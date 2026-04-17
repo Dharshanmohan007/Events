@@ -1,11 +1,15 @@
 import './App.css'
+import {Routes, Route} from 'react-router-dom'
+import EventsForm from './Pages/EventsForm'
+import Login from './Pages/Login'
 
 function App() {
 
   return (
-    <div>
-      Hello App
-    </div>
+    <Routes>
+      <Route path='/' element={<Login/>}/>
+      <Route path='/events' element={<EventsForm/>}/>
+    </Routes>
   )
 }
 
