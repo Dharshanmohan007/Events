@@ -6,7 +6,7 @@ import Form from './Form'
 export default function EventsForm() {
   return (
     <div className='bg-[#16162A] flex h-screen w-screen overflow-hidden'>
-      <EventsSidebar />
+      {/* <EventsSidebar /> */}
       <div className='flex-1 flex flex-col min-w-0 overflow-hidden'>
         <Form />
       </div>

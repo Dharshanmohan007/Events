@@ -26,7 +26,7 @@ export default function CustomSelect({
 
       <div
         onClick={() => setOpen(!open)}
-        className={`w-full h-12 sm:h-14 bg-transparent border rounded-lg px-4 flex items-center justify-between cursor-pointer transition-colors duration-200
+        className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200
           ${open ? "border-purple-500" : "border-[#3A3A5A]"}`}
       >
         <span className={value ? "text-white text-sm" : "text-gray-500 text-sm"}>
@@ -45,7 +45,7 @@ export default function CustomSelect({
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto">
+        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
           {options.map((opt, i) => (
             <div
               key={i}

@@ -1,79 +1,56 @@
-import React,{useState} from 'react'
-import CustomSelect from '../CustomSelect'
+import React, { useState } from "react";
+import CustomSelect from "../CustomSelect";
 
-export default function EventRequirements() {
-    const [venue, setVenue] = useState("");
-    const [audio, setAudio] = useState("");
-    const [icts, setIcts] = useState("");
-    const [transport, setTransport] = useState("");
-    const [accommodation, setAccommodation] = useState("");
-    const [media, setMedia] = useState("");
-    const [other, setOther] = useState("");
+export default function EventRequirements({ nextStep, setSelectedRequirements }) {
+  const [values, setValues] = useState({
+    venue: "",
+    audio: "",
+    icts: "",
+    transport: "",
+    foodandrefreshments: "",
+    accommodation: "",
+    purchase: "",
+    media: "",
+
+  });
+
+  const handleChange = (key, val) => {
+    setValues((prev) => ({ ...prev, [key]: val }));
+  };
+
+  const handleNext = () => {
+    const selected = Object.keys(values).filter(
+      (key) => values[key] === "Yes"
+    );
+
+    setSelectedRequirements(selected);
+    nextStep();
+  };
+
   return (
-    <div>
-        <h1 className="text-white text-base sm:text-lg font-bold mb-6">
-            Event Requirements
-        </h1>
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
-            <CustomSelect
-                label="Venue Required"
-                required
-                value={venue}
-                onChange={setVenue}
-                options={["Yes", "No"]}
-            />
-            <CustomSelect
-                label="Audio Required"
-                required
-                value={audio}
-                onChange={setAudio}
-                options={["Yes", "No"]}
-            />
-        </div>
+    <div className='p-6 rounded-xl'>
+      <h1 className="text-white text-lg font-bold mb-6">
+        Event Requirements
+      </h1>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
-            <CustomSelect
-                label="ICTS Required"
-                required
-                value={icts}
-                onChange={setIcts}
-                options={["Yes", "No"]}
-            />
-            <CustomSelect
-                label="Transport Required"
-                required
-                value={transport}
-                onChange={setTransport}
-                options={["Yes", "No"]}
-            />
-        </div>
+      <div className="grid grid-cols-2 gap-4 mb-6">
+        {Object.keys(values).map((key) => (
+          <CustomSelect
+            key={key}
+            label={`${key.charAt(0).toUpperCase() + key.slice(1)} Required`}
+            value={values[key]}
+            onChange={(val) => handleChange(key, val)}
+            options={["Yes", "No"]}
+          />
+        ))}
+      </div>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
-            <CustomSelect
-                label="Accommodation/Dining Required"
-                required
-                value={accommodation}
-                onChange={setAccommodation}
-                options={["Yes", "No"]}
-            />
-            <CustomSelect
-                label="Media Required"
-                required
-                value={media}
-                onChange={setMedia}
-                options={["Yes", "No"]}
-            />
-        </div>
-
-        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
-            <CustomSelect
-                label="Other Requirements if any"
-                required
-                value={other}
-                onChange={setOther}
-                options={["Yes", "No"]}
-            />
-        </div>
+      <button
+        onClick={handleNext}
+        className="bg-purple-600 text-white px-6 py-2 rounded-lg"
+      >
+        Next
+      </button>
     </div>
-  )
+  );
 }
