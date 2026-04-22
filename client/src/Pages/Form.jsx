@@ -13,6 +13,7 @@ import MediaForm from "../Components/Forms/MediaForm";
 
 export default function Form() {
   const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
 
   // Step Definitions
@@ -41,18 +42,28 @@ export default function Form() {
 
   const CurrentComponent = steps[currentStep]?.component;
 
-  const nextStep = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep((prev) => prev + 1);
-    }
-  };
+  // const nextStep = () => {
+  //   if (currentStep < steps.length - 1) {
+  //     setCurrentStep((prev) => prev + 1);
+  //   }
+  // };
 
+  const handleNext = () => {
+  setCompletedSteps((prev) => {
+    if (!prev.includes(currentStep)) {
+      return [...prev, currentStep];
+    }
+    return prev;
+  });
+
+  setCurrentStep((prev) => prev + 1);
+};
   return (
     <div className="flex h-screen bg-[#16162A]">
       
       {/* Sidebar (INCREASED WIDTH) */}
       <div className="w-[320px]">
-        <EventsSidebar steps={steps} currentStep={currentStep} />
+        <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps}/>
       </div>
 
       {/* Main Content */}
@@ -75,7 +86,7 @@ export default function Form() {
         {/* Form Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           <CurrentComponent
-            nextStep={nextStep}
+            nextStep={handleNext}
             setSelectedRequirements={setSelectedRequirements}
           />
         </div>

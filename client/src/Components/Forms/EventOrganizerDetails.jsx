@@ -1,33 +1,6 @@
 import React, { useState } from "react";
 import CustomSelect from "../CustomSelect";
-
-const inputBase =
-  "w-full h-12 sm:h-14 bg-transparent border border-[#3A3A5A] text-white rounded-lg focus:outline-none focus:border-purple-500";
-
-const FloatingInput = ({ label, type = "text" }) => (
-  <div className="relative w-full">
-    <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
-      {label}
-    </span>
-    <input
-      type={type}
-      className={`${inputBase} px-4`}
-      placeholder=""
-    />
-  </div>
-);
-
-const FloatingDateInput = ({ label }) => (
-  <div className="relative w-full">
-    <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
-      {label}
-    </span>
-    <input
-      type="date"
-      className={`${inputBase} px-4 text-gray-400 [color-scheme:dark]`}
-    />
-  </div>
-);
+import CustomInput from "../CustomInput";
 
 export default function EventOrganizerDetails() {
   const [doc, setDoc] = useState("");
@@ -41,45 +14,23 @@ export default function EventOrganizerDetails() {
         Event Organizer Details
       </h1>
 
-      {/* Row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <CustomSelect
-          label="Completion of previous Event documentation"
-          required
-          value={doc}
-          onChange={setDoc}
-          options={["Yes", "No"]}
-        />
-        <CustomSelect
-          label="Finance Required"
-          required
-          value={finance}
-          onChange={setFinance}
-          options={["Yes", "No"]}
-        />
+        <CustomSelect label="Completion of previous Event documentation" required value={doc} onChange={setDoc} options={["Yes", "No"]} />
+        <CustomSelect label="Finance Required" required value={finance} onChange={setFinance} options={["Yes", "No"]} />
       </div>
 
-      {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <CustomSelect
-          label="Is It approved in budget?"
-          required
-          value={budget}
-          onChange={setBudget}
-          options={["Yes", "No"]}
-        />
-        <FloatingDateInput label="Requisition Date *" />
+        <CustomSelect label="Is It approved in budget?" required value={budget} onChange={setBudget} options={["Yes", "No"]} />
+        <CustomInput type="date" label="Requisition Date *" />
       </div>
 
-      {/* Row 3 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <FloatingInput label="Name of the Organizing Department / Centre *" />
-        <FloatingInput label="Organizing Co-Ordinator Name *" />
+        <CustomInput label="Name of the Organizing Department / Centre *" />
+        <CustomInput label="Organizing Co-Ordinator Name *" />
       </div>
 
-      {/* Row 4 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <FloatingInput label="Designation *" />
+        <CustomInput label="Designation *" />
         <CustomSelect
           label="Department"
           required
@@ -89,10 +40,9 @@ export default function EventOrganizerDetails() {
         />
       </div>
 
-      {/* Row 5 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <FloatingInput label="Mobile Number *" type="tel" />
-        <FloatingInput label="Emp Id *" />
+        <CustomInput label="Mobile Number *" type="tel" />
+        <CustomInput label="Emp Id *" />
       </div>
     </div>
   );
