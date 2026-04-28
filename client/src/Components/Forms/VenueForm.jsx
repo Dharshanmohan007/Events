@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import CustomInput from "../CustomInput";
 
-// ─── Venue Data ────────────────────────────────────────────────────────────────
 const VENUES = [
   { venue: "Main Board Room", capacity: 20 },
   { venue: "Ignite", capacity: 60 },
@@ -50,8 +49,88 @@ const VENUES = [
   { venue: "ClassRooms", capacity: 70 },
 ];
 
-// ─── Multi-Select Venue Dropdown ───────────────────────────────────────────────
-function MultiVenueSelect({ label, options, selected, onChange }) {
+const HALL_REQUIREMENTS = [
+  "Guest Chair",
+  "Water Bottles",
+  "Dias Table",
+  "Audience Chair",
+];
+
+const ErrorMsg = ({ msg }) =>
+  msg ? <p className="text-red-400 text-xs mt-1">{msg}</p> : null;
+
+function validateVenueCard(card) {
+  const e = {};
+
+  if (!card.participants || parseInt(card.participants) < 1) {
+    e.participants = "Number of participants is required";
+  }
+
+  if (!card.seatingCapacity || parseInt(card.seatingCapacity) < 1) {
+    e.seatingCapacity = "Seating capacity is required";
+  }
+
+  if (!card.hallReqs || card.hallReqs.length === 0) {
+    e.hallReqs = "Select at least one hall requirement";
+  }
+
+  if (
+    card.hallReqs?.includes("Guest Chair") &&
+    (!card.guestChairs || parseInt(card.guestChairs) < 1)
+  ) {
+    e.guestChairs = "Number of guest chairs is required";
+  }
+
+  if (
+    card.hallReqs?.includes("Water Bottles") &&
+    (!card.waterBottles || parseInt(card.waterBottles) < 1)
+  ) {
+    e.waterBottles = "Number of water bottles is required";
+  }
+
+  if (
+    card.hallReqs?.includes("Dias Table") &&
+    (!card.diasTable || parseInt(card.diasTable) < 1)
+  ) {
+    e.diasTable = "Number of dias tables is required";
+  }
+
+  if (
+    card.hallReqs?.includes("Audience Chair") &&
+    (!card.audienceChair || parseInt(card.audienceChair) < 1)
+  ) {
+    e.audienceChair = "Number of audience chairs is required";
+  }
+
+  if (!card.specialReqs?.trim()) {
+    e.specialReqs = "Special requirements field is required";
+  }
+
+  return e;
+}
+
+function validateDay(dayData) {
+  const e = {};
+
+  if (!dayData.participants || parseInt(dayData.participants) < 1) {
+    e.participants = "Total number of participants is required";
+  }
+
+  if (!dayData.selectedVenues || dayData.selectedVenues.length === 0) {
+    e.selectedVenues = "Please select at least one venue";
+  }
+
+  if (dayData.selectedVenues?.length > 0) {
+    const cards = dayData.venueCards || [];
+    const cardErrors = cards.map((card) => validateVenueCard(card));
+    const hasCardErrors = cardErrors.some((ce) => Object.keys(ce).length > 0);
+    if (hasCardErrors) e.venueCards = cardErrors;
+  }
+
+  return e;
+}
+
+function MultiVenueSelect({ label, options, selected, onChange, error }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -64,11 +143,11 @@ function MultiVenueSelect({ label, options, selected, onChange }) {
   }, []);
 
   const toggle = (venue) => {
-    if (selected.includes(venue)) {
-      onChange(selected.filter((v) => v !== venue));
-    } else {
-      onChange([...selected, venue]);
-    }
+    onChange(
+      selected.includes(venue)
+        ? selected.filter((v) => v !== venue)
+        : [...selected, venue]
+    );
   };
 
   const displayText =
@@ -79,97 +158,99 @@ function MultiVenueSelect({ label, options, selected, onChange }) {
       : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
 
   return (
-    <div className="relative w-full" ref={ref}>
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
-        {label}
-      </span>
-      <div
-        onClick={() => setOpen(!open)}
-        className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
-        }`}
-      >
-        <span className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}>
-          {displayText || "Select venues..."}
+    <div className="w-full" ref={ref}>
+      <div className="relative w-full">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+          {label}
         </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+
+        <div
+          onClick={() => setOpen(!open)}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+            open
+              ? "border-purple-500"
+              : error
+              ? "border-red-400"
+              : "border-[#3A3A5A]"
+          }`}
         >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+          <span
+            className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}
+          >
+            {displayText || "Select venues..."}
+          </span>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        {open && (
+          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-y-auto custom-scrollbar">
+            {options.length === 0 ? (
+              <div className="px-4 py-3 text-sm text-gray-400">
+                No venues available for this capacity
+              </div>
+            ) : (
+              options.map((opt, i) => {
+                const isSelected = selected.includes(opt.venue);
+                return (
+                  <div
+                    key={i}
+                    onClick={() => toggle(opt.venue)}
+                    className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${
+                      isSelected
+                        ? "bg-purple-600/30 text-white"
+                        : "text-white hover:bg-purple-500/20"
+                    }`}
+                  >
+                    <span>{opt.venue}</span>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs text-gray-400">
+                        Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
+                      </span>
+                      {isSelected && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 text-purple-400"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
       </div>
 
-      {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-y-auto custom-scrollbar">
-          {options.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-400">
-              No venues available for this capacity
-            </div>
-          ) : (
-            options.map((opt, i) => {
-              const isSelected = selected.includes(opt.venue);
-              return (
-                <div
-                  key={i}
-                  onClick={() => toggle(opt.venue)}
-                  className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${
-                    isSelected
-                      ? "bg-purple-600/30 text-white"
-                      : "text-white hover:bg-purple-500/20"
-                  }`}
-                >
-                  <span>{opt.venue}</span>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs text-gray-400">
-                      Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
-                    </span>
-                    {isSelected && (
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-4 h-4 text-purple-400"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
+      <ErrorMsg msg={error} />
     </div>
   );
 }
 
-// ─── Hall Requirements Multi-Select ───────────────────────────────────────────
-const HALL_REQUIREMENTS = [
-  "Guest Chair",
-  "Water Bottles",
-  "Dias Table",
-  "Audience Chair",
-  "Projector",
-  "Whiteboard",
-  "Podium",
-  "Sound System",
-];
-
-function HallRequirementsSelect({ label, selected, onChange }) {
+function HallRequirementsSelect({ label, selected, onChange, error }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -182,101 +263,119 @@ function HallRequirementsSelect({ label, selected, onChange }) {
   }, []);
 
   const toggle = (item) => {
-    if (selected.includes(item)) {
-      onChange(selected.filter((v) => v !== item));
-    } else {
-      onChange([...selected, item]);
-    }
+    onChange(
+      selected.includes(item)
+        ? selected.filter((v) => v !== item)
+        : [...selected, item]
+    );
   };
 
-  const displayText =
-    selected.length === 0 ? "" : selected.join(" / ");
-
   return (
-    <div className="relative w-full" ref={ref}>
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-        {label}
-      </span>
-      <div
-        onClick={() => setOpen(!open)}
-        className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
-        }`}
-      >
-        <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm"}>
-          {displayText || "Select requirements..."}
+    <div className="w-full" ref={ref}>
+      <div className="relative w-full">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          {label}
         </span>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+
+        <div
+          onClick={() => setOpen(!open)}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+            open
+              ? "border-purple-500"
+              : error
+              ? "border-red-400"
+              : "border-[#3A3A5A]"
+          }`}
         >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
+          <span
+            className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm"}
+          >
+            {selected.length ? selected.join(" / ") : "Select requirements..."}
+          </span>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+
+        {open && (
+          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+            {HALL_REQUIREMENTS.map((item, i) => {
+              const isSelected = selected.includes(item);
+              return (
+                <div
+                  key={i}
+                  onClick={() => toggle(item)}
+                  className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? "bg-purple-600/30 text-white"
+                      : "text-white hover:bg-purple-500/20"
+                  }`}
+                >
+                  <span>{item}</span>
+                  {isSelected && (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4 text-purple-400"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
-          {HALL_REQUIREMENTS.map((item, i) => {
-            const isSelected = selected.includes(item);
-            return (
-              <div
-                key={i}
-                onClick={() => toggle(item)}
-                className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                  isSelected
-                    ? "bg-purple-600/30 text-white"
-                    : "text-white hover:bg-purple-500/20"
-                }`}
-              >
-                <span>{item}</span>
-                {isSelected && (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4 text-purple-400"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      )}
+      <ErrorMsg msg={error} />
     </div>
   );
 }
 
-// ─── Individual Venue Detail Card ──────────────────────────────────────────────
-function VenueDetailCard({ venueName, venueCapacity, index }) {
-  const [hallReqs, setHallReqs] = useState([]);
-  const [participants, setParticipants] = useState("");
-  const [seatingCapacity, setSeatingCapacity] = useState("");
-  const [guestChairs, setGuestChairs] = useState("");
-  const [waterBottles, setWaterBottles] = useState("");
-  const [diasTable, setDiasTable] = useState("");
-  const [specialReqs, setSpecialReqs] = useState("");
+function VenueDetailCard({
+  venueName,
+  venueCapacity,
+  index,
+  data,
+  onChange,
+  errors = {},
+}) {
+  const showGuestChair = data.hallReqs?.includes("Guest Chair");
+  const showWaterBottles = data.hallReqs?.includes("Water Bottles");
+  const showDiasTable = data.hallReqs?.includes("Dias Table");
+  const showAudienceChair = data.hallReqs?.includes("Audience Chair");
+  const showProjector = data.hallReqs?.includes("Projector");
+  const showSpeakerSystem = data.hallReqs?.includes("Speaker System");
+  const showMicrophones = data.hallReqs?.includes("Microphones");
+  const showVideoConferencing = data.hallReqs?.includes("Video Conferencing");
+  const showWhiteboardFlipchart = data.hallReqs?.includes("Whiteboard/Flipchart");
+  const showPodium = data.hallReqs?.includes("Podium");
+  const showStageSetup = data.hallReqs?.includes("Stage Setup");
 
-  const showGuestChair = hallReqs.includes("Guest Chair");
-  const showWaterBottles = hallReqs.includes("Water Bottles");
-  const showDiasTable = hallReqs.includes("Dias Table");
+  const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
         <div className="flex items-center gap-2">
@@ -289,257 +388,372 @@ function VenueDetailCard({ venueName, venueCapacity, index }) {
         </div>
       </div>
 
-      {/* Participants & Seating */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <CustomInput
-          label="Number of Participants *"
-          type="number"
-          value={participants}
-          onChange={(e) => setParticipants(e.target.value)}
-        />
-        <CustomInput
-          label="Number of Seating Capacity Required *"
-          type="number"
-          value={seatingCapacity}
-          onChange={(e) => setSeatingCapacity(e.target.value)}
+        <div>
+          <CustomInput
+            label="Number of Participants *"
+            type="number"
+            value={data.participants || ""}
+            onChange={update("participants")}
+          />
+          <ErrorMsg msg={errors.participants} />
+        </div>
+
+        <div>
+          <CustomInput
+            label="Number of Seating Capacity Required *"
+            type="number"
+            value={data.seatingCapacity || ""}
+            onChange={update("seatingCapacity")}
+          />
+          <ErrorMsg msg={errors.seatingCapacity} />
+        </div>
+      </div>
+
+      <div>
+        <HallRequirementsSelect
+          label="Hall Requirements *"
+          selected={data.hallReqs || []}
+          onChange={(val) => onChange({ ...data, hallReqs: val })}
+          error={errors.hallReqs}
         />
       </div>
 
-      {/* Hall Requirements Multi-Select */}
-      <HallRequirementsSelect
-        label="Hall Requirements *"
-        selected={hallReqs}
-        onChange={setHallReqs}
-      />
-
-      {/* Conditional Fields based on Hall Requirements */}
-      {(showGuestChair || showWaterBottles || showDiasTable) && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair ||showProjector || showSpeakerSystem || showMicrophones ||showVideoConferencing ||showWhiteboardFlipchart ||showPodium ||showStageSetup) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {showGuestChair && (
-            <CustomInput
-              label="No. of Guest Chair *"
-              type="number"
-              value={guestChairs}
-              onChange={(e) => setGuestChairs(e.target.value)}
-            />
+            <div>
+              <CustomInput
+                label="No. of Guest Chair *"
+                type="number"
+                value={data.guestChairs || ""}
+                onChange={update("guestChairs")}
+              />
+              <ErrorMsg msg={errors.guestChairs} />
+            </div>
           )}
+
           {showWaterBottles && (
-            <CustomInput
-              label="No. of Water Bottles *"
-              type="number"
-              value={waterBottles}
-              onChange={(e) => setWaterBottles(e.target.value)}
-            />
+            <div>
+              <CustomInput
+                label="No. of Water Bottles *"
+                type="number"
+                value={data.waterBottles || ""}
+                onChange={update("waterBottles")}
+              />
+              <ErrorMsg msg={errors.waterBottles} />
+            </div>
           )}
+
           {showDiasTable && (
-            <CustomInput
-              label="No. of Dias Table *"
-              type="number"
-              value={diasTable}
-              onChange={(e) => setDiasTable(e.target.value)}
-            />
+            <div>
+              <CustomInput
+                label="No. of Dias Table *"
+                type="number"
+                value={data.diasTable || ""}
+                onChange={update("diasTable")}
+              />
+              <ErrorMsg msg={errors.diasTable} />
+            </div>
+          )}
+
+          {showAudienceChair && (
+            <div>
+              <CustomInput
+                label="No. of Audience Chair *"
+                type="number"
+                value={data.audienceChair || ""}
+                onChange={update("audienceChair")}
+              />
+              <ErrorMsg msg={errors.audienceChair} />
+            </div>
           )}
         </div>
       )}
 
-      {/* Special Requirements */}
-      <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-          Special Requirements, if any *
-        </span>
-        <textarea
-          value={specialReqs}
-          onChange={(e) => setSpecialReqs(e.target.value)}
-          rows={3}
-          placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
-        />
+      <div>
+        <div className="relative w-full">
+          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+            Special Requirements, if any *
+          </span>
+
+          <textarea
+            value={data.specialReqs || ""}
+            onChange={update("specialReqs")}
+            rows={3}
+            placeholder="Enter any special requirements..."
+            className={`w-full bg-transparent border ${
+              errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
+            } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+          />
+        </div>
+
+        <ErrorMsg msg={errors.specialReqs} />
       </div>
     </div>
   );
 }
 
-// ─── Day Timeline Header ───────────────────────────────────────────────────────
-function DayTimeline({ days }) {
+function DayTimeline({ days, currentDayIndex, completedDays }) {
   if (!days || days.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-0 mb-6 overflow-x-auto pb-2">
-      {days.map((day, index) => {
-        const isCompleted = index < 2; // visual mock — first 2 completed
-        const isCurrent = index === 2;
+    <div className="w-full flex justify-center mb-8">
+      <div className="flex items-center justify-center">
+        {days.map((day, index) => {
+          const isCompleted = completedDays.includes(index);
+          const isCurrent = index === currentDayIndex;
 
-        return (
-          <React.Fragment key={index}>
-            {/* Node */}
-            <div className="flex flex-col items-center flex-shrink-0 min-w-[120px]">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all ${
-                  isCompleted
-                    ? "bg-purple-600 border-purple-600 text-white"
-                    : isCurrent
-                    ? "bg-transparent border-gray-500 text-gray-400"
-                    : "bg-transparent border-gray-600 text-gray-500"
-                }`}
-              >
-                {isCompleted ? (
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-4 h-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                ) : (
-                  `0${index + 1}`
-                )}
-              </div>
-              {day.date && (
-                <div className="mt-1 text-center">
-                  <p className={`text-xs font-semibold ${isCompleted ? "text-purple-400" : "text-gray-400"}`}>
-                    {day.date}
-                  </p>
-                  {day.startTime && day.endTime && (
-                    <p className={`text-xs ${isCompleted ? "text-purple-400/70" : "text-gray-500"}`}>
-                      ({day.startTime} - {day.endTime})
-                    </p>
+          return (
+            <React.Fragment key={index}>
+              <div className="flex flex-col items-center min-w-[140px]">
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
+                    isCompleted
+                      ? "bg-purple-600 border-purple-600 text-white"
+                      : isCurrent
+                      ? "border-purple-500 text-purple-400"
+                      : "border-gray-600 text-gray-500"
+                  }`}
+                >
+                  {isCompleted ? (
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    `0${index + 1}`
                   )}
                 </div>
-              )}
-            </div>
 
-            {/* Connector */}
-            {index < days.length - 1 && (
-              <div
-                className={`flex-1 h-0.5 mx-1 ${
-                  index < 1 ? "bg-purple-500" : "bg-gray-600"
-                }`}
-              />
-            )}
-          </React.Fragment>
-        );
-      })}
+                {day.date && (
+                  <div className="mt-2 text-center">
+                    <p
+                      className={`text-xs font-semibold ${
+                        isCompleted
+                          ? "text-purple-400"
+                          : isCurrent
+                          ? "text-purple-300"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {day.date}
+                    </p>
+
+                    {day.startTime && day.endTime && (
+                      <p
+                        className={`text-xs ${
+                          isCompleted
+                            ? "text-purple-400"
+                            : isCurrent
+                            ? "text-purple-300"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        ({day.startTime} - {day.endTime})
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {index < days.length - 1 && (
+                <div
+                  className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${
+                    isCompleted ? "bg-purple-500" : "bg-gray-600"
+                  }`}
+                  style={{ minWidth: "60px" }}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </div>
     </div>
   );
 }
 
-// ─── Main VenueForm Component ──────────────────────────────────────────────────
 export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
-  const [totalParticipants, setTotalParticipants] = useState("");
-  const [selectedVenues, setSelectedVenues] = useState([]);
-  const [othersText, setOthersText] = useState("");
+  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [completedDays, setCompletedDays] = useState([]);
+  const [errors, setErrors] = useState({});
 
-  // Filter venues based on participant count
-  const participantCount = parseInt(totalParticipants) || 0;
+  const [venueData, setVenueData] = useState(
+    eventDays.map(() => ({
+      participants: "",
+      selectedVenues: [],
+      othersText: "",
+      venueCards: [],
+    }))
+  );
+
+  const currentDay = venueData[currentDayIndex];
+  const currentErrors = errors[currentDayIndex] || {};
+  const participantCount = parseInt(currentDay?.participants) || 0;
 
   const eligibleVenues = VENUES.filter(
     (v) => v.capacity === 0 || v.capacity >= participantCount
   );
 
-  // When participant count changes, remove venues that are no longer eligible
-  const handleParticipantsChange = (e) => {
-    const val = e.target.value;
-    setTotalParticipants(val);
-    const count = parseInt(val) || 0;
-    const eligible = VENUES.filter((v) => v.capacity === 0 || v.capacity >= count).map((v) => v.venue);
-    setSelectedVenues((prev) => prev.filter((v) => eligible.includes(v)));
+  const updateCurrentDay = (newData) => {
+    setVenueData((prev) => {
+      const updated = [...prev];
+      updated[currentDayIndex] = { ...updated[currentDayIndex], ...newData };
+      return updated;
+    });
   };
 
-  const selectedVenueObjects = selectedVenues.map((name) =>
-    VENUES.find((v) => v.venue === name)
-  );
+  const handleVenueSelection = (selectedVenues) => {
+    const existingCards = currentDay.venueCards || [];
 
-  // Demo days — in real usage, these come from props (eventDays)
-  const days =
-    eventDays.length > 0
-      ? eventDays
-      : [
-          { date: "25-03-2026", startTime: "10:30 AM", endTime: "12:00PM" },
-          { date: "25-03-2026", startTime: "10:30 AM", endTime: "12:00PM" },
-          { date: "25-03-2026", startTime: "10:30 AM", endTime: "12:00PM" },
-          { date: "25-03-2026", startTime: "10:30 AM", endTime: "12:00PM" },
-        ];
+    const updatedCards = selectedVenues.map((name) => {
+      const existing = existingCards.find((c) => c.venueName === name);
+
+      return (
+        existing || {
+          venueName: name,
+          participants: "",
+          seatingCapacity: "",
+          hallReqs: [],
+          guestChairs: "",
+          waterBottles: "",
+          diasTable: "",
+          audienceChair: "",
+          specialReqs: "",
+        }
+      );
+    });
+
+    updateCurrentDay({ selectedVenues, venueCards: updatedCards });
+  };
+
+  const updateVenueCard = (cardIndex, updated) => {
+    setVenueData((prev) => {
+      const data = [...prev];
+      const cards = [...(data[currentDayIndex].venueCards || [])];
+      cards[cardIndex] = updated;
+      data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
+      return data;
+    });
+  };
+
+  const handleNext = () => {
+    const dayData = venueData[currentDayIndex];
+    const dayErrors = validateDay(dayData);
+    const hasErrors = Object.keys(dayErrors).length > 0;
+
+    setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
+
+    if (hasErrors) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    setCompletedDays((prev) =>
+      prev.includes(currentDayIndex) ? prev : [...prev, currentDayIndex]
+    );
+
+    if (currentDayIndex < eventDays.length - 1) {
+      setCurrentDayIndex((prev) => prev + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      nextStep();
+    }
+  };
+
+  const handleBack = () => {
+    if (currentDayIndex > 0) {
+      setCurrentDayIndex((prev) => prev - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      prevStep();
+    }
+  };
+
+  const selectedVenueObjects = (currentDay.selectedVenues || [])
+    .map((name) => VENUES.find((v) => v.venue === name))
+    .filter(Boolean);
 
   return (
     <div className="flex flex-col gap-6 pb-6">
-      {/* Day Timeline */}
-      <DayTimeline days={days} />
+      <DayTimeline
+        days={eventDays}
+        currentDayIndex={currentDayIndex}
+        completedDays={completedDays}
+      />
 
-      {/* Top Section: Header */}
+      <h2 className="text-white text-lg font-bold">
+        Venue Details – Day {currentDayIndex + 1}
+      </h2>
+
       <div>
-        <h2 className="text-white text-base font-bold mb-4">Venue Details</h2>
+        <CustomInput
+          label="Total Number of Participants *"
+          type="number"
+          value={currentDay.participants}
+          onChange={(e) => updateCurrentDay({ participants: e.target.value })}
+        />
+        <ErrorMsg msg={currentErrors.participants} />
+      </div>
 
-        {/* Total Participants */}
-        <div className="mb-5">
-          <CustomInput
-            label="Total Number of Participants *"
-            type="number"
-            value={totalParticipants}
-            onChange={handleParticipantsChange}
-          />
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <MultiVenueSelect
+          label="Venue Required *"
+          options={participantCount > 0 ? eligibleVenues : VENUES}
+          selected={currentDay.selectedVenues}
+          onChange={handleVenueSelection}
+          error={currentErrors.selectedVenues}
+        />
 
-        {/* Venue Required + Others */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <MultiVenueSelect
-            label="Venue Required *"
-            options={participantCount > 0 ? eligibleVenues : VENUES}
-            selected={selectedVenues}
-            onChange={setSelectedVenues}
-          />
-          <div className="relative w-full">
-            <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
-              If venue required is others, please specify *
+        <div>
+          <div className="relative">
+            <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">
+              Others
             </span>
             <input
-              value={othersText}
-              onChange={(e) => setOthersText(e.target.value)}
-              placeholder=""
+              value={currentDay.othersText}
+              onChange={(e) => updateCurrentDay({ othersText: e.target.value })}
               className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500"
             />
           </div>
         </div>
-
-        {/* Participant count hint */}
-        {participantCount > 0 && (
-          <p className="text-xs text-gray-400 mt-2">
-            Showing {eligibleVenues.length} venues with capacity ≥ {participantCount}
-          </p>
-        )}
       </div>
 
-      {/* Per-Venue Detail Cards */}
       {selectedVenueObjects.length > 0 && (
         <div className="flex flex-col gap-4">
           {selectedVenueObjects.map((v, i) => (
             <VenueDetailCard
-              key={v.venue + i}
+              key={v.venue}
               venueName={v.venue}
               venueCapacity={v.capacity}
               index={i + 1}
+              data={currentDay.venueCards?.[i] || {}}
+              onChange={(updated) => updateVenueCard(i, updated)}
+              errors={(currentErrors.venueCards && currentErrors.venueCards[i]) || {}}
             />
           ))}
         </div>
       )}
 
-      {/* Bottom Navigation */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex justify-between">
         <button
-          onClick={prevStep}
-          className="border border-purple-500 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-purple-500/10 transition-colors"
+          onClick={handleBack}
+          className="border border-purple-600 px-6 py-2 rounded text-purple-600"
         >
           ← Back
         </button>
+
         <button
-          onClick={nextStep}
-          className="bg-purple-600 text-white px-6 py-2.5 rounded-lg text-sm hover:bg-purple-700 transition-colors"
+          onClick={handleNext}
+          className="bg-purple-600 px-6 py-2 rounded text-white"
         >
-          Next →
+          {currentDayIndex === eventDays.length - 1 ? "Next Form →" : "Next Day →"}
         </button>
       </div>
     </div>
