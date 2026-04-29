@@ -20,7 +20,7 @@ export default function CustomSelect({
 
   return (
     <div className="relative w-full" ref={ref}>
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+      <span className="absolute left-3 -top-[9px] text-xs text-white px-1  z-10 pointer-events-none">
         {label} {required && "*"}
       </span>
 

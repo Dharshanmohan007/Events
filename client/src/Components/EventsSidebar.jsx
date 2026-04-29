@@ -53,11 +53,10 @@ export default function EventsSidebar({ steps = [], currentStep = 0, completedSt
             </div>
 
             {/* Step Label */}
-            <span className="text-sm">{step.label}</span>
+            <span className="text-md">{step.label}</span>
           </div>
         ))}
       </div>
-
       {/* ✅ FIXED BOTTOM-LEFT DESIGN */}
       <img
         src={SidebarDesign}

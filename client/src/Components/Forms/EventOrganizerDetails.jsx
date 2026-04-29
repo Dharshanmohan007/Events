@@ -7,6 +7,10 @@ export default function EventOrganizerDetails() {
   const [finance, setFinance] = useState("");
   const [budget, setBudget] = useState("");
   const [department, setDepartment] = useState("");
+  
+
+  // logs 
+
 
   return (
     <div className="w-full p-4 sm:p-6 rounded-xl">

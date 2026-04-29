@@ -1,7 +1,7 @@
 import React from "react";
 
 const baseStyle =
-  "w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg focus:outline-none focus:border-purple-500";
+  "w-full bg-transparent border border-[#3A3A5A] text-white  rounded-lg focus:outline-none focus:border-purple-500";
 
 export default function CustomInput({
   label,
@@ -9,12 +9,13 @@ export default function CustomInput({
   value,
   onChange,
   className = "",
+
 }) {
   const isDarkBg = type === "date" || type === "time";
 
   return (
-    <div className="relative w-full">
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+    <div className="relative w-full ">
+      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38]   z-10 pointer-events-none">
         {label}
       </span>
 
@@ -22,9 +23,9 @@ export default function CustomInput({
         type={type}
         {...(value !== undefined ? { value } : {})}
         {...(onChange ? { onChange } : {})}
-        className={`${baseStyle} p-3.5 text-sm ${
+        className={`${baseStyle}   p-3.5 text-sm ${
           isDarkBg ? "text-gray-400 [color-scheme:dark]" : ""
-        } ${className}`}
+        } ${className}` }
       />
     </div>
   );

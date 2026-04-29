@@ -1,9 +1,8 @@
 import React from 'react'
-
-export default function IctsForm() {
+const IctsForm = () => {
   return (
-    <div>
-      
-    </div>
+    <div>IctsForm</div>
+  
   )
 }
+export default IctsForm

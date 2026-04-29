@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import EventsSidebar from "../Components/EventsSidebar";
-
 import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 import VenueForm from "../Components/Forms/VenueForm";
 import AudioForm from "../Components/Forms/AudioForm";
@@ -29,8 +28,7 @@ export default function Form() {
     transport: { label: "Transport Details", component: TransportForm },
     accommodation: { label: "Accommodation Details", component: AccommodationForm },
     purchase: { label: "Purchase Details", component: Purchase },
-    media: { label: "Media Details", component: MediaForm },
-    
+    media: { label: "Media Details", component: MediaForm }, 
   };
 
   const dynamicSteps = selectedRequirements.map((key) => ({
