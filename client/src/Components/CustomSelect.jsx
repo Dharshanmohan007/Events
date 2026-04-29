@@ -6,6 +6,7 @@ export default function CustomSelect({
   value,
   onChange,
   required,
+  labelBg = "#16162A", 
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -20,7 +21,7 @@ export default function CustomSelect({
 
   return (
     <div className="relative w-full" ref={ref}>
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none" style={{ backgroundColor: labelBg }}>
         {label} {required && "*"}
       </span>
 

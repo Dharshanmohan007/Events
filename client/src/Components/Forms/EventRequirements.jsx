@@ -50,10 +50,12 @@ export default function EventRequirements({ nextStep, setSelectedRequirements })
           </div>
         ))}
       </div>
-
-      <button onClick={handleNext} className="bg-purple-600 text-white px-6 py-2 rounded-lg">
-        Next
-      </button>
+      
+      <div className="flex justify-end">
+        <button onClick={handleNext} className="bg-purple-600 text-white px-6 py-2 rounded-lg">
+          Next →
+        </button>
+      </div>
     </div>
   );
 }

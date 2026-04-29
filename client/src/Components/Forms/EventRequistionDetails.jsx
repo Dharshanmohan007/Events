@@ -144,7 +144,7 @@ export default function EventRequisitionDetails({ nextStep, setSelectedRequireme
   };
 
   return (
-    <div className='w-full flex flex-col gap-6 pb-6'>
+    <div className='w-full flex flex-col gap-6 pb-3'>
       <EventOrganizerDetails
         // state passed down
         doc={doc} setDoc={setDoc}

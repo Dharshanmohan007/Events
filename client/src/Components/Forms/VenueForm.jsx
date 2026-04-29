@@ -391,6 +391,7 @@ function VenueDetailCard({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <CustomInput
+            labelBg="#1E1E35"
             label="Number of Participants *"
             type="number"
             value={data.participants || ""}
@@ -401,6 +402,7 @@ function VenueDetailCard({
 
         <div>
           <CustomInput
+            labelBg="#1E1E35"
             label="Number of Seating Capacity Required *"
             type="number"
             value={data.seatingCapacity || ""}
@@ -424,6 +426,7 @@ function VenueDetailCard({
           {showGuestChair && (
             <div>
               <CustomInput
+                labelBg="#1E1E35"
                 label="No. of Guest Chair *"
                 type="number"
                 value={data.guestChairs || ""}
@@ -436,6 +439,7 @@ function VenueDetailCard({
           {showWaterBottles && (
             <div>
               <CustomInput
+                labelBg="#1E1E35"
                 label="No. of Water Bottles *"
                 type="number"
                 value={data.waterBottles || ""}
@@ -448,6 +452,7 @@ function VenueDetailCard({
           {showDiasTable && (
             <div>
               <CustomInput
+                labelBg="#1E1E35"
                 label="No. of Dias Table *"
                 type="number"
                 value={data.diasTable || ""}
@@ -460,12 +465,104 @@ function VenueDetailCard({
           {showAudienceChair && (
             <div>
               <CustomInput
+                labelBg="#1E1E35"
                 label="No. of Audience Chair *"
                 type="number"
                 value={data.audienceChair || ""}
                 onChange={update("audienceChair")}
               />
               <ErrorMsg msg={errors.audienceChair} />
+            </div>
+          )}
+
+          {showProjector && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Projector Required *"
+                type="number"   
+                value={data.projector || ""}
+                onChange={update("projector")}
+              />
+              <ErrorMsg msg={errors.projector} />
+            </div>
+          )}
+
+          {showSpeakerSystem && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Speaker System Required *"
+                type="number"
+                value={data.speakerSystem || ""}
+                onChange={update("speakerSystem")}
+              />
+              <ErrorMsg msg={errors.speakerSystem} />
+            </div>
+          )}
+
+          {showMicrophones && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Microphones Required *"
+                type="number"
+                value={data.microphones || ""}
+                onChange={update("microphones")}
+              />
+              <ErrorMsg msg={errors.microphones} />
+            </div>
+          )}
+
+          {showVideoConferencing && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Video Conferencing Required *"
+                type="number"
+                value={data.videoConferencing || ""}
+                onChange={update("videoConferencing")}
+              />
+              <ErrorMsg msg={errors.videoConferencing} />
+            </div>
+          )}
+
+          {showWhiteboardFlipchart && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Whiteboard/Flipchart Required *"
+                type="number"
+                value={data.whiteboardFlipchart || ""}
+                onChange={update("whiteboardFlipchart")}
+              />
+              <ErrorMsg msg={errors.whiteboardFlipchart} />
+            </div>
+          )}
+
+          {showPodium && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Podium Required *"
+                type="number"
+                value={data.podium || ""}
+                onChange={update("podium")}
+              />
+              <ErrorMsg msg={errors.podium} />
+            </div>
+          )}
+
+          {showStageSetup && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Stage Setup Required *"
+                type="number"
+                value={data.stageSetup || ""}
+                onChange={update("stageSetup")}
+              />
+              <ErrorMsg msg={errors.stageSetup} />
             </div>
           )}
         </div>

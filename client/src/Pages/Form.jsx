@@ -115,7 +115,7 @@ export default function Form() {
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
           <CurrentComponent
             nextStep={handleNext}
             prevStep={handleBack}
