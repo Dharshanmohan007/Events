@@ -65,11 +65,25 @@ const upcomingEvents = [
         department: 'CSE',
         acknowledgeStatus: 'Acknowledged',
     },
+    {
+        eventName: 'Welcome Freshers',
+        eventType: 'Seminar',
+        eventDate: '15-03-2026',
+        department: 'CSE',
+        acknowledgeStatus: 'Acknowledged',
+    },
+    {
+        eventName: 'Welcome Freshers',
+        eventType: 'Seminar',
+        eventDate: '15-03-2026',
+        department: 'CSE',
+        acknowledgeStatus: 'Acknowledged',
+    },
 ]
 
 const IctcsUpcomingEventsTable = () => {
     return (
-        <section className=" rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-full flex flex-col">
+        <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-[400px] flex flex-col">
             <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
                 <h2 className="text-white font-medium">Upcoming Events</h2>
 

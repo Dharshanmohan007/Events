@@ -1,3 +1,4 @@
+import React from 'react'
 import {
     CalendarRange,
     Check,
@@ -6,15 +7,14 @@ import {
 import calendarFill from '../../assets/calendarFill.svg'
 import hourglassFill from '../../assets/hourglassFill.svg'
 import tick from '../../assets/tick.svg'
-
-import React from 'react'
+import pattern from '../../assets/pattern.svg'
 
 const data = [
     {
         lable: 'Total Events',
         value: 50,
         icon: calendarFill,
-        bgColor: 'bg-gradient-to-r from-[#8b5cf6] to-[#8b5cf6]',
+        bgColor: 'bg-gradient-to-r from-[#684cc5] to-[#4546a5]',
         sideColor: 'bg-[#b89aff]',
         iconBg: 'bg-[#b89aff]',
     },
@@ -22,7 +22,7 @@ const data = [
         lable: 'Acknowledged Events',
         value: 50,
         icon: tick,
-        bgColor: 'bg-gradient-to-r from-[#3c3fbf] to-[#2252c3]',
+        bgColor: 'bg-gradient-to-r from-[#3d3cbc] to-[#1c439d]',
         sideColor: 'bg-[#818cf8]',
         iconBg: 'bg-[#8ea2ff]',
     },
@@ -30,7 +30,7 @@ const data = [
         lable: 'Pending Acknowledgements',
         value: 50,
         icon: hourglassFill,
-        bgColor: 'bg-gradient-to-r from-[#b22264] to-[#b61b42]',
+        bgColor: 'bg-gradient-to-r from-[#af2263] to-[#8d193c]',
         sideColor: 'bg-[#f472b6]',
         iconBg: 'bg-[#ff78a8]',
     },
@@ -38,7 +38,7 @@ const data = [
         lable: 'Completed Events',
         value: 50,
         icon: tick,
-        bgColor: 'bg-gradient-to-r from-[#077c5e] to-[#0c7a73]',
+        bgColor: 'bg-gradient-to-r from-[#07795c] to-[#0b5e5d]',
         sideColor: 'bg-[#34d399]',
         iconBg: 'bg-[#34d399]',
     },
@@ -53,6 +53,7 @@ const IctcsStatcard = () => {
                     className={`card h-20 rounded-lg flex ${item.bgColor} w-full`}
                     key={index}
                 >
+                    <img src={pattern} className="absolute inset-0 h-full w-full object-cover opacity-10" />
                     <div className={`side-box ${item.sideColor} h-full w-2 rounded-l-lg`} />
 
                     <div className="first-cotent-container flex h-fit items-start w-full justify-between px-4 mt-2">
