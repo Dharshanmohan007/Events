@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 
-export default function AudioForm({ onNextClick, handlePrevious }) {
+export default function AudioForm({ nextStep, handlePrevious }) {
   const [mainAudio, setMainAudio] = useState("");
   const [vistaAudio, setVistaAudio] = useState("");
 
   const [values, setValues] = useState({});
   const [selectedRequirements, setSelectedRequirements] = useState([]);
 
-  // 👉 NEXT BUTTON
+  
   const handleNextClick = () => {
     const selected = Object.keys(values).filter(
       (key) => values[key] === ""
@@ -17,14 +17,14 @@ export default function AudioForm({ onNextClick, handlePrevious }) {
 
     setSelectedRequirements(selected);
 
-    console.log("Next clicked"); // ✅ debug check
+    console.log("Next clicked"); 
 
-    if (onNextClick) {
-      onNextClick(); // 🔥 THIS moves to ICTS
+    if (nextStep) {
+      nextStep(); 
     }
   };
 
-  // 👉 BACK BUTTON
+ 
   const handlePrevClick = () => {
     if (handlePrevious) {
       handlePrevious();
@@ -33,7 +33,7 @@ export default function AudioForm({ onNextClick, handlePrevious }) {
 
   return (
     <>
-      {/* ===== Main Board Room ===== */}
+
       <div className="w-full p-4 sm:p-6 rounded-xl bg-[#1f1f38]">
         <h1 className="text-[#853ff9] font-bold mb-6">
           Main Board Room
@@ -66,7 +66,6 @@ export default function AudioForm({ onNextClick, handlePrevious }) {
         </div>
       </div>
 
-      {/* ===== Vista Hall ===== */}
       <div className="mt-8 w-full p-4 sm:p-6 rounded-xl bg-[#1f1f38]">
         <h1 className="text-[#853ff9] font-bold mb-6">
           Vista Hall
@@ -99,7 +98,7 @@ export default function AudioForm({ onNextClick, handlePrevious }) {
         </div>
       </div>
 
-      {/* ===== Buttons ===== */}
+    
       <div className="flex justify-between mt-10">
         <button
           onClick={handlePrevClick}
