@@ -3,7 +3,7 @@ import CustomSelect from "../CustomSelect";
 
 export default function EventRequirements({ nextStep, setSelectedRequirements }) {
   const [values, setValues] = useState({
-    venue: "", audio: "", icts: "", transport: "",
+    venue: "", icts: "", audio: "", transport: "",
     foodandrefreshments: "", accommodation: "", purchase: "", media: "",
   });
   const [errors, setErrors] = useState({});
