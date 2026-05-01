@@ -5,9 +5,13 @@ import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 
-export default function PickupForm( nextStep, handlePrevious) {
+export default function TransportForm( {nextStep, handlePrevious}) {
 
-   const handleNextClick = () => {
+   const [values, setValues] = useState({});
+    const [selectedRequirements, setSelectedRequirements] = useState([]);
+   
+
+    const handleNextClick = () => {
     const selected = Object.keys(values).filter(
       (key) => values[key] === ""
     );
