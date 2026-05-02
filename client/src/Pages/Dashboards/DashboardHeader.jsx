@@ -12,8 +12,8 @@ const DashboardHeader = () => {
 
                     <div className="navlins text-white flex items-center gap-4 text-sm">
                         <Link to="/dashboard-ictcs" className='border-b border-[#8B5CF6] text-[#8B5CF6] font-medium'>Dashboard</Link>
-                        <Link to="/Events" className='text-[#FFFFFF80]'>Events</Link>
-                        <Link to="/Reports" className='text-[#FFFFFF80]'>Reports</Link>
+                        <Link to="/dashboard-ictcs/events" className='text-[#FFFFFF80]'>Events</Link>
+                        <Link to="/dashboard-ictcs/reports" className='text-[#FFFFFF80]'>Reports</Link>
                     </div>
                 </div>
                 <div className="second-container flex items-center gap-6 ">

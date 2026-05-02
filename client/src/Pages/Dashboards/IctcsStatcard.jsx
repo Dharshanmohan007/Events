@@ -8,39 +8,42 @@ import calendarFill from '../../assets/calendarFill.svg'
 import hourglassFill from '../../assets/hourglassFill.svg'
 import tick from '../../assets/tick.svg'
 import pattern from '../../assets/pattern.svg'
-
+import circleTick from '../../assets/circle-tick.svg'
 const data = [
     {
         lable: 'Total Events',
         value: 50,
         icon: calendarFill,
-        bgColor: 'bg-gradient-to-r from-[#684cc5] to-[#4546a5]',
-        sideColor: 'bg-[#b89aff]',
+        bgColor: 'bg-gradient-to-r from-[#241d43] to-[#3d196b]',
+        sideColor: 'bg-[#654ec3]',
         iconBg: 'bg-[#b89aff]',
     },
     {
         lable: 'Acknowledged Events',
         value: 50,
         icon: tick,
-        bgColor: 'bg-gradient-to-r from-[#3d3cbc] to-[#1c439d]',
-        sideColor: 'bg-[#818cf8]',
-        iconBg: 'bg-[#8ea2ff]',
+        bgColor: 'bg-gradient-to-r from-[#171d3b] to-[#1b196c]',
+        sideColor: 'bg-[#6871ce]',
+        iconBg: 'bg-[#818cf8]',
+    },
+    {
+        lable: 'Completed Events',
+
+        value: 50,
+        icon: circleTick,
+
+        bgColor: 'bg-gradient-to-r from-[#162d36] to-[#146147]',
+        sideColor: 'bg-[#b6256a]',
+        iconBg: 'bg-[#34d399]',
+
     },
     {
         lable: 'Pending Acknowledgements',
         value: 50,
         icon: hourglassFill,
-        bgColor: 'bg-gradient-to-r from-[#af2263] to-[#8d193c]',
-        sideColor: 'bg-[#f472b6]',
+        bgColor: 'bg-gradient-to-r from-[#261e35] to-[#591941]',
+        sideColor: 'bg-[#08805e]',
         iconBg: 'bg-[#ff78a8]',
-    },
-    {
-        lable: 'Completed Events',
-        value: 50,
-        icon: tick,
-        bgColor: 'bg-gradient-to-r from-[#07795c] to-[#0b5e5d]',
-        sideColor: 'bg-[#34d399]',
-        iconBg: 'bg-[#34d399]',
     },
 ]
 
@@ -50,13 +53,13 @@ const IctcsStatcard = () => {
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
             {data.map((item, index) => (
                 <div
-                    className={`card h-20 rounded-lg flex ${item.bgColor} w-full`}
+                    className={`card relative h-20 overflow-hidden rounded-lg flex ${item.bgColor} w-full`}
                     key={index}
                 >
-                    <img src={pattern} className="absolute inset-0 h-full w-full object-cover opacity-10" />
-                    <div className={`side-box ${item.sideColor} h-full w-2 rounded-l-lg`} />
+                    <img src={pattern} className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-10" />
+                    <div className={`side-box relative ${item.sideColor} h-full w-2 rounded-l-lg`} />
 
-                    <div className="first-cotent-container flex h-fit items-start w-full justify-between px-4 mt-2">
+                    <div className="first-cotent-container relative flex h-fit items-start w-full justify-between px-4 mt-2">
                         <div>
                             <h1 className="text-white text-sm font-medium">{item.lable}</h1>
                             <h1 className="text-white text-lg font-semibold">{item.value}</h1>
