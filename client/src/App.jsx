@@ -1,10 +1,10 @@
 import './App.css'
 import { Routes, Route } from 'react-router-dom'
 import EventsForm from './Pages/EventsForm'
-import ICTCSDashboard from './Pages/Dashboards/ICTCSDashboard'
+import ICTCSDashboard from './Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard'
 import Login from './Pages/Login'
-import Events from './Pages/Events'
-import Reports from './Pages/Reports'
+import Events from './Pages/Dashboards/ICTC-Dashboard/Events'
+import Reports from './Pages/Dashboards/ICTC-Dashboard/Reports'
 
 function App() {
 

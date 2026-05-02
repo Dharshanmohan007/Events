@@ -1,9 +1,13 @@
 import React from 'react'
-import smallLogo from '../../assets/small-logo.svg'
+import smallLogo from '../../../assets/small-logo.svg'
 import { Search, Bell, CircleQuestionMark, Settings } from 'lucide-react'
-import profileAvatar from '../../assets/profile-avatar.svg'
-import { Link } from 'react-router-dom'
+import profileAvatar from '../../../assets/profile-avatar.svg'
+import { Link, useLocation } from 'react-router-dom'
 const DashboardHeader = () => {
+    const location = useLocation()
+
+    const isActive = (path) => location.pathname === path
+
     return (
         <>
             <section className='dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins '>
@@ -11,9 +15,9 @@ const DashboardHeader = () => {
                     <img src={smallLogo} alt="Small Logo" className='w-10 h-10' />
 
                     <div className="navlins text-white flex items-center gap-4 text-sm">
-                        <Link to="/dashboard-ictcs" className='border-b border-[#8B5CF6] text-[#8B5CF6] font-medium'>Dashboard</Link>
-                        <Link to="/dashboard-ictcs/events" className='text-[#FFFFFF80]'>Events</Link>
-                        <Link to="/dashboard-ictcs/reports" className='text-[#FFFFFF80]'>Reports</Link>
+                        <Link to="/dashboard-ictcs" className={`font-medium ${isActive('/dashboard-ictcs') ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Dashboard</Link>
+                        <Link to="/dashboard-ictcs/events" className={`font-medium ${isActive('/dashboard-ictcs/events') ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Events</Link>
+                        <Link to="/dashboard-ictcs/reports" className={`font-medium ${isActive('/dashboard-ictcs/reports') ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Reports</Link>
                     </div>
                 </div>
                 <div className="second-container flex items-center gap-6 ">

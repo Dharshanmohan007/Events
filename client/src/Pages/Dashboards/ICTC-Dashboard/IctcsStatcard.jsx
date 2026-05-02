@@ -4,11 +4,11 @@ import {
     Check,
     Hourglass,
 } from 'lucide-react'
-import calendarFill from '../../assets/calendarFill.svg'
-import hourglassFill from '../../assets/hourglassFill.svg'
-import tick from '../../assets/tick.svg'
-import pattern from '../../assets/pattern.svg'
-import circleTick from '../../assets/circle-tick.svg'
+import calendarFill from '../../../assets/calendarFill.svg'
+import hourglassFill from '../../../assets/hourglassFill.svg'
+import tick from '../../../assets/tick.svg'
+import pattern from '../../../assets/pattern.svg'
+import circleTick from '../../../assets/circle-tick.svg'
 const data = [
     {
         lable: 'Total Events',
@@ -33,7 +33,7 @@ const data = [
         icon: circleTick,
 
         bgColor: 'bg-gradient-to-r from-[#162d36] to-[#146147]',
-        sideColor: 'bg-[#b6256a]',
+        sideColor: 'bg-[#08805e]',
         iconBg: 'bg-[#34d399]',
 
     },
@@ -42,7 +42,8 @@ const data = [
         value: 50,
         icon: hourglassFill,
         bgColor: 'bg-gradient-to-r from-[#261e35] to-[#591941]',
-        sideColor: 'bg-[#08805e]',
+        sideColor: 'bg-[#b6256a]',
+      
         iconBg: 'bg-[#ff78a8]',
     },
 ]

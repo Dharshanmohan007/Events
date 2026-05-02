@@ -1,5 +1,6 @@
 import React from 'react'
 import { ArrowRight, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const upcomingEvents = [
     {
@@ -83,14 +84,14 @@ const upcomingEvents = [
 
 const IctcsUpcomingEventsTable = () => {
     return (
-        <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-[400px] flex flex-col">
+        <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-full flex flex-col">
             <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
                 <h2 className="text-white font-medium">Upcoming Events</h2>
 
-                <button className="flex items-center gap-2 text-[#853FF9] hover:text-[#a76df9] cursor-pointer text-sm font-medium">
+                <Link to="/dashboard-ictcs/events" className="flex items-center gap-2 text-[#853FF9] hover:text-[#a76df9] cursor-pointer text-sm font-medium">
                     View All
                     <ArrowRight size={16} />
-                </button>
+                </Link>
             </div>
 
             <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
@@ -122,11 +123,11 @@ const IctcsUpcomingEventsTable = () => {
                                     <td className="px-6 py-4">{event.department}</td>
                                     <td className="px-6 py-4">
                                         <span
-                                            className={`inline-flex items-center gap-2 ${isAcknowledged ? 'text-[#2D4AC2]' : 'text-[#B32058]'
+                                            className={`inline-flex items-center gap-2 ${isAcknowledged ? 'text-[#34D399]' : 'text-[#B32058]'
                                                 }`}
                                         >
                                             <span
-                                                className={`h-2 w-2 rounded-full ${isAcknowledged ? 'bg-[#2D4AC2]' : 'bg-[#B32058]'
+                                                className={`h-2 w-2 rounded-full ${isAcknowledged ? 'bg-[#34D399]' : 'bg-[#B32058]'
                                                     }`}
                                             />
                                             {event.acknowledgeStatus}
