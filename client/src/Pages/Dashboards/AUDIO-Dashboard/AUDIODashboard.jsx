@@ -112,6 +112,7 @@ const departmentData = [
 ]
 
 const AUDIODashboard = () => {
+    console.log("AUDIO Dashboard rendered") // Debug log to check rendering 
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen'>
