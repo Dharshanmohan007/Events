@@ -6,6 +6,7 @@ import AUDIODashboard from './Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard'
 import Login from './Pages/Login'
 import Events from './Pages/Dashboards/ICTC-Dashboard/Events'
 import Reports from './Pages/Dashboards/ICTC-Dashboard/Reports'
+import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
       <Route path='/dashboard-ictcs/events' element={<Events />} />
       <Route path='/dashboard-ictcs/reports' element={<Reports />} />
       <Route path='/dashboard-audio' element={<AUDIODashboard />} />
+      <Route path='/dashboard-transports' element={<TransportsDashboard />} />
     </Routes>
   )
 }

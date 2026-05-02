@@ -2,6 +2,8 @@ import React from 'react'
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+
+
 const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
     return (
         <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-full flex flex-col">
@@ -21,8 +23,8 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
                             <th className="px-6 py-4 font-semibold">Event Name</th>
                             <th className="px-6 py-4 font-semibold">Event Type</th>
                             <th className="px-6 py-4 font-semibold">Event Date</th>
-                            <th className="px-6 py-4 font-semibold">Department</th>
-                            <th className="px-6 py-4 font-semibold">Acknowledge Status</th>
+                            <th className="px-6 py-4 font-semibold">Dpt</th>
+                            <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-center">Action</th>
                         </tr>
                     </thead>
@@ -37,11 +39,11 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
                                     key={index}
                                     className="border-t border-[#20283a] text-sm text-white"
                                 >
-                                    <td className="px-6 py-4 font-medium">{event.eventName}</td>
-                                    <td className="px-6 py-4">{event.eventType}</td>
-                                    <td className="px-6 py-4">{event.eventDate}</td>
-                                    <td className="px-6 py-4">{event.department}</td>
-                                    <td className="px-6 py-4">
+                                    <td className="px-6 py-4 font-medium whitespace-nowrap">{event.eventName}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.eventDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">
                                         <span
                                             className={`inline-flex items-center gap-2 ${isAcknowledged ? 'text-[#34D399]' : 'text-[#B32058]'
                                                 }`}

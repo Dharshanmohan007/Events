@@ -141,7 +141,7 @@ const AUDIODashboard = () => {
                         {/* charts  */}
                         <DepartmentPieChart
                             data={departmentData}
-                            title="Sessions By Department"
+                            title="Events By Department"
                         />
                     </div>
 

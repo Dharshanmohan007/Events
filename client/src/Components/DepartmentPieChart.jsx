@@ -38,7 +38,7 @@ const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
                             className="h-3 w-3 rounded-sm"
                             style={{ backgroundColor: item.color }}
                         />
-                        <span className="text-xs font-semibold text-white">
+                        <span className="text-xs font-semibold text-white whitespace-nowrap">
                             {item.name}
                         </span>
                     </div>
