@@ -5,6 +5,8 @@
   font-family: 'Poppins';
 }
 
+
+
 .custom-scrollbar {
   overflow-y: auto;
 }
@@ -37,4 +39,25 @@ input::-webkit-inner-spin-button{
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE, Edge */
   scrollbar-width: none;     /* Firefox */
+}
+
+
+.table-custom-scrollbar {
+  overflow-y: auto;
+}
+
+/* WebKit */
+.table-custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.table-custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 6px;
+}
+
+/* Firefox */
+.table-custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d8d2dab6 transparent;
 }
