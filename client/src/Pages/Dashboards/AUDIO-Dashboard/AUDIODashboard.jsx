@@ -1,10 +1,10 @@
 import React from 'react'
-import DashboardHeader from './DashboardHeader'
+import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import DepartmentPieChart from '../../../Components/DepartmentPieChart'
 
-// ICTC Dashboard specific data
+// AUDIO Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
 import tick from '../../../assets/tick.svg'
@@ -12,32 +12,32 @@ import circleTick from '../../../assets/circle-tick.svg'
 
 const statCardData = [
     {
-        lable: 'Total Events',
-        value: 50,
+        lable: 'Total Sessions',
+        value: 120,
         icon: calendarFill,
         bgColor: 'bg-gradient-to-r from-[#241d43] to-[#3d196b]',
         sideColor: 'bg-[#654ec3]',
         iconBg: 'bg-[#b89aff]',
     },
     {
-        lable: 'Acknowledged Events',
-        value: 50,
+        lable: 'Active Sessions',
+        value: 45,
         icon: tick,
         bgColor: 'bg-gradient-to-r from-[#171d3b] to-[#1b196c]',
         sideColor: 'bg-[#6871ce]',
         iconBg: 'bg-[#818cf8]',
     },
     {
-        lable: 'Completed Events',
-        value: 50,
+        lable: 'Completed Sessions',
+        value: 65,
         icon: circleTick,
         bgColor: 'bg-gradient-to-r from-[#162d36] to-[#146147]',
         sideColor: 'bg-[#08805e]',
         iconBg: 'bg-[#34d399]',
     },
     {
-        lable: 'Pending Acknowledgements',
-        value: 50,
+        lable: 'Scheduled Sessions',
+        value: 10,
         icon: hourglassFill,
         bgColor: 'bg-gradient-to-r from-[#261e35] to-[#591941]',
         sideColor: 'bg-[#b6256a]',
@@ -47,103 +47,82 @@ const statCardData = [
 
 const upcomingEvents = [
     {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventName: 'Audio Mixing Workshop',
+        eventType: 'Workshop',
+        eventDate: '20-03-2026',
+        department: 'Audio Eng.',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventName: 'Sound Design Masterclass',
+        eventType: 'Masterclass',
+        eventDate: '22-03-2026',
+        department: 'Media',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventName: 'Podcast Recording Session',
+        eventType: 'Recording',
+        eventDate: '25-03-2026',
+        department: 'Broadcasting',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventName: 'Live Sound Engineering',
+        eventType: 'Training',
+        eventDate: '28-03-2026',
+        department: 'Audio Eng.',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Welcome Freshers',
+        eventName: 'Music Production Seminar',
         eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventDate: '01-04-2026',
+        department: 'Music',
+        acknowledgeStatus: 'Acknowledged',
+    },
+    {
+        eventName: 'Voice Over Workshop',
+        eventType: 'Workshop',
+        eventDate: '05-04-2026',
+        department: 'Broadcasting',
+        acknowledgeStatus: 'Acknowledged',
+    },
+    {
+        eventName: 'Audio Post-Production',
+        eventType: 'Training',
+        eventDate: '08-04-2026',
+        department: 'Media',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Welcome Freshers',
+        eventName: 'Spatial Audio Seminar',
         eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
+        eventDate: '10-04-2026',
+        department: 'Audio Eng.',
         acknowledgeStatus: 'Acknowledged',
     },
 ]
 
 const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
+    { name: 'Audio Eng.', value: 35, color: '#74b9ff' },
+    { name: 'Media', value: 30, color: '#159283' },
+    { name: 'Broadcasting', value: 20, color: '#68df85' },
+    { name: 'Music', value: 15, color: '#4169e1' },
 ]
 
-const ICTCSDashboard = () => {
+const AUDIODashboard = () => {
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen'>
                 {/* header  */}
-                <DashboardHeader />
+                <DashboardHeader basePath="/dashboard-audio" />
 
                 {/* main-container  */}
                 <div className='main-body-container  px-6 '>
                     {/* heading */}
                     <div className="heading mt-2">
-                        <h1 className='text-white text-lg font-medium'>ICTCS Dashboard Overview</h1>
+                        <h1 className='text-white text-lg font-medium'>AUDIO Dashboard Overview</h1>
                         <h1 className='text-[#FFFFFF80] text-sm'>Lorem Ipsumis simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</h1>
                     </div>
 
@@ -153,13 +132,15 @@ const ICTCSDashboard = () => {
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
                         {/* table  */}
-                        <UpcomingEventsTable 
-                            events={upcomingEvents} 
-                            viewAllLink="/dashboard-ictcs/events"
+                        <UpcomingEventsTable
+                            events={upcomingEvents}
+                            viewAllLink="/dashboard-audio/events"
+                            title="Upcoming Events"
                         />
                         {/* charts  */}
-                        <DepartmentPieChart 
-                            data={departmentData} 
+                        <DepartmentPieChart
+                            data={departmentData}
+                            title="Sessions By Department"
                         />
                     </div>
 
@@ -169,4 +150,4 @@ const ICTCSDashboard = () => {
     )
 }
 
-export default ICTCSDashboard
+export default AUDIODashboard
