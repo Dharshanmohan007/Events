@@ -230,7 +230,7 @@ export default function TransportForm( {nextStep, handlePrevious}) {
             <label className="text-sm text-gray-300">
               Drop Location *
             </label>
-            <div className="flex items-center bg-[#1f1f38] mt-1 px-4 py-2 rounded-lg border border-gray-600">
+            <div className="flex items-cnpm rundenter bg-[#1f1f38] mt-1 px-4 py-2 rounded-lg border border-gray-600">
               <MapPin size={18} className="text-gray-400 mr-2" />
               <input
                 type="text"

@@ -15,7 +15,7 @@ export default function CustomInput({
 
   return (
     <div className="relative w-full ">
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38]   z-10 pointer-events-none">
+      <span className="absolute left-3 -top-[9px] text-xs text-white px-1    z-10 pointer-events-none">
         {label}
       </span>
 
