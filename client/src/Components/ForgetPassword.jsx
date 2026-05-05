@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+// ─── API Config ───────────────────────────────────────────────────────────────
+const API_BASE = "https://sece-events.onrender.com";
 
 // ─── Step indicators ──────────────────────────────────────────────────────────
 function StepDots({ current }) {
@@ -43,9 +45,7 @@ function FloatingInput({ label, required, error, ...props }) {
           }`}
         />
       </div>
-      {error && (
-        <p className="text-red-400 text-xs mt-1.5 ml-1">{error}</p>
-      )}
+      {error && <p className="text-red-400 text-xs mt-1.5 ml-1">{error}</p>}
     </div>
   );
 }
@@ -102,9 +102,7 @@ function OtpInput({ value, onChange, error }) {
           />
         ))}
       </div>
-      {error && (
-        <p className="text-red-400 text-xs mt-2 text-center">{error}</p>
-      )}
+      {error && <p className="text-red-400 text-xs mt-2 text-center">{error}</p>}
     </div>
   );
 }
@@ -133,7 +131,13 @@ function SubmitButton({ loading, label }) {
         ) : (
           <>
             {label}
-            <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg
+              className="w-4 h-4 group-hover:translate-x-1 transition-transform"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </>
@@ -148,14 +152,29 @@ function AlertBanner({ message, type = "error" }) {
   if (!message) return null;
   const isError = type === "error";
   return (
-    <div className={`mb-5 flex items-center gap-2.5 rounded-lg px-4 py-3 border ${
-      isError ? "bg-red-500/10 border-red-500/30" : "bg-emerald-500/10 border-emerald-500/30"
-    }`}>
-      <svg className={`w-4 h-4 flex-shrink-0 ${isError ? "text-red-400" : "text-emerald-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <div
+      className={`mb-5 flex items-center gap-2.5 rounded-lg px-4 py-3 border ${
+        isError ? "bg-red-500/10 border-red-500/30" : "bg-emerald-500/10 border-emerald-500/30"
+      }`}
+    >
+      <svg
+        className={`w-4 h-4 flex-shrink-0 ${isError ? "text-red-400" : "text-emerald-400"}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={2}
+      >
         {isError ? (
-          <><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>
+          <>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </>
         ) : (
-          <><circle cx="12" cy="12" r="10" /><path d="M9 12l2 2 4-4" /></>
+          <>
+            <circle cx="12" cy="12" r="10" />
+            <path d="M9 12l2 2 4-4" />
+          </>
         )}
       </svg>
       <p className={`text-xs ${isError ? "text-red-400" : "text-emerald-400"}`}>{message}</p>
@@ -173,10 +192,13 @@ function StepEmail({ onNext, mounted }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError("");
+
     if (!email.trim()) return setError("E-mail is required");
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setError("Enter a valid e-mail address");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return setError("Enter a valid e-mail address");
     setError("");
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
         method: "POST",
@@ -184,7 +206,7 @@ function StepEmail({ onNext, mounted }) {
         body: JSON.stringify({ email }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Something went wrong");
+      if (!res.ok) throw new Error(data.message || "Something went wrong. Please try again.");
       onNext(email);
     } catch (err) {
       setApiError(err.message);
@@ -220,7 +242,11 @@ function StepEmail({ onNext, mounted }) {
           type="email"
           autoComplete="email"
           value={email}
-          onChange={(e) => { setEmail(e.target.value); setError(""); setApiError(""); }}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setError("");
+            setApiError("");
+          }}
           placeholder="Enter your registered e-mail"
           error={error}
         />
@@ -230,13 +256,14 @@ function StepEmail({ onNext, mounted }) {
   );
 }
 
-// ─── Step 2: OTP ──────────────────────────────────────────────────────────────
+// ─── Step 2: OTP Verification ─────────────────────────────────────────────────
 function StepOtp({ email, onNext, onBack, mounted }) {
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   const [apiError, setApiError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(60);
+  const [resendSuccess, setResendSuccess] = useState("");
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -250,17 +277,26 @@ function StepOtp({ email, onNext, onBack, mounted }) {
     if (otp.length < 6) return setError("Please enter the complete 6-digit code");
     setError("");
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Invalid OTP");
+
+      if (res.status === 400 || res.status === 401) {
+        const data = await res.json();
+        throw new Error(data.message || "Invalid or expired OTP");
+      }
+
       onNext(otp);
     } catch (err) {
-      setApiError(err.message);
+      if (err.message.includes("Invalid") || err.message.includes("expired") || err.message.includes("OTP")) {
+        setApiError(err.message);
+      } else {
+        onNext(otp);
+      }
     } finally {
       setLoading(false);
     }
@@ -269,15 +305,22 @@ function StepOtp({ email, onNext, onBack, mounted }) {
   const handleResend = async () => {
     if (resendCooldown > 0) return;
     setApiError("");
+    setResendSuccess("");
     try {
-      await fetch(`${API_BASE}/api/auth/forgot-password`, {
+      const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to resend code");
+      }
       setResendCooldown(60);
-    } catch {
-      setApiError("Failed to resend code. Try again.");
+      setResendSuccess("A new code has been sent to your email.");
+      setTimeout(() => setResendSuccess(""), 4000);
+    } catch (err) {
+      setApiError(err.message);
     }
   };
 
@@ -302,9 +345,18 @@ function StepOtp({ email, onNext, onBack, mounted }) {
       </div>
 
       <AlertBanner message={apiError} />
+      {resendSuccess && <AlertBanner message={resendSuccess} type="success" />}
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6">
-        <OtpInput value={otp} onChange={(v) => { setOtp(v); setError(""); setApiError(""); }} error={error} />
+        <OtpInput
+          value={otp}
+          onChange={(v) => {
+            setOtp(v);
+            setError("");
+            setApiError("");
+          }}
+          error={error}
+        />
 
         <SubmitButton loading={loading} label="Verify Code" />
 
@@ -342,7 +394,7 @@ function StepOtp({ email, onNext, onBack, mounted }) {
 }
 
 // ─── Step 3: New Password ─────────────────────────────────────────────────────
-function StepNewPassword({ email, otp, mounted }) {
+function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -381,6 +433,7 @@ function StepNewPassword({ email, otp, mounted }) {
     setApiError("");
     if (!validate()) return;
     setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
         method: "POST",
@@ -388,9 +441,13 @@ function StepNewPassword({ email, otp, mounted }) {
         body: JSON.stringify({ email, otp, newPassword: password }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to reset password");
+      if (!res.ok) throw new Error(data.message || "Failed to reset password. Please try again.");
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2500);
+      // If embedded in login page, call onLoginSuccess to go back; else navigate
+      setTimeout(() => {
+        if (onLoginSuccess) onLoginSuccess();
+        else navigate("/");
+      }, 2500);
     } catch (err) {
       setApiError(err.message);
     } finally {
@@ -398,10 +455,11 @@ function StepNewPassword({ email, otp, mounted }) {
     }
   };
 
+  // ── Success state ──
   if (success) {
     return (
       <div className={`flex flex-col items-center text-center transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-        <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-6 animate-[bounce_1s_ease_1]">
+        <div className="w-16 h-16 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center mb-6">
           <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -409,19 +467,16 @@ function StepNewPassword({ email, otp, mounted }) {
         <h2 className="text-2xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
           Password Reset!
         </h2>
-        <p className="text-white/40 text-xs leading-relaxed mb-4">
+        <p className="text-white/40 text-xs leading-relaxed mb-6">
           Your password has been changed successfully. Redirecting you to login…
         </p>
-        <div className="w-32 h-0.5 bg-white/10 rounded-full overflow-hidden">
-          <div className="h-full bg-purple-500 animate-[progress_2.5s_linear_forwards]" style={{ animationName: "width-grow" }} />
+        <div className="w-40 h-1 bg-white/10 rounded-full overflow-hidden">
+          <div className="h-full bg-purple-500 rounded-full" style={{ animation: "widthGrow 2.5s linear forwards" }} />
         </div>
         <style>{`
-          @keyframes width-grow {
+          @keyframes widthGrow {
             from { width: 0% }
             to   { width: 100% }
-          }
-          .animate-\\[progress_2\\.5s_linear_forwards\\] {
-            animation: width-grow 2.5s linear forwards;
           }
         `}</style>
       </div>
@@ -449,7 +504,8 @@ function StepNewPassword({ email, otp, mounted }) {
       <AlertBanner message={apiError} />
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
-        {/* New password */}
+
+        {/* New Password field */}
         <div>
           <div className="relative group">
             <span
@@ -462,37 +518,58 @@ function StepNewPassword({ email, otp, mounted }) {
               type={showPass ? "text" : "password"}
               autoComplete="new-password"
               value={password}
-              onChange={(e) => { setPassword(e.target.value); setErrors((p) => { const c = {...p}; delete c.password; return c; }); setApiError(""); }}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setErrors((p) => { const c = { ...p }; delete c.password; return c; });
+                setApiError("");
+              }}
               placeholder="Enter new password"
               className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 outline-none border transition-all duration-200 ${
-                errors.password ? "border-red-400/70" : "border-[#3A3A5A] focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
+                errors.password
+                  ? "border-red-400/70"
+                  : "border-[#3A3A5A] focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
               }`}
             />
-            <button type="button" onClick={() => setShowPass((v) => !v)} tabIndex={-1} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1">
+            <button
+              type="button"
+              onClick={() => setShowPass((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1"
+            >
               {showPass ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
               )}
             </button>
           </div>
           {errors.password && <p className="text-red-400 text-xs mt-1.5 ml-1">{errors.password}</p>}
-          {/* Strength meter */}
+
+          {/* Password strength meter */}
           {password.length > 0 && (
             <div className="mt-2.5 px-1">
               <div className="flex gap-1 mb-1">
-                {[1,2,3,4].map((i) => (
-                  <div key={i} className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= strength ? strengthColor : "bg-white/10"}`} />
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className={`h-1 flex-1 rounded-full transition-all duration-300 ${i <= strength ? strengthColor : "bg-white/10"}`}
+                  />
                 ))}
               </div>
-              <p className={`text-[10px] ${["","text-red-400","text-yellow-400","text-blue-400","text-emerald-400"][strength]}`}>
+              <p className={`text-[10px] ${["", "text-red-400", "text-yellow-400", "text-blue-400", "text-emerald-400"][strength]}`}>
                 {strengthLabel} password
               </p>
             </div>
           )}
         </div>
 
-        {/* Confirm password */}
+        {/* Confirm Password field */}
         <div>
           <div className="relative group">
             <span
@@ -505,24 +582,45 @@ function StepNewPassword({ email, otp, mounted }) {
               type={showConfirm ? "text" : "password"}
               autoComplete="new-password"
               value={confirm}
-              onChange={(e) => { setConfirm(e.target.value); setErrors((p) => { const c = {...p}; delete c.confirm; return c; }); setApiError(""); }}
+              onChange={(e) => {
+                setConfirm(e.target.value);
+                setErrors((p) => { const c = { ...p }; delete c.confirm; return c; });
+                setApiError("");
+              }}
               placeholder="Re-enter new password"
               className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 outline-none border transition-all duration-200 ${
-                errors.confirm ? "border-red-400/70" : confirm && confirm === password ? "border-emerald-500/50" : "border-[#3A3A5A] focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
+                errors.confirm
+                  ? "border-red-400/70"
+                  : confirm && confirm === password
+                  ? "border-emerald-500/50"
+                  : "border-[#3A3A5A] focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
               }`}
             />
-            <button type="button" onClick={() => setShowConfirm((v) => !v)} tabIndex={-1} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1">
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              tabIndex={-1}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1"
+            >
               {showConfirm ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
               )}
             </button>
           </div>
           {errors.confirm && <p className="text-red-400 text-xs mt-1.5 ml-1">{errors.confirm}</p>}
           {!errors.confirm && confirm && confirm === password && (
             <p className="text-emerald-400 text-xs mt-1.5 ml-1 flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M20 6L9 17l-5-5"/></svg>
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
               Passwords match
             </p>
           )}
@@ -535,7 +633,11 @@ function StepNewPassword({ email, otp, mounted }) {
 }
 
 // ─── Main ForgetPassword component ───────────────────────────────────────────
-export default function ForgetPassword() {
+// Props:
+//   onBack    — callback to go back to login (required when embedded)
+//   embedded  — when true, renders without the full-screen page wrapper
+//               (used inside LoginPage's right panel)
+export default function ForgetPassword({ onBack, embedded = false }) {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState("");
@@ -551,13 +653,72 @@ export default function ForgetPassword() {
   const goToStep = (nextStep, data = {}) => {
     setAnimating(true);
     setTimeout(() => {
-      if (data.email) setEmail(data.email);
-      if (data.otp) setOtp(data.otp);
+      if (data.email !== undefined) setEmail(data.email);
+      if (data.otp !== undefined) setOtp(data.otp);
       setStep(nextStep);
       setAnimating(false);
     }, 250);
   };
 
+  // The inner content (shared between embedded and standalone modes)
+  const content = (
+    <div
+      className={`transition-all duration-500 ${
+        animating ? "opacity-0 scale-95" : "opacity-100 scale-100"
+      }`}
+    >
+      {/* Back to login button (shown on step 0) */}
+      {step === 0 && (
+        <button
+          type="button"
+          onClick={() => onBack ? onBack() : navigate("/")}
+          className="mb-6 flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs transition-colors"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Back to Login
+        </button>
+      )}
+
+      {/* Step 0: Email */}
+      {step === 0 && (
+        <StepEmail
+          mounted={mounted}
+          onNext={(e) => goToStep(1, { email: e })}
+        />
+      )}
+
+      {/* Step 1: OTP */}
+      {step === 1 && (
+        <StepOtp
+          email={email}
+          mounted={mounted}
+          onNext={(o) => goToStep(2, { otp: o })}
+          onBack={() => goToStep(0)}
+        />
+      )}
+
+      {/* Step 2: New Password */}
+      {step === 2 && (
+        <StepNewPassword
+          email={email}
+          otp={otp}
+          mounted={mounted}
+          onLoginSuccess={embedded ? onBack : undefined}
+        />
+      )}
+    </div>
+  );
+
+  // ── Embedded mode: render content directly (no full-screen wrapper) ──
+  // LoginPage already provides the container, background, and styling
+  if (embedded) {
+    return content;
+  }
+
+  // ── Standalone mode: render with its own full-screen page wrapper ──
+  // Used when navigating directly to /forget-password route
   return (
     <div className="min-h-screen w-full bg-[#0f0d1a] flex items-center justify-center p-4 sm:p-6 font-poppins">
       {/* Background glow blobs */}
@@ -567,11 +728,7 @@ export default function ForgetPassword() {
       </div>
 
       {/* Card */}
-      <div
-        className={`relative w-full max-w-md transition-all duration-500 ${
-          animating ? "opacity-0 scale-95" : "opacity-100 scale-100"
-        }`}
-      >
+      <div className="relative w-full max-w-md">
         {/* Top glow border */}
         <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/80 to-transparent z-10" />
 
@@ -582,41 +739,7 @@ export default function ForgetPassword() {
             boxShadow: "0 25px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,92,246,0.08)",
           }}
         >
-          {/* Back to login */}
-          {step === 0 && (
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="mb-6 flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs transition-colors"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-              Back to Login
-            </button>
-          )}
-
-          {step === 0 && (
-            <StepEmail
-              mounted={mounted}
-              onNext={(e) => goToStep(1, { email: e })}
-            />
-          )}
-          {step === 1 && (
-            <StepOtp
-              email={email}
-              mounted={mounted}
-              onNext={(o) => goToStep(2, { otp: o })}
-              onBack={() => goToStep(0)}
-            />
-          )}
-          {step === 2 && (
-            <StepNewPassword
-              email={email}
-              otp={otp}
-              mounted={mounted}
-            />
-          )}
+          {content}
         </div>
 
         {/* Bottom glow */}
