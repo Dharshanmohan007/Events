@@ -254,8 +254,6 @@ function validateOrganizerSection(state) {
 function validateEventDetails(data = {}, days = []) {
   const e = {};
   if (!data.eventName?.trim()) e.eventName = "Event name is required";
-  if (!data.tagging) e.tagging = "Tagging is required";
-  if (!data.taggingDetails?.trim()) e.taggingDetails = "Tagging details are required";
   if (!data.eventType) e.eventType = "Event type is required";
 
   if (data.eventType === "Other" && !data.eventTypeOther?.trim())
@@ -397,8 +395,13 @@ export default function EventRequisitionDetails({
   };
 
   const handleNextWithValidation = async (selectedReqs) => {
+    console.log('handleNextWithValidation called with selectedReqs:', selectedReqs);
+    console.log('Current user:', user);
+    console.log('Current eventData:', eventData);
+    console.log('Current eventDays:', eventDays);
 
     if (!user?._id) {
+      console.error('User not authenticated');
       setApiError("User not authenticated. Please login again.");
       return;
     }
@@ -407,17 +410,21 @@ export default function EventRequisitionDetails({
       doc, file, reason, budget, finance, department,
       numOrganizers, organizers,
     });
+    console.log('Organizer errors:', oErr);
 
     const eErr = validateEventDetails(eventData, eventDays);
+    console.log('Event errors:', eErr);
 
     setOrgErrors(oErr);
     setEventErrors(eErr);
 
     if (Object.keys(oErr).length > 0 || Object.keys(eErr).length > 0) {
+      console.log('Validation failed, scrolling to top');
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
+    console.log('Validation passed, proceeding with API call');
     setIsLoading(true);
     setApiError("");
 
@@ -430,19 +437,26 @@ export default function EventRequisitionDetails({
         requirements: selectedReqs,
         user
       });
+      console.log('Payload built:', payload);
 
       const response = await fetch(`${BASE_URL}/api/events`, {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
         body: payload,
       });
 
+      console.log('API response status:', response.status);
       const data = await response.json();
+      console.log('API response data:', data);
 
       if (!response.ok) {
         throw new Error(data.message || `Server error: ${response.status}`);
       }
 
       const eventId = data.data?._id;
+      console.log('Event created successfully, ID:', eventId);
       if (eventId && setEventId) {
         setEventId(eventId);
       }
@@ -451,6 +465,7 @@ export default function EventRequisitionDetails({
       nextStep();
 
     } catch (err) {
+      console.error('API Error:', err.message);
       setApiError(err.message || "Failed to save event. Please try again.");
     } finally {
       setIsLoading(false);

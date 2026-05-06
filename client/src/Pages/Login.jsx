@@ -348,7 +348,6 @@ export default function LoginPage({ onLoginSuccess }) {
                             value={email}
                             onChange={(e) => handleFieldChange("email", e.target.value)}
                             placeholder="Enter Your E-mail id here"
-                            labelBg="#1E1E35"
                             className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
                               fieldErrors.email ? "border-red-400/70" : "border-[#3A3A5A]"
                             }`}
@@ -371,7 +370,6 @@ export default function LoginPage({ onLoginSuccess }) {
                             value={password}
                             onChange={(e) => handleFieldChange("password", e.target.value)}
                             placeholder="Enter Your Password here"
-                            labelBg="#1E1E35"
                             className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
                               fieldErrors.password ? "border-red-400/70" : "border-[#3A3A5A]"
                             }`}

@@ -923,7 +923,6 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], onVenueD
     setVenueData((prev) => {
       const updated = [...prev];
       updated[currentDayIndex] = { ...updated[currentDayIndex], ...newData };
-      if (onVenueDataChange) onVenueDataChange(updated);
       return updated;
     });
   };
@@ -953,10 +952,15 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], onVenueD
       const cards = [...(data[currentDayIndex].venueCards || [])];
       cards[cardIndex] = updated;
       data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
-      if (onVenueDataChange) onVenueDataChange(data);
       return data;
     });
   };
+
+  useEffect(() => {
+    if (onVenueDataChange) {
+      onVenueDataChange(venueData);
+    }
+  }, [venueData, onVenueDataChange]);
 
   const isLastDay = currentDayIndex === eventDays.length - 1;
 
@@ -982,13 +986,19 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], onVenueD
         const payload = buildVenuePayload(allCompletedData);
 
         const id = eventId || '';
+        console.log('Sending venue details to backend for event ID:', id, payload);
         const response = await fetch(`${BASE_URL}/api/events/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
           body: JSON.stringify({ venueDetails: payload }),
         });
 
+        console.log('Venue API response status:', response.status);
         const data = await response.json();
+        console.log('Venue API response data:', data);
 
         if (!response.ok) {
           throw new Error(data.message || `Server error: ${response.status}`);

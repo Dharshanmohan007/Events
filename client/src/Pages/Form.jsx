@@ -10,12 +10,27 @@ import AccommodationForm from "../Components/Forms/AccommodationForm";
 import Purchase from "../Components/Forms/Purchase";
 import MediaForm from "../Components/Forms/MediaForm";
 import AudioForm from "../Components/Forms/AudioForm";
+import { useAuth } from "../Components/AuthContext";
 
 export default function Form() {
+  const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
   const [eventDays, setEventDays] = useState([]);
+  const [eventId, setEventId] = useState("");
+  const [eventRequisition, setEventRequisition] = useState({
+    doc: "",
+    finance: "",
+    budget: "",
+    department: "",
+    file: null,
+    reason: "",
+    numOrganizers: "",
+    organizers: [],
+    eventData: {},
+    eventDays: [],
+  });
 
   // Shared cross-form state
   const [venueData, setVenueData] = useState([]); // passed from VenueForm → IctsForm
@@ -89,6 +104,7 @@ export default function Form() {
 
   // Extra props per step key
   const extraProps = {
+    event: { user, eventRequisition, setEventRequisition, setEventDays },
     venue: { onVenueDataChange: setVenueData },
     icts: { venueData },
   };
@@ -136,6 +152,8 @@ export default function Form() {
             setSelectedRequirements={setSelectedRequirements}
             eventDays={eventDays}
             setEventDays={setEventDays}
+            eventId={eventId}
+            setEventId={setEventId}
             {...(extraProps[currentStepKey] || {})}
           />
         </div>
