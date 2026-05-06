@@ -1,34 +1,41 @@
 import React, { useState, forwardRef } from "react";
 import DatePicker from "react-datepicker";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Trash2 } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 
-// Date Input
-const DateInput = forwardRef(({ value, label }, ref) => (
+// ✅ DATE INPUT (FIXED)
+const DateInput = forwardRef(({ value, onClick, label }, ref) => (
   <div className="relative w-full">
-    <CustomInput
+    <input
       ref={ref}
-      label={label}
       value={value || ""}
-      onChange={() => {}}
-      type="text"
-      className="pr-10"
       readOnly
+      placeholder={label}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="w-full p-3 rounded-lg bg-[#2a2a4a] text-white pr-10 cursor-pointer"
     />
+
     <CalendarDays
       size={18}
-      className="absolute right-3 bottom-3 text-gray-400 pointer-events-none"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className="absolute right-3 top-3 text-gray-400 cursor-pointer"
     />
   </div>
 ));
 
 export default function FoodAndRefreshments({ nextStep, handlePrevious }) {
 
-  // ✅ create fresh form
   const createForm = () => ({
+    id: Date.now() + Math.random(), // ✅ UNIQUE KEY
     date: null,
     resourceType: "",
     resourcePersons: "",
@@ -36,7 +43,6 @@ export default function FoodAndRefreshments({ nextStep, handlePrevious }) {
     staffName: "",
     mobileNumber: "",
     foodType: "",
-
     breakfast: {
       vegParticipants: "",
       vegGuest: "",
@@ -59,94 +65,124 @@ export default function FoodAndRefreshments({ nextStep, handlePrevious }) {
 
   const [forms, setForms] = useState([createForm()]);
 
-  // ✅ handle change
-  const handleChange = (index, field, value, section) => {
-    const updated = [...forms];
+  // ✅ SAFE STATE UPDATE
+  const handleChange = (id, field, value, section) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
 
-    if (section) {
-      updated[index][section][field] = value;
-    } else {
-      updated[index][field] = value;
-    }
+        if (section) {
+          return {
+            ...form,
+            [section]: {
+              ...form[section],
+              [field]: value,
+            },
+          };
+        }
 
-    setForms(updated);
+        return { ...form, [field]: value };
+      })
+    );
   };
 
-  // ✅ ADD BELOW CURRENT CONTAINER
-  const handleAdd = (index) => {
-    const updated = [...forms];
-    updated.splice(index + 1, 0, createForm());
-    setForms(updated);
+  // ✅ ADD
+  const handleAdd = () => {
+    setForms((prev) => [...prev, createForm()]);
+  };
+
+  // ✅ DELETE
+  const handleDelete = (id) => {
+    setForms((prev) => prev.filter((f) => f.id !== id));
   };
 
   return (
     <div className="w-full">
 
       {forms.map((form, index) => (
-        <div key={index} className="bg-[#1f1f38] rounded-lg mb-5">
+        <div key={form.id} className="bg-[#1f1f38] rounded-lg mb-5">
 
-          {/* ✅ ADD BUTTON PER CONTAINER */}
+          {/* BUTTON */}
           <div className="flex justify-end p-4 pb-0">
-            <button
-              onClick={() => handleAdd(index)}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl
-                         bg-gradient-to-r from-purple-500 to-purple-600
-                         text-white text-sm font-semibold
-                         shadow-[0_6px_20px_rgba(168,85,247,0.4)]"
-            >
-              <span className="text-lg">+</span>
-              Add
-            </button>
+            {index === 0 ? (
+              <button
+                onClick={handleAdd}
+                className="px-5 py-2 rounded-xl bg-purple-600 text-white"
+              >
+                + Add
+              </button>
+            ) : (
+              <button
+                onClick={() => handleDelete(form.id)}
+                className="p-2 rounded-full bg-[#ffd6d6] text-red-500"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
 
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
 
+            {/* DATE PICKER */}
             <DatePicker
               selected={form.date}
-              onChange={(date) => handleChange(index, "date", date)}
+              onChange={(date) =>
+                handleChange(form.id, "date", date)
+              }
               customInput={<DateInput label="Select Date *" />}
             />
 
             <CustomSelect
               label="Type of resource Person *"
               value={form.resourceType}
-              onChange={(val) => handleChange(index, "resourceType", val)}
+              onChange={(val) =>
+                handleChange(form.id, "resourceType", val)
+              }
               options={["VIP", "Trainer", "Placement"]}
             />
 
             <CustomInput
               label="Total number of resource Person *"
               value={form.resourcePersons}
-              onChange={(val) => handleChange(index, "resourcePersons", val)}
+              onChange={(e) =>
+                handleChange(form.id, "resourcePersons", e.target.value)
+              }
               type="number"
             />
 
             <CustomInput
               label="Total number of Internal Accompanying Person *"
               value={form.internalCount}
-              onChange={(val) => handleChange(index, "internalCount", val)}
+              onChange={(e) =>
+                handleChange(form.id, "internalCount", e.target.value)
+              }
               type="number"
             />
 
             <CustomInput
               label="Internal Accompanying staff name *"
               value={form.staffName}
-              onChange={(val) => handleChange(index, "staffName", val)}
-              type="text"
+              onChange={(e) =>
+                handleChange(form.id, "staffName", e.target.value)
+              }
             />
 
             <CustomInput
               label="Internal Accompanying staff Mobile number *"
               value={form.mobileNumber}
-              onChange={(val) => handleChange(index, "mobileNumber", val)}
+              onChange={(e) =>
+                handleChange(form.id, "mobileNumber", e.target.value)
+              }
               type="number"
             />
 
-            <div className="col-span-1 md:col-span-2">
+            <div className="col-span-2">
               <CustomSelect
                 label="Food Type *"
                 value={form.foodType}
-                onChange={(val) => handleChange(index, "foodType", val)}
+                onChange={(val) =>
+                  handleChange(form.id, "foodType", val)
+                }
                 options={[
                   "Breakfast",
                   "Lunch",
@@ -157,39 +193,29 @@ export default function FoodAndRefreshments({ nextStep, handlePrevious }) {
               />
             </div>
 
-            {/* BREAKFAST */}
             <Meal
               title="Breakfast"
               data={form.breakfast}
-              onChange={(f, v) => handleChange(index, f, v, "breakfast")}
+              onChange={(f, v) =>
+                handleChange(form.id, f, v, "breakfast")
+              }
             />
 
-            {/* LUNCH */}
             <Meal
               title="Lunch"
               data={form.lunch}
-              onChange={(f, v) => handleChange(index, f, v, "lunch")}
+              onChange={(f, v) =>
+                handleChange(form.id, f, v, "lunch")
+              }
             />
 
-            {/* DINNER */}
             <Meal
               title="Dinner"
               data={form.dinner}
-              onChange={(f, v) => handleChange(index, f, v, "dinner")}
+              onChange={(f, v) =>
+                handleChange(form.id, f, v, "dinner")
+              }
             />
-
-            {/* TEXTAREA */}
-            <div className="col-span-1 md:col-span-2">
-              <div className="relative mb-6 w-full">
-                <textarea
-                  className="w-full p-4 rounded-lg border border-gray-700 text-white bg-transparent outline-none focus:border-blue-200 focus:ring-1 focus:ring-blue-100 resize-none"
-                  rows={3}
-                />
-                <label className="absolute -top-2 left-3 text-xs text-white bg-[#1f1f38] px-1">
-                  Special Requirements, If any *
-                </label>
-              </div>
-            </div>
 
           </div>
         </div>
@@ -197,55 +223,56 @@ export default function FoodAndRefreshments({ nextStep, handlePrevious }) {
 
       {/* FOOTER */}
       <div className="flex justify-end gap-3 mt-4">
-        <button onClick={handlePrevious} className="px-4 py-2 border rounded-lg">
+        <button
+          onClick={handlePrevious}
+          className="px-4 py-2 border rounded-lg"
+        >
           Previous
         </button>
 
-        <button onClick={nextStep} className="px-4 py-2 bg-purple-600 text-white rounded-lg">
+        <button
+          onClick={nextStep}
+          className="px-4 py-2 bg-purple-600 text-white rounded-lg"
+        >
           Next
         </button>
       </div>
-
     </div>
   );
 }
 
-// Meal Section
+// ✅ MEAL COMPONENT
 function Meal({ title, data, onChange }) {
   return (
-    <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] rounded-lg p-4 mt-2
-                    [&_label]:bg-[#2a2a4a] [&_label]:px-1">
-
-      <h3 className="text-purple-400 font-semibold mb-2">{title}</h3>
+    <div className="col-span-2 bg-[#2a2a4a] rounded-lg p-4 mt-2">
+      <h1 className="text-purple-400 font-semibold mb-3">
+        {title}
+      </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
         <CustomInput
-          label="No. of veg in Participants Menu *"
+          label="Veg Participants"
           value={data.vegParticipants}
-          onChange={(v) => onChange("vegParticipants", v)}
-          type="number"
+          onChange={(e) => onChange("vegParticipants", e.target.value)}
         />
 
         <CustomInput
-          label="No. of veg in Guest/VIP Menu *"
+          label="Veg Guest"
           value={data.vegGuest}
-          onChange={(v) => onChange("vegGuest", v)}
-          type="number"
+          onChange={(e) => onChange("vegGuest", e.target.value)}
         />
 
         <CustomInput
-          label="No. of Non-veg in Participants Menu *"
+          label="Non-Veg Participants"
           value={data.nonVegParticipants}
-          onChange={(v) => onChange("nonVegParticipants", v)}
-          type="number"
+          onChange={(e) => onChange("nonVegParticipants", e.target.value)}
         />
 
         <CustomInput
-          label="No. of Non-veg in Guest/VIP Menu *"
+          label="Non-Veg Guest"
           value={data.nonVegGuest}
-          onChange={(v) => onChange("nonVegGuest", v)}
-          type="number"
+          onChange={(e) => onChange("nonVegGuest", e.target.value)}
         />
 
       </div>
