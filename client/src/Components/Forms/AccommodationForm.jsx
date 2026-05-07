@@ -3,7 +3,6 @@ import DatePicker from "react-datepicker";
 import { CalendarDays, Clock, User, Phone, ChevronDown } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 
-/* ================= DATE INPUT ================= */
 const DateInput = forwardRef(({ value, onClick, label }, ref) => (
   <div className="relative w-full">
     <input
@@ -25,7 +24,6 @@ const DateInput = forwardRef(({ value, onClick, label }, ref) => (
   </div>
 ));
 
-/* ================= MAIN ================= */
 export default function AccommodationForm({ nextStep, handlePrevious }) {
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
@@ -61,7 +59,6 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
     );
   };
 
-  /* ✅ HANDLERS (FIXED POSITION) */
   const handleNextClick = () => {
     const selected = Object.keys(values).filter(
       (key) => values[key] === ""
@@ -80,7 +77,7 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
   return (
     <div className="bg-[#1f1f38] p-6 rounded-xl text-white w-full">
 
-      {/* DATE */}
+   
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="w-full">
           <DatePicker
@@ -105,7 +102,7 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         </div>
       </div>
 
-      {/* GUEST HEADER */}
+
       <div className="flex justify-between mb-2">
         <p className="text-purple-400 text-sm">
           Select the Guest who needed Accommodation
@@ -115,7 +112,6 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         </p>
       </div>
 
-      {/* GUEST LIST */}
       <div className="mb-6">
         {guests.map((g) => (
           <div key={g.id}
@@ -143,7 +139,7 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         ))}
       </div>
 
-      {/* FORM */}
+ 
       <div className="grid md:grid-cols-2 gap-4">
 
         <Input label="No. of Single Rooms *"
@@ -226,11 +222,10 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         )}
       </div>
 
-      {/* ✅ BUTTONS */}
       <div className="flex items-center justify-between mt-14 w-full">
         <button
           onClick={handlePrevClick}
-          className="border border-purple-500 text-purple-500 px-6 py-2 rounded-lg hover:bg-purple-500/10 transition"
+          className="border border-purple-500 text-purple-500 px-6 py-2 rounded-lg  transition"
         >
           ← Back
         </button>
@@ -241,12 +236,12 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         >
           Next →
         </button>
-      </div>
+      </div>  
     </div>
   );
 }
 
-/* ================= INPUT ================= */
+
 function Input({ label, value, onChange }) {
   return (
     <div className="relative w-full">
@@ -263,7 +258,7 @@ function Input({ label, value, onChange }) {
   );
 }
 
-/* ================= TEXTAREA ================= */
+
 function Textarea({ label, value, onChange }) {
   return (
     <div className="relative w-full">
@@ -281,7 +276,7 @@ function Textarea({ label, value, onChange }) {
   );
 }
 
-/* ================= CUSTOM SELECT ================= */
+
 function CustomSelect({ label, value, onChange, options, full }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();

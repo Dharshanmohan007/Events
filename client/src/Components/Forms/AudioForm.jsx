@@ -104,14 +104,14 @@ export default function AudioForm({ nextStep, handlePrevious }) {
           onClick={handlePrevClick}
           className="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg"
         >
-          Back
+          ← Back
         </button>
 
         <button
           onClick={handleNextClick}
           className="bg-purple-600 text-white px-6 py-2 rounded-lg"
         >
-          Next
+          Next →
         </button>
       </div>
     </>
