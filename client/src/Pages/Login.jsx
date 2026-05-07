@@ -1,10 +1,12 @@
-
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ForgetPassword from "../Components/ForgetPassword";
 import { useAuth } from "../Components/AuthContext";
-import { MoveRight } from 'lucide-react';
+import { MoveRight } from "lucide-react";
+import {
+  showSuccessToast,
+  showErrorToast,
+} from "../Components/CustomToast";
 
 // ─── Assets (update paths as needed) ─────────────────────────────────────────
 import Logo from "../assets/logo.svg";
@@ -29,7 +31,13 @@ async function loginApi(email, password) {
 const FEATURES = [
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
@@ -39,7 +47,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <rect x="2" y="3" width="20" height="14" rx="2" />
         <line x1="8" y1="21" x2="16" y2="21" />
         <line x1="12" y1="17" x2="12" y2="21" />
@@ -50,7 +64,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
@@ -59,7 +79,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -135,7 +161,10 @@ function ParticleCanvas() {
     };
   }, []);
   return (
-    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+    />
   );
 }
 
@@ -153,6 +182,10 @@ export default function LoginPage({ onLoginSuccess }) {
 
   const { login } = useAuth();
 
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
     return () => clearTimeout(t);
@@ -206,10 +239,11 @@ export default function LoginPage({ onLoginSuccess }) {
 
       localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
-
+      showSuccessToast(
+        "Login Successful"
+      );
       console.log("👤 User set in context:", userData);
       navigate("/forms");
-
     } catch (err) {
       console.error("❌ LOGIN ERROR:", err.message);
       setError(err.message);
@@ -238,7 +272,11 @@ export default function LoginPage({ onLoginSuccess }) {
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Background image */}
-        <img className="absolute pointer-events-none" src={LoginBackground} alt="Login Background" />
+        <img
+          className="absolute pointer-events-none"
+          src={LoginBackground}
+          alt="Login Background"
+        />
         {/* Fallback gradient background */}
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-900/20 blur-[140px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-900/15 blur-[120px]" />
@@ -248,7 +286,6 @@ export default function LoginPage({ onLoginSuccess }) {
       <div className="relative w-full rounded-2xl overflow-hidden">
         <div className="relative flex flex-col justify-between lg:min-h-0">
           <div className="grid grid-cols-1 lg:grid-cols-2">
-
             {/* ── LEFT PANEL: Branding + Features ── */}
             <div className="relative overflow-hidden bg-gradient-to-br flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[340px] lg:min-h-[560px]">
               <ParticleCanvas />
@@ -258,7 +295,9 @@ export default function LoginPage({ onLoginSuccess }) {
                 </div>
 
                 {/* Headline */}
-                <div className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+                <div
+                  className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                >
                   <h1
                     className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4"
                     style={{ fontFamily: "'Sora', sans-serif" }}
@@ -270,13 +309,17 @@ export default function LoginPage({ onLoginSuccess }) {
                     </span>
                   </h1>
                   <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-                    The all-in-one platform for academic event management, combining institutional rigor with modern technological agility.
+                    The all-in-one platform for academic event management,
+                    combining institutional rigor with modern technological
+                    agility.
                   </p>
                 </div>
               </div>
 
               {/* Feature cards grid */}
-              <div className={`relative z-10 grid grid-cols-2 gap-3 mt-8 lg:mt-0 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+              <div
+                className={`relative z-10 grid grid-cols-2 gap-3 mt-8 lg:mt-0 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              >
                 {FEATURES.map((f, i) => (
                   <div
                     key={i}
@@ -285,10 +328,15 @@ export default function LoginPage({ onLoginSuccess }) {
                     <div className="w-8 h-8 rounded-lg bg-purple-600/30 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-2 group-hover:bg-purple-600/50 transition-colors">
                       {f.icon}
                     </div>
-                    <p className="text-white text-xs font-semibold mb-0.5" style={{ fontFamily: "'Sora', sans-serif" }}>
+                    <p
+                      className="text-white text-xs font-semibold mb-0.5"
+                      style={{ fontFamily: "'Sora', sans-serif" }}
+                    >
                       {f.title}
                     </p>
-                    <p className="text-white/40 text-[10px] leading-tight">{f.desc}</p>
+                    <p className="text-white/40 text-[10px] leading-tight">
+                      {f.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -300,30 +348,49 @@ export default function LoginPage({ onLoginSuccess }) {
               <div className="absolute z-20 top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/90 to-transparent" />
 
               {/* Background image overlay */}
-              <img src={LoginContainerBg} alt="" className="absolute z-30 inset-0 w-full h-full object-cover opacity-60 pointer-events-none" />
+              <img
+                src={LoginContainerBg}
+                alt=""
+                className="absolute z-30 inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
+              />
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(145deg, #13111f 0%, #0f0d1a 60%, #110f1e 100%)" }}
+                style={{
+                  background:
+                    "linear-gradient(145deg, #13111f 0%, #0f0d1a 60%, #110f1e 100%)",
+                }}
               />
 
-              <div className={`relative z-10 w-full max-w-sm mx-auto transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-
+              <div
+                className={`relative z-10 w-full max-w-sm mx-auto transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
+              >
                 {mode === "login" ? (
                   <>
                     {/* Heading */}
                     <div className="mb-7">
-                      <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
+                      <h2
+                        className="text-2xl sm:text-3xl font-extrabold text-white mb-2"
+                        style={{ fontFamily: "'Sora', sans-serif" }}
+                      >
                         Welcome Back!
                       </h2>
                       <p className="text-white/40 text-xs leading-relaxed">
-                        The all-in-one platform for academic event management, combining institutional rigor with modern technological agility.
+                        The all-in-one platform for academic event management,
+                        combining institutional rigor with modern technological
+                        agility.
                       </p>
                     </div>
 
                     {/* Global error banner */}
                     {error && (
                       <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3">
-                        <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg
+                          className="w-4 h-4 text-red-400 flex-shrink-0"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={2}
+                        >
                           <circle cx="12" cy="12" r="10" />
                           <line x1="12" y1="8" x2="12" y2="12" />
                           <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -333,50 +400,69 @@ export default function LoginPage({ onLoginSuccess }) {
                     )}
 
                     {/* Login Form */}
-                    <form onSubmit={handleLogin} noValidate className="flex flex-col gap-5">
-
+                    <form
+                      onSubmit={handleLogin}
+                      noValidate
+                      className="flex flex-col gap-5"
+                    >
                       {/* E-mail field */}
                       <div>
                         <div className="relative group ">
-                          <span className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
-                            style={{ backgroundColor: "#13111f" }}>
+                          <span
+                            className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
+                            style={{ backgroundColor: "#13111f" }}
+                          >
                             E-mail <span className="text-purple-400">*</span>
                           </span>
                           <input
                             type="email"
                             autoComplete="email"
                             value={email}
-                            onChange={(e) => handleFieldChange("email", e.target.value)}
+                            onChange={(e) =>
+                              handleFieldChange("email", e.target.value)
+                            }
                             placeholder="Enter Your E-mail id here"
                             className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
-                              fieldErrors.email ? "border-red-400/70" : "border-[#3A3A5A]"
+                              fieldErrors.email
+                                ? "border-red-400/70"
+                                : "border-[#3A3A5A]"
                             }`}
                           />
                         </div>
                         {fieldErrors.email && (
-                          <p className="text-red-400 text-xs mt-1.5 ml-1">{fieldErrors.email}</p>
+                          <p className="text-red-400 text-xs mt-1.5 ml-1">
+                            {fieldErrors.email}
+                          </p>
                         )}
                       </div>
 
                       {/* Password field */}
                       <div>
                         <div className="relative group">
-                          <span className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
-                            style={{ backgroundColor: "#13111f" }}>
+                          <span
+                            className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
+                            style={{ backgroundColor: "#13111f" }}
+                          >
                             Password <span className="text-purple-400">*</span>
                           </span>
                           <input
                             type={showPass ? "text" : "password"}
                             value={password}
-                            onChange={(e) => handleFieldChange("password", e.target.value)}
+                            onChange={(e) =>
+                              handleFieldChange("password", e.target.value)
+                            }
                             placeholder="Enter Your Password here"
                             className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
-                              fieldErrors.password ? "border-red-400/70" : "border-[#3A3A5A]"
+                              fieldErrors.password
+                                ? "border-red-400/70"
+                                : "border-[#3A3A5A]"
                             }`}
                           />
                         </div>
                         {fieldErrors.password && (
-                          <p className="text-red-400 text-xs mt-1.5 ml-1">{fieldErrors.password}</p>
+                          <p className="text-red-400 text-xs mt-1.5 ml-1">
+                            {fieldErrors.password}
+                          </p>
                         )}
                       </div>
 
@@ -392,9 +478,13 @@ export default function LoginPage({ onLoginSuccess }) {
                       </div>
 
                       {/* Submit */}
-                        <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]">
-                          {loading ? "Signing in..." : "Login to your Account"}
-                        </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]"
+                      >
+                        {loading ? "Signing in..." : "Login to your Account"}
+                      </button>
                     </form>
                   </>
                 ) : (
@@ -406,7 +496,6 @@ export default function LoginPage({ onLoginSuccess }) {
               {/* Bottom glow line */}
               <div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
             </div>
-
           </div>
         </div>
       </div>
