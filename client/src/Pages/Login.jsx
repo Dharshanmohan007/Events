@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import ForgetPassword from "../Components/ForgetPassword";
 import { useAuth } from "../Components/AuthContext";
 import { MoveRight } from "lucide-react";
@@ -266,12 +266,13 @@ export default function LoginPage({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0f0d1a] flex items-center justify-center p-3 sm:p-4  font-poppins">
+    <div className="min-h-screen w-full bg-[#0f0d1a] flex items-center justify-center py-0 px-2 sm:py-1 sm:px-3 font-poppins">
       {/* Ambient background glow */}
       <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10"></div>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Background image */}
+<<<<<<< Updated upstream
         <img
           className="absolute pointer-events-none"
           src={LoginBackground}
@@ -280,14 +281,22 @@ export default function LoginPage({ onLoginSuccess }) {
         {/* Fallback gradient background */}
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-900/20 blur-[140px]" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-900/15 blur-[120px]" />
+=======
+        <img className="absolute pointer-events-none" src={LoginBackground} alt="Login Background" />
+>>>>>>> Stashed changes
       </div>
 
       {/* Main card */}
-      <div className="relative w-full rounded-2xl overflow-hidden">
+      <div className="relative w-full max-w-[1380px] rounded-[32px] overflow-hidden min-h-[calc(100vh-1rem)]">
         <div className="relative flex flex-col justify-between lg:min-h-0">
+<<<<<<< Updated upstream
           <div className="grid grid-cols-1 lg:grid-cols-2">
+=======
+          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-1.5rem)] items-stretch gap-0">
+
+>>>>>>> Stashed changes
             {/* ── LEFT PANEL: Branding + Features ── */}
-            <div className="relative overflow-hidden bg-gradient-to-br flex flex-col justify-between p-6 sm:p-8 lg:p-10 min-h-[340px] lg:min-h-[560px]">
+            <div className="relative overflow-hidden bg-gradient-to-br flex flex-col justify-between h-full py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
               <ParticleCanvas />
               <div className="relative z-10">
                 <div className="mb-6">
@@ -343,16 +352,20 @@ export default function LoginPage({ onLoginSuccess }) {
             </div>
 
             {/* ── RIGHT PANEL: Login form OR Forgot Password ── */}
-            <div className="relative flex flex-col justify-center p-6 sm:p-8 lg:p-10 overflow-hidden">
+            <div className="relative flex flex-col justify-center h-full py-4 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6 overflow-hidden">
               {/* Top border glow */}
               <div className="absolute z-20 top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/90 to-transparent" />
 
               {/* Background image overlay */}
+<<<<<<< Updated upstream
               <img
                 src={LoginContainerBg}
                 alt=""
                 className="absolute z-30 inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
               />
+=======
+              <img src={LoginContainerBg} alt="" className="absolute z-30 inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
+>>>>>>> Stashed changes
               <div
                 className="absolute inset-0"
                 style={{
@@ -478,6 +491,7 @@ export default function LoginPage({ onLoginSuccess }) {
                       </div>
 
                       {/* Submit */}
+<<<<<<< Updated upstream
                       <button
                         type="submit"
                         disabled={loading}
@@ -485,6 +499,19 @@ export default function LoginPage({ onLoginSuccess }) {
                       >
                         {loading ? "Signing in..." : "Login to your Account"}
                       </button>
+=======
+                        <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]">
+                          {loading ? "Signing in..." : "Login to your Account"}
+                        </button>
+
+                      {/* Sign Up Link */}
+                      <p className="text-center text-white/60 text-sm mt-4">
+                        Don't have an account?{" "}
+                        <Link to="/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
+                          Sign Up
+                        </Link>
+                      </p>
+>>>>>>> Stashed changes
                     </form>
                   </>
                 ) : (
