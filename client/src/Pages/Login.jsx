@@ -272,29 +272,14 @@ export default function LoginPage({ onLoginSuccess }) {
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Background image */}
-<<<<<<< Updated upstream
-        <img
-          className="absolute pointer-events-none"
-          src={LoginBackground}
-          alt="Login Background"
-        />
-        {/* Fallback gradient background */}
-        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-purple-900/20 blur-[140px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-violet-900/15 blur-[120px]" />
-=======
         <img className="absolute pointer-events-none" src={LoginBackground} alt="Login Background" />
->>>>>>> Stashed changes
       </div>
 
       {/* Main card */}
       <div className="relative w-full max-w-[1380px] rounded-[32px] overflow-hidden min-h-[calc(100vh-1rem)]">
         <div className="relative flex flex-col justify-between lg:min-h-0">
-<<<<<<< Updated upstream
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-=======
           <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-1.5rem)] items-stretch gap-0">
 
->>>>>>> Stashed changes
             {/* ── LEFT PANEL: Branding + Features ── */}
             <div className="relative overflow-hidden bg-gradient-to-br flex flex-col justify-between h-full py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
               <ParticleCanvas />
@@ -357,15 +342,12 @@ export default function LoginPage({ onLoginSuccess }) {
               <div className="absolute z-20 top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/90 to-transparent" />
 
               {/* Background image overlay */}
-<<<<<<< Updated upstream
               <img
                 src={LoginContainerBg}
                 alt=""
                 className="absolute z-30 inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
               />
-=======
               <img src={LoginContainerBg} alt="" className="absolute z-30 inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
->>>>>>> Stashed changes
               <div
                 className="absolute inset-0"
                 style={{
@@ -491,7 +473,6 @@ export default function LoginPage({ onLoginSuccess }) {
                       </div>
 
                       {/* Submit */}
-<<<<<<< Updated upstream
                       <button
                         type="submit"
                         disabled={loading}
@@ -499,19 +480,6 @@ export default function LoginPage({ onLoginSuccess }) {
                       >
                         {loading ? "Signing in..." : "Login to your Account"}
                       </button>
-=======
-                        <button type="submit" disabled={loading} className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]">
-                          {loading ? "Signing in..." : "Login to your Account"}
-                        </button>
-
-                      {/* Sign Up Link */}
-                      <p className="text-center text-white/60 text-sm mt-4">
-                        Don't have an account?{" "}
-                        <Link to="/signup" className="text-purple-400 hover:text-purple-300 font-semibold">
-                          Sign Up
-                        </Link>
-                      </p>
->>>>>>> Stashed changes
                     </form>
                   </>
                 ) : (

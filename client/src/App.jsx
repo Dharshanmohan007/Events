@@ -5,20 +5,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
 // Pages
-<<<<<<< Updated upstream
-import EventsForm from "./Pages/EventsForm";
-import ICTCSDashboard from "./Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard";
-import AUDIODashboard from "./Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard";
-import Login from "./Pages/Login";
-import ForgetPassword from "./Components/ForgetPassword";
-=======
 import EventsForm from './Pages/EventsForm'
 import ICTCSDashboard from './Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard'
 import AUDIODashboard from './Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard'
 import Login from './Pages/Login'
 import SignUp from './Pages/SignUp'
 import ForgetPassword from './Components/ForgetPassword'  
->>>>>>> Stashed changes
 
 // Auth Context
 import { AuthProvider, useAuth } from "./Components/AuthContext";
