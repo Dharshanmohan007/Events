@@ -31,6 +31,18 @@ function Dashboard() {
       </div>
     </div>
   );
+
+function App() {
+
+  return (
+    
+    <Routes>
+      <Route path='/login' element={<Login/>}/>
+      <Route path='/' element={<EventsForm/>}/>
+      
+    </Routes>
+    
+  )
 }
 
 // ─── Route Wrapper for Login Redirect ────────────────────────────────────────

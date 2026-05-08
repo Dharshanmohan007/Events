@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
 import EventsSidebar from "../Components/EventsSidebar";
-
 import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 import VenueForm from "../Components/Forms/VenueForm";
 import ICTSForm from "../Components/Forms/IctsForm";
