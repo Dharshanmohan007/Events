@@ -16,7 +16,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 
-/* ================= DATE INPUT ================= */
+
 
 const DateInput = forwardRef(
   (
@@ -66,7 +66,6 @@ const DateInput = forwardRef(
             px-4
             pr-12
             rounded-xl
-            bg-[#2a2a4a]
             border
             border-[#3d3d68]
             text-white
@@ -76,7 +75,7 @@ const DateInput = forwardRef(
           "
         />
 
-        {/* CALENDAR ICON */}
+
 
         <div
           onClick={(e) => {
@@ -105,7 +104,7 @@ const DateInput = forwardRef(
 
 DateInput.displayName = "DateInput";
 
-/* ================= MEAL COMPONENT ================= */
+
 
 const Meal = memo(function Meal({
   title,
@@ -177,13 +176,13 @@ const Meal = memo(function Meal({
   );
 });
 
-/* ================= MAIN COMPONENT ================= */
+
 
 export default function FoodAndRefreshments({
   nextStep,
   handlePrevious,
 }) {
-  /* ================= CREATE FORM ================= */
+
 
   const createForm = () => ({
     id: crypto.randomUUID(),
@@ -227,7 +226,6 @@ export default function FoodAndRefreshments({
     createForm(),
   ]);
 
-  /* ================= HANDLE CHANGE ================= */
 
   const handleChange = (
     id,
@@ -262,7 +260,6 @@ export default function FoodAndRefreshments({
     );
   };
 
-  /* ================= ADD FORM ================= */
 
   const handleAdd = () => {
     setForms((prev) => [
@@ -270,8 +267,6 @@ export default function FoodAndRefreshments({
       createForm(),
     ]);
   };
-
-  /* ================= DELETE FORM ================= */
 
   const handleDelete = (id) => {
     setForms((prev) =>
@@ -283,7 +278,7 @@ export default function FoodAndRefreshments({
 
   return (
     <div className="w-full">
-      {/* ================= FORMS ================= */}
+   
 
       {forms.map((form, index) => (
         <div
@@ -297,7 +292,7 @@ export default function FoodAndRefreshments({
             overflow-visible
           "
         >
-          {/* ================= TOP ACTION ================= */}
+   
 
           <div className="flex justify-end p-5 pb-0">
             {index === 0 ? (
@@ -339,7 +334,7 @@ export default function FoodAndRefreshments({
             )}
           </div>
 
-          {/* ================= FORM BODY ================= */}
+      
 
           <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
             {/* DATE */}
@@ -364,7 +359,6 @@ export default function FoodAndRefreshments({
               />
             </div>
 
-            {/* RESOURCE TYPE */}
 
             <CustomSelect
               label="Type of resource Person *"
@@ -383,7 +377,6 @@ export default function FoodAndRefreshments({
               ]}
             />
 
-            {/* RESOURCE PERSON */}
 
             <CustomInput
               label="Total number of resource Person *"
@@ -398,8 +391,6 @@ export default function FoodAndRefreshments({
               type="number"
             />
 
-            {/* INTERNAL PERSON */}
-
             <CustomInput
               label="Total number of Internal Accompanying Person *"
               value={form.internalCount}
@@ -413,7 +404,6 @@ export default function FoodAndRefreshments({
               type="number"
             />
 
-            {/* STAFF NAME */}
 
             <CustomInput
               label="Internal Accompanying staff name *"
@@ -426,8 +416,6 @@ export default function FoodAndRefreshments({
                 )
               }
             />
-
-            {/* MOBILE NUMBER */}
 
             <CustomInput
               label="Internal Accompanying staff Mobile number *"
@@ -442,7 +430,7 @@ export default function FoodAndRefreshments({
               type="number"
             />
 
-            {/* FOOD TYPE */}
+
 
             <div className="col-span-1 md:col-span-2">
               <CustomSelect
@@ -465,7 +453,6 @@ export default function FoodAndRefreshments({
               />
             </div>
 
-            {/* BREAKFAST */}
 
             <Meal
               title="Breakfast"
@@ -480,7 +467,7 @@ export default function FoodAndRefreshments({
               }
             />
 
-            {/* LUNCH */}
+
 
             <Meal
               title="Lunch"
@@ -495,7 +482,7 @@ export default function FoodAndRefreshments({
               }
             />
 
-            {/* DINNER */}
+
 
             <Meal
               title="Dinner"
@@ -510,7 +497,6 @@ export default function FoodAndRefreshments({
               }
             />
 
-            {/* SPECIAL REQUIREMENTS */}
 
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
@@ -561,10 +547,9 @@ export default function FoodAndRefreshments({
         </div>
       ))}
 
-      {/* ================= BOTTOM BUTTONS ================= */}
 
       <div className="w-full mt-10 flex items-center justify-between">
-        {/* BACK BUTTON */}
+      
 
         <button
           type="button"
@@ -586,7 +571,7 @@ export default function FoodAndRefreshments({
           ← Back
         </button>
 
-        {/* NEXT BUTTON */}
+
 
         <button
           type="button"

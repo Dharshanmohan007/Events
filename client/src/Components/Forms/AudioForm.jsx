@@ -8,28 +8,33 @@ export default function AudioForm({ nextStep, handlePrevious }) {
 
   const [values, setValues] = useState({});
   const [selectedRequirements, setSelectedRequirements] = useState([]);
+  
+
+   const handlePrevClick = () => {
+    const selected = Object.keys(values).filter(
+      (key) => values[key] === ""
+    );
+    setSelectedRequirements(selected);
+    console.log("Back clicked"); 
+    if (handlePrevious) {
+      handlePrevious(); 
+    }
+  };
 
   
   const handleNextClick = () => {
     const selected = Object.keys(values).filter(
       (key) => values[key] === ""
     );
-
     setSelectedRequirements(selected);
-
     console.log("Next clicked"); 
-
     if (nextStep) {
       nextStep(); 
     }
   };
 
  
-  const handlePrevClick = () => {
-    if (handlePrevious) {
-      handlePrevious();
-    }
-  };
+  
 
   return (
     <>

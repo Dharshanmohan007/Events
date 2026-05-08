@@ -142,7 +142,7 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
  
       <div className="grid md:grid-cols-2 gap-4">
 
-        <Input label="No. of Single Rooms *"
+        <Input label="No. of SSSingle Rooms *"
           value={form.singleRooms}
           onChange={(e) => handleChange("singleRooms", e.target.value)}
         />
