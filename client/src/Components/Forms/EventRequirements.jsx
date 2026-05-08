@@ -67,8 +67,8 @@ import CustomSelect from "../CustomSelect";
 
 export default function EventRequirements({ nextStep, setSelectedRequirements, isLoading = false }) {
   const [values, setValues] = useState({
-    venue: "", icts: "", purchase: "", media: "", audio: "", transport: "",
-    foodandrefreshments: "", accommodation: "", 
+    venue: "", icts: "", audio: "", transport: "",
+    foodandrefreshments: "", accommodation: "",  purchase: "", media: "",
   });
   const [errors, setErrors] = useState({});
 

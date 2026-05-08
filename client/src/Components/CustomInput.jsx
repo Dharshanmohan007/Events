@@ -16,9 +16,10 @@ export default function CustomInput({
 
   return (
     <div className="relative w-full">
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none" style={{ backgroundColor: labelBg }}>
-    <div className="relative w-full ">
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1    z-10 pointer-events-none">
+      <span
+        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+        style={{ backgroundColor: labelBg }}
+      >
         {label}
       </span>
 

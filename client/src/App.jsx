@@ -17,33 +17,7 @@ import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
 
-// ─── Dashboard (optional wrapper, you can replace with EventsForm directly) ───
-function Dashboard() {
-  const { user } = useAuth();
 
-  return (
-    <div className="min-h-screen bg-[#0f0d1a] text-white p-6">
-      <h1 className="text-2xl font-bold">Welcome, {user?.name} 👋</h1>
-
-      {/* Your actual main page */}
-      <div className="mt-6">
-        <EventsForm />
-      </div>
-    </div>
-  );
-
-function App() {
-
-  return (
-    
-    <Routes>
-      <Route path='/login' element={<Login/>}/>
-      <Route path='/' element={<EventsForm/>}/>
-      
-    </Routes>
-    
-  )
-}
 
 // ─── Route Wrapper for Login Redirect ────────────────────────────────────────
 function PublicRoute({ children }) {

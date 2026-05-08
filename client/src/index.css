@@ -82,6 +82,7 @@ input::-webkit-inner-spin-button{
 
 .glassmorphism-container{
   backdrop-filter: blur(10px);
+}
 .react-datepicker-wrapper {
   width: 100%;
 }
