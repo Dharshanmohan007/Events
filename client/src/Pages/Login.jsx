@@ -3,10 +3,13 @@ import { useNavigate, Link } from "react-router-dom";
 import ForgetPassword from "../Components/ForgetPassword";
 import { useAuth } from "../Components/AuthContext";
 import { MoveRight } from "lucide-react";
+import loginBg from "../assets/login_ConBg.svg";
 import {
   showSuccessToast,
   showErrorToast,
 } from "../Components/CustomToast";
+
+import blurImg1  from "../assets/blur-img1.svg";
 
 // ─── Assets (update paths as needed) ─────────────────────────────────────────
 import Logo from "../assets/logo.svg";
@@ -268,7 +271,7 @@ export default function LoginPage({ onLoginSuccess }) {
   return (
     <div className="min-h-screen w-full bg-[#0f0d1a] flex items-center justify-center py-0 px-2 sm:py-1 sm:px-3 font-poppins">
       {/* Ambient background glow */}
-      <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10"></div>
+      <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10 pointer-events-none"></div>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         {/* Background image */}
@@ -276,12 +279,12 @@ export default function LoginPage({ onLoginSuccess }) {
       </div>
 
       {/* Main card */}
-      <div className="relative w-full max-w-[1380px] rounded-[32px] overflow-hidden min-h-[calc(100vh-1rem)]">
-        <div className="relative flex flex-col justify-between lg:min-h-0">
-          <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[calc(100vh-1.5rem)] items-stretch gap-0">
+      <div className="relative w-full max-w-[1380px] rounded-lg overflow-hidden min-h-[calc(100vh-1rem)]">
+        <div className="relative flex flex-col  justify-between lg:min-h-0 ">
+          <div className="  flex items-center gap-10 min-h-[calc(100vh-1.5rem)] items-stretch gap-0">
 
             {/* ── LEFT PANEL: Branding + Features ── */}
-            <div className="relative overflow-hidden bg-gradient-to-br flex flex-col justify-between h-full py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
+            <div className="relative w-1/2 overflow-hidden h-screen bg-gradient-to-br flex flex-col justify-between h-full py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
               <ParticleCanvas />
               <div className="relative z-10">
                 <div className="mb-6">
@@ -293,13 +296,12 @@ export default function LoginPage({ onLoginSuccess }) {
                   className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
                 >
                   <h1
-                    className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4"
-                    style={{ fontFamily: "'Sora', sans-serif" }}
+                    className="playfair text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4"
                   >
-                    Plan faster,
+                    Plan faster host,
                     <br />
-                    <span className="bg-gradient-to-r from-purple-400 to-violet-300 bg-clip-text text-transparent">
-                      host better
+                    <span className="playfair bg-gradient-to-r from-purple-400 to-violet-300 bg-clip-text text-transparent">
+                      better
                     </span>
                   </h1>
                   <p className="text-white/50 text-sm leading-relaxed max-w-xs">
@@ -337,160 +339,206 @@ export default function LoginPage({ onLoginSuccess }) {
             </div>
 
             {/* ── RIGHT PANEL: Login form OR Forgot Password ── */}
-            <div className="relative flex flex-col justify-center h-full py-4 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6 overflow-hidden">
-              {/* Top border glow */}
-              <div className="absolute z-20 top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/90 to-transparent" />
+                
+            <div className="form-container h-screen flex items-center justify-center w-1/2">
 
-              {/* Background image overlay */}
-              <img
-                src={LoginContainerBg}
-                alt=""
-                className="absolute z-30 inset-0 w-full h-full object-cover opacity-60 pointer-events-none"
-              />
-              <img src={LoginContainerBg} alt="" className="absolute z-30 inset-0 w-full h-full object-cover opacity-10 pointer-events-none" />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(145deg, #13111f 0%, #0f0d1a 60%, #110f1e 100%)",
-                }}
-              />
+            {/* backgorund image container  */}
+              <div className="glassmorphism-container h-[90%] relative border border-gray-700 shadow-md shadow-gray-900 rounded-2xl  w-full p-5">
+                <img src={blurImg1} className="login-bg h-20 absolute top-0 "/>
+                <img src={blurImg1} className="login-bg h-20 absolute bottom-0 "/>
+                {/* <img src={blurImg1} className="login-bg h-50 absolute top-30 w-[400px]"/> */}
 
-              <div
-                className={`relative z-10 w-full max-w-sm mx-auto transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}
-              >
-                {mode === "login" ? (
-                  <>
-                    {/* Heading */}
-                    <div className="mb-7">
-                      <h2
-                        className="text-2xl sm:text-3xl font-extrabold text-white mb-2"
-                        style={{ fontFamily: "'Sora', sans-serif" }}
-                      >
-                        Welcome Back!
-                      </h2>
-                      <p className="text-white/40 text-xs leading-relaxed">
-                        The all-in-one platform for academic event management,
-                        combining institutional rigor with modern technological
-                        agility.
-                      </p>
-                    </div>
+                {/* form appears here  */}
 
-                    {/* Global error banner */}
-                    {error && (
-                      <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3">
-                        <svg
-                          className="w-4 h-4 text-red-400 flex-shrink-0"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
+                <div
+                  className={`absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] border border-white w-full px-8`}
+                >
+                  {mode === "login" ? (
+                    <>
+                      {/* Heading */}
+                      <div className="mb-7 ">
+                        <h2
+                          className=" playfair text-2xl sm:text-3xl font-extrabold text-white mb-1"
+                          // style={{ fontFamily: "'Sora', sans-serif" }}
                         >
-                          <circle cx="12" cy="12" r="10" />
-                          <line x1="12" y1="8" x2="12" y2="12" />
-                          <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                        <p className="text-red-400 text-xs">{error}</p>
+                          Welcome Back!
+                        </h2>
+                        <p className="text-white/40 text-xs leading-relaxed">
+                          The all-in-one platform for academic event management,
+                          combining institutional rigor with modern technological
+                          agility.
+                        </p>
                       </div>
-                    )}
 
-                    {/* Login Form */}
-                    <form
-                      onSubmit={handleLogin}
-                      noValidate
-                      className="flex flex-col gap-5"
-                    >
-                      {/* E-mail field */}
-                      <div>
-                        <div className="relative group ">
-                          <span
-                            className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
-                            style={{ backgroundColor: "#13111f" }}
+                      {/* Global error banner */}
+                      {error && (
+                        <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3">
+                          <svg
+                            className="w-4 h-4 text-red-400 flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
                           >
-                            E-mail <span className="text-purple-400">*</span>
-                          </span>
-                          <input
-                            type="email"
-                            autoComplete="email"
-                            value={email}
-                            onChange={(e) =>
-                              handleFieldChange("email", e.target.value)
-                            }
-                            placeholder="Enter Your E-mail id here"
-                            className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
-                              fieldErrors.email
-                                ? "border-red-400/70"
-                                : "border-[#3A3A5A]"
-                            }`}
-                          />
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                          <p className="text-red-400 text-xs">{error}</p>
                         </div>
-                        {fieldErrors.email && (
-                          <p className="text-red-400 text-xs mt-1.5 ml-1">
-                            {fieldErrors.email}
-                          </p>
-                        )}
-                      </div>
+                      )}
 
-                      {/* Password field */}
-                      <div>
-                        <div className="relative group">
-                          <span
-                            className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
-                            style={{ backgroundColor: "#13111f" }}
+                      {/* Login Form */}
+                      <form
+                        onSubmit={handleLogin}
+                        noValidate
+                        className="flex flex-col gap-3"
+                      >
+                        {/* E-mail field */}
+                        <div>
+                          <div className="relative group ">
+                            <span
+                              className="absolute left-3.5 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+                            >
+                              E-mail <span className="text-purple-400">*</span>
+                            </span>
+                            <input
+                              type="email"
+                              autoComplete="email"
+                              value={email}
+                              onChange={(e) =>
+                                handleFieldChange("email", e.target.value)
+                              }
+                              placeholder="Enter Your E-mail id here"
+                              className={`w-full bg-[#853FF926] opacity-15% rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none `}
+                            />
+                          </div>
+                          {fieldErrors.email && (
+                            <p className="text-red-400 text-xs mt-1.5 ml-1">
+                              {fieldErrors.email}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Password field */}
+                        <div>
+                          <div className="relative group">
+                            <span
+                              className="absolute left-3.5 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+                            >
+                              Password <span className="text-purple-400">*</span>
+                            </span>
+
+                            <input
+                              type={showPass ? "text" : "password"}
+                              value={password}
+                              onChange={(e) =>
+                                handleFieldChange("password", e.target.value)
+                              }
+                              placeholder="Enter Your Password here"
+                              className={`w-full bg-[#853FF926] opacity-15% rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 outline-none `}
+                            />
+
+                            {/* Eye Button */}
+                            <button
+                              type="button"
+                              onClick={() => setShowPass(!showPass)}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition"
+                            >
+                              {showPass ? (
+                                // Eye Open
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.8}
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
+                                </svg>
+                              ) : (
+                                // Eye Closed
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.8}
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3 3l18 18"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M10.584 10.587a2.25 2.25 0 003.182 3.182"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277"
+                                  />
+                                </svg>
+                              )}
+                            </button>
+                          </div>
+
+                          {fieldErrors.password && (
+                            <p className="text-red-400 text-xs mt-1.5 ml-1">
+                              {fieldErrors.password}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Forgot Password — now uses setMode("forgot") instead of navigate */}
+                        <div className="flex justify-end -mt-2">
+                          <button
+                            type="button"
+                            onClick={() => setMode("forgot")}
+                            className="text-purple-400 text-xs hover:underline"
                           >
-                            Password <span className="text-purple-400">*</span>
-                          </span>
-                          <input
-                            type={showPass ? "text" : "password"}
-                            value={password}
-                            onChange={(e) =>
-                              handleFieldChange("password", e.target.value)
-                            }
-                            placeholder="Enter Your Password here"
-                            className={`w-full bg-[#853FF926] rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/20 outline-none border ${
-                              fieldErrors.password
-                                ? "border-red-400/70"
-                                : "border-[#3A3A5A]"
-                            }`}
-                          />
+                            Forgot Password?
+                          </button>
                         </div>
-                        {fieldErrors.password && (
-                          <p className="text-red-400 text-xs mt-1.5 ml-1">
-                            {fieldErrors.password}
-                          </p>
-                        )}
-                      </div>
 
-                      {/* Forgot Password — now uses setMode("forgot") instead of navigate */}
-                      <div className="flex justify-end -mt-2">
+                        {/* Submit */}
                         <button
-                          type="button"
-                          onClick={() => setMode("forgot")}
-                          className="text-purple-400 text-xs hover:underline"
+                          type="submit"
+                          disabled={loading}
+                          className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]"
                         >
-                          Forgot Password?
+                          {loading ? "Signing in..." : "Login to your Account"}
                         </button>
-                      </div>
-
-                      {/* Submit */}
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full py-3.5 rounded-xl text-white bg-gradient-to-l from-[#4F2593] to-[#853FF9]"
-                      >
-                        {loading ? "Signing in..." : "Login to your Account"}
-                      </button>
-                    </form>
-                  </>
-                ) : (
-                  /* ── Forgot Password inline inside same right panel ── */
-                  <ForgetPassword onBack={() => setMode("login")} embedded />
-                )}
+                      </form>
+                    </>
+                  ) : (
+                    /* ── Forgot Password inline inside same right panel ── */
+                    <ForgetPassword onBack={() => setMode("login")} embedded />
+                  )}
+                </div>
               </div>
 
-              {/* Bottom glow line */}
-              <div className="absolute bottom-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/20 to-transparent" />
+              
             </div>
+
           </div>
         </div>
       </div>

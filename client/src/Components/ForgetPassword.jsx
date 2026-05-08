@@ -217,14 +217,14 @@ function StepEmail({ onNext, mounted }) {
 
   return (
     <div className={`transition-all duration-700 delay-100 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-      <StepDots current={0} />
+      {/* <StepDots current={0} /> */}
       <div className="mb-7">
-        <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
+        {/* <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
           <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
           </svg>
-        </div>
+        </div> */}
         <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
           Forgot Password?
         </h2>
