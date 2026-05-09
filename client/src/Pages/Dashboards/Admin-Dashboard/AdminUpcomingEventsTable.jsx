@@ -3,8 +3,7 @@ import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 
-
-const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
+const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
     return (
         <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-[70%] h-full flex flex-col">
             <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
@@ -46,11 +45,11 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
                                             className={`inline-flex items-center gap-2 ${isAcknowledged ? 'text-[#34D399]' : 'text-[#B32058]'
-                                                }`}
+                                            }`}
                                         >
                                             <span
                                                 className={`h-2 w-2 rounded-full ${isAcknowledged ? 'bg-[#34D399]' : 'bg-[#B32058]'
-                                                    }`}
+                                                }`}
                                             />
                                             {event.acknowledgeStatus}
                                         </span>
@@ -70,4 +69,4 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
     )
 }
 
-export default UpcomingEventsTable
+export default AdminUpcomingEventsTable

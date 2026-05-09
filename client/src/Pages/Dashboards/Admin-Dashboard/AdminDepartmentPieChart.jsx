@@ -1,7 +1,7 @@
 import React from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
-const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
+const AdminDepartmentPieChart = ({ data, title = "Events By Department" }) => {
     return (
         <section className="w-[30%] rounded-lg border border-[#2a3347] bg-[#151c2c] p-5">
             <h2 className="text-white text-base font-semibold">
@@ -31,7 +31,7 @@ const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
                 </ResponsiveContainer>
             </div>
 
-            <div className="mt-2 flex items-center justify-center gap-6">
+            <div className="mt-2 flex items-center flex-wrap justify-center gap-6 w-[90%] overflow-auto table-custom-scrollbar">
                 {data.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                         <span
@@ -48,4 +48,4 @@ const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
     )
 }
 
-export default DepartmentPieChart
+export default AdminDepartmentPieChart
