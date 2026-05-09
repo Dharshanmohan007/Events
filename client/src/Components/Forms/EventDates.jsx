@@ -25,7 +25,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
         {errors.mobile && <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>}
       </div>
       <div>
-        <CustomSelect labelBg="#1E1E35" options={["Male", "Female", "Others"]} label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`} value={data.gender || ""} onChange={(e) => onChange({ ...data, gender: e.target.value })} />
+        <CustomSelect labelBg="#1E1E35" options={["Male", "Female", "Others"]} label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`} value={data.gender || ""} onChange={(val) => onChange({ ...data, gender: val })} />
         {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
       </div>
     </div>

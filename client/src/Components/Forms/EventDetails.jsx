@@ -3,9 +3,11 @@ import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 
-export default function EventDetails({ setEventDays, errors = {}, eventData, setEventData }) {
+export default function EventDetails({ setEventDays, errors = {}, eventData = {}, setEventData }) {
   const [numDays, setNumDays] = useState("");
   const [daysData, setDaysData] = useState([]);
+  // Initialize local data only once from prop, don't reset on every prop change
+  const [localData, setLocalData] = useState(() => eventData || {});
 
   const handleDaysChange = (e) => {
     const val = e.target.value;
@@ -22,8 +24,16 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
     }
   };
 
-  const handle = (field) => (e) => setEventData((prev) => ({ ...prev, [field]: e.target.value }));
-  const handleSelect = (field) => (val) => setEventData((prev) => ({ ...prev, [field]: val }));
+  const handle = (field) => (e) => {
+    const value = e.target.value;
+    setLocalData((prev) => ({ ...prev, [field]: value }));
+    setEventData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelect = (field) => (val) => {
+    setLocalData((prev) => ({ ...prev, [field]: val }));
+    setEventData((prev) => ({ ...prev, [field]: val }));
+  };
 
   const dayCount = parseInt(numDays) > 0 ? parseInt(numDays) : 0;
 
@@ -33,36 +43,23 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
 
       {/* Event Name */}
       <div className='mb-6'>
-        <CustomInput label="Name of the Event *" value={eventData?.eventName || ""} onChange={handle("eventName")} />
+        <CustomInput label="Name of the Event *" value={localData?.eventName || ""} onChange={handle("eventName")} />
         {errors.eventName && <p className="text-red-400 text-xs mt-1">{errors.eventName}</p>}
-      </div>
-
-      {/* Tagging */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
-        <div>
-          <CustomSelect label="Tagging" required value={eventData?.tagging || ""} onChange={handleSelect("tagging")}
-            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","S&H","Media","Transport"]} />
-          {errors.tagging && <p className="text-red-400 text-xs mt-1">{errors.tagging}</p>}
-        </div>
-        <div>
-          <CustomInput label="Tagging Details *" value={eventData?.taggingDetails || ""} onChange={handle("taggingDetails")} />
-          {errors.taggingDetails && <p className="text-red-400 text-xs mt-1">{errors.taggingDetails}</p>}
-        </div>
       </div>
 
       {/* Event Type */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
         <div>
-          <CustomSelect label="Type of Event" required value={eventData?.eventType || ""} onChange={handleSelect("eventType")}
+          <CustomSelect label="Type of Event" required value={localData?.eventType || ""} onChange={handleSelect("eventType")}
             options={["FDP","Hackathon","Workshop","Seminar","Conference","Symposium","Webinar","Other"]} />
           {errors.eventType && <p className="text-red-400 text-xs mt-1">{errors.eventType}</p>}
         </div>
         <div>
           <CustomInput
             label="If type of event is others, please specify *"
-            value={eventData?.eventTypeOther || ""}
+            value={localData?.eventTypeOther || ""}
             onChange={handle("eventTypeOther")}
-            disabled={eventData?.eventType !== "Other"}
+            disabled={localData?.eventType !== "Other"}
           />
           {errors.eventTypeOther && <p className="text-red-400 text-xs mt-1">{errors.eventTypeOther}</p>}
         </div>
@@ -71,16 +68,16 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
       {/* Professional Society */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
         <div>
-          <CustomSelect label="Professional Society Involved" required value={eventData?.society || ""} onChange={handleSelect("society")}
+          <CustomSelect label="Professional Society Involved" required value={localData?.society || ""} onChange={handleSelect("society")}
             options={["IEEE","ISTE","CSI","ACM","Other"]} />
           {errors.society && <p className="text-red-400 text-xs mt-1">{errors.society}</p>}
         </div>
         <div>
           <CustomInput
             label="If professional society involved is others, please specify *"
-            value={eventData?.societyOther || ""}
+            value={localData?.societyOther || ""}
             onChange={handle("societyOther")}
-            disabled={eventData?.society !== "Other"}
+            disabled={localData?.society !== "Other"}
           />
           {errors.societyOther && <p className="text-red-400 text-xs mt-1">{errors.societyOther}</p>}
         </div>
@@ -89,16 +86,16 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
       {/* Logos */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
         <div>
-          <CustomSelect label="Logos in Poster" required value={eventData?.logos || ""} onChange={handleSelect("logos")}
+          <CustomSelect label="Logos in Poster" required value={localData?.logos || ""} onChange={handleSelect("logos")}
             options={["College Logo","Society Logo","Both","Other"]} />
           {errors.logos && <p className="text-red-400 text-xs mt-1">{errors.logos}</p>}
         </div>
         <div>
           <CustomInput
             label="If logos in poster is others, please specify *"
-            value={eventData?.logosOther || ""}
+            value={localData?.logosOther || ""}
             onChange={handle("logosOther")}
-            disabled={eventData?.logos !== "Other"}
+            disabled={localData?.logos !== "Other"}
           />
           {errors.logosOther && <p className="text-red-400 text-xs mt-1">{errors.logosOther}</p>}
         </div>
@@ -111,7 +108,7 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
           {errors.numDays && <p className="text-red-400 text-xs mt-1">{errors.numDays}</p>}
         </div>
         <div>
-          <CustomSelect label="Target Audience" required value={eventData?.audience || ""} onChange={handleSelect("audience")}
+          <CustomSelect label="Target Audience" required value={localData?.audience || ""} onChange={handleSelect("audience")}
             options={["Students","Faculty","Both"]} />
           {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
         </div>
