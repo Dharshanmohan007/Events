@@ -33,6 +33,13 @@ export default function Form() {
 
   // Shared cross-form state
   const [venueData, setVenueData] = useState([]); // passed from VenueForm → IctsForm
+  const [ictsData, setIctsData] = useState({}); // ICTS form data
+  const [audioData, setAudioData] = useState({}); // Audio form data
+  const [transportData, setTransportData] = useState({}); // Transport form data
+  const [foodData, setFoodData] = useState({}); // Food and refreshments form data
+  const [accommodationData, setAccommodationData] = useState({}); // Accommodation form data
+  const [purchaseData, setPurchaseData] = useState({}); // Purchase form data
+  const [mediaData, setMediaData] = useState({}); // Media form data
 
   // Scroll container ref — used to reset scroll to top on every step change
   const scrollContainerRef = useRef(null);
@@ -104,8 +111,14 @@ export default function Form() {
   // Extra props per step key
   const extraProps = {
     event: { user, eventRequisition, setEventRequisition, setEventDays },
-    venue: { onVenueDataChange: setVenueData },
-    icts: { venueData },
+    venue: { venueData, onVenueDataChange: setVenueData },
+    icts: { venueData, ictsData, onIctsDataChange: setIctsData },
+    audio: { audioData, onAudioDataChange: setAudioData },
+    transport: { transportData, onTransportDataChange: setTransportData },
+    foodandrefreshments: { foodData, onFoodDataChange: setFoodData },
+    accommodation: { accommodationData, onAccommodationDataChange: setAccommodationData },
+    purchase: { purchaseData, onPurchaseDataChange: setPurchaseData },
+    media: { mediaData, onMediaDataChange: setMediaData },
   };
 
   const currentStepKey = steps[currentStep]?.key;
@@ -113,7 +126,7 @@ export default function Form() {
   return (
     <div className="flex h-screen bg-[#16162A]">
       {/* Sidebar */}
-      <div className="w-[280px] flex-shrink-0">
+      <div className="w-[325px] flex-shrink-0">
         <EventsSidebar
           steps={steps}
           currentStep={currentStep}
@@ -125,7 +138,7 @@ export default function Form() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-4 pb-3 border-[#2A2A45]">
-          <h1 className="text-white text-xl font-bold">
+          <h1 className="text-white text-xl font-bold playfair">
             {steps[currentStep]?.label}
           </h1>
 

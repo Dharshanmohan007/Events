@@ -36,8 +36,8 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path='/login' element={<Login />} /> 
-      <Route path='/' element={<EventsForm />} />
+      {/* <Route path='/login' element={<Login />} /> 
+      <Route path='/' element={<EventsForm />} /> */}
       <Route path='/dashboard-ictcs' element={<ICTCSDashboard />} />
       <Route path='/dashboard-ictcs/events' element={<Events />} />
       <Route path='/dashboard-ictcs/reports' element={<Reports />} />

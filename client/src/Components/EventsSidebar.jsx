@@ -53,7 +53,7 @@ export default function EventsSidebar({ steps = [], currentStep = 0, completedSt
             </div>
 
             
-            <span className="text-md whitespace-nowrap">{step.label}</span>
+            <span className="text-sm whitespace-nowrap">{step.label}</span>
           </div>
         ))}
       </div>

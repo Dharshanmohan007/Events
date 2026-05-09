@@ -46,8 +46,8 @@ export default function EventOrganizerDetails({
   const openFilePicker = () => inputRef.current.click();
 
   return (
-    <div className="w-full p-4 sm:p-6 rounded-xl">
-      <h1 className="text-white text-base sm:text-lg font-bold mb-6">
+    <div className="w-full px-4 py-6 sm:px-6  rounded-xl">
+      <h1 className="text-white text-base sm:text-lg font-bold mb-6 playfair">
         Event Organizer Details
       </h1>
 
