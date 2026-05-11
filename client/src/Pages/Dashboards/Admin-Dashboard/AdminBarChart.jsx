@@ -1,37 +1,142 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import cylinder from '../../../assets/cylinder.svg'
+import cylinderTop from '../../../assets/cylinder-top.svg'
+import cylinderBottom from '../../../assets/cylinder-bottom.svg'
 
-const AdminBarChart = () => {
+const AdminBarChart = ({ data = [
+  {
+    "count": 2,
+    "department": "AIDS"
+  },
+  {
+    "count": 1,
+    "department": "CCE"
+  },
+  {
+    "count": 2,
+    "department": "CSE"
+  },
+  {
+    "count": 1,
+    "department": "ECE"
+  },
+  {
+    "count": 1,
+    "department": "EEE"
+  },
+  {
+    "count": 2,
+    "department": "IT"
+  },
+  {
+    "count": 1,
+    "department": "MATHS"
+  },
+  {
+    "count": 1,
+    "department": "Placement"
+  },
+  {
+    "count": 1,
+    "department": "Placement"
+  },
+  {
+    "count": 4,
+    "department": "Placement"
+  },
+  {
+    "count": 2,
+    "department": "IT"
+  },
+  {
+    "count": 1,
+    "department": "MATHS"
+  },
+  {
+    "count": 1,
+    "department": "Placement"
+  },
+  {
+    "count": 1,
+    "department": "Placement"
+  },
+  {
+    "count": 3,
+    "department": "Placement"
+  }
+] }) => {
+   const chartData = data
+
+const maxCount =
+  chartData.length > 0
+    ? Math.max(...chartData.map(item => item.count))
+    : 0
+
+    // useEffect(() => {
+    //     if (data && data.length > 0) {
+    //         setChartData(data)
+    //         const max = Math.max(...data.map(item => item.count))
+    //         setMaxCount(max)
+    //     }
+    // }, [data])
+
+    // Calculate bar height as percentage of max count
+    const getBarHeight = (count) => {
+        if (maxCount === 0) return 0
+        return (count / maxCount) * 100
+    }
+
     return (
         <>
-            <section className="w-full bg-[#171f31] rounded-lg mt-4 p-4">
-                <h2 className="text-white text-base font-medium ">
+            <section className=" bg-[#171f31] rounded-lg p-4 w-[75%]">
+                <h2 className="text-white text-base font-medium mb-4">
                     Faculty By Department
                 </h2>
 
                 {/* chart  */}
-                <div className="chart-contaner">
-                    <div className="flex flex-col items-center justify-end h-64 w-20  rounded-md px-2 py-3">
+                <div className="chart-container flex gap-2 w-full">
+                    {chartData.length > 0 ? (
+                        chartData.map((item, index) => (
+                            <div
+                                key={index}
+                                className="bar flex-1 min-w-0 flex flex-col items-center justify-end h-80 rounded-md px-1 py-3"
+                            >
+                                {/* Value */}
+                                <span className="text-white text-xs mb-2 font-semibold">
+                                    {item.count}
+                                </span>
 
-                        {/* Value */}
-                        <span className="text-white text-xs mb-2">215</span>
+                                {/* Bar container */}
+                                <div className="relative h-full flex items-end w-full">
 
-                        {/* Bar container */}
-                        <div className="relative w-12 h-full flex items-end">
+                                    {/* Main bar */}
+                                    <div className="w-full bg-gradient-to-b h-full from-[#192c4a] to-[#0b1f3a] rounded-t-lg flex items-end overflow-hidden transition-all duration-300"
+                                    >
 
-                            {/* Main bar */}
-                            <div className="w-full h-full bg-gradient-to-b from-[#192c4a] to-[#0b1f3a] rounded-md flex items-end overflow-hidden">
+                                        {/* cylinder  */}
+                                        <img src={cylinderTop} className=" top-cylinder absolute top-[-1.2px] w-full " />
 
-                                {/* Bottom highlight fill */}
-                                <div className="w-full h-6 bg-gradient-to-r from-blue-400 to-blue-600 rounded-md"></div>
 
+
+                                        {/* Bottom highlight fill */}
+                                        <div style={{ height: `${getBarHeight(item.count)}%` }} className="w-full h-full bg-gradient-to-r from-[#2164B7] relative to-blue-600/40 rounded-t-xl rounded-b-sm">
+                                            <img src={cylinder} className=" top-cylinder absolute top-[-0px] rounded-t-xl w-full " />
+                                            {/* <img src={cylinder} className=" top-cylinder absolute bottom-[0px] rounded-t-xl w-full " /> */}
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                                {/* Label */}
+                                <span className="text-gray-300 text-xs mt-2">
+                                    {item.department}
+                                </span>
                             </div>
-
-                            
-                        </div>
-
-                        {/* Label */}
-                        <span className="text-gray-300 text-xs mt-2">CSE</span>
-                    </div>
+                        ))
+                    ) : (
+                        <div className="text-gray-400 text-sm">No data available</div>
+                    )}
                 </div>
             </section>
         </>
