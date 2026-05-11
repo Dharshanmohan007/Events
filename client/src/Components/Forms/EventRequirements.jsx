@@ -6,13 +6,19 @@ const defaultValues = {
   foodandrefreshments: "", accommodation: "", purchase: "", media: "",
 };
 
-export default function EventRequirements({ nextStep, setSelectedRequirements, isLoading = false, initialValues = {} }) {
+export default function EventRequirements({ nextStep, setSelectedRequirements, onRequirementsChange, isLoading = false, initialValues = {}, errors = {} }) {
   const [values, setValues] = useState(() => ({ ...defaultValues, ...initialValues }));
-  const [errors, setErrors] = useState({});
+  const [localErrors, setLocalErrors] = useState({});
 
   const handleChange = (key, val) => {
-    setValues((prev) => ({ ...prev, [key]: val }));
-    setErrors((prev) => ({ ...prev, [key]: "" }));
+    const nextValues = { ...values, [key]: val };
+    setValues(nextValues);
+    setLocalErrors((prev) => ({ ...prev, [key]: "" }));
+
+    if (onRequirementsChange) {
+      const selected = Object.keys(nextValues).filter((req) => nextValues[req] === "Yes");
+      onRequirementsChange(selected);
+    }
   };
 
   const validate = () => {
@@ -28,13 +34,12 @@ export default function EventRequirements({ nextStep, setSelectedRequirements, i
   const handleNext = () => {
     const errs = validate();
     if (Object.keys(errs).length > 0) {
-      setErrors(errs);
+      setLocalErrors(errs);
       return;
     }
     const selected = Object.keys(values).filter((key) => values[key] === "Yes");
     setSelectedRequirements(selected);
-    // Pass selected requirements directly to nextStep so parent can use them immediately
-    nextStep(selected);
+    if (nextStep) nextStep(selected);
   };
 
   const LABEL_MAP = {
@@ -60,10 +65,12 @@ export default function EventRequirements({ nextStep, setSelectedRequirements, i
               onChange={(val) => handleChange(key, val)}
               options={["Yes", "No"]}
             />
-            {errors[key] && <p className="text-red-400 text-xs mt-1">{errors[key]}</p>}
+            {(localErrors[key] || errors[key]) && <p className="text-red-400 text-xs mt-1">{localErrors[key] || errors[key]}</p>}
           </div>
         ))}
       </div>
+
+      {errors.requirements && <p className="text-red-400 text-sm mb-4">{errors.requirements}</p>}
 
       <div className="flex justify-end">
         <button

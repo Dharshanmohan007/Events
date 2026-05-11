@@ -405,12 +405,12 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
     }))
   );
 
-  // Update venueData when initialVenueData changes
+  // Initialize venueData from initialVenueData once on mount
   useEffect(() => {
     if (initialVenueData.length > 0) {
       setVenueData(initialVenueData);
     }
-  }, [initialVenueData]);
+  }, []);
 
   // Notify parent of venueData changes
   useEffect(() => {

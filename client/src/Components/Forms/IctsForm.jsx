@@ -221,10 +221,12 @@ export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData
 
   const [ictsData, setIctsData] = useState(initialIctsData);
 
-  // Update ictsData when initialIctsData changes
+  // Initialize ictsData from initialIctsData once on mount
   useEffect(() => {
-    setIctsData(initialIctsData);
-  }, [initialIctsData]);
+    if (Object.keys(initialIctsData).length > 0) {
+      setIctsData(initialIctsData);
+    }
+  }, []);
 
   // Notify parent of ictsData changes
   useEffect(() => {

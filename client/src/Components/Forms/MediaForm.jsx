@@ -34,8 +34,8 @@ function buildMediaPayload(mediaData) {
           ...(day.poster?.sizeForFlex ? [{ type: "Flex", value: day.poster.sizeForFlex }] : []),
           ...(day.poster?.sizeForGlass ? [{ type: "Glass Sticker", value: day.poster.sizeForGlass }] : []),
         ],
-        referencePosterFiles: [],
-        referenceCertificateFiles: [],
+        referencePosterFiles: day.poster?.referencePoster ? [day.poster.referencePoster.name] : [],
+        referenceCertificateFiles: day.poster?.referenceCertificate ? [day.poster.referenceCertificate.name] : [],
         displayNeeded: day.poster?.displayNeeded || [],
         deliveryDate: day.poster?.deliveryDate || "",
         priority: day.poster?.priority || "",
@@ -47,7 +47,7 @@ function buildMediaPayload(mediaData) {
         eventCoverage: day.video?.eventCoverage || [],
         postEventVideos: day.video?.postEvent || [],
         specialVideos: day.video?.specialVideos || [],
-        referenceFiles: [],
+        referenceFiles: day.video?.referenceVideo ? [day.video.referenceVideo.name] : [],
         deliveryDate: day.video?.deliveryDate || "",
         priority: day.video?.priority || "",
         specialRequirements: day.video?.specialReq || "",
@@ -113,7 +113,7 @@ function MultiSelectDropdown({ label, options, selected, onChange, error, labelB
 
 function FileUpload({ label, value, onChange, labelBg = "#1E1E35" }) {
   const ref = useRef();
-  const handleFile = (file) => { if (file) onChange({ name: file.name, size: file.size }); };
+  const handleFile = (file) => { if (file) onChange(file); };
 
   return (
     <div className="w-full">
@@ -357,11 +357,29 @@ export default function MediaForm({ nextStep, prevStep, eventDays = [], eventId 
       setApiError("");
       try {
         const payload = buildMediaPayload(mediaData);
+        const formData = new FormData();
+        formData.append('mediaRequirementDetails', JSON.stringify(payload));
+
+        // Append files
+        mediaData.forEach((day, dayIndex) => {
+          if (day.poster?.referencePoster) {
+            formData.append(`referencePoster_${dayIndex}`, day.poster.referencePoster);
+          }
+          if (day.poster?.referenceCertificate) {
+            formData.append(`referenceCertificate_${dayIndex}`, day.poster.referenceCertificate);
+          }
+          if (day.video?.referenceVideo) {
+            formData.append(`referenceVideo_${dayIndex}`, day.video.referenceVideo);
+          }
+        });
+
         const id = eventId || '';
         const saveRes = await fetch(`${BASE_URL}/api/events/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ mediaRequirementDetails: payload }),
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: formData,
         });
         const saveData = await saveRes.json();
         if (!saveRes.ok) throw new Error(saveData.message || `Server error: ${saveRes.status}`);

@@ -138,8 +138,8 @@ function buildPayload({
 
     eventDetails: {
       eventName: eventData.eventName || "",
-      iic : eventData.involvedIIC || false,
-      involvedIIC: false,
+      iic: eventData.iic === "Yes" || eventData.iic === true || false,
+      involvedIIC: eventData.iic === "Yes" || eventData.iic === true,
       eventType: eventData.eventType || "",
       eventTypeOther: eventData.eventTypeOther || "",
       professionalSociety: eventData.society ? [eventData.society] : [],
@@ -188,12 +188,14 @@ function buildPayload({
 
 export default function EventRequisitionDetails({
   nextStep,
+  onSave,
   setSelectedRequirements,
   setEventDays,
   setEventId,
   user,
   eventRequisition: initialEventRequisition = {},
-  setEventRequisition
+  setEventRequisition,
+  errors = {}
 }) {
 
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
@@ -269,6 +271,11 @@ export default function EventRequisitionDetails({
     setEventDays(days);
   };
 
+  const handleRequirementsChange = (selectedReqs) => {
+    setRequirements(selectedReqs);
+    if (setSelectedRequirements) setSelectedRequirements(selectedReqs);
+  };
+
   const requirementValues = requirements.reduce((acc, key) => ({ ...acc, [key]: "Yes" }), {});
 
   const handleNextWithValidation = async (selectedReqs) => {
@@ -316,6 +323,8 @@ export default function EventRequisitionDetails({
       });
       console.log('Payload built:', payload);
 
+      // In EventRequisitionDetails.jsx, replace the fetch block in handleNextWithValidation:
+
       const response = await fetch(`${BASE_URL}/api/events`, {
         method: 'POST',
         headers: {
@@ -324,9 +333,20 @@ export default function EventRequisitionDetails({
         body: payload,
       });
 
-      console.log('API response status:', response.status);
-      const data = await response.json();
-      console.log('API response data:', data);
+      // ✅ Read as text FIRST, then try to parse
+      const rawText = await response.text();
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        // Server returned HTML (error page, 404, 502, etc.)
+        console.error('Non-JSON response from server:', rawText.slice(0, 300));
+        throw new Error(
+          `Server returned an unexpected response (status ${response.status}). ` +
+          `Check that ${BASE_URL}/api/events is reachable and the server is running.`
+        );
+      }
 
       if (!response.ok) {
         throw new Error(data.message || `Server error: ${response.status}`);
@@ -368,13 +388,13 @@ export default function EventRequisitionDetails({
         reason={reason} setReason={setReason}
         numOrganizers={numOrganizers} setNumOrganizers={setNumOrganizers}
         organizers={organizers} setOrganizers={setOrganizers}
-        errors={orgErrors}
+        errors={errors}
       />
       <hr className="my-1   border-[#333351]"/>
 
       <EventDetails
         setEventDays={syncEventDays}
-        errors={eventErrors}
+        errors={errors}
         eventData={eventData}
         setEventData={setEventData}
         setErrors={setEventErrors}
@@ -382,10 +402,12 @@ export default function EventRequisitionDetails({
       <hr className="my-1 border-[#333351]" />
 
       <EventRequirements
-        nextStep={handleNextWithValidation}
+        nextStep={onSave}
         setSelectedRequirements={setRequirements}
+        onRequirementsChange={handleRequirementsChange}
         isLoading={isLoading}
         initialValues={requirementValues}
+        errors={errors}
       />
 
     </div>
