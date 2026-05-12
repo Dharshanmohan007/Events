@@ -548,53 +548,6 @@ export default function FoodAndRefreshments({
       ))}
 
 
-      <div className="w-full mt-10 flex items-center justify-between">
-      
-
-        <button
-          type="button"
-          onClick={handlePrevious}
-          className="
-            min-w-[120px]
-            h-[46px]
-            rounded-xl
-            border
-            border-purple-600
-            text-purple-500
-            font-medium
-            bg-transparent
-          
-            transition-all
-            duration-300
-          "
-        >
-          ← Back
-        </button>
-
-
-
-        <button
-          type="button"
-          onClick={nextStep}
-          className="
-            min-w-[120px]
-            h-[46px]
-            rounded-xl
-            bg-gradient-to-r
-            from-purple-500
-            to-purple-600
-            text-white
-            font-medium
-            hover:opacity-90
-            transition-all
-            duration-300
-            shadow-lg
-            shadow-purple-900/30
-          "
-        >
-          Next →
-        </button>
-      </div>
     </div>
   );
 }

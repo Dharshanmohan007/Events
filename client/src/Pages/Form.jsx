@@ -455,7 +455,53 @@ const validatePurchaseData = (purchaseData) => {
   console.log("Purchase data validation errors:", errors);
 };
 
-const buildPurchasePayload = (purchaseData) => ({ purchases: purchaseData });
+const buildPurchasePayload = (purchaseData) => {
+  const purchases = purchaseData.map((day, dayIndex) => {
+    const requirementNeeded = [];
+    if (day.requirementNeeded?.includes("Id Card"))
+      requirementNeeded.push({ type: "Id Card", hardCount: parseInt(day.idCardQty) || 0, softCount: 0 });
+    if (day.requirementNeeded?.includes("Certificate"))
+      requirementNeeded.push({ type: "Certificate", hardCount: parseInt(day.certificateQty) || 0, softCount: 0 });
+ 
+    const requiredFor = [];
+    if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
+    if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
+ 
+    const buildPersonData = (personData = {}) => {
+      const giftItems = [];
+      if (personData.giftType?.includes("Trophy")) {
+        giftItems.push({
+          type: "Trophy",
+          trophyTypes: personData.trophyType || [],
+          basicQty: parseInt(personData.basicTrophyQty) || 0,
+          eliteQty: parseInt(personData.eliteTrophyQty) || 0,
+        });
+      }
+      if (personData.giftType?.includes("Cash Prize")) {
+        giftItems.push({ type: "Cash Prize", amount: parseInt(personData.cashPrizeAmount) || 0 });
+      }
+      if (personData.giftType?.includes("Voucher")) {
+        giftItems.push({ type: "Voucher", worth: personData.voucherWorth || "" });
+      }
+      return {
+        registrationKitNeeded: personData.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(personData.registrationKitQty) || 0,
+        specialRequirements: personData.specialRequirements || "",
+        giftItems,
+      };
+    };
+ 
+    return {
+      dayIndex,
+      requirementNeeded,
+      requiredFor,
+      students: buildPersonData(day.studentData),
+      guests: buildPersonData(day.guestData),
+    };
+  });
+ 
+  return { purchases };
+};
 
 const validateMediaData = (mediaData) => {
   const errors = mediaData.map((day) => {
@@ -827,7 +873,26 @@ export default function Form() {
     }
   };
 
+  const [childNav, setChildNav] = useState({ next: null, prev: null, isLoading: false });
+
+  const registerChildNavigation = useCallback((nav = {}) => {
+    console.log('👁️ Parent registerChildNavigation called', { currentStepKey, nav });
+    setChildNav({
+      next: nav.next || null,
+      prev: nav.prev || null,
+      isLoading: nav.isLoading || false,
+    });
+  }, [currentStepKey]);
+
   const handleSaveAndContinue = async () => {
+    console.log('👁️ Parent handleSaveAndContinue', { currentStepKey, childNav });
+    if (childNav.next) {
+      console.log('👁️ Parent calling childNav.next');
+      await childNav.next();
+      return;
+    }
+
+    console.log('👁️ Parent falling back to saveSection');
     const sectionKey = currentStepKey;
     if (!sectionKey) return;
     const sectionValue = formData[sectionKey];
@@ -841,14 +906,52 @@ export default function Form() {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
+      setCompletedSteps((prev) => (prev.includes(currentStep) ? prev : [...prev, currentStep]));
       setCurrentStep((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
+    if (childNav.prev) {
+      childNav.prev();
+      return;
+    }
     if (currentStep > 0) {
       setCurrentStep((prev) => prev - 1);
     }
+  };
+
+  // Check if current form section has multi-day data and if all days are completed
+  const isMultiDayForm = () => {
+    const multiDayKeys = ['venue', 'icts', 'purchase', 'media'];
+    return multiDayKeys.includes(currentStepKey) && (formData.event.eventDays || []).length > 1;
+  };
+
+  const isAllDaysCompleted = () => {
+    if (!isMultiDayForm()) return true;
+    
+    const sectionData = formData[currentStepKey];
+    const eventDays = formData.event.eventDays || [];
+    
+    if (currentStepKey === 'icts') {
+      if (typeof sectionData !== 'object' || Array.isArray(sectionData)) return false;
+      return eventDays.every((_, index) => sectionData[index] && Object.keys(sectionData[index]).length > 0);
+    }
+
+    if (!Array.isArray(sectionData) || sectionData.length !== eventDays.length) {
+      return false;
+    }
+    
+    return sectionData.every(day => {
+      if (currentStepKey === 'venue') {
+        return day.participants && day.selectedVenues && day.selectedVenues.length > 0;
+      } else if (currentStepKey === 'purchase') {
+        return day.selectedPersons && day.selectedPersons.trim() !== '';
+      } else if (currentStepKey === 'media') {
+        return day.designType && day.designType.trim() !== '';
+      }
+      return false;
+    });
   };
 
   const sectionProps = {
@@ -1010,6 +1113,7 @@ export default function Form() {
           <CurrentComponent
             nextStep={handleNext}
             prevStep={handleBack}
+            registerChildNavigation={registerChildNavigation}
             setSelectedRequirements={setSelectedRequirements}
             eventDays={formData.event.eventDays}
             setEventDays={(days) => updateFormSection("event", { ...formData.event, eventDays: days })}
@@ -1023,7 +1127,7 @@ export default function Form() {
           <div className="flex justify-between gap-4">
             <button
               onClick={handleBack}
-              disabled={currentStep === 0}
+              disabled={!childNav.prev && currentStep === 0}
               className="rounded-lg border border-purple-600 px-6 py-2 text-purple-600 hover:bg-purple-600/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Back
@@ -1031,18 +1135,18 @@ export default function Form() {
             {currentStep === steps.length - 1 ? (
               <button
                 onClick={submitEvent}
-                disabled={!eventId || isLoading}
+                disabled={!eventId || isLoading || childNav.isLoading}
                 className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Submitting..." : "Submit"}
+                {isLoading || childNav.isLoading ? "Submitting..." : "Submit"}
               </button>
             ) : (
               <button
                 onClick={handleSaveAndContinue}
-                disabled={isLoading}
+                disabled={isLoading || childNav.isLoading}
                 className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading ? "Saving..." : "Save & Next"}
+                {isLoading || childNav.isLoading ? "Saving..." : isMultiDayForm() && !isAllDaysCompleted() ? "Next Day →" : "Save & Next"}
               </button>
             )}
           </div>

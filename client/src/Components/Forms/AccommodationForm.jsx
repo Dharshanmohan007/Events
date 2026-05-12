@@ -222,21 +222,6 @@ export default function AccommodationForm({ nextStep, handlePrevious }) {
         )}
       </div>
 
-      <div className="flex items-center justify-between mt-14 w-full">
-        <button
-          onClick={handlePrevClick}
-          className="border border-purple-500 text-purple-500 px-6 py-2 rounded-lg  transition"
-        >
-          ← Back
-        </button>
-
-        <button
-          onClick={handleNextClick}
-          className="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-2 rounded-lg hover:opacity-90 transition"
-        >
-          Next →
-        </button>
-      </div>  
     </div>
   );
 }

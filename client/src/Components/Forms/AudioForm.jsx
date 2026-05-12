@@ -104,21 +104,6 @@ export default function AudioForm({ nextStep, handlePrevious }) {
       </div>
 
     
-      <div className="flex justify-between mt-10">
-        <button
-          onClick={handlePrevClick}
-          className="border border-purple-600 text-purple-600 px-6 py-2 rounded-lg"
-        >
-          ← Back
-        </button>
-
-        <button
-          onClick={handleNextClick}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg"
-        >
-          Next →
-        </button>
-      </div>
     </>
   );
 }

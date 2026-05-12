@@ -422,75 +422,18 @@ export default function TransportForm({nextStep,handlePrevious,}){
 
         
             <div className="relative mb-6 mt-4">
-             <textarea
-  className="
-    w-full
-    p-4
-    rounded-lg
-    border border-gray-700
-    text-gray-300
-   
-    focus:outline-none
-    focus:border-purple-500
-    transition-all duration-200
-  "
-  rows={4}
-/>
+              <textarea
+                className="w-full p-4 rounded-lg border border-gray-700 text-gray-300 focus:outline-none focus:border-purple-500 transition-all duration-200"
+                rows={4}
+              />
 
               <label
-                className="
-                  absolute
-                  -top-2
-                  left-3
-                  text-xs
-                  text-white
-                  bg-[#1f1f38]
-                  px-1
-                "
+                className="absolute -top-2 left-3 text-xs text-white bg-[#1f1f38] px-1"
               >
                 Special Requirements *
               </label>
-            </div>  
+            </div>
           </div>
-
-  
-<div className="w-full mt-8">
-  <div className="flex justify-between items-center">
-    
-   
-    <button
-      onClick={handlePrevClick}
-      className="
-        border border-purple-600
-        text-purple-500
-        px-8 py-2
-        rounded-md
-        text-sm font-medium
-        transition-all duration-200
-      "
-    >
-      ← Back
-    </button>
-
-   
-    <button
-      onClick={handleNextClick}
-      className="
-        bg-gradient-to-r
-        from-purple-600
-        to-purple-500
-        text-white
-        px-8 py-2
-        rounded-md
-        text-sm font-medium
-        hover:opacity-90
-        transition-all duration-200
-      "
-    >
-      Next →
-    </button>
-  </div>
-</div>
         </div>
       ))}
     </div>

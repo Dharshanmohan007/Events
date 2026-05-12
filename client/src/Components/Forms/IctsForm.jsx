@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 import { DayTimeline } from "./VenueForm";
@@ -212,21 +212,21 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {} }) {
   );
 }
 
-export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData = [], ictsData: initialIctsData = {}, onIctsDataChange, eventId }) {
+export default function IctsForm({ nextStep, prevStep, registerChildNavigation, eventDays = [], venueData = [], ictsData: initialIctsData = {}, onIctsDataChange, eventId }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const [ictsData, setIctsData] = useState(initialIctsData);
+  const [ictsData, setIctsData] = useState(() => initialIctsData || {});
 
-  // Initialize ictsData from initialIctsData once on mount
+  // Keep local ictsData synced when parent prop changes
   useEffect(() => {
-    if (Object.keys(initialIctsData).length > 0) {
+    if (initialIctsData && Object.keys(initialIctsData).length > 0) {
       setIctsData(initialIctsData);
     }
-  }, []);
+  }, [initialIctsData]);
 
   // Notify parent of ictsData changes
   useEffect(() => {
@@ -250,6 +250,16 @@ export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData
       ...prev,
       [dayIndex]: { ...(prev[dayIndex] || {}), [venueName]: updated },
     }));
+
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+      if (updatedErrors[dayIndex] && updatedErrors[dayIndex][venueName]) {
+        const venueErrors = { ...updatedErrors[dayIndex] };
+        delete venueErrors[venueName];
+        updatedErrors[dayIndex] = venueErrors;
+      }
+      return updatedErrors;
+    });
   };
 
   const validateCurrentDay = () => {
@@ -266,11 +276,13 @@ export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData
 
   const isLastDay = currentDayIndex === eventDays.length - 1;
 
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     const dayErrors = validateCurrentDay();
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
+
+    setErrors((prev) => ({ ...prev, [currentDayIndex]: {} }));
 
     const newCompleted = completedDays.includes(currentDayIndex)
       ? completedDays
@@ -300,15 +312,40 @@ export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
     }
-  };
+  }, [currentDayIndex, completedDays, isLastDay, ictsData, venueData, eventId, nextStep]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
       setCurrentDayIndex((prev) => prev - 1);
     } else {
       prevStep();
     }
-  };
+  }, [currentDayIndex, prevStep]);
+
+  // ── navRef pattern — prevents infinite loop in registerChildNavigation ──────
+  const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
+  useEffect(() => {
+    navRef.current = { next: handleNext, prev: handleBack, isLoading };
+  });
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    const stableNext = (...args) => navRef.current.next(...args);
+    const stablePrev = (...args) => navRef.current.prev(...args);
+    registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
+    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerChildNavigation]);
+
+  // Keep parent's isLoading in sync without re-running the registration effect
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    registerChildNavigation({
+      next: navRef.current.next,
+      prev: navRef.current.prev,
+      isLoading,
+    });
+  }, [isLoading, registerChildNavigation]);
 
   const currentDayErrors = errors[currentDayIndex] || {};
 
@@ -351,26 +388,6 @@ export default function IctsForm({ nextStep, prevStep, eventDays = [], venueData
         </div>
       )}
 
-      <div className="flex justify-between">
-        <button onClick={handleBack} className="border border-purple-600 px-6 py-2 rounded text-purple-600 hover:bg-purple-600/10 transition-colors">
-          ← Back
-        </button>
-        <button
-          onClick={handleNext}
-          disabled={isLoading}
-          className="bg-purple-600 px-6 py-2 rounded text-white hover:bg-purple-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              Saving...
-            </>
-          ) : isLastDay ? "Save & Next →" : "Next Day →"}
-        </button>
-      </div>
     </div>
   );
 }

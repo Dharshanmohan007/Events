@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import CustomSelect from "../CustomSelect";
 
 const defaultValues = {
-  venue: "", icts: "", audio: "", transport: "",
-  foodandrefreshments: "", accommodation: "", purchase: "", media: "",
+  venue: "", icts: "", purchase: "", media: "", audio: "", transport: "",
+  foodandrefreshments: "", accommodation: "",
 };
 
 export default function EventRequirements({ nextStep, setSelectedRequirements, onRequirementsChange, isLoading = false, initialValues = {}, errors = {} }) {
@@ -71,26 +71,6 @@ export default function EventRequirements({ nextStep, setSelectedRequirements, o
       </div>
 
       {errors.requirements && <p className="text-red-400 text-sm mb-4">{errors.requirements}</p>}
-
-      <div className="flex justify-end">
-        <button
-          onClick={handleNext}
-          disabled={isLoading}
-          className="bg-purple-600 text-white px-6 py-2 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2 hover:bg-purple-700 transition-colors"
-        >
-          {isLoading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              Saving...
-            </>
-          ) : (
-            "Save & Next →"
-          )}
-        </button>
-      </div>
     </div>
   );
 }

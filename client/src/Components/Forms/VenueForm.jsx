@@ -1,4 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+
+
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import CustomInput from "../CustomInput";
 
 const BASE_URL = 'https://sece-events.onrender.com';
@@ -100,7 +102,6 @@ function validateDay(dayData) {
 // ─── Build venueDetails payload ───────────────────────────────────────────────
 
 function buildVenuePayload(venueData) {
-  // Calculate total participants across all days
   const totalParticipants = venueData.reduce((sum, day) => {
     return sum + (parseInt(day.participants) || 0);
   }, 0);
@@ -108,7 +109,6 @@ function buildVenuePayload(venueData) {
   const venues = [];
   venueData.forEach((day, dayIndex) => {
     (day.venueCards || []).forEach((card) => {
-      // Build hallRequirements array
       const hallRequirements = [];
       if (card.hallReqs?.includes("Guest Chair") && card.guestChairs)
         hallRequirements.push({ type: "Guest Chair", quantity: parseInt(card.guestChairs) });
@@ -157,8 +157,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
     selected.length === 0
       ? ""
       : selected.length <= 2
-      ? selected.join(" / ")
-      : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
+        ? selected.join(" / ")
+        : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
 
   return (
     <div className="w-full" ref={ref}>
@@ -168,9 +168,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
-          }`}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            }`}
         >
           <span className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}>
             {displayText || "Select venues..."}
@@ -389,28 +388,44 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
   );
 }
 
-export default function VenueForm({ nextStep, prevStep, eventDays = [], venueData: initialVenueData = [], onVenueDataChange, eventId }) {
+export default function VenueForm({ nextStep, prevStep, registerChildNavigation, eventDays = [], venueData: initialVenueData = [], onVenueDataChange, eventId }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const [venueData, setVenueData] = useState(
-    initialVenueData.length > 0 ? initialVenueData : eventDays.map(() => ({
-      participants: "",
-      selectedVenues: [],
-      othersText: "",
-      venueCards: [],
-    }))
+  const [venueData, setVenueData] = useState(() =>
+    initialVenueData.length > 0
+      ? initialVenueData
+      : eventDays.map(() => ({
+          participants: "",
+          selectedVenues: [],
+          othersText: "",
+          venueCards: [],
+        }))
   );
 
-  // Initialize venueData from initialVenueData once on mount
   useEffect(() => {
     if (initialVenueData.length > 0) {
       setVenueData(initialVenueData);
+      return;
     }
-  }, []);
+
+    setVenueData((prev) => {
+      const nextDays = eventDays.length;
+      const updated = [...prev].slice(0, nextDays);
+      while (updated.length < nextDays) {
+        updated.push({
+          participants: "",
+          selectedVenues: [],
+          othersText: "",
+          venueCards: [],
+        });
+      }
+      return updated;
+    });
+  }, [eventDays.length]);
 
   // Notify parent of venueData changes
   useEffect(() => {
@@ -423,35 +438,91 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
   const currentErrors = errors[currentDayIndex] || {};
   const participantCount = parseInt(currentDay?.participants) || 0;
 
+  // ── FIXED: declare isLastDay before it is used in handleNext ──────────────
+  const isLastDay = currentDayIndex === eventDays.length - 1;
+
   const eligibleVenues = VENUES.filter(
     (v) => v.capacity === 0 || v.capacity >= participantCount
   );
 
   const updateCurrentDay = (newData) => {
+    console.log('📝 updateCurrentDay called with:', newData);
     setVenueData((prev) => {
       const updated = [...prev];
-      updated[currentDayIndex] = { ...updated[currentDayIndex], ...newData };
+
+      updated[currentDayIndex] = {
+        ...updated[currentDayIndex],
+        ...newData,
+      };
+      console.log('📝 Updated venueData state:', updated[currentDayIndex]);
+
       return updated;
+    });
+
+    // ONLY clear field-specific errors instead of revalidating whole form
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
+
+      Object.keys(newData).forEach((field) => {
+        delete currentDayErrors[field];
+      });
+
+      updatedErrors[currentDayIndex] = currentDayErrors;
+
+      return updatedErrors;
     });
   };
 
   const handleVenueSelection = (selectedVenues) => {
+    console.log('🎯 handleVenueSelection called with:', selectedVenues);
     const existingCards = currentDay.venueCards || [];
+
     const updatedCards = selectedVenues.map((name) => {
       const existing = existingCards.find((c) => c.venueName === name);
-      return existing || {
-        venueName: name,
-        participants: "",
-        seatingCapacity: "",
-        hallReqs: [],
-        guestChairs: "",
-        waterBottles: "",
-        diasTable: "",
-        audienceChair: "",
-        specialReqs: "",
-      };
+
+      return (
+        existing || {
+          venueName: name,
+          participants: "",
+          seatingCapacity: "",
+          hallReqs: [],
+          guestChairs: "",
+          waterBottles: "",
+          diasTable: "",
+          audienceChair: "",
+          specialReqs: "",
+        }
+      );
     });
-    updateCurrentDay({ selectedVenues, venueCards: updatedCards });
+
+    // update venue data
+    setVenueData((prev) => {
+      const updated = [...prev];
+
+      updated[currentDayIndex] = {
+        ...updated[currentDayIndex],
+        selectedVenues,
+        venueCards: updatedCards,
+      };
+      console.log('🎯 Updated venueData after venue selection:', updated[currentDayIndex]);
+
+      return updated;
+    });
+
+    // CLEAR validation immediately
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+
+      if (updatedErrors[currentDayIndex]) {
+        updatedErrors[currentDayIndex] = {
+          ...updatedErrors[currentDayIndex],
+          selectedVenues: undefined,
+        };
+      }
+
+      return updatedErrors;
+    });
   };
 
   const updateVenueCard = (cardIndex, updated) => {
@@ -464,17 +535,11 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
     });
   };
 
-  useEffect(() => {
-    if (onVenueDataChange) {
-      onVenueDataChange(venueData);
-    }
-  }, [venueData, onVenueDataChange]);
-
-  const isLastDay = currentDayIndex === eventDays.length - 1;
-
-  const handleNext = async () => {
+  const handleNext = useCallback(async () => {
     const dayData = venueData[currentDayIndex];
+    console.log('🔍 VenueForm handleNext - dayData:', dayData);
     const dayErrors = validateDay(dayData);
+    console.log('🔍 VenueForm validation errors:', dayErrors);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
 
@@ -484,17 +549,12 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
       ? completedDays
       : [...completedDays, currentDayIndex];
 
-    // Only call API when all days are completed (last day's Next)
     if (isLastDay) {
       setIsLoading(true);
       setApiError("");
-
       try {
-        const allCompletedData = venueData; // all days filled
-        const payload = buildVenuePayload(allCompletedData);
-
+        const payload = buildVenuePayload(venueData);
         const id = eventId || '';
-        console.log('Sending venue details to backend for event ID:', id, payload);
         const response = await fetch(`${BASE_URL}/api/events/${id}`, {
           method: 'PUT',
           headers: {
@@ -503,15 +563,8 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
           },
           body: JSON.stringify({ venueDetails: payload }),
         });
-
-        console.log('Venue API response status:', response.status);
         const data = await response.json();
-        console.log('Venue API response data:', data);
-
-        if (!response.ok) {
-          throw new Error(data.message || `Server error: ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
         setCompletedDays(newCompleted);
         nextStep();
       } catch (err) {
@@ -523,15 +576,39 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
     }
-  };
+  }, [venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
       setCurrentDayIndex((prev) => prev - 1);
     } else {
       prevStep();
     }
-  };
+  }, [currentDayIndex, prevStep]);
+
+  // ── navRef pattern — prevents infinite loop in registerChildNavigation ──────
+  const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
+  useEffect(() => {
+    navRef.current = { next: handleNext, prev: handleBack, isLoading };
+  });
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    const stableNext = (...args) => navRef.current.next(...args);
+    const stablePrev = (...args) => navRef.current.prev(...args);
+    registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
+    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerChildNavigation]);
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    registerChildNavigation({
+      next: navRef.current.next,
+      prev: navRef.current.prev,
+      isLoading,
+    });
+  }, [isLoading, registerChildNavigation]);
 
   const selectedVenueObjects = (currentDay.selectedVenues || [])
     .map((name) => VENUES.find((v) => v.venue === name))
@@ -545,23 +622,46 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
         Venue Details – Day {currentDayIndex + 1}
       </h2>
 
-      {/* API Error */}
-      {apiError && (
+      {(apiError || Object.keys(currentErrors).length > 0) && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
           <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
-          <p className="text-red-400 text-sm">{apiError}</p>
+          <div className="text-red-400 text-sm">
+            {apiError && <p>{apiError}</p>}
+            {Object.keys(currentErrors).length > 0 && (
+              <div>
+                {currentErrors.participants && <p>• {currentErrors.participants}</p>}
+                {currentErrors.selectedVenues && <p>• {currentErrors.selectedVenues}</p>}
+                {currentErrors.venueCards && <p>• Please fill in all required fields for each venue</p>}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      <div>
-        <CustomInput label="Total Number of Participants *" type="number" value={currentDay.participants} onChange={(e) => updateCurrentDay({ participants: e.target.value })} />
-        <ErrorMsg msg={currentErrors.participants} />
-      </div>
+      <CustomInput
+        label="Total Number of Participants *"
+        type="number"
+        value={currentDay.participants}
+        onChange={(e) =>
+          updateCurrentDay({ participants: e.target.value })
+        }
+      />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <MultiVenueSelect label="Venue Required *" options={participantCount > 0 ? eligibleVenues : VENUES} selected={currentDay.selectedVenues} onChange={handleVenueSelection} error={currentErrors.selectedVenues} />
+        <MultiVenueSelect
+          label="Venue Required *"
+          options={participantCount > 0 ? eligibleVenues : VENUES}
+          selected={currentDay.selectedVenues}
+          onChange={handleVenueSelection}
+          error={
+            currentErrors.selectedVenues &&
+            currentDay.selectedVenues.length === 0
+              ? currentErrors.selectedVenues
+              : ""
+          }
+        />
         <div>
           <div className="relative">
             <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">Others</span>
@@ -585,25 +685,6 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [], venueDat
           ))}
         </div>
       )}
-
-      <div className="flex justify-between">
-        <button onClick={handleBack} className="border border-purple-600 px-6 py-2 rounded text-purple-600 hover:bg-purple-600/10 transition-colors">← Back</button>
-        <button
-          onClick={handleNext}
-          disabled={isLoading}
-          className="bg-purple-600 px-6 py-2 rounded text-white hover:bg-purple-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-              </svg>
-              Saving...
-            </>
-          ) : isLastDay ? "Save & Next →" : "Next Day →"}
-        </button>
-      </div>
     </div>
   );
 }
