@@ -3,7 +3,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 const AdminDepartmentPieChart = ({ data, title = "Events By Department" }) => {
     return (
-        <section className="w-[30%] rounded-lg border border-[#2a3347] bg-[#151c2c] p-5">
+        <section className="w-[25%] rounded-lg border border-[#2a3347] bg-[#171f31] p-5">
             <h2 className="text-white text-base font-semibold">
                 {title}
             </h2>

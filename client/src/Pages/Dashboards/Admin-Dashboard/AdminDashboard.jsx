@@ -1,5 +1,4 @@
 import React from 'react'
-import AdminDashboardHeader from './AdminDashboardHeader'
 import AdminStatcard from './AdminStatcard'
 import AdminUpcomingEventsTable from './AdminUpcomingEventsTable'
 import AdminDepartmentPieChart from './AdminDepartmentPieChart'
@@ -143,12 +142,7 @@ const departmentData = [
 const AdminDashboard = () => {
     return (
         <>
-            <section className='bg-[#0b1326] poppins '>
-                {/* header  */}
-                <AdminDashboardHeader basePath="/dashboard-admin" />
-
-                {/* main-container  */}
-                <div className='main-body-container  px-6 '>
+                <div className='main-body-container px-6'>
                     {/* heading */}
                     <div className="heading mt-2">
                         <h1 className='text-white text-lg font-medium'>Admin Dashboard Overview</h1>
@@ -158,14 +152,21 @@ const AdminDashboard = () => {
                     {/* stat cards  */}
                     <AdminStatcard data={statCardData} />
 
-                    {/* table and charts   */}
+                    {/* table */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
                         {/* table  */}
                         <AdminUpcomingEventsTable
                             events={upcomingEvents}
-                            viewAllLink="/dashboard-admin/events"
+                            viewAllLink="/dashboard-admin/AdminEventsRequests"
                             title="Upcoming Events"
                         />
+
+                    </div>
+
+                    {/* bar chart  and pie chart*/}
+
+                    <div className="chart-container mt-4 flex gap-2">
+                        <AdminBarChart />
                         {/* charts  */}
                         <AdminDepartmentPieChart
                             data={departmentData}
@@ -173,10 +174,8 @@ const AdminDashboard = () => {
                         />
                     </div>
 
-                    {/* bar chart  */}
-                    <AdminBarChart />
+
                 </div>
-            </section>
         </>
     )
 }

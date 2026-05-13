@@ -30,7 +30,7 @@ body {
   scrollbar-color: #d4a6e1b6 transparent;
 }
 
-input::-webkit-inner-spin-button{
+input::-webkit-inner-spin-button {
   display: none;
 }
 
@@ -40,10 +40,9 @@ input::-webkit-inner-spin-button{
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE, Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none; /* IE, Edge */
+  scrollbar-width: none; /* Firefox */
 }
-
 
 .table-custom-scrollbar {
   overflow-y: auto;
@@ -63,6 +62,9 @@ input::-webkit-inner-spin-button{
 .table-custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: #d8d2dab6 transparent;
+}
+.requiremet-card {
+  backdrop-filter: blur(10px);
 }
 .tint {
   background: linear-gradient(
