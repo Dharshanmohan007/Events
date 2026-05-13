@@ -1,4 +1,5 @@
 import { Calendar, ExternalLink, ListFilter, Search } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const events = [
     {
@@ -201,7 +202,7 @@ function StatusLabel({ status }) {
 
 export default function IctcsEventsOverviewTable() {
     return (
-        <section className="h-full w-full overflow-auto rounded-lg border border-[#202b3d] bg-[#171f31] table-custom-scrollbar">
+        <section className=" h-full w-full overflow-auto rounded-lg border border-[#202b3d] bg-[#171f31] table-custom-scrollbar">
             <div className="sticky top-0 z-30 flex min-w-[1180px] items-center justify-end gap-2 border-b border-[#202b3d] bg-[#171f31] px-4 py-4 ">
                 <label className="relative block ">
                     <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
@@ -256,10 +257,13 @@ export default function IctcsEventsOverviewTable() {
                                 <StatusLabel status={event.status} />
                             </td>
                             <td className="whitespace-nowrap px-4 py-4">
-                                <button className="flex items-center justify-center w-full">
-
+                                <Link
+                                    to={`/dashboard-ictcs/events/${event.id}`}
+                                    className="flex items-center justify-center w-full"
+                                    aria-label={`Open ${event.name} details`}
+                                >
                                     <ExternalLink size={18} className="text-[#8a8e97] hover:text-white" />
-                                </button>
+                                </Link>
                             </td>
                         </tr>
                     ))}
