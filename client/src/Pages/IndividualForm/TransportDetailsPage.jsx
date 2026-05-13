@@ -39,7 +39,7 @@ const TransportDetailsPage = () => {
       </h1>
 
       {/* Header */}
-      <div className="w-full border-b border-[#2a2a40] pb-4 flex justify-end">
+      <div className="w-full pb-4 flex justify-end">
         <button className="flex items-center gap-1 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white text-sm font-medium px-4 py-2 rounded-md transition">
           <Plus size={16} />
           Add
@@ -48,7 +48,7 @@ const TransportDetailsPage = () => {
 
       {/* Form Card */}
       <div className="mt-6 bg-[#1b1b35] rounded-xl p-5 border border-[#2a2a40]">
-        
+
         {/* Date Inputs */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
@@ -60,7 +60,7 @@ const TransportDetailsPage = () => {
 
             <div className="flex items-center justify-between border border-[#3a3a5a] rounded-md px-4 py-3">
               <span className="text-[#8d8da8] text-sm">
-                __/__/___
+                __/__/____
               </span>
 
               <div className="flex items-center gap-3">
@@ -76,9 +76,9 @@ const TransportDetailsPage = () => {
               Drop date & Time *
             </label>
 
-            <div className="flex items-center justify-between border border-[#3a3a5a] rounded-md px-4 py-3">
+            <div className="flex items-center justify-between border border-[#3f3f45] rounded-md px-4 py-3">
               <span className="text-[#8d8da8] text-sm">
-                __/__/___
+                __/__/____
               </span>
 
               <div className="flex items-center gap-3">
@@ -89,6 +89,7 @@ const TransportDetailsPage = () => {
           </div>
         </div>
 
+        {/* Pickup Location */}
         <div className="mt-5">
           <label className="text-sm text-white mb-2 block">
             Pickup Location *
@@ -99,7 +100,7 @@ const TransportDetailsPage = () => {
 
             <input
               type="text"
-              placeholder=""
+              placeholder="Enter pickup location"
               className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
             />
           </div>
@@ -154,6 +155,109 @@ const TransportDetailsPage = () => {
             </div>
           ))}
         </div>
+
+        {/* Drop Location */}
+        <div className="mt-5">
+          <label className="text-sm text-white mb-2 block">
+            Drop Location *
+          </label>
+
+          <div className="flex items-center gap-3 border border-[#3f3f45] rounded-md px-4 py-3">
+            <MapPin size={18} />
+
+            <input
+              type="text"
+              placeholder="Enter drop location"
+              className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
+            />
+          </div>
+        </div>
+
+        {/* Passenger & Vehicle Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+
+          {/* Total Number of Passengers */}
+          <div>
+            <label className="text-sm text-white mb-2 block">
+              Total Number of Passengers *
+            </label>
+
+            <div className="border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1b1b35]">
+              <input
+                type="number"
+                placeholder="Enter total passengers"
+                className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
+              />
+            </div>
+          </div>
+
+          {/* Vehicle Type */}
+          <div>
+            <label className="text-sm text-white mb-2 block">
+              Type of Vehicle Needed *
+            </label>
+
+            <div className="relative overflow-visible">
+
+              <select
+                defaultValue=""
+                className="w-full appearance-none border border-[#3a3a5a] rounded-md bg-[#1b1b35] px-4 py-3 text-sm text-white outline-none cursor-pointer relative z-50"
+              >
+                <option value="" disabled>
+                  Select Vehicle Type
+                </option>
+
+                <option
+                  value="Bus"
+                  className="bg-[#26264a] text-white"
+                >
+                  Bus
+                </option>
+
+                <option
+                  value="Van"
+                  className="bg-[#26264a] text-white"
+                >
+                  Van
+                </option>
+
+                <option
+                  value="Car"
+                  className="bg-[#26264a] text-white"
+                >
+                  Car
+                </option>
+
+                <option
+                  value="Outsource Car"
+                  className="bg-[#26264a] text-white"
+                >
+                  Outsource Car
+                </option>
+              </select>
+
+              {/* Dropdown Arrow */}
+              <div className="absolute inset-y-0 right-4 flex items-center pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </div>
   );
