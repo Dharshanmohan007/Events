@@ -3,50 +3,54 @@ import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 
-export default function EventDetails({ setEventDays, errors = {}, eventData, setEventData }) {
-  const [numDays, setNumDays] = useState("");
-  const [daysData, setDaysData] = useState([]);
+export default function EventDetails({ setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
+  const daysData = eventData.eventDays || [];
+  const numDays = daysData.length > 0 ? daysData.length.toString() : "";
 
   const handleDaysChange = (e) => {
     const val = e.target.value;
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
-      setNumDays(val);
       const count = parseInt(val) || 0;
       const newDays = Array.from({ length: count }, (_, i) => ({
-        date: "", startTime: "", endTime: "",
+        date: "",
+        startTime: "",
+        endTime: "",
         numGuests: "1",
         guests: [{ name: "", designation: "", organization: "" }],
       }));
-      setDaysData(newDays);
       setEventDays(newDays);
+      setEventData((prev) => ({ ...prev, eventDays: newDays }));
+      if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
     }
   };
 
-  const handle = (field) => (e) => setEventData((prev) => ({ ...prev, [field]: e.target.value }));
-  const handleSelect = (field) => (val) => setEventData((prev) => ({ ...prev, [field]: val }));
+  const handle = (field) => (e) => {
+    const value = e.target.value;
+    setEventData((prev) => ({ ...prev, [field]: value }));
+    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleSelect = (field) => (val) => {
+    setEventData((prev) => ({ ...prev, [field]: val }));
+    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
   const dayCount = parseInt(numDays) > 0 ? parseInt(numDays) : 0;
 
   return (
-    <div className='p-6 rounded-xl'>
-      <h1 className='text-white text-lg font-bold mb-6'>Event Details</h1>
+    <div className='px-6 py-6 rounded-xl'>
+      <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
       {/* Event Name */}
-      <div className='mb-6'>
-        <CustomInput label="Name of the Event *" value={eventData?.eventName || ""} onChange={handle("eventName")} />
-        {errors.eventName && <p className="text-red-400 text-xs mt-1">{errors.eventName}</p>}
-      </div>
-
-      {/* Tagging */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
         <div>
-          <CustomSelect label="Tagging" required value={eventData?.tagging || ""} onChange={handleSelect("tagging")}
-            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","S&H","Media","Transport"]} />
-          {errors.tagging && <p className="text-red-400 text-xs mt-1">{errors.tagging}</p>}
+          <CustomInput label="Name of the Event *" value={eventData?.eventName || ""} onChange={handle("eventName")} />
+          {errors.eventName && <p className="text-red-400 text-xs mt-1">{errors.eventName}</p>}
         </div>
         <div>
-          <CustomInput label="Tagging Details *" value={eventData?.taggingDetails || ""} onChange={handle("taggingDetails")} />
-          {errors.taggingDetails && <p className="text-red-400 text-xs mt-1">{errors.taggingDetails}</p>}
+          <CustomSelect label="IIC Need *" value={eventData?.iic || ""} onChange={handleSelect("iic")}
+            options={["Yes","No"]} />
+          {errors.iic && <p className="text-red-400 text-xs mt-1">{errors.iic}</p>}
         </div>
       </div>
 
@@ -127,8 +131,8 @@ export default function EventDetails({ setEventDays, errors = {}, eventData, set
           updateDay={(updatedDay) => {
             const updated = [...daysData];
             updated[i] = updatedDay;
-            setDaysData(updated);
             setEventDays(updated);
+            setEventData((prev) => ({ ...prev, eventDays: updated }));
           }}
         />
       ))}

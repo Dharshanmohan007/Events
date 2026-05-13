@@ -1,5 +1,10 @@
-import './App.css'
-import { Routes, Route } from 'react-router-dom'
+import "./App.css";
+import { Routes, Route, Navigate } from "react-router-dom";
+import { showErrorToast, showSuccessToast } from "./Components/CustomToast";
+import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
+
+// Pages
 import EventsForm from './Pages/EventsForm'
 import ICTCSDashboard from './Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard'
 import AUDIODashboard from './Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard'
@@ -18,13 +23,32 @@ import FacultyManagementPage from './Pages/Dashboards/Admin-Dashboard/FacultyMan
 import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/AccommodationDashboard'
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
+import SignUp from './Pages/SignUp'
+import ForgetPassword from './Components/ForgetPassword'  
 
-function App() {
+// Auth Context
+import { AuthProvider, useAuth } from "./Components/AuthContext";
+import { ProtectedRoute } from "./utils/ProtectedRoute";
+import { useEffect } from "react";
 
+
+
+// ─── Route Wrapper for Login Redirect ────────────────────────────────────────
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth();
+  // Wait for auth check before deciding
+  if (loading) return null;
+  return user ? <Navigate to="/forms" replace /> : children;
+}
+
+// ─── App Routes ─────────────────────────────────────────────────────────────
+function AppRoutes() {
   return (
     <Routes>
       <Route path='/login' element={<Login />} />
       <Route path='/' element={<EventsForm />} />
+      {/* <Route path='/login' element={<Login />} /> 
+      <Route path='/' element={<EventsForm />} /> */}
       <Route path='/dashboard-ictcs' element={<ICTCSDashboard />} />
       <Route path='/dashboard-ictcs/events' element={<Events />} />
       <Route path='/dashboard-ictcs/events/:eventId' element={<IctcEventDetailsPage />} />
@@ -42,8 +66,68 @@ function App() {
       <Route path='/dashboard-accommodation' element={<AccommodationDashboard />} />
       <Route path='/dashboard-food' element={<FoodDashboard />} />
       <Route path='/dashboard-purchase' element={<PurchaseDashboard />} />
+      <Route path='/dashboard-admin' element={<AdminDashboard />} />
+      {/* Login Route */}
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      {/* Sign Up Route */}
+      <Route
+        path="/signup"
+        element={
+          <PublicRoute>
+            <SignUp />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path="/forget-password"
+        element={
+          <PublicRoute>
+            <ForgetPassword />
+          </PublicRoute>
+        }
+      />
+
+      {/* Protected Main Route */}
+      <Route
+        path="/forms"
+        element={
+          <ProtectedRoute>
+            <EventsForm />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Fallback */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+// ─── Main App Wrapper ───────────────────────────────────────────────────────
+function App() {
+    
+  return (
+    <AuthProvider>
+      <ToastContainer position="top-right" autoClose={1500}  />
+
+      <AppRoutes />
+    </AuthProvider>
+  );
+}
+
+export default App;

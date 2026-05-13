@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import CustomInput from "../CustomInput";
 
+const BASE_URL = 'https://sece-events.onrender.com';
+
 const VENUES = [
   { venue: "Main Board Room", capacity: 20 },
   { venue: "Ignite", capacity: 60 },
@@ -61,73 +63,74 @@ const ErrorMsg = ({ msg }) =>
 
 function validateVenueCard(card) {
   const e = {};
-
-  if (!card.participants || parseInt(card.participants) < 1) {
+  if (!card.participants || parseInt(card.participants) < 1)
     e.participants = "Number of participants is required";
-  }
-
-  if (!card.seatingCapacity || parseInt(card.seatingCapacity) < 1) {
+  if (!card.seatingCapacity || parseInt(card.seatingCapacity) < 1)
     e.seatingCapacity = "Seating capacity is required";
-  }
-
-  if (!card.hallReqs || card.hallReqs.length === 0) {
+  if (!card.hallReqs || card.hallReqs.length === 0)
     e.hallReqs = "Select at least one hall requirement";
-  }
-
-  if (
-    card.hallReqs?.includes("Guest Chair") &&
-    (!card.guestChairs || parseInt(card.guestChairs) < 1)
-  ) {
+  if (card.hallReqs?.includes("Guest Chair") && (!card.guestChairs || parseInt(card.guestChairs) < 1))
     e.guestChairs = "Number of guest chairs is required";
-  }
-
-  if (
-    card.hallReqs?.includes("Water Bottles") &&
-    (!card.waterBottles || parseInt(card.waterBottles) < 1)
-  ) {
+  if (card.hallReqs?.includes("Water Bottles") && (!card.waterBottles || parseInt(card.waterBottles) < 1))
     e.waterBottles = "Number of water bottles is required";
-  }
-
-  if (
-    card.hallReqs?.includes("Dias Table") &&
-    (!card.diasTable || parseInt(card.diasTable) < 1)
-  ) {
+  if (card.hallReqs?.includes("Dias Table") && (!card.diasTable || parseInt(card.diasTable) < 1))
     e.diasTable = "Number of dias tables is required";
-  }
-
-  if (
-    card.hallReqs?.includes("Audience Chair") &&
-    (!card.audienceChair || parseInt(card.audienceChair) < 1)
-  ) {
+  if (card.hallReqs?.includes("Audience Chair") && (!card.audienceChair || parseInt(card.audienceChair) < 1))
     e.audienceChair = "Number of audience chairs is required";
-  }
-
-  if (!card.specialReqs?.trim()) {
+  if (!card.specialReqs?.trim())
     e.specialReqs = "Special requirements field is required";
-  }
-
   return e;
 }
 
 function validateDay(dayData) {
   const e = {};
-
-  if (!dayData.participants || parseInt(dayData.participants) < 1) {
+  if (!dayData.participants || parseInt(dayData.participants) < 1)
     e.participants = "Total number of participants is required";
-  }
-
-  if (!dayData.selectedVenues || dayData.selectedVenues.length === 0) {
+  if (!dayData.selectedVenues || dayData.selectedVenues.length === 0)
     e.selectedVenues = "Please select at least one venue";
-  }
-
   if (dayData.selectedVenues?.length > 0) {
     const cards = dayData.venueCards || [];
     const cardErrors = cards.map((card) => validateVenueCard(card));
-    const hasCardErrors = cardErrors.some((ce) => Object.keys(ce).length > 0);
-    if (hasCardErrors) e.venueCards = cardErrors;
+    if (cardErrors.some((ce) => Object.keys(ce).length > 0))
+      e.venueCards = cardErrors;
   }
-
   return e;
+}
+
+// ─── Build venueDetails payload ───────────────────────────────────────────────
+
+function buildVenuePayload(venueData) {
+  // Calculate total participants across all days
+  const totalParticipants = venueData.reduce((sum, day) => {
+    return sum + (parseInt(day.participants) || 0);
+  }, 0);
+
+  const venues = [];
+  venueData.forEach((day, dayIndex) => {
+    (day.venueCards || []).forEach((card) => {
+      // Build hallRequirements array
+      const hallRequirements = [];
+      if (card.hallReqs?.includes("Guest Chair") && card.guestChairs)
+        hallRequirements.push({ type: "Guest Chair", quantity: parseInt(card.guestChairs) });
+      if (card.hallReqs?.includes("Water Bottles") && card.waterBottles)
+        hallRequirements.push({ type: "Water Bottles", quantity: parseInt(card.waterBottles) });
+      if (card.hallReqs?.includes("Dias Table") && card.diasTable)
+        hallRequirements.push({ type: "Dias Table", quantity: parseInt(card.diasTable) });
+      if (card.hallReqs?.includes("Audience Chair") && card.audienceChair)
+        hallRequirements.push({ type: "Audience Chair", quantity: parseInt(card.audienceChair) });
+
+      venues.push({
+        dayIndex,
+        venueName: card.venueName || "",
+        numberOfParticipants: parseInt(card.participants) || 0,
+        seatingCapacity: parseInt(card.seatingCapacity) || 0,
+        hallRequirements,
+        specialRequirements: card.specialReqs || "",
+      });
+    });
+  });
+
+  return { totalParticipants, venues };
 }
 
 function MultiVenueSelect({ label, options, selected, onChange, error }) {
@@ -163,76 +166,33 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
         <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
           {label}
         </span>
-
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open
-              ? "border-purple-500"
-              : error
-              ? "border-red-400"
-              : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
           }`}
         >
-          <span
-            className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}
-          >
+          <span className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}>
             {displayText || "Select venues..."}
           </span>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
-              open ? "rotate-180" : ""
-            }`}
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
-
         {open && (
           <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-y-auto custom-scrollbar">
             {options.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-gray-400">
-                No venues available for this capacity
-              </div>
+              <div className="px-4 py-3 text-sm text-gray-400">No venues available for this capacity</div>
             ) : (
               options.map((opt, i) => {
                 const isSelected = selected.includes(opt.venue);
                 return (
-                  <div
-                    key={i}
-                    onClick={() => toggle(opt.venue)}
-                    className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${
-                      isSelected
-                        ? "bg-purple-600/30 text-white"
-                        : "text-white hover:bg-purple-500/20"
-                    }`}
-                  >
+                  <div key={i} onClick={() => toggle(opt.venue)} className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"}`}>
                     <span>{opt.venue}</span>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400">
-                        Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
-                      </span>
+                      <span className="text-xs text-gray-400">Cap: {opt.capacity === 0 ? "Open" : opt.capacity}</span>
                       {isSelected && (
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4 text-purple-400"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
                       )}
@@ -244,7 +204,6 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
           </div>
         )}
       </div>
-
       <ErrorMsg msg={error} />
     </div>
   );
@@ -263,80 +222,30 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
   }, []);
 
   const toggle = (item) => {
-    onChange(
-      selected.includes(item)
-        ? selected.filter((v) => v !== item)
-        : [...selected, item]
-    );
+    onChange(selected.includes(item) ? selected.filter((v) => v !== item) : [...selected, item]);
   };
 
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-          {label}
-        </span>
-
-        <div
-          onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open
-              ? "border-purple-500"
-              : error
-              ? "border-red-400"
-              : "border-[#3A3A5A]"
-          }`}
-        >
-          <span
-            className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm"}
-          >
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">{label}</span>
+        <div onClick={() => setOpen(!open)} className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"}`}>
+          <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm"}>
             {selected.length ? selected.join(" / ") : "Select requirements..."}
           </span>
-
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${
-              open ? "rotate-180" : ""
-            }`}
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
-
         {open && (
           <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
             {HALL_REQUIREMENTS.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
-                <div
-                  key={i}
-                  onClick={() => toggle(item)}
-                  className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected
-                      ? "bg-purple-600/30 text-white"
-                      : "text-white hover:bg-purple-500/20"
-                  }`}
-                >
+                <div key={i} onClick={() => toggle(item)} className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"}`}>
                   <span>{item}</span>
                   {isSelected && (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 text-purple-400"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   )}
@@ -346,31 +255,16 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
           </div>
         )}
       </div>
-
       <ErrorMsg msg={error} />
     </div>
   );
 }
 
-function VenueDetailCard({
-  venueName,
-  venueCapacity,
-  index,
-  data,
-  onChange,
-  errors = {},
-}) {
+function VenueDetailCard({ venueName, venueCapacity, index, data, onChange, errors = {} }) {
   const showGuestChair = data.hallReqs?.includes("Guest Chair");
   const showWaterBottles = data.hallReqs?.includes("Water Bottles");
   const showDiasTable = data.hallReqs?.includes("Dias Table");
   const showAudienceChair = data.hallReqs?.includes("Audience Chair");
-  const showProjector = data.hallReqs?.includes("Projector");
-  const showSpeakerSystem = data.hallReqs?.includes("Speaker System");
-  const showMicrophones = data.hallReqs?.includes("Microphones");
-  const showVideoConferencing = data.hallReqs?.includes("Video Conferencing");
-  const showWhiteboardFlipchart = data.hallReqs?.includes("Whiteboard/Flipchart");
-  const showPodium = data.hallReqs?.includes("Podium");
-  const showStageSetup = data.hallReqs?.includes("Stage Setup");
 
   const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
@@ -382,187 +276,49 @@ function VenueDetailCard({
           <span className="text-xs text-gray-400 bg-[#2A2A45] px-2 py-1 rounded-full">
             Capacity: {venueCapacity === 0 ? "Open" : venueCapacity}
           </span>
-          <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs text-white font-bold">
-            {index}
-          </div>
+          <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs text-white font-bold">{index}</div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <CustomInput
-            labelBg="#1E1E35"
-            label="Number of Participants *"
-            type="number"
-            value={data.participants || ""}
-            onChange={update("participants")}
-          />
+          <CustomInput labelBg="#1E1E35" label="Number of Participants *" type="number" value={data.participants || ""} onChange={update("participants")} />
           <ErrorMsg msg={errors.participants} />
         </div>
-
         <div>
-          <CustomInput
-            labelBg="#1E1E35"
-            label="Number of Seating Capacity Required *"
-            type="number"
-            value={data.seatingCapacity || ""}
-            onChange={update("seatingCapacity")}
-          />
+          <CustomInput labelBg="#1E1E35" label="Number of Seating Capacity Required *" type="number" value={data.seatingCapacity || ""} onChange={update("seatingCapacity")} />
           <ErrorMsg msg={errors.seatingCapacity} />
         </div>
       </div>
 
       <div>
-        <HallRequirementsSelect
-          label="Hall Requirements *"
-          selected={data.hallReqs || []}
-          onChange={(val) => onChange({ ...data, hallReqs: val })}
-          error={errors.hallReqs}
-        />
+        <HallRequirementsSelect label="Hall Requirements *" selected={data.hallReqs || []} onChange={(val) => onChange({ ...data, hallReqs: val })} error={errors.hallReqs} />
       </div>
 
-      {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair ||showProjector || showSpeakerSystem || showMicrophones ||showVideoConferencing ||showWhiteboardFlipchart ||showPodium ||showStageSetup) && (
+      {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {showGuestChair && (
             <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="No. of Guest Chair *"
-                type="number"
-                value={data.guestChairs || ""}
-                onChange={update("guestChairs")}
-              />
+              <CustomInput labelBg="#1E1E35" label="No. of Guest Chair *" type="number" value={data.guestChairs || ""} onChange={update("guestChairs")} />
               <ErrorMsg msg={errors.guestChairs} />
             </div>
           )}
-
           {showWaterBottles && (
             <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="No. of Water Bottles *"
-                type="number"
-                value={data.waterBottles || ""}
-                onChange={update("waterBottles")}
-              />
+              <CustomInput labelBg="#1E1E35" label="No. of Water Bottles *" type="number" value={data.waterBottles || ""} onChange={update("waterBottles")} />
               <ErrorMsg msg={errors.waterBottles} />
             </div>
           )}
-
           {showDiasTable && (
             <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="No. of Dias Table *"
-                type="number"
-                value={data.diasTable || ""}
-                onChange={update("diasTable")}
-              />
+              <CustomInput labelBg="#1E1E35" label="No. of Dias Table *" type="number" value={data.diasTable || ""} onChange={update("diasTable")} />
               <ErrorMsg msg={errors.diasTable} />
             </div>
           )}
-
           {showAudienceChair && (
             <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="No. of Audience Chair *"
-                type="number"
-                value={data.audienceChair || ""}
-                onChange={update("audienceChair")}
-              />
+              <CustomInput labelBg="#1E1E35" label="No. of Audience Chair *" type="number" value={data.audienceChair || ""} onChange={update("audienceChair")} />
               <ErrorMsg msg={errors.audienceChair} />
-            </div>
-          )}
-
-          {showProjector && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Projector Required *"
-                type="number"   
-                value={data.projector || ""}
-                onChange={update("projector")}
-              />
-              <ErrorMsg msg={errors.projector} />
-            </div>
-          )}
-
-          {showSpeakerSystem && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Speaker System Required *"
-                type="number"
-                value={data.speakerSystem || ""}
-                onChange={update("speakerSystem")}
-              />
-              <ErrorMsg msg={errors.speakerSystem} />
-            </div>
-          )}
-
-          {showMicrophones && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Microphones Required *"
-                type="number"
-                value={data.microphones || ""}
-                onChange={update("microphones")}
-              />
-              <ErrorMsg msg={errors.microphones} />
-            </div>
-          )}
-
-          {showVideoConferencing && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Video Conferencing Required *"
-                type="number"
-                value={data.videoConferencing || ""}
-                onChange={update("videoConferencing")}
-              />
-              <ErrorMsg msg={errors.videoConferencing} />
-            </div>
-          )}
-
-          {showWhiteboardFlipchart && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Whiteboard/Flipchart Required *"
-                type="number"
-                value={data.whiteboardFlipchart || ""}
-                onChange={update("whiteboardFlipchart")}
-              />
-              <ErrorMsg msg={errors.whiteboardFlipchart} />
-            </div>
-          )}
-
-          {showPodium && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Podium Required *"
-                type="number"
-                value={data.podium || ""}
-                onChange={update("podium")}
-              />
-              <ErrorMsg msg={errors.podium} />
-            </div>
-          )}
-
-          {showStageSetup && (
-            <div>
-              <CustomInput
-                labelBg="#1E1E35"
-                label="Stage Setup Required *"
-                type="number"
-                value={data.stageSetup || ""}
-                onChange={update("stageSetup")}
-              />
-              <ErrorMsg msg={errors.stageSetup} />
             </div>
           )}
         </div>
@@ -573,25 +329,21 @@ function VenueDetailCard({
           <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, if any *
           </span>
-
           <textarea
             value={data.specialReqs || ""}
             onChange={update("specialReqs")}
             rows={3}
             placeholder="Enter any special requirements..."
-            className={`w-full bg-transparent border ${
-              errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
-            } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
           />
         </div>
-
         <ErrorMsg msg={errors.specialReqs} />
       </div>
     </div>
   );
 }
 
-function DayTimeline({ days, currentDayIndex, completedDays }) {
+export function DayTimeline({ days, currentDayIndex, completedDays }) {
   if (!days || days.length === 0) return null;
 
   return (
@@ -604,69 +356,30 @@ function DayTimeline({ days, currentDayIndex, completedDays }) {
           return (
             <React.Fragment key={index}>
               <div className="flex flex-col items-center min-w-[140px]">
-                <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
-                    isCompleted
-                      ? "bg-purple-600 border-purple-600 text-white"
-                      : isCurrent
-                      ? "border-purple-500 text-purple-400"
-                      : "border-gray-600 text-gray-500"
-                  }`}
-                >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${isCompleted ? "bg-purple-600 border-purple-600 text-white" : isCurrent ? "border-purple-500 text-purple-400" : "border-gray-600 text-gray-500"}`}>
                   {isCompleted ? (
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   ) : (
                     `0${index + 1}`
                   )}
                 </div>
-
                 {day.date && (
                   <div className="mt-2 text-center">
-                    <p
-                      className={`text-xs font-semibold ${
-                        isCompleted
-                          ? "text-purple-400"
-                          : isCurrent
-                          ? "text-purple-300"
-                          : "text-gray-400"
-                      }`}
-                    >
+                    <p className={`text-xs font-semibold ${isCompleted ? "text-purple-400" : isCurrent ? "text-purple-300" : "text-gray-400"}`}>
                       {day.date}
                     </p>
-
                     {day.startTime && day.endTime && (
-                      <p
-                        className={`text-xs ${
-                          isCompleted
-                            ? "text-purple-400"
-                            : isCurrent
-                            ? "text-purple-300"
-                            : "text-gray-500"
-                        }`}
-                      >
+                      <p className={`text-xs ${isCompleted ? "text-purple-400" : isCurrent ? "text-purple-300" : "text-gray-500"}`}>
                         ({day.startTime} - {day.endTime})
                       </p>
                     )}
                   </div>
                 )}
               </div>
-
               {index < days.length - 1 && (
-                <div
-                  className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${
-                    isCompleted ? "bg-purple-500" : "bg-gray-600"
-                  }`}
-                  style={{ minWidth: "60px" }}
-                />
+                <div className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${isCompleted ? "bg-purple-500" : "bg-gray-600"}`} style={{ minWidth: "60px" }} />
               )}
             </React.Fragment>
           );
@@ -676,19 +389,35 @@ function DayTimeline({ days, currentDayIndex, completedDays }) {
   );
 }
 
-export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
+export default function VenueForm({ nextStep, prevStep, eventDays = [], venueData: initialVenueData = [], onVenueDataChange, eventId }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const [venueData, setVenueData] = useState(
-    eventDays.map(() => ({
+    initialVenueData.length > 0 ? initialVenueData : eventDays.map(() => ({
       participants: "",
       selectedVenues: [],
       othersText: "",
       venueCards: [],
     }))
   );
+
+  // Update venueData when initialVenueData changes
+  useEffect(() => {
+    if (initialVenueData.length > 0) {
+      setVenueData(initialVenueData);
+    }
+  }, [initialVenueData]);
+
+  // Notify parent of venueData changes
+  useEffect(() => {
+    if (onVenueDataChange) {
+      onVenueDataChange(venueData);
+    }
+  }, [venueData, onVenueDataChange]);
 
   const currentDay = venueData[currentDayIndex];
   const currentErrors = errors[currentDayIndex] || {};
@@ -708,25 +437,20 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
 
   const handleVenueSelection = (selectedVenues) => {
     const existingCards = currentDay.venueCards || [];
-
     const updatedCards = selectedVenues.map((name) => {
       const existing = existingCards.find((c) => c.venueName === name);
-
-      return (
-        existing || {
-          venueName: name,
-          participants: "",
-          seatingCapacity: "",
-          hallReqs: [],
-          guestChairs: "",
-          waterBottles: "",
-          diasTable: "",
-          audienceChair: "",
-          specialReqs: "",
-        }
-      );
+      return existing || {
+        venueName: name,
+        participants: "",
+        seatingCapacity: "",
+        hallReqs: [],
+        guestChairs: "",
+        waterBottles: "",
+        diasTable: "",
+        audienceChair: "",
+        specialReqs: "",
+      };
     });
-
     updateCurrentDay({ selectedVenues, venueCards: updatedCards });
   };
 
@@ -740,34 +464,70 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
     });
   };
 
-  const handleNext = () => {
+  useEffect(() => {
+    if (onVenueDataChange) {
+      onVenueDataChange(venueData);
+    }
+  }, [venueData, onVenueDataChange]);
+
+  const isLastDay = currentDayIndex === eventDays.length - 1;
+
+  const handleNext = async () => {
     const dayData = venueData[currentDayIndex];
     const dayErrors = validateDay(dayData);
     const hasErrors = Object.keys(dayErrors).length > 0;
-
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
 
-    if (hasErrors) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
+    if (hasErrors) return;
 
-    setCompletedDays((prev) =>
-      prev.includes(currentDayIndex) ? prev : [...prev, currentDayIndex]
-    );
+    const newCompleted = completedDays.includes(currentDayIndex)
+      ? completedDays
+      : [...completedDays, currentDayIndex];
 
-    if (currentDayIndex < eventDays.length - 1) {
-      setCurrentDayIndex((prev) => prev + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    // Only call API when all days are completed (last day's Next)
+    if (isLastDay) {
+      setIsLoading(true);
+      setApiError("");
+
+      try {
+        const allCompletedData = venueData; // all days filled
+        const payload = buildVenuePayload(allCompletedData);
+
+        const id = eventId || '';
+        console.log('Sending venue details to backend for event ID:', id, payload);
+        const response = await fetch(`${BASE_URL}/api/events/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify({ venueDetails: payload }),
+        });
+
+        console.log('Venue API response status:', response.status);
+        const data = await response.json();
+        console.log('Venue API response data:', data);
+
+        if (!response.ok) {
+          throw new Error(data.message || `Server error: ${response.status}`);
+        }
+
+        setCompletedDays(newCompleted);
+        nextStep();
+      } catch (err) {
+        setApiError(err.message || "Failed to save venue details. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     } else {
-      nextStep();
+      setCompletedDays(newCompleted);
+      setCurrentDayIndex((prev) => prev + 1);
     }
   };
 
   const handleBack = () => {
     if (currentDayIndex > 0) {
       setCurrentDayIndex((prev) => prev - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       prevStep();
     }
@@ -779,45 +539,33 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
 
   return (
     <div className="flex flex-col gap-6 pb-6">
-      <DayTimeline
-        days={eventDays}
-        currentDayIndex={currentDayIndex}
-        completedDays={completedDays}
-      />
+      <DayTimeline days={eventDays} currentDayIndex={currentDayIndex} completedDays={completedDays} />
 
       <h2 className="text-white text-lg font-bold">
         Venue Details – Day {currentDayIndex + 1}
       </h2>
 
+      {/* API Error */}
+      {apiError && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
+          <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <p className="text-red-400 text-sm">{apiError}</p>
+        </div>
+      )}
+
       <div>
-        <CustomInput
-          label="Total Number of Participants *"
-          type="number"
-          value={currentDay.participants}
-          onChange={(e) => updateCurrentDay({ participants: e.target.value })}
-        />
+        <CustomInput label="Total Number of Participants *" type="number" value={currentDay.participants} onChange={(e) => updateCurrentDay({ participants: e.target.value })} />
         <ErrorMsg msg={currentErrors.participants} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <MultiVenueSelect
-          label="Venue Required *"
-          options={participantCount > 0 ? eligibleVenues : VENUES}
-          selected={currentDay.selectedVenues}
-          onChange={handleVenueSelection}
-          error={currentErrors.selectedVenues}
-        />
-
+        <MultiVenueSelect label="Venue Required *" options={participantCount > 0 ? eligibleVenues : VENUES} selected={currentDay.selectedVenues} onChange={handleVenueSelection} error={currentErrors.selectedVenues} />
         <div>
           <div className="relative">
-            <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">
-              Others
-            </span>
-            <input
-              value={currentDay.othersText}
-              onChange={(e) => updateCurrentDay({ othersText: e.target.value })}
-              className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500"
-            />
+            <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">Others</span>
+            <input value={currentDay.othersText} onChange={(e) => updateCurrentDay({ othersText: e.target.value })} className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500" />
           </div>
         </div>
       </div>
@@ -839,18 +587,21 @@ export default function VenueForm({ nextStep, prevStep, eventDays = [] }) {
       )}
 
       <div className="flex justify-between">
-        <button
-          onClick={handleBack}
-          className="border border-purple-600 px-6 py-2 rounded text-purple-600"
-        >
-          ← Back
-        </button>
-
+        <button onClick={handleBack} className="border border-purple-600 px-6 py-2 rounded text-purple-600 hover:bg-purple-600/10 transition-colors">← Back</button>
         <button
           onClick={handleNext}
-          className="bg-purple-600 px-6 py-2 rounded text-white"
+          disabled={isLoading}
+          className="bg-purple-600 px-6 py-2 rounded text-white hover:bg-purple-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          {currentDayIndex === eventDays.length - 1 ? "Next Form →" : "Next Day →"}
+          {isLoading ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+              </svg>
+              Saving...
+            </>
+          ) : isLastDay ? "Save & Next →" : "Next Day →"}
         </button>
       </div>
     </div>
