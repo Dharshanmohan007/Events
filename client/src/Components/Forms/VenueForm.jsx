@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import CustomInput from "../CustomInput";
 
@@ -98,8 +96,6 @@ function validateDay(dayData) {
   }
   return e;
 }
-
-// ─── Build venueDetails payload ───────────────────────────────────────────────
 
 function buildVenuePayload(venueData) {
   const totalParticipants = venueData.reduce((sum, day) => {
@@ -406,6 +402,13 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
         }))
   );
 
+  // ── FIX: ref that always holds the latest venueData ──────────────────────
+  const venueDataRef = useRef(venueData);
+  useEffect(() => {
+    venueDataRef.current = venueData;
+  }, [venueData]);
+  // ─────────────────────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (initialVenueData.length > 0) {
       setVenueData(initialVenueData);
@@ -427,7 +430,6 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
     });
   }, [eventDays.length]);
 
-  // Notify parent of venueData changes
   useEffect(() => {
     if (onVenueDataChange) {
       onVenueDataChange(venueData);
@@ -438,7 +440,6 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
   const currentErrors = errors[currentDayIndex] || {};
   const participantCount = parseInt(currentDay?.participants) || 0;
 
-  // ── FIXED: declare isLastDay before it is used in handleNext ──────────────
   const isLastDay = currentDayIndex === eventDays.length - 1;
 
   const eligibleVenues = VENUES.filter(
@@ -446,41 +447,31 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
   );
 
   const updateCurrentDay = (newData) => {
-    console.log('📝 updateCurrentDay called with:', newData);
     setVenueData((prev) => {
       const updated = [...prev];
-
       updated[currentDayIndex] = {
         ...updated[currentDayIndex],
         ...newData,
       };
-      console.log('📝 Updated venueData state:', updated[currentDayIndex]);
-
       return updated;
     });
 
-    // ONLY clear field-specific errors instead of revalidating whole form
     setErrors((prev) => {
       const updatedErrors = { ...prev };
       const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
-
       Object.keys(newData).forEach((field) => {
         delete currentDayErrors[field];
       });
-
       updatedErrors[currentDayIndex] = currentDayErrors;
-
       return updatedErrors;
     });
   };
 
   const handleVenueSelection = (selectedVenues) => {
-    console.log('🎯 handleVenueSelection called with:', selectedVenues);
     const existingCards = currentDay.venueCards || [];
 
     const updatedCards = selectedVenues.map((name) => {
       const existing = existingCards.find((c) => c.venueName === name);
-
       return (
         existing || {
           venueName: name,
@@ -496,31 +487,21 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
       );
     });
 
-    // update venue data
     setVenueData((prev) => {
       const updated = [...prev];
-
       updated[currentDayIndex] = {
         ...updated[currentDayIndex],
         selectedVenues,
         venueCards: updatedCards,
       };
-      console.log('🎯 Updated venueData after venue selection:', updated[currentDayIndex]);
-
       return updated;
     });
 
-    // CLEAR validation immediately
     setErrors((prev) => {
       const updatedErrors = { ...prev };
-
-      if (updatedErrors[currentDayIndex]) {
-        updatedErrors[currentDayIndex] = {
-          ...updatedErrors[currentDayIndex],
-          selectedVenues: undefined,
-        };
-      }
-
+      const currentDayErrors = updatedErrors[currentDayIndex] || {};
+      delete currentDayErrors.selectedVenues;
+      updatedErrors[currentDayIndex] = currentDayErrors;
       return updatedErrors;
     });
   };
@@ -535,11 +516,11 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
     });
   };
 
+  // ── FIX: handleNext now reads venueDataRef.current instead of venueData ──
   const handleNext = useCallback(async () => {
-    const dayData = venueData[currentDayIndex];
-    console.log('🔍 VenueForm handleNext - dayData:', dayData);
+    const latestVenueData = venueDataRef.current;
+    const dayData = latestVenueData[currentDayIndex];
     const dayErrors = validateDay(dayData);
-    console.log('🔍 VenueForm validation errors:', dayErrors);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
 
@@ -553,7 +534,7 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildVenuePayload(venueData);
+        const payload = buildVenuePayload(latestVenueData);
         const id = eventId || '';
         const response = await fetch(`${BASE_URL}/api/events/${id}`, {
           method: 'PUT',
@@ -576,7 +557,8 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
     }
-  }, [venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep]);
+  }, [currentDayIndex, completedDays, isLastDay, eventId, nextStep]);
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
@@ -586,7 +568,6 @@ export default function VenueForm({ nextStep, prevStep, registerChildNavigation,
     }
   }, [currentDayIndex, prevStep]);
 
-  // ── navRef pattern — prevents infinite loop in registerChildNavigation ──────
   const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
   useEffect(() => {
     navRef.current = { next: handleNext, prev: handleBack, isLoading };

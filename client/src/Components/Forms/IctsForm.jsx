@@ -32,11 +32,20 @@ function validateIctsCard(card) {
   return e;
 }
 
-// ─── Build ictsDetails payload ────────────────────────────────────────────────
+// ── KEY FIX: accepts latestIctsData as a parameter so it always uses fresh data
+function validateDay(dayIndex, venues, latestIctsData) {
+  if (venues.length === 0) return {};
+  const dayErrors = {};
+  venues.forEach((venueName) => {
+    const card = latestIctsData[dayIndex]?.[venueName] || {};
+    const cardErrors = validateIctsCard(card);
+    if (Object.keys(cardErrors).length > 0) dayErrors[venueName] = cardErrors;
+  });
+  return dayErrors;
+}
 
-function buildIctsPayload(ictsData, venueData) {
+function buildIctsPayload(ictsData) {
   const ictses = [];
-
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues).forEach(([venueName, card]) => {
@@ -56,7 +65,6 @@ function buildIctsPayload(ictsData, venueData) {
       });
     });
   });
-
   return { ictses };
 }
 
@@ -212,7 +220,16 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {} }) {
   );
 }
 
-export default function IctsForm({ nextStep, prevStep, registerChildNavigation, eventDays = [], venueData = [], ictsData: initialIctsData = {}, onIctsDataChange, eventId }) {
+export default function IctsForm({
+  nextStep,
+  prevStep,
+  registerChildNavigation,
+  eventDays = [],
+  venueData = [],
+  ictsData: initialIctsData = {},
+  onIctsDataChange,
+  eventId,
+}) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays] = useState([]);
   const [errors, setErrors] = useState({});
@@ -221,19 +238,32 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
 
   const [ictsData, setIctsData] = useState(() => initialIctsData || {});
 
-  // Keep local ictsData synced when parent prop changes
+  // ── Always-fresh ref — this is what handleNext reads for validation & submit
+  const ictsDataRef = useRef(ictsData);
+  useEffect(() => {
+    ictsDataRef.current = ictsData;
+  }, [ictsData]);
+
+  // ── Stable ref for parent callback — prevents infinite loop
+  const onIctsDataChangeRef = useRef(onIctsDataChange);
+  useEffect(() => {
+    onIctsDataChangeRef.current = onIctsDataChange;
+  }, [onIctsDataChange]);
+
+  // Initial sync from parent (mount only)
   useEffect(() => {
     if (initialIctsData && Object.keys(initialIctsData).length > 0) {
       setIctsData(initialIctsData);
     }
-  }, [initialIctsData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Notify parent of ictsData changes
+  // Notify parent whenever local data changes
   useEffect(() => {
-    if (onIctsDataChange) {
-      onIctsDataChange(ictsData);
+    if (onIctsDataChangeRef.current) {
+      onIctsDataChangeRef.current(ictsData);
     }
-  }, [ictsData, onIctsDataChange]);
+  }, [ictsData]);
 
   const getVenuesForDay = (dayIndex) => {
     const dayVenue = venueData[dayIndex];
@@ -250,10 +280,9 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
       ...prev,
       [dayIndex]: { ...(prev[dayIndex] || {}), [venueName]: updated },
     }));
-
     setErrors((prev) => {
       const updatedErrors = { ...prev };
-      if (updatedErrors[dayIndex] && updatedErrors[dayIndex][venueName]) {
+      if (updatedErrors[dayIndex]?.[venueName]) {
         const venueErrors = { ...updatedErrors[dayIndex] };
         delete venueErrors[venueName];
         updatedErrors[dayIndex] = venueErrors;
@@ -262,22 +291,14 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
     });
   };
 
-  const validateCurrentDay = () => {
-    const venues = getVenuesForDay(currentDayIndex);
-    if (venues.length === 0) return {};
-    const dayErrors = {};
-    venues.forEach((venueName) => {
-      const card = getCardData(currentDayIndex, venueName);
-      const cardErrors = validateIctsCard(card);
-      if (Object.keys(cardErrors).length > 0) dayErrors[venueName] = cardErrors;
-    });
-    return dayErrors;
-  };
-
   const isLastDay = currentDayIndex === eventDays.length - 1;
 
+  // ── KEY FIX: pass ictsDataRef.current into validateDay so it never reads
+  //    stale closure state. Same fix applied for completedDays via the ref pattern.
   const handleNext = useCallback(async () => {
-    const dayErrors = validateCurrentDay();
+    const latestIctsData = ictsDataRef.current;          // ← always fresh
+    const venues = getVenuesForDay(currentDayIndex);
+    const dayErrors = validateDay(currentDayIndex, venues, latestIctsData);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
@@ -292,11 +313,14 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildIctsPayload(ictsData, venueData);
+        const payload = buildIctsPayload(latestIctsData);
         const id = eventId || '';
         const response = await fetch(`${BASE_URL}/api/events/${id}`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
           body: JSON.stringify({ ictsDetails: payload }),
         });
         const data = await response.json();
@@ -312,7 +336,9 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
     }
-  }, [currentDayIndex, completedDays, isLastDay, ictsData, venueData, eventId, nextStep]);
+  // getVenuesForDay is stable (reads venueData prop directly), safe to omit
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDayIndex, completedDays, isLastDay, venueData, eventId, nextStep]);
 
   const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
@@ -322,7 +348,7 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
     }
   }, [currentDayIndex, prevStep]);
 
-  // ── navRef pattern — prevents infinite loop in registerChildNavigation ──────
+  // Register with parent's Save & Next button
   const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
   useEffect(() => {
     navRef.current = { next: handleNext, prev: handleBack, isLoading };
@@ -337,7 +363,6 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registerChildNavigation]);
 
-  // Keep parent's isLoading in sync without re-running the registration effect
   useEffect(() => {
     if (!registerChildNavigation) return;
     registerChildNavigation({
@@ -360,7 +385,9 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
       {apiError && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
           <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
           </svg>
           <p className="text-red-400 text-sm">{apiError}</p>
         </div>
@@ -387,7 +414,6 @@ export default function IctsForm({ nextStep, prevStep, registerChildNavigation, 
           ))}
         </div>
       )}
-
     </div>
   );
 }

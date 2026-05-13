@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import CustomSelect from "../CustomSelect";
 
 const defaultValues = {
-  venue: "", icts: "", purchase: "", media: "", audio: "", transport: "",
-  foodandrefreshments: "", accommodation: "",
+  venue: "", icts: "",  audio: "", transport: "",
+  foodandrefreshments: "", accommodation: "", purchase: "", media: "",
 };
 
 export default function EventRequirements({ nextStep, setSelectedRequirements, onRequirementsChange, isLoading = false, initialValues = {}, errors = {} }) {
