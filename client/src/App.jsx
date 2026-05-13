@@ -30,6 +30,7 @@ import ForgetPassword from './Components/ForgetPassword'
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
+import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 
 
 
@@ -47,6 +48,9 @@ function AppRoutes() {
     <Routes>
       <Route path='/login' element={<Login />} />
       <Route path='/' element={<EventsForm />} />
+
+      <Route path="/transports" element={<TransportDetailsPage/>}/>
+
       {/* <Route path='/login' element={<Login />} /> 
       <Route path='/' element={<EventsForm />} /> */}
       <Route path='/dashboard-ictcs' element={<ICTCSDashboard />} />
