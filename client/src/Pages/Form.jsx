@@ -77,17 +77,18 @@ const emptyMediaDay = () => ({
 });
 
 const emptyFoodDay = () => ({
+  id: crypto.randomUUID(),
   date: null,
-  resourceType: "",
+  resourcePersonType: [],      // was resourceType: ""
   resourcePersons: "",
   internalCount: "",
   staffName: "",
   mobileNumber: "",
-  foodType: "",
+  foodTypes: [],               // was foodType: ""
   specialRequirements: "",
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-  lunch: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-  dinner: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+  lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+  dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
 });
 
 const defaultAccommodation = {
@@ -113,11 +114,13 @@ const defaultTransport = () => ({
   dropDate: null,
   pickupLocation: "",
   dropLocation: "",
-  vistaTransport: "",
+  vistaTransport: [],          // was "" — must be array for multi-select
   staffCount: "",
   totalPassengers: "",
+  busCount: "",
   accompanyingStaffName: "",
   accompanyingStaffMobile: "",
+  specialRequirements: "",
   checkpoints: [],
 });
 
@@ -492,12 +495,14 @@ const validateFoodData = (foodData) => {
   const errors = foodData.map((form) => {
     const err = {};
     if (!form.date) err.date = "Date is required";
-    if (!form.resourceType) err.resourceType = "Resource type is required";
+    if (!form.resourcePersonType || form.resourcePersonType.length === 0)
+      err.resourcePersonType = "Resource type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
     if (!form.internalCount?.trim()) err.internalCount = "Internal accompanying count is required";
     if (!form.staffName?.trim()) err.staffName = "Staff name is required";
     if (!form.mobileNumber?.trim()) err.mobileNumber = "Staff mobile is required";
-    if (!form.foodType) err.foodType = "Food type is required";
+    if (!form.foodTypes || form.foodTypes.length === 0)
+      err.foodTypes = "Food type is required";
     return err;
   });
   if (errors.some((e) => Object.keys(e).length > 0)) return errors;
@@ -812,6 +817,8 @@ export default function Form() {
       onAccommodationDataChange: handleAccommodationDataChange,
       eventId,
       errors: formErrors.accommodation || {},
+      // ✅ Pass eventDays so AccommodationForm can read the guest list
+      eventDays: formData.event.eventDays,
     },
     purchase: {
       purchaseData: formData.purchase,
