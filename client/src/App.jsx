@@ -31,6 +31,7 @@ import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
+import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 
 
 
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path='/' element={<EventsForm />} />
 
       <Route path="/transports" element={<TransportDetailsPage/>}/>
+      <Route path="/media" element={<MediaDetailsPage/>}/>
 
       {/* <Route path='/login' element={<Login />} /> 
       <Route path='/' element={<EventsForm />} /> */}
