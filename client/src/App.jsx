@@ -32,6 +32,11 @@ import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
+import FoodAndRefreshments from "./Components/Forms/FoodAndRefreshments";
+import FoodandRefreshment from "./Pages/IndividualForm/FoodandRefreshment";
+
+
+
 
 
 
@@ -52,6 +57,9 @@ function AppRoutes() {
 
       <Route path="/transports" element={<TransportDetailsPage/>}/>
       <Route path="/media" element={<MediaDetailsPage/>}/>
+      <Route path="/foodandrefreshment" element={<FoodandRefreshment/>}/>
+     
+
 
       {/* <Route path='/login' element={<Login />} /> 
       <Route path='/' element={<EventsForm />} /> */}
