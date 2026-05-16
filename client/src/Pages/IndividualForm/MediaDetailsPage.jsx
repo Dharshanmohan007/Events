@@ -323,7 +323,7 @@ const MediaDetailsPage = () => {
                 items-center
                 gap-3
                 cursor-pointer
-                hover:border-[#8b5cf6]
+                
               "
             >
               <input
@@ -414,7 +414,7 @@ const MediaDetailsPage = () => {
                 items-center
                 gap-3
                 cursor-pointer
-                hover:border-[#8b5cf6]
+               
               "
             >
               <input
@@ -1061,7 +1061,7 @@ const MediaDetailsPage = () => {
                 items-center
                 gap-3
                 cursor-pointer
-                hover:border-[#8b5cf6]
+               
               "
             >
               <input
