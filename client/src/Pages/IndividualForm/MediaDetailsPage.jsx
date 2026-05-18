@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   Upload,
   FileText,
   X,
   CalendarDays,
+  ArrowRight,
 } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+import { API_BASE } from "../../utils/apiConfig";
 
 const MediaDetailsPage = () => {
   // =========================
@@ -53,6 +56,23 @@ const MediaDetailsPage = () => {
     "Low",
   ];
 
+  // Auth 
+  const [id, setId] = useState("");
+  useEffect(()=>{
+    const token = localStorage.getItem("token");
+      console.log("token :", token);
+
+    if(token) {
+      const decoded = jwtDecode(token);
+      setId(decoded.id);
+
+      console.log("Decoded JWT:", decoded);
+    }
+  }, [])
+  
+
+
+
   // =========================
   // POSTER FILES
   // =========================
@@ -70,6 +90,7 @@ const MediaDetailsPage = () => {
   // =========================
   const [posterContent, setPosterContent] =
     useState("");
+  console.log("poster content  : ", posterContent);
 
   const [
     certificateContent,
@@ -99,6 +120,9 @@ const MediaDetailsPage = () => {
     posterRequirement,
     setPosterRequirement,
   ] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // =========================
   // VIDEO STATES
@@ -201,12 +225,165 @@ const MediaDetailsPage = () => {
     }
   };
 
+  const validatePoster = () => {
+    const errors = [];
+    if (!selectedType) {
+      errors.push("Please select a Type of Design Required.");
+    }
+    if (selectedType === "Poster") {
+      if (!posterContent.trim()) {
+        errors.push("Content for Poster is required.");
+      }
+      if (!selectedDisplay) {
+        errors.push("Display Needed is required.");
+      }
+      if (selectedDisplay) {
+        if (selectedDisplay === "Glass Sticker") {
+          if (!glassStickerSize.trim()) {
+            errors.push("Size for Glass Sticker is required.");
+          }
+        } else if (!displaySize.trim()) {
+          errors.push(`Size for ${selectedDisplay} is required.`);
+        }
+      }
+      if (!posterDeliveryDate) {
+        errors.push("Delivery Date is required.");
+      }
+      if (!posterPriority) {
+        errors.push("Priority is required.");
+      }
+      if (!posterRequirement.trim()) {
+        errors.push("Special Requirements is required.");
+      }
+    }
+    return errors;
+  };
+
+  const validateVideo = () => {
+    const errors = [];
+    if (!selectedType) {
+      errors.push("Please select a Type of Design Required.");
+    }
+    if (selectedType === "Video") {
+      if (!videoContent.trim()) {
+        errors.push("Content for Video is required.");
+      }
+      if (!videoDuration.trim()) {
+        errors.push("Video Duration is required.");
+      }
+      if (!videoDeliveryDate) {
+        errors.push("Video Delivery Date is required.");
+      }
+      if (!videoPriority) {
+        errors.push("Video Priority is required.");
+      }
+      if (!videoRequirement.trim()) {
+        errors.push("Special Requirements is required.");
+      }
+    }
+    return errors;
+  };
+
+  const buildPosterFormData = () => {
+    const formData = new FormData();
+    formData.append("employee", "6a0411af4579d3137b255e71");
+    formData.append("dayIndex", "1");
+    formData.append("status", "Pending");
+    formData.append("typeOfMedia[]", "Poster");
+    formData.append("poster[posterContent]", posterContent);
+    formData.append("poster[priority]", posterPriority);
+    formData.append("poster[specialRequirements]", posterRequirement);
+    if (selectedDisplay) {
+      formData.append("poster[displayNeeded][]", selectedDisplay);
+      const sizeValue = selectedDisplay === "Glass Sticker" ? glassStickerSize : displaySize;
+      formData.append("poster[sizes][0][type]", selectedDisplay);
+      formData.append("poster[sizes][0][value]", sizeValue);
+    }
+    if (posterFile) formData.append("referencePosterFiles", posterFile);
+    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+    if (trophyFile) formData.append("referenceFiles", trophyFile);
+    return formData;
+  };
+
+  const buildVideoFormData = () => {
+    const formData = new FormData();
+    formData.append("employee", "6a0411af4579d3137b255e71");
+    formData.append("dayIndex", "1");
+    formData.append("status", "Pending");
+    formData.append("typeOfMedia[]", "Video");
+    formData.append("video[videoContent]", videoContent);
+    formData.append("video[duration]", videoDuration);
+    formData.append("video[deliveryDate]", videoDeliveryDate);
+    formData.append("video[priority]", videoPriority);
+    formData.append("video[specialRequirements]", videoRequirement);
+    if (videoFile) {
+      formData.append("referenceFiles", videoFile);
+    }
+    return formData;
+  };
+
+  const handleNext = async () => {
+    const errors = selectedType === "Poster" ? validatePoster() : selectedType === "Video" ? validateVideo() : [];
+    setValidationErrors(errors);
+    if (errors.length) return;
+
+    if (selectedType === "Poster") {
+      setIsSubmitting(true);
+      setSubmitSuccess(false);
+      try {
+        const response = await fetch(`${API_BASE}/api/individual-media/create`, {
+          method: "POST",
+          body: buildPosterFormData(),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Poster submission failed.");
+        }
+        setSubmitSuccess(true);
+      } catch (error) {
+        setValidationErrors([error.message || "Unable to send poster data."]);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
+    if (selectedType === "Video") {
+      setIsSubmitting(true);
+      setSubmitSuccess(false);
+      try {
+        const response = await fetch(`${API_BASE}/api/individual-media/create`, {
+          method: "POST",
+          body: buildVideoFormData(),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Video submission failed.");
+        }
+        setSubmitSuccess(true);
+      } catch (error) {
+        setValidationErrors([error.message || "Unable to send video data."]);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6">
       {/* TITLE */}
       <h1 className="text-3xl font-bold mb-6">
         Media Details Form
       </h1>
+
+      {validationErrors.length > 0 && (
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+          <ul className="list-disc list-inside space-y-1">
+            {validationErrors.map((error, idx) => (
+              <li key={idx}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* TYPE DROPDOWN */}
       <div className="relative mb-8">
@@ -323,7 +500,6 @@ const MediaDetailsPage = () => {
                 items-center
                 gap-3
                 cursor-pointer
-                
               "
             >
               <input
@@ -367,130 +543,6 @@ const MediaDetailsPage = () => {
             )}
           </div>
 
-          {/* Certificate */}
-          <div className="mb-6">
-            <label className="block text-sm mb-2">
-              Content for Certificate *
-            </label>
-
-            <textarea
-              rows={4}
-              value={certificateContent}
-              onChange={(e) =>
-                setCertificateContent(
-                  e.target.value
-                )
-              }
-              placeholder="reason"
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                p-4
-                text-white
-                outline-none
-              "
-            />
-          </div>
-
-          {/* Certificate Upload */}
-          <div className="mb-8">
-            <label className="block text-sm mb-3">
-              Reference Certificate ( If any )
-            </label>
-
-            <label
-              className="
-                border-2
-                border-dashed
-                border-[#4b4b6b]
-                rounded-lg
-                p-8
-                flex
-                flex-col
-                justify-center
-                items-center
-                gap-3
-                cursor-pointer
-               
-              "
-            >
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) =>
-                  setCertificateFile(
-                    e.target.files[0]
-                  )
-                }
-              />
-
-              <Upload size={24} />
-
-              <span className="text-sm text-center">
-                Drag and drop the files here or{" "}
-                <span className="text-[#8b5cf6] underline">
-                  choose file
-                </span>
-              </span>
-            </label>
-
-            {certificateFile && (
-              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText size={18} />
-
-                  <span className="text-sm">
-                    {certificateFile.name}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() =>
-                    removeFile(
-                      "certificate"
-                    )
-                  }
-                >
-                  <X className="text-red-500" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Trophy */}
-          <div className="mb-6">
-            <label className="block text-sm mb-2">
-              Content for Trophy *
-            </label>
-
-            <textarea
-              rows={4}
-              value={trophyContent}
-              onChange={(e) =>
-                setTrophyContent(
-                  e.target.value
-                )
-              }
-              placeholder="reason"
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                p-4
-                text-white
-                outline-none
-              "
-            />
-          </div>
-
-          {/* Trophy Upload */}
-         
-
           {/* Display Needed */}
           <div className="relative mb-6">
             <label className="block text-sm mb-2">
@@ -525,7 +577,7 @@ const MediaDetailsPage = () => {
                 }
               >
                 {selectedDisplay ||
-                  "Flex / A type Standee / Website Banner / TV Display / ID card / Plug card / Momento card / Glass Sticker"}
+                  "Select Display"}
               </span>
 
               <ChevronDown size={18} />
@@ -606,7 +658,6 @@ const MediaDetailsPage = () => {
 
           {/* DATE + PRIORITY */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* DELIVERY DATE */}
             <div>
               <label className="block text-sm mb-2">
                 Delivery Date *
@@ -650,7 +701,6 @@ const MediaDetailsPage = () => {
               </div>
             </div>
 
-            {/* PRIORITY */}
             <div className="relative">
               <label className="block text-sm mb-2">
                 Priority *
@@ -777,242 +827,6 @@ const MediaDetailsPage = () => {
             />
           </div>
 
-          {/* PRE EVENT */}
-          <div className="relative mb-6">
-            <label className="block text-sm mb-2">
-              Pre-Event Videos Needed *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowPreEvent(
-                  !showPreEvent
-                )
-              }
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
-              "
-            >
-              <span>
-                {selectedPreEvent ||
-                  "Select Pre Event"}
-              </span>
-
-              <ChevronDown size={18} />
-            </div>
-
-            {showPreEvent && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {preEventOptions.map(
-                  (item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setSelectedPreEvent(
-                          item
-                        );
-
-                        setShowPreEvent(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* COVERAGE */}
-          <div className="relative mb-6">
-            <label className="block text-sm mb-2">
-              Event Coverage Needed *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowCoverage(
-                  !showCoverage
-                )
-              }
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
-              "
-            >
-              <span>
-                {selectedCoverage ||
-                  "Select Coverage"}
-              </span>
-
-              <ChevronDown size={18} />
-            </div>
-
-            {showCoverage && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {coverageOptions.map(
-                  (item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setSelectedCoverage(
-                          item
-                        );
-
-                        setShowCoverage(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* POST EVENT */}
-          <div className="relative mb-6">
-            <label className="block text-sm mb-2">
-              Post-Event Videos Needed *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowPostEvent(
-                  !showPostEvent
-                )
-              }
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
-              "
-            >
-              <span>
-                {selectedPostEvent ||
-                  "Select Post Event"}
-              </span>
-
-              <ChevronDown size={18} />
-            </div>
-
-            {showPostEvent && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {postEventOptions.map(
-                  (item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setSelectedPostEvent(
-                          item
-                        );
-
-                        setShowPostEvent(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* SPECIAL VIDEO */}
-          <div className="relative mb-6">
-            <label className="block text-sm mb-2">
-              Special Videos Needed *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowSpecialVideo(
-                  !showSpecialVideo
-                )
-              }
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
-              "
-            >
-              <span>
-                {selectedSpecialVideo ||
-                  "Select Special Video"}
-              </span>
-
-              <ChevronDown size={18} />
-            </div>
-
-            {showSpecialVideo && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {specialVideoOptions.map(
-                  (item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setSelectedSpecialVideo(
-                          item
-                        );
-
-                        setShowSpecialVideo(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
-          </div>
-
           {/* VIDEO DURATION */}
           <div className="mb-6">
             <label className="block text-sm mb-2">
@@ -1042,72 +856,7 @@ const MediaDetailsPage = () => {
             />
           </div>
 
-          {/* VIDEO UPLOAD */}
-          <div className="mb-8">
-            <label className="block text-sm mb-3">
-              Reference Video ( If any )
-            </label>
-
-            <label
-              className="
-                border-2
-                border-dashed
-                border-[#4b4b6b]
-                rounded-lg
-                p-8
-                flex
-                flex-col
-                justify-center
-                items-center
-                gap-3
-                cursor-pointer
-               
-              "
-            >
-              <input
-                type="file"
-                className="hidden"
-                onChange={(e) =>
-                  setVideoFile(
-                    e.target.files[0]
-                  )
-                }
-              />
-
-              <Upload size={24} />
-
-              <span className="text-sm text-center">
-                Drag and drop the files here or{" "}
-                <span className="text-[#8b5cf6] underline">
-                  choose file
-                </span>
-              </span>
-            </label>
-
-            {videoFile && (
-              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText size={18} />
-
-                  <span>
-                    {videoFile.name}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() =>
-                    removeFile("video")
-                  }
-                >
-                  <X className="text-red-500" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* VIDEO DATE + PRIORITY */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* DELIVERY DATE */}
             <div>
               <label className="block text-sm mb-2">
                 Delivery Date *
@@ -1151,7 +900,6 @@ const MediaDetailsPage = () => {
               </div>
             </div>
 
-            {/* PRIORITY */}
             <div className="relative">
               <label className="block text-sm mb-2">
                 Priority *
@@ -1210,6 +958,68 @@ const MediaDetailsPage = () => {
             </div>
           </div>
 
+          {/* VIDEO UPLOAD */}
+          <div className="mb-8">
+            <label className="block text-sm mb-3">
+              Reference Video ( If any )
+            </label>
+
+            <label
+              className="
+                border-2
+                border-dashed
+                border-[#4b4b6b]
+                rounded-lg
+                p-8
+                flex
+                flex-col
+                justify-center
+                items-center
+                gap-3
+                cursor-pointer
+              "
+            >
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) =>
+                  setVideoFile(
+                    e.target.files[0]
+                  )
+                }
+              />
+
+              <Upload size={24} />
+
+              <span className="text-sm text-center">
+                Drag and drop the files here or{" "}
+                <span className="text-[#8b5cf6] underline">
+                  choose file
+                </span>
+              </span>
+            </label>
+
+            {videoFile && (
+              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FileText size={18} />
+
+                  <span>
+                    {videoFile.name}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() =>
+                    removeFile("video")
+                  }
+                >
+                  <X className="text-red-500" />
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* REQUIREMENT */}
           <div>
             <label className="block text-sm mb-2">
@@ -1239,6 +1049,34 @@ const MediaDetailsPage = () => {
           </div>
         </div>
       )}
+
+      {/* NEXT BUTTON */}
+      <div className="flex justify-end mt-8">
+        <button
+          type="button"
+          onClick={handleNext}
+          className="
+            bg-[#8b3dff]
+            hover:bg-[#9a52ff]
+            transition-all
+            duration-300
+            text-white
+            font-semibold
+            px-10
+            py-3
+            rounded-lg
+            flex
+            items-center
+            gap-2
+            shadow-lg
+            shadow-purple-900/30
+          "
+        >
+          Next
+
+          <ArrowRight size={18} />
+        </button>
+      </div>
     </div>
   );
 };

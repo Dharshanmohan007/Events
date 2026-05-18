@@ -34,6 +34,7 @@ import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import FoodAndRefreshments from "./Components/Forms/FoodAndRefreshments";
 import FoodandRefreshment from "./Pages/IndividualForm/FoodandRefreshment";
+import PurchaseDetails from "./Pages/IndividualForm/PurchaseDetails";
 
 
 
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/transports" element={<TransportDetailsPage/>}/>
       <Route path="/media" element={<MediaDetailsPage/>}/>
       <Route path="/foodandrefreshment" element={<FoodandRefreshment/>}/>
+      <Route path="/purchase" element={<PurchaseDetails/>}/>
      
 
 
