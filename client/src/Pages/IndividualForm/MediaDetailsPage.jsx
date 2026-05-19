@@ -79,12 +79,6 @@ const MediaDetailsPage = () => {
   const [posterFile, setPosterFile] =
     useState(null);
 
-  const [certificateFile, setCertificateFile] =
-    useState(null);
-
-  const [trophyFile, setTrophyFile] =
-    useState(null);
-
   // =========================
   // POSTER INPUTS
   // =========================
@@ -92,13 +86,6 @@ const MediaDetailsPage = () => {
     useState("");
   console.log("poster content  : ", posterContent);
 
-  const [
-    certificateContent,
-    setCertificateContent,
-  ] = useState("");
-
-  const [trophyContent, setTrophyContent] =
-    useState("");
 
   const [displaySize, setDisplaySize] =
     useState("");
@@ -212,13 +199,13 @@ const MediaDetailsPage = () => {
       setPosterFile(null);
     }
 
-    if (type === "certificate") {
-      setCertificateFile(null);
-    }
+    // if (type === "certificate") {
+    //   setCertificateFile(null);
+    // }
 
-    if (type === "trophy") {
-      setTrophyFile(null);
-    }
+    // if (type === "trophy") {
+    //   setTrophyFile(null);
+    // }
 
     if (type === "video") {
       setVideoFile(null);
@@ -226,6 +213,7 @@ const MediaDetailsPage = () => {
   };
 
   const validatePoster = () => {
+    console.log("validating poster...");
     const errors = [];
     if (!selectedType) {
       errors.push("Please select a Type of Design Required.");
@@ -256,6 +244,8 @@ const MediaDetailsPage = () => {
         errors.push("Special Requirements is required.");
       }
     }
+
+    console.log("Poster validation errors:", errors);
     return errors;
   };
 
@@ -293,6 +283,7 @@ const MediaDetailsPage = () => {
     formData.append("poster[posterContent]", posterContent);
     formData.append("poster[priority]", posterPriority);
     formData.append("poster[specialRequirements]", posterRequirement);
+    formData.append("poster[deliveryDate]", posterDeliveryDate);
     if (selectedDisplay) {
       formData.append("poster[displayNeeded][]", selectedDisplay);
       const sizeValue = selectedDisplay === "Glass Sticker" ? glassStickerSize : displaySize;
@@ -300,8 +291,8 @@ const MediaDetailsPage = () => {
       formData.append("poster[sizes][0][value]", sizeValue);
     }
     if (posterFile) formData.append("referencePosterFiles", posterFile);
-    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
-    if (trophyFile) formData.append("referenceFiles", trophyFile);
+    // if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+    // if (trophyFile) formData.append("referenceFiles", trophyFile);
     return formData;
   };
 
@@ -313,9 +304,10 @@ const MediaDetailsPage = () => {
     formData.append("typeOfMedia[]", "Video");
     formData.append("video[videoContent]", videoContent);
     formData.append("video[duration]", videoDuration);
-    formData.append("video[deliveryDate]", videoDeliveryDate);
+   
     formData.append("video[priority]", videoPriority);
     formData.append("video[specialRequirements]", videoRequirement);
+
     if (videoFile) {
       formData.append("referenceFiles", videoFile);
     }
@@ -323,9 +315,12 @@ const MediaDetailsPage = () => {
   };
 
   const handleNext = async () => {
+    console.log("activated function")
     const errors = selectedType === "Poster" ? validatePoster() : selectedType === "Video" ? validateVideo() : [];
     setValidationErrors(errors);
     if (errors.length) return;
+
+    console.log("no errors");
 
     if (selectedType === "Poster") {
       setIsSubmitting(true);

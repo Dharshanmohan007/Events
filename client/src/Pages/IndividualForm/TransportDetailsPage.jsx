@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+
 import {
   Plus,
   CalendarDays,
@@ -7,39 +9,116 @@ import {
   GripVertical,
   X,
   ChevronDown,
+  ArrowRight,
 } from "lucide-react";
+import {jwtDecode} from "jwt-decode";
+import { API_BASE } from "../../utils/apiConfig";
+
+import "react-datepicker/dist/react-datepicker.css";
 
 const TransportDetailsPage = () => {
-  // Checkpoints state
+  // =========================
+  // DATE STATES
+  // =========================
+  const [pickupDateTime, setPickupDateTime] =
+    useState(null);
+
+  const [dropDateTime, setDropDateTime] =
+    useState(null);
+
+  // =========================
+  // LOCATION STATES
+  // =========================
+  const [pickupLocation, setPickupLocation] =
+    useState("");
+
+  const [dropLocation, setDropLocation] =
+    useState("");
+
+  // =========================
+  // CHECKPOINTS
+  // =========================
   const [checkpoints, setCheckpoints] =
     useState([]);
 
-  // Drag state
   const [draggedIndex, setDraggedIndex] =
     useState(null);
 
-  // Vehicle dropdown state
+  // =========================
+  // PASSENGERS
+  // =========================
+  const [totalPassengers, setTotalPassengers] =
+    useState("");
+
+  // =========================
+  // VEHICLE DROPDOWN
+  // =========================
   const [vehicleType, setVehicleType] =
     useState("");
 
-  const [showVehicleDropdown, setShowVehicleDropdown] =
-    useState(false);
+  const [
+    showVehicleDropdown,
+    setShowVehicleDropdown,
+  ] = useState(false);
 
-  // Vehicle count
   const [vehicleCount, setVehicleCount] =
     useState("");
 
-  // Staff dropdown state
+  // =========================
+  // STAFF DROPDOWN
+  // =========================
   const [staffOptionType, setOptionType] =
     useState("");
 
   const [showStaffDropdown, setShowStaffDropdown] =
     useState(false);
 
-  // Dynamic staff fields
+  // =========================
+  // STAFF DETAILS
+  // =========================
   const [staffDetails, setStaffDetails] =
     useState([]);
 
+  // =========================
+  // SPECIAL REQUIREMENT
+  // =========================
+  const [
+    specialRequirement,
+    setSpecialRequirement,
+  ] = useState("");
+
+  const [employeeId, setEmployeeId] = useState("");
+  const [token, setToken] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      try {
+        const decoded = jwtDecode(storedToken);
+        if (decoded?.id) {
+          setEmployeeId(decoded.id);
+        }
+      } catch (error) {
+        console.error("Failed to decode token:", error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    console.log("TransportDetailsPage mounted/updated", {
+      API_BASE,
+      tokenAvailable: Boolean(token),
+      employeeId,
+    });
+  }, [token, employeeId]);
+
+  // =========================
+  // OPTIONS
+  // =========================
   const vehicleOptions = [
     "Bus",
     "Van",
@@ -49,12 +128,15 @@ const TransportDetailsPage = () => {
 
   const staffOptions = ["1", "2", "3", "4"];
 
-  // Add checkpoint
+  // =========================
+  // CHECKPOINT FUNCTIONS
+  // =========================
   const addCheckpoint = () => {
-    setCheckpoints([...checkpoints, ""]);
+    const updated = [...checkpoints, ""];
+    console.log("addCheckpoint", updated);
+    setCheckpoints(updated);
   };
 
-  // Update checkpoint
   const updateCheckpoint = (
     index,
     value
@@ -62,11 +144,11 @@ const TransportDetailsPage = () => {
     const updated = [...checkpoints];
 
     updated[index] = value;
+    console.log("updateCheckpoint", index, value, updated);
 
     setCheckpoints(updated);
   };
 
-  // Remove checkpoint
   const removeCheckpoint = (index) => {
     const updated = checkpoints.filter(
       (_, i) => i !== index
@@ -75,17 +157,141 @@ const TransportDetailsPage = () => {
     setCheckpoints(updated);
   };
 
-  // Drag Start
+  const buildTransportPayload = () => {
+    const checkpointList = checkpoints
+      .map((location) => location.trim())
+      .filter(Boolean);
+
+    return {
+      employee: employeeId || "6a0411af4579d3137b255e70",
+      pickupDateTime: pickupDateTime
+        ? pickupDateTime.toISOString()
+        : null,
+      dropDateTime: dropDateTime
+        ? dropDateTime.toISOString()
+        : null,
+      pickupLocation: pickupLocation.trim(),
+      dropLocation: dropLocation.trim(),
+      checkpoints: checkpointList.map((location) => ({ location })),
+      totalPassengers: Number(totalPassengers) || 0,
+      vehicles: vehicleType
+        ? [
+            {
+              type: vehicleType,
+              count: Number(vehicleCount) || 0,
+            },
+          ]
+        : [],
+      numberOfBusNeeded:
+        vehicleType === "Bus"
+          ? Number(vehicleCount) || 0
+          : 0,
+      numberOfAccompanyingStaff:
+        Number(staffOptionType) || staffDetails.length,
+      accompanyingStaff: staffDetails.map((staff) => ({
+        name: staff.name.trim(),
+        mobile: staff.mobile ? Number(staff.mobile) : staff.mobile,
+      })),
+      specialRequirements: specialRequirement.trim(),
+      status: "Pending",
+    };
+  };
+
+  const handleSubmit = async () => {
+    console.log("Transport handleSubmit invoked");
+    console.log("API_BASE:", API_BASE, "token:", token);
+    const errors = [];
+    if (!pickupDateTime) {
+      errors.push("Pickup Date & Time is required.");
+    }
+    if (!dropDateTime) {
+      errors.push("Drop Date & Time is required.");
+    }
+    if (!pickupLocation.trim()) {
+      errors.push("Pickup Location is required.");
+    }
+    if (!dropLocation.trim()) {
+      errors.push("Drop Location is required.");
+    }
+    if (!checkpoints.some((location) => location.trim())) {
+      errors.push("At least one checkpoint is required.");
+    }
+    if (!totalPassengers) {
+      errors.push("Total Passengers is required.");
+    }
+    if (!vehicleType) {
+      errors.push("Vehicle type is required.");
+    }
+    if (!vehicleCount) {
+      errors.push("Vehicle count is required.");
+    }
+    if (!staffOptionType) {
+      errors.push("Number of accompanying staff is required.");
+    }
+    if (
+      staffDetails.some(
+        (staff) => !staff.name.trim() || !staff.mobile
+      )
+    ) {
+      errors.push("All accompanying staff must have a name and mobile number.");
+    }
+
+    setValidationErrors(errors);
+    setSubmitMessage("");
+    console.log("Transport submit validation errors:", errors);
+    if (errors.length) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const payload = buildTransportPayload();
+      console.log("Transport payload:", payload);
+      const requestUrl = `${API_BASE}/api/transports`;
+      console.log("Transport request URL:", requestUrl);
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        data = null;
+      }
+
+      console.log("Transport response:", response.status, data);
+      if (!response.ok) {
+        throw new Error(
+          (data && data.message) ||
+            `Transport submission failed with status ${response.status}`
+        );
+      }
+
+      setValidationErrors([]);
+      setSubmitMessage("Transport data submitted successfully.");
+    } catch (error) {
+      setValidationErrors([error.message || "Unable to send transport data."]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // =========================
+  // DRAG FUNCTIONS
+  // =========================
   const handleDragStart = (index) => {
     setDraggedIndex(index);
   };
 
-  // Drag Over
   const handleDragOver = (e) => {
     e.preventDefault();
   };
 
-  // Drop
   const handleDrop = (dropIndex) => {
     if (
       draggedIndex === null ||
@@ -117,7 +323,9 @@ const TransportDetailsPage = () => {
     setDraggedIndex(null);
   };
 
-  // Dynamic vehicle label
+  // =========================
+  // VEHICLE LABELS
+  // =========================
   const getVehicleLabel = () => {
     switch (vehicleType) {
       case "Car":
@@ -137,7 +345,6 @@ const TransportDetailsPage = () => {
     }
   };
 
-  // Dynamic placeholder
   const getVehiclePlaceholder = () => {
     switch (vehicleType) {
       case "Car":
@@ -159,54 +366,110 @@ const TransportDetailsPage = () => {
 
   return (
     <div className="min-h-screen bg-[#141428] text-white p-5">
-      <h1 className="text-2xl font-semibold mb-5">
+      {/* TITLE */}
+      <h1 className="text-3xl font-bold mb-6">
         Transport Details Form
       </h1>
 
-      {/* Header */}
-      <div className="w-full pb-4 flex justify-end">
-        <button className="flex items-center gap-1 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white text-sm font-medium px-4 py-2 rounded-md transition">
-          <Plus size={16} />
+      {/* HEADER */}
+      <div className="flex justify-end mb-5">
+        <button
+          className="
+            flex
+            items-center
+            gap-2
+            bg-[#8b5cf6]
+            hover:bg-[#7c3aed]
+            px-5
+            py-2.5
+            rounded-md
+            transition-all
+          "
+        >
+          <Plus size={18} />
           Add
         </button>
       </div>
 
-      {/* Form Card */}
-      <div className="mt-6 bg-[#1b1b35] rounded-xl p-5 border border-[#2a2a40] overflow-visible">
-
-        {/* Date Inputs */}
+      {/* MAIN CARD */}
+      <div
+        className="
+          bg-[#1b1b35]
+          border
+          border-[#2a2a40]
+          rounded-2xl
+          p-6
+        "
+      >
+        {/* DATE PICKERS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-          {/* Pickup */}
+          {/* PICKUP DATE */}
           <div>
-            <label className="text-sm text-white mb-2 block">
-              Pickup date & Time *
+            <label className="block text-sm mb-2">
+              Pickup Date & Time *
             </label>
 
-            <div className="flex items-center justify-between border border-[#3a3a5a] rounded-md px-4 py-3">
-              <span className="text-[#8d8da8] text-sm">
-                __/__/____
-              </span>
+            <div className="relative">
+              <DatePicker
+                selected={pickupDateTime}
+                onChange={(date) =>
+                  setPickupDateTime(date)
+                }
+                showTimeSelect
+                dateFormat="dd/MM/yyyy h:mm aa"
+                placeholderText="Select pickup date & time"
+                className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  pr-20
+                  text-white
+                  outline-none
+                "
+              />
 
-              <div className="flex items-center gap-3">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
                 <CalendarDays size={18} />
                 <Clock3 size={18} />
               </div>
             </div>
           </div>
 
-          {/* Drop */}
+          {/* DROP DATE */}
           <div>
-            <label className="text-sm text-white mb-2 block">
-              Drop date & Time *
+            <label className="block text-sm mb-2">
+              Drop Date & Time *
             </label>
 
-            <div className="flex items-center justify-between border border-[#3f3f45] rounded-md px-4 py-3">
-              <span className="text-[#8d8da8] text-sm">
-                __/__/____
-              </span>
+            <div className="relative">
+              <DatePicker
+                selected={dropDateTime}
+                onChange={(date) =>
+                  setDropDateTime(date)
+                }
+                showTimeSelect
+                dateFormat="dd/MM/yyyy h:mm aa"
+                placeholderText="Select drop date & time"
+                className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  pr-20
+                  text-white
+                  outline-none
+                "
+              />
 
-              <div className="flex items-center gap-3">
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
                 <CalendarDays size={18} />
                 <Clock3 size={18} />
               </div>
@@ -214,39 +477,45 @@ const TransportDetailsPage = () => {
           </div>
         </div>
 
-        {/* Pickup Location */}
+        {/* PICKUP LOCATION */}
         <div className="mt-5">
-          <label className="text-sm text-white mb-2 block">
+          <label className="block text-sm mb-2">
             Pickup Location *
           </label>
 
-          <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3">
+          <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
             <MapPin size={18} />
 
             <input
               type="text"
+              value={pickupLocation}
+              onChange={(e) =>
+                setPickupLocation(
+                  e.target.value
+                )
+              }
               placeholder="Enter pickup location"
-              className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
+              className="bg-transparent outline-none w-full text-white"
             />
           </div>
         </div>
 
-        {/* Add Checkpoint */}
+        {/* ADD CHECKPOINT */}
         <div className="flex justify-center mt-5">
           <button
             type="button"
             onClick={addCheckpoint}
-            className="flex items-center gap-2 text-[#9b5cff] text-sm font-medium"
+            className="flex items-center gap-2 text-[#9b5cff] font-medium"
           >
             <Plus
               size={16}
-              className="bg-[#9b5cff] rounded-full p-[2px] text-white"
+              className="bg-[#9b5cff] rounded-full p-0.5 text-white"
             />
             Add Checkpoint
           </button>
         </div>
 
-        {/* Checkpoint List */}
+        {/* CHECKPOINT LIST */}
         {checkpoints.length > 0 && (
           <div className="mt-5 space-y-3">
             {checkpoints.map(
@@ -261,10 +530,7 @@ const TransportDetailsPage = () => {
                   onDrop={() =>
                     handleDrop(index)
                   }
-                  onDragEnd={() =>
-                    setDraggedIndex(null)
-                  }
-                  className={`
+                  className="
                     bg-[#26264a]
                     rounded-md
                     px-4
@@ -272,14 +538,7 @@ const TransportDetailsPage = () => {
                     flex
                     items-center
                     justify-between
-                    cursor-grab
-                    transition-all
-                    ${
-                      draggedIndex === index
-                        ? "opacity-50 scale-[0.98]"
-                        : "opacity-100"
-                    }
-                  `}
+                  "
                 >
                   <div className="flex items-center gap-3 w-full">
                     <GripVertical
@@ -301,19 +560,18 @@ const TransportDetailsPage = () => {
                       placeholder={`Checkpoint ${
                         index + 1
                       }`}
-                      className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
+                      className="bg-transparent outline-none text-white w-full"
                     />
                   </div>
 
                   <button
-                    type="button"
                     onClick={() =>
                       removeCheckpoint(index)
                     }
                   >
                     <X
                       size={18}
-                      className="text-red-500 cursor-pointer"
+                      className="text-red-500"
                     />
                   </button>
                 </div>
@@ -322,44 +580,63 @@ const TransportDetailsPage = () => {
           </div>
         )}
 
-        {/* Drop Location */}
+        {/* DROP LOCATION */}
         <div className="mt-5">
-          <label className="text-sm text-white mb-2 block">
+          <label className="block text-sm mb-2">
             Drop Location *
           </label>
 
-          <div className="flex items-center gap-3 border border-[#3f3f45] rounded-md px-4 py-3">
+          <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
             <MapPin size={18} />
 
             <input
               type="text"
+              value={dropLocation}
+              onChange={(e) =>
+                setDropLocation(
+                  e.target.value
+                )
+              }
               placeholder="Enter drop location"
-              className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
+              className="bg-transparent outline-none w-full text-white"
             />
           </div>
         </div>
 
-        {/* Passenger & Vehicle Section */}
+        {/* PASSENGER + VEHICLE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
 
-          {/* Total Passengers */}
+          {/* PASSENGERS */}
           <div>
-            <label className="text-sm text-white mb-2 block">
+            <label className="block text-sm mb-2">
               Total Number of Passengers *
             </label>
 
-            <div className="border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1b1b35]">
-              <input
-                type="number"
-                placeholder="Enter total passengers"
-                className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
-              />
-            </div>
+            <input
+              type="number"
+              value={totalPassengers}
+              onChange={(e) =>
+                setTotalPassengers(
+                  e.target.value
+                )
+              }
+              placeholder="Enter total passengers"
+              className="
+                w-full
+                bg-[#1f1f38]
+                border
+                border-[#3a3a5a]
+                rounded-md
+                px-4
+                py-3
+                outline-none
+              "
+            />
           </div>
 
-          {/* Vehicle Type */}
+          {/* VEHICLE TYPE */}
           <div className="relative">
-            <label className="text-sm text-white mb-2 block">
+            <label className="block text-sm mb-2">
               Type of Vehicle Needed *
             </label>
 
@@ -371,44 +648,28 @@ const TransportDetailsPage = () => {
               }
               className="
                 w-full
+                bg-[#1f1f38]
                 border
                 border-[#3a3a5a]
                 rounded-md
-                bg-[#1b1b35]
                 px-4
                 py-3
-                text-sm
-                text-white
-                cursor-pointer
                 flex
-                items-center
                 justify-between
+                items-center
+                cursor-pointer
               "
             >
-              <span
-                className={
-                  vehicleType
-                    ? "text-white"
-                    : "text-[#8d8da8]"
-                }
-              >
+              <span>
                 {vehicleType ||
-                  "Select Vehicle Type"}
+                  "Select Vehicle"}
               </span>
 
-              <ChevronDown
-                size={18}
-                className={`transition-transform ${
-                  showVehicleDropdown
-                    ? "rotate-180"
-                    : ""
-                }`}
-              />
+              <ChevronDown size={18} />
             </div>
 
-            {/* Dropdown */}
             {showVehicleDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
                 {vehicleOptions.map(
                   (option, index) => (
                     <div
@@ -418,9 +679,8 @@ const TransportDetailsPage = () => {
                         setShowVehicleDropdown(
                           false
                         );
-                        setVehicleCount("");
                       }}
-                      className="px-4 py-3 text-sm cursor-pointer hover:bg-[#3b82f6]"
+                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
                     >
                       {option}
                     </div>
@@ -429,125 +689,115 @@ const TransportDetailsPage = () => {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Dynamic Vehicle Count Input */}
-          {vehicleType && (
-            <div>
-              <label className="text-sm text-white mb-2 block">
-                {getVehicleLabel()}
-              </label>
-
-              <div className="border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1b1b35]">
-                <input
-                  type="number"
-                  value={vehicleCount}
-                  onChange={(e) =>
-                    setVehicleCount(
-                      e.target.value
-                    )
-                  }
-                  placeholder={getVehiclePlaceholder()}
-                  className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Staff Dropdown */}
-          <div className="relative">
-            <label className="text-sm text-white mb-2 block">
-              Number of Accompanying Staff *
+        {/* VEHICLE COUNT */}
+        {vehicleType && (
+          <div className="mt-5">
+            <label className="block text-sm mb-2">
+              {getVehicleLabel()}
             </label>
 
-            <div
-              onClick={() =>
-                setShowStaffDropdown(
-                  !showStaffDropdown
+            <input
+              type="number"
+              value={vehicleCount}
+              onChange={(e) =>
+                setVehicleCount(
+                  e.target.value
                 )
               }
+              placeholder={getVehiclePlaceholder()}
               className="
                 w-full
+                bg-[#1f1f38]
                 border
                 border-[#3a3a5a]
                 rounded-md
-                bg-[#1b1b35]
                 px-4
                 py-3
-                text-sm
-                text-white
-                cursor-pointer
-                flex
-                items-center
-                justify-between
+                outline-none
               "
-            >
-              <span
-                className={
-                  staffOptionType
-                    ? "text-white"
-                    : "text-[#8d8da8]"
-                }
-              >
-                {staffOptionType ||
-                  "Select Staff Option"}
-              </span>
+            />
+          </div>
+        )}
 
-              <ChevronDown
-                size={18}
-                className={`transition-transform ${
-                  showStaffDropdown
-                    ? "rotate-180"
-                    : ""
-                }`}
-              />
-            </div>
+        {/* STAFF DROPDOWN */}
+        <div className="relative mt-5">
+          <label className="block text-sm mb-2">
+            Number of Accompanying Staff *
+          </label>
 
-            {/* Staff Options */}
-            {showStaffDropdown && (
-              <div className="absolute top-full left-0 mt-2 w-full bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {staffOptions.map(
-                  (option, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setOptionType(option);
+          <div
+            onClick={() =>
+              setShowStaffDropdown(
+                !showStaffDropdown
+              )
+            }
+            className="
+              w-full
+              bg-[#1f1f38]
+              border
+              border-[#3a3a5a]
+              rounded-md
+              px-4
+              py-3
+              flex
+              justify-between
+              items-center
+              cursor-pointer
+            "
+          >
+            <span>
+              {staffOptionType ||
+                "Select Staff Count"}
+            </span>
 
-                        setShowStaffDropdown(
-                          false
-                        );
-
-                        // Create dynamic staff fields
-                        const count =
-                          Number(option);
-
-                        const newStaff =
-                          Array.from(
-                            {
-                              length: count,
-                            },
-                            () => ({
-                              name: "",
-                              mobile: "",
-                            })
-                          );
-
-                        setStaffDetails(
-                          newStaff
-                        );
-                      }}
-                      className="px-4 py-3 text-sm cursor-pointer hover:bg-[#3b82f6]"
-                    >
-                      {option}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
+            <ChevronDown size={18} />
           </div>
 
+          {showStaffDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              {staffOptions.map(
+                (option, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                                      setOptionType(option);
+
+                      setShowStaffDropdown(
+                        false
+                      );
+
+                      const count =
+                        Number(option);
+
+                      const newStaff =
+                        Array.from(
+                          {
+                            length: count,
+                          },
+                          () => ({
+                            name: "",
+                            mobile: "",
+                          })
+                        );
+
+                      console.log("staff count selected", count, newStaff);
+                      setStaffDetails(
+                        newStaff
+                      );
+                    }}
+                    className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                  >
+                    {option}
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Dynamic Staff Fields */}
+        {/* STAFF DETAILS */}
         {staffDetails.length > 0 && (
           <div className="mt-5 space-y-5">
             {staffDetails.map(
@@ -556,100 +806,151 @@ const TransportDetailsPage = () => {
                   key={index}
                   className="grid grid-cols-1 md:grid-cols-2 gap-5"
                 >
-                  {/* Staff Name */}
-                  <div>
-                    <label className="text-sm text-white mb-2 block">
-                      Accompanying Staff Name{" "}
-                      {index + 1} *
-                    </label>
+                  <input
+                    type="text"
+                    value={staff.name}
+                    onChange={(e) => {
+                      const updated = [
+                        ...staffDetails,
+                      ];
 
-                    <div className="border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1b1b35]">
-                      <input
-                        type="text"
-                        value={staff.name}
-                        onChange={(e) => {
-                          const updated =
-                            [...staffDetails];
+                      updated[index].name =
+                        e.target.value;
+                      console.log("staff name changed", index, updated[index].name, updated);
 
-                          updated[index].name =
-                            e.target.value;
+                      setStaffDetails(
+                        updated
+                      );
+                    }}
+                    placeholder={`Staff ${
+                      index + 1
+                    } Name`}
+                    className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      outline-none
+                    "
+                  />
 
-                          setStaffDetails(
-                            updated
-                          );
-                        }}
-                        placeholder={`Enter staff ${
-                          index + 1
-                        } name`}
-                        className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
-                      />
-                    </div>
-                  </div>
+                  <input
+                    type="number"
+                    value={staff.mobile}
+                    onChange={(e) => {
+                      const updated = [
+                        ...staffDetails,
+                      ];
 
-                  {/* Staff Mobile */}
-                  <div>
-                    <label className="text-sm text-white mb-2 block">
-                      Accompanying Staff Mobile Number{" "}
-                      {index + 1} *
-                    </label>
+                      updated[index].mobile =
+                        e.target.value;
+                      console.log("staff mobile changed", index, updated[index].mobile, updated);
 
-                    <div className="border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1b1b35]">
-                      <input
-                        type="number"
-                        value={staff.mobile}
-                        onChange={(e) => {
-                          const updated =
-                            [...staffDetails];
-
-                          updated[index].mobile =
-                            e.target.value;
-
-                          setStaffDetails(
-                            updated
-                          );
-                        }}
-                        placeholder={`Enter staff ${
-                          index + 1
-                        } mobile number`}
-                        className="bg-transparent outline-none text-sm w-full text-white placeholder:text-[#8d8da8]"
-                      />
-                    </div>
-                  </div>
+                      setStaffDetails(
+                        updated
+                      );
+                    }}
+                    placeholder={`Staff ${
+                      index + 1
+                    } Mobile Number`}
+                    className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      outline-none
+                    "
+                  />
                 </div>
               )
             )}
           </div>
         )}
 
-        {/* Special Requirement */}
+        {/* SPECIAL REQUIREMENT */}
         <div className="mt-5">
-          <label className="text-sm text-white mb-2 block">
+          <label className="block text-sm mb-2">
             Special Requirement
           </label>
 
           <textarea
             rows={4}
+            value={specialRequirement}
+            onChange={(e) =>
+              setSpecialRequirement(
+                e.target.value
+              )
+            }
             placeholder="Enter any special requirements"
             className="
               w-full
-              bg-[#1b1b35]
+              bg-[#1f1f38]
               border
               border-[#3a3a5a]
               rounded-md
               px-4
               py-3
-              text-sm
-              text-white
-              placeholder:text-[#8d8da8]
               outline-none
               resize-none
             "
           />
         </div>
+      </div>
 
+      {/* NEXT BUTTON */}
+      {validationErrors.length > 0 && (
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+          <ul className="list-disc list-inside space-y-1">
+            {validationErrors.map((error, idx) => (
+              <li key={idx}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {submitMessage && (
+        <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+          {submitMessage}
+        </div>
+      )}
+
+      <div className="flex justify-end mt-6">
+        <button
+          type="button"
+          onClick={() => {
+            console.log("Transport submit button clicked");
+            handleSubmit();
+          }}
+          disabled={isSubmitting}
+          className="
+            bg-[#8b5cf6]
+            hover:bg-[#7c3aed]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
+            text-white
+            font-medium
+            px-8
+            py-3
+            rounded-md
+            transition-all
+            duration-300
+            flex
+            items-center
+            gap-2
+          "
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
+          <ArrowRight size={18} />
+        </button>
       </div>
     </div>
   );
 };
 
-export default TransportDetailsPage;
+export default TransportDetailsPage;  

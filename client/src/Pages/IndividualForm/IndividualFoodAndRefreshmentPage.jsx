@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   CalendarDays,
   Plus,
+  ArrowRight,
 } from "lucide-react";
+import {jwtDecode} from "jwt-decode";
+import { API_BASE } from "../../utils/apiConfig";
 
-const FoodAndRefreshment = () => {
+const IndividualFoodAndRefreshment = () => {
   // =========================
   // DROPDOWNS
   // =========================
@@ -52,7 +55,6 @@ const FoodAndRefreshment = () => {
     setTotalResourcePerson,
   ] = useState("");
 
-  // DEFAULT VALUE = 1
   const [
     internalAccompanyingCount,
     setInternalAccompanyingCount,
@@ -129,6 +131,28 @@ const FoodAndRefreshment = () => {
   // =========================
   // HANDLE STAFF INPUT
   // =========================
+  const [employeeId, setEmployeeId] = useState("");
+  const [token, setToken] = useState("");
+  const [specialRequirement, setSpecialRequirement] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+    if (storedToken) {
+      setToken(storedToken);
+      try {
+        const decoded = jwtDecode(storedToken);
+        if (decoded?.id) {
+          setEmployeeId(decoded.id);
+        }
+      } catch (error) {
+        console.error("Failed to decode token:", error);
+      }
+    }
+  }, []);
+
   const handleStaffChange = (
     index,
     field,
@@ -143,9 +167,116 @@ const FoodAndRefreshment = () => {
     setAccompanyingStaffs(updated);
   };
 
+  const buildFoodPayload = () => {
+    const participants = {
+      vegCount: Number(vegParticipants) || 0,
+      nonVegCount: Number(nonVegParticipants) || 0,
+    };
+
+    const vipGuests = {
+      vegCount: Number(vegGuest) || 0,
+      nonVegCount: Number(nonVegGuest) || 0,
+    };
+
+    return {
+      employee:
+        employeeId || "6a0411af4579d3137b255e70",
+      date: selectDate
+        ? new Date(selectDate).toISOString()
+        : null,
+      resourcePersonType: resourceType
+        ? [resourceType]
+        : [],
+      numberOfResourcePersons:
+        Number(totalResourcePerson) || 0,
+      numberOfInternalAccompanyingStaff:
+        Number(internalAccompanyingCount) || 0,
+      accompanyingStaff: accompanyingStaffs.map((staff) => ({
+        name: staff.name.trim(),
+        mobile: staff.mobile,
+      })),
+      foodTypes: foodType
+        ? [
+            {
+              type: foodType,
+              participants,
+              vipGuests,
+            },
+          ]
+        : [],
+      participants,
+      vipGuests,
+      specialRequirements:
+        specialRequirement.trim(),
+      status: "Pending",
+    };
+  };
+
+  const handleSubmit = async () => {
+    const errors = [];
+    if (!selectDate) errors.push("Select Date is required.");
+    if (!resourceType) errors.push("Resource Person Type is required.");
+    if (!totalResourcePerson) errors.push("Total Resource Person is required.");
+    if (!internalAccompanyingCount) errors.push("Internal Accompanying Person count is required.");
+    if (
+      accompanyingStaffs.some(
+        (staff) => !staff.name.trim() || !staff.mobile
+      )
+    ) {
+      errors.push(
+        "All accompanying staff must have a name and mobile number."
+      );
+    }
+    if (!foodType) errors.push("Food Type is required.");
+    if (!vegParticipants) errors.push("Veg Participants count is required.");
+    if (!nonVegParticipants) errors.push("Non-Veg Participants count is required.");
+    if (!vegGuest) errors.push("Veg Guest count is required.");
+    if (!nonVegGuest) errors.push("Non-Veg Guest count is required.");
+
+    setValidationErrors(errors);
+    setSubmitMessage("");
+    if (errors.length) return;
+
+    setIsSubmitting(true);
+    try {
+      const payload = buildFoodPayload();
+      console.log("Food submit payload:", payload);
+      const response = await fetch(`${API_BASE}/api/foods`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      console.log("Food submit response:", response.status, data);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.message || `Food submission failed: ${response.status}`
+        );
+      }
+
+      setValidationErrors([]);
+      setSubmitMessage("Food request submitted successfully.");
+    } catch (error) {
+      setValidationErrors([
+        error.message || "Unable to send food data.",
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6">
-      <h1 className="text-white text-3xl">Food and Refreshment</h1>
+      {/* TITLE */}
+      <h1 className="text-white text-3xl font-bold mb-6">
+        Food and Refreshment
+      </h1>
+
       {/* HEADER */}
       <div className="flex justify-end mb-6">
         <button
@@ -159,6 +290,8 @@ const FoodAndRefreshment = () => {
             flex
             items-center
             gap-2
+            transition-all
+            duration-300
           "
         >
           <Plus size={16} />
@@ -515,6 +648,7 @@ const FoodAndRefreshment = () => {
               bg-[#252547]
               rounded-xl
               p-5
+              mb-6
             "
           >
             <h2 className="text-[#a855f7] text-xl font-bold mb-5">
@@ -644,15 +778,75 @@ const FoodAndRefreshment = () => {
                 />
               </div>
             </div>
-            
+
+            <div className="mt-5">
+              <label className="block text-sm mb-2">
+                Special Requirements
+              </label>
+              <textarea
+                rows={4}
+                value={specialRequirement}
+                onChange={(e) =>
+                  setSpecialRequirement(
+                    e.target.value
+                  )
+                }
+                placeholder="Enter special requirements"
+                className="w-full bg-[#1f1f38] border border-[#3a3a5a] rounded-md px-4 py-3 text-white outline-none resize-none"
+              />
+            </div>
           </div>
-          
+        )}
+
+        {/* NEXT BUTTON */}
+
+        {validationErrors.length > 0 && (
+          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {submitMessage && (
+          <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+            {submitMessage}
+          </div>
         )}
       </div>
-      
+       <div className="flex justify-center md:justify-end mt-8">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="
+              bg-[#8b5cf6]
+              hover:bg-[#7c3aed]
+              disabled:opacity-60
+              disabled:cursor-not-allowed
+              text-white
+              font-semibold
+              text-lg
+              px-12
+              py-4
+              rounded-xl
+              flex
+              items-center
+              gap-3
+              transition-all
+              duration-300
+              shadow-lg
+              shadow-purple-900/40
+            "
+          >
+            {isSubmitting ? "Submitting..." : "Next"}
+            <ArrowRight size={20} />
+          </button>
+        </div>
     </div>
-    
   );
 };
 
-export default FoodAndRefreshment; 
+export default IndividualFoodAndRefreshment;
