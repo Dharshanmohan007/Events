@@ -32,7 +32,7 @@ const AdminStatcard = ({ data }) => {
                                 </p>
 
                                 <div className={`absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-md ${item.iconBg}`}>
-                                    <img src={item.icon} alt="" />
+                                    <img src={item.icon} className="w-4 h-4" />
                                 </div>
                             </div>
                         ))}

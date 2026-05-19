@@ -24,12 +24,14 @@ import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/A
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
 import SignUp from './Pages/SignUp'
-import ForgetPassword from './Components/ForgetPassword'  
+import ForgetPassword from './Components/ForgetPassword'
 
 // Auth Context
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
+import EventDetailsPage from "./Pages/Dashboards/Admin-Dashboard/EventDetailsPage";
+import FacultyDashboard from "./Pages/Dashboards/Faculty-Dashboard/FacultyDashboard";
 
 
 
@@ -56,13 +58,17 @@ function AppRoutes() {
       <Route path='/dashboard-audio' element={<AUDIODashboard />} />
       <Route path='/dashboard-transports' element={<TransportsDashboard />} />
       <Route path='/dashboard-media' element={<MediaDashboard />} />
+      {/* Admin routes  */}
       <Route path='/dashboard-admin' element={<AdminDashboardLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path='AdminEventsRequests' element={<AdminEventsListPage />} />
         <Route path='VenueManagement' element={<VenueManagementPage />} />
         <Route path='AdminManagement' element={<AdminManagementPage />} />
         <Route path='FacultyManagement' element={<FacultyManagementPage />} />
+        <Route path='AdminEventsRequests/:eventId' element={<EventDetailsPage />} />
       </Route>
+
+      <Route path="/dashboard-faculty" element={<FacultyDashboard />} />
       <Route path='/dashboard-accommodation' element={<AccommodationDashboard />} />
       <Route path='/dashboard-food' element={<FoodDashboard />} />
       <Route path='/dashboard-purchase' element={<PurchaseDashboard />} />
@@ -120,10 +126,10 @@ function AppRoutes() {
 
 // ─── Main App Wrapper ───────────────────────────────────────────────────────
 function App() {
-    
+
   return (
     <AuthProvider>
-      <ToastContainer position="top-right" autoClose={1500}  />
+      <ToastContainer position="top-right" autoClose={1500} />
 
       <AppRoutes />
     </AuthProvider>
