@@ -1,4 +1,5 @@
 ﻿// import React, { useState, useRef, useEffect, useCallback } from "react";
+// import { useNavigate } from "react-router-dom";
 // import EventsSidebar from "../Components/EventsSidebar";
 // import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 // import VenueForm from "../Components/Forms/VenueForm";
@@ -10,6 +11,7 @@
 // import MediaForm from "../Components/Forms/MediaForm";
 // import AudioForm from "../Components/Forms/AudioForm";
 // import { useAuth } from "../Components/AuthContext";
+// import FormSubmitted from "../Components/Forms/FormSubmitted";
 
 // const BASE_URL = "https://sece-events.onrender.com";
 
@@ -79,12 +81,12 @@
 // const emptyFoodDay = () => ({
 //   id: crypto.randomUUID(),
 //   date: null,
-//   resourcePersonType: [],      // was resourceType: ""
+//   resourcePersonType: [],
 //   resourcePersons: "",
 //   internalCount: "",
 //   staffName: "",
 //   mobileNumber: "",
-//   foodTypes: [],               // was foodType: ""
+//   foodTypes: [],
 //   specialRequirements: "",
 //   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
 //   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -114,7 +116,7 @@
 //   dropDate: null,
 //   pickupLocation: "",
 //   dropLocation: "",
-//   vistaTransport: [],          // was "" — must be array for multi-select
+//   vistaTransport: [],
 //   staffCount: "",
 //   totalPassengers: "",
 //   busCount: "",
@@ -131,7 +133,7 @@
 //   return result;
 // };
 
-// // ── All validate/build helpers (unchanged, kept at module level) ──────────────
+// // ── Validators ────────────────────────────────────────────────────────────────
 
 // const validateEventRequisition = (data) => {
 //   const errors = {};
@@ -432,46 +434,60 @@
 //   return {};
 // };
 
+// // ── buildMediaPayload: matches backend shape exactly ─────────────────────────
+// // PUT body → { mediaRequirementDetails: { mediaRequirements: [...] } }
 // const buildMediaPayload = (mediaData) => {
 //   const mediaRequirements = mediaData.map((day, dayIndex) => {
 //     const typeOfMedia = [];
 //     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
-//     if (day.designType === "Video" || day.designType === "Both") typeOfMedia.push("video");
+//     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
+
+//     // Build sizes: Flex and Glass Sticker use dedicated inputs; all other
+//     // display options are included with an empty value string.
+//     const sizes = [];
+//     (day.poster?.displayNeeded || []).forEach((type) => {
+//       if (type === "Flex") {
+//         if (day.poster?.sizeForFlex?.trim()) sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
+//       } else if (type === "Glass Sticker") {
+//         if (day.poster?.sizeForGlass?.trim()) sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
+//       } else {
+//         sizes.push({ type, value: "" });
+//       }
+//     });
+
 //     return {
-//       dayIndex, typeOfMedia,
+//       dayIndex,
+//       typeOfMedia,
 //       poster: {
-//         posterContent: day.poster?.contentPoster || "",
-//         certificateContent: day.poster?.contentCertificate || "",
-//         sizes: [
-//           ...(day.poster?.sizeForFlex ? [{ type: "Flex", value: day.poster.sizeForFlex }] : []),
-//           ...(day.poster?.sizeForGlass ? [{ type: "Glass Sticker", value: day.poster.sizeForGlass }] : []),
-//         ],
-//         referencePosterFiles: [],
+//         posterContent:             day.poster?.contentPoster       || "",
+//         referencePosterFiles:      [],
+//         certificateContent:        day.poster?.contentCertificate  || "",
 //         referenceCertificateFiles: [],
-//         displayNeeded: day.poster?.displayNeeded || [],
-//         deliveryDate: day.poster?.deliveryDate || "",
-//         priority: day.poster?.priority || "",
-//         specialRequirements: day.poster?.specialReq || "",
+//         trophyContent:             day.poster?.contentTrophy       || "",
+//         displayNeeded:             day.poster?.displayNeeded       || [],
+//         sizes,
+//         deliveryDate:        day.poster?.deliveryDate ? new Date(day.poster.deliveryDate).toISOString() : "",
+//         priority:            day.poster?.priority    || "",
+//         specialRequirements: day.poster?.specialReq  || "",
 //       },
 //       video: {
-//         videoContent: day.video?.contentVideo || "",
-//         preEventVideos: day.video?.preEvent || [],
-//         eventCoverage: day.video?.eventCoverage || [],
-//         postEventVideos: day.video?.postEvent || [],
-//         specialVideos: day.video?.specialVideos || [],
-//         referenceFiles: [],
-//         deliveryDate: day.video?.deliveryDate || "",
-//         priority: day.video?.priority || "",
+//         videoContent:        day.video?.contentVideo  || "",
+//         preEventVideos:      day.video?.preEvent      || [],
+//         eventCoverage:       day.video?.eventCoverage || [],
+//         postEventVideos:     day.video?.postEvent     || [],
+//         specialVideos:       day.video?.specialVideos || [],
+//         referenceFiles:      [],
+//         deliveryDate:        day.video?.deliveryDate ? new Date(day.video.deliveryDate).toISOString() : "",
+//         priority:            day.video?.priority   || "",
 //         specialRequirements: day.video?.specialReq || "",
 //       },
 //     };
 //   });
+
 //   return { mediaRequirementDetails: { mediaRequirements } };
 // };
 
 // const validateAudioData = (_audioData) => {
-//   // AudioForm handles its own validation day-by-day via registerChildNavigation.
-//   // Return empty so the parent's fallback saveSection path never blocks it.
 //   return {};
 // };
 
@@ -519,37 +535,77 @@
 
 // const buildPayloadForSection = (sectionKey, data) => {
 //   switch (sectionKey) {
-//     case "venue": return { venueDetails: buildVenuePayload(data) };
-//     case "icts": return { ictsDetails: buildIctsPayload(data) };
-//     case "purchase": return { purchaseDetails: buildPurchasePayload(data) };
-//     case "media": return buildMediaPayload(data);
-//     case "audio": return { audioDetails: data };
-//     case "transport": return { transportDetails: data };
+//     case "venue":               return { venueDetails: buildVenuePayload(data) };
+//     case "icts":                return { ictsDetails: buildIctsPayload(data) };
+//     case "purchase":            return { purchaseDetails: buildPurchasePayload(data) };
+//     case "media":               return buildMediaPayload(data);   // already { mediaRequirementDetails: {...} }
+//     case "audio":               return { audioDetails: data };
+//     case "transport":           return { transportDetails: data };
 //     case "foodandrefreshments": return { foodDetails: data };
-//     case "accommodation": return { accommodationDetails: data };
-//     default: return {};
+//     case "accommodation":       return { accommodationDetails: data };
+//     default:                    return {};
 //   }
 // };
 
 // const validateSection = (sectionKey, data, extras = {}) => {
 //   switch (sectionKey) {
-//     case "event": return validateEventRequisition(data);
-//     case "venue": return validateVenueData(data);
-//     case "icts": return validateIctsData(data, extras.venueData || []);
-//     case "purchase": return validatePurchaseData(data);
-//     case "media": return validateMediaData(data);
-//     case "audio": return validateAudioData(data);
-//     case "transport": return validateTransportData(data);
+//     case "event":               return validateEventRequisition(data);
+//     case "venue":               return validateVenueData(data);
+//     case "icts":                return validateIctsData(data, extras.venueData || []);
+//     case "purchase":            return validatePurchaseData(data);
+//     case "media":               return validateMediaData(data);
+//     case "audio":               return validateAudioData(data);
+//     case "transport":           return validateTransportData(data);
 //     case "foodandrefreshments": return validateFoodData(data);
-//     case "accommodation": return validateAccommodationData(data);
-//     default: return {};
+//     case "accommodation":       return validateAccommodationData(data);
+//     default:                    return {};
 //   }
+// };
+
+// // ── Build the full submit payload from all collected formData ─────────────────
+// // Called by submitEvent — sends everything the backend needs in one PATCH body.
+// const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
+//   const media = buildMediaPayload(formData.media);
+//   const venue = buildVenuePayload(formData.venue);
+//   const icts  = buildIctsPayload(formData.icts);
+//   const purchase = buildPurchasePayload(formData.purchase);
+
+//   return {
+//     // Re-send core event data so the backend is guaranteed up-to-date
+//     organizerDetails: {
+//       previousEventDocumentation: formData.event.doc === "Yes",
+//       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
+//       isBudgetApproved: formData.event.budget === "Yes",
+//       financeRequired: formData.event.finance === "Yes",
+//       organizingDepartment: formData.event.department,
+//       organizerCount: parseInt(formData.event.numOrganizers) || 0,
+//       organizers: (formData.event.organizers || []).map((o) => ({
+//         name: o.name || "",
+//         department: o.department || "",
+//         mobile: parseInt(o.mobile) || 0,
+//         designation: o.designation || "",
+//         email: o.empEmail || "",
+//         empId: o.empId || "",
+//         facultyId: user?._id ?? "",
+//       })),
+//     },
+//     // Section payloads
+//     venueDetails:      venue,
+//     ictsDetails:       icts,
+//     purchaseDetails:   purchase,
+//     ...media,           // spreads { mediaRequirementDetails: { mediaRequirements: [...] } }
+//     audioDetails:      formData.audio,
+//     transportDetails:  formData.transport,
+//     foodDetails:       formData.foodandrefreshments,
+//     accommodationDetails: formData.accommodation,
+//   };
 // };
 
 // // ── Component ─────────────────────────────────────────────────────────────────
 
 // export default function Form() {
 //   const { user } = useAuth();
+//   const navigate = useNavigate();
 //   const [currentStep, setCurrentStep] = useState(0);
 //   const [completedSteps, setCompletedSteps] = useState([]);
 //   const [selectedRequirements, setSelectedRequirements] = useState([]);
@@ -579,35 +635,44 @@
 
 //   const baseSteps = [{ key: "event", label: "Event Requisition Details", component: EventRequistionDetails }];
 //   const requirementMap = {
-//     venue: { label: "Venue Details", component: VenueForm },
-//     icts: { label: "ICTS Details", component: ICTSForm },
-//     audio: { label: "Audio Details", component: AudioForm },
-//     transport: { label: "Transport Details", component: TransportForm },
+//     venue:               { label: "Venue Details",               component: VenueForm },
+//     icts:                { label: "ICTS Details",                component: ICTSForm },
+//     audio:               { label: "Audio Details",               component: AudioForm },
+//     transport:           { label: "Transport Details",           component: TransportForm },
 //     foodandrefreshments: { label: "Food and Refreshments Details", component: FoodAndRefreshments },
-//     accommodation: { label: "Accommodation Details", component: AccommodationForm },
-//     purchase: { label: "Purchase Details", component: Purchase },
-//     media: { label: "Media Requirement Details", component: MediaForm },
+//     accommodation:       { label: "Accommodation Details",       component: AccommodationForm },
+//     purchase:            { label: "Purchase Details",            component: Purchase },
+//     media:               { label: "Media Requirement Details",   component: MediaForm },
 //   };
 
 //   const dynamicSteps = selectedRequirements.map((key) => ({ key, ...requirementMap[key] }));
 //   const steps = [...baseSteps, ...dynamicSteps];
 //   const CurrentComponent = steps[currentStep]?.component;
-//   const currentStepKey = steps[currentStep]?.key;
+//   const currentStepKey   = steps[currentStep]?.key;
 
 //   // ── Refs so callbacks never read stale closures ───────────────────────────
-//   const stepsRef = useRef(steps);
-//   useEffect(() => { stepsRef.current = steps; }, [steps]);
-
+//   const stepsRef       = useRef(steps);
 //   const currentStepRef = useRef(currentStep);
-//   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
+//   const formDataRef    = useRef(formData);
 
-//   // ── advanceStep: stable callback, reads live values via refs ──────────────
+//   useEffect(() => { stepsRef.current       = steps;       }, [steps]);
+//   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
+//   useEffect(() => { formDataRef.current    = formData;    }, [formData]);
+
+//   // ── advanceStep: moves parent forward one step ────────────────────────────
 //   const advanceStep = useCallback(() => {
-//     const step = currentStepRef.current;
+//     const step  = currentStepRef.current;
 //     const total = stepsRef.current.length;
 //     setCompletedSteps((prev) => prev.includes(step) ? prev : [...prev, step]);
 //     if (step < total - 1) setCurrentStep((prev) => prev + 1);
-//   }, []); // intentionally empty — reads via refs
+//   }, []);
+
+//   // ── goBackStep: moves parent backward one step ────────────────────────────
+//   // This is the ONLY back-navigation function passed as prevStep to children.
+//   // It does NOT call childNav.prev — that would create a circular call.
+//   const goBackStep = useCallback(() => {
+//     setCurrentStep((prev) => Math.max(prev - 1, 0));
+//   }, []);
 
 //   useEffect(() => {
 //     if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
@@ -617,9 +682,9 @@
 //     const dayCount = formData.event.eventDays.length;
 //     setFormData((prev) => ({
 //       ...prev,
-//       venue: ensureLength(prev.venue, dayCount, emptyVenueDay),
-//       purchase: ensureLength(prev.purchase, dayCount, emptyPurchaseDay),
-//       media: ensureLength(prev.media, dayCount, emptyMediaDay),
+//       venue:               ensureLength(prev.venue,               dayCount, emptyVenueDay),
+//       purchase:            ensureLength(prev.purchase,            dayCount, emptyPurchaseDay),
+//       media:               ensureLength(prev.media,               dayCount, emptyMediaDay),
 //       foodandrefreshments: ensureLength(prev.foodandrefreshments, dayCount, emptyFoodDay),
 //     }));
 //   }, [formData.event.eventDays.length]);
@@ -628,15 +693,16 @@
 //     setFormData((prev) => ({ ...prev, [sectionKey]: value }));
 //   }, []);
 
-//   const handleVenueDataChange = useCallback((value) => updateFormSection("venue", value), [updateFormSection]);
-//   const handleIctsDataChange = useCallback((value) => updateFormSection("icts", value), [updateFormSection]);
-//   const handleAudioDataChange = useCallback((value) => updateFormSection("audio", value), [updateFormSection]);
-//   const handleTransportDataChange = useCallback((value) => updateFormSection("transport", value), [updateFormSection]);
-//   const handleFoodDataChange = useCallback((value) => updateFormSection("foodandrefreshments", value), [updateFormSection]);
-//   const handleAccommodationDataChange = useCallback((value) => updateFormSection("accommodation", value), [updateFormSection]);
-//   const handlePurchaseDataChange = useCallback((value) => updateFormSection("purchase", value), [updateFormSection]);
-//   const handleMediaDataChange = useCallback((value) => updateFormSection("media", value), [updateFormSection]);
+//   const handleVenueDataChange        = useCallback((v) => updateFormSection("venue",               v), [updateFormSection]);
+//   const handleIctsDataChange         = useCallback((v) => updateFormSection("icts",                v), [updateFormSection]);
+//   const handleAudioDataChange        = useCallback((v) => updateFormSection("audio",               v), [updateFormSection]);
+//   const handleTransportDataChange    = useCallback((v) => updateFormSection("transport",           v), [updateFormSection]);
+//   const handleFoodDataChange         = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
+//   const handleAccommodationDataChange= useCallback((v) => updateFormSection("accommodation",       v), [updateFormSection]);
+//   const handlePurchaseDataChange     = useCallback((v) => updateFormSection("purchase",            v), [updateFormSection]);
+//   const handleMediaDataChange        = useCallback((v) => updateFormSection("media",               v), [updateFormSection]);
 
+//   // ── saveSection: PUT each section individually as the user fills it ───────
 //   const saveSection = async (sectionKey, sectionValue, extras = {}) => {
 //     setApiError("");
 //     const errors = validateSection(sectionKey, sectionValue, extras);
@@ -653,8 +719,8 @@
 //       let response;
 //       if (sectionKey === "event") {
 //         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValue, user });
-//         const method = eventId ? "PUT" : "POST";
-//         const url = eventId ? `${BASE_URL}/api/events/${eventId}` : `${BASE_URL}/api/events`;
+//         const method  = eventId ? "PUT" : "POST";
+//         const url     = eventId ? `${BASE_URL}/api/events/${eventId}` : `${BASE_URL}/api/events`;
 //         response = await fetch(url, {
 //           method,
 //           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -688,14 +754,21 @@
 //     }
 //   };
 
+//   // ── submitEvent: PATCH /submit with ALL accumulated form data ─────────────
+//   // Sends every section's data in the body so the backend has the full picture.
 //   const submitEvent = async () => {
 //     if (!eventId) { setApiError("No event ID available for submit."); return; }
 //     setIsLoading(true);
 //     setApiError("");
 //     try {
+//       const fullPayload = buildFullSubmitPayload(formDataRef.current, selectedRequirements, user);
 //       const response = await fetch(`${BASE_URL}/api/events/${eventId}/submit`, {
 //         method: "PATCH",
-//         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
+//         headers: {
+//           "Content-Type": "application/json",
+//           Authorization: `Bearer ${localStorage.getItem("token")}`,
+//         },
+//         body: JSON.stringify(fullPayload),
 //       });
 //       const data = await response.json();
 //       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
@@ -709,48 +782,59 @@
 
 //   const registerChildNavigation = useCallback((nav = {}) => {
 //     setChildNav({
-//       next: nav.next || null,
-//       prev: nav.prev || null,
+//       next:      nav.next      || null,
+//       prev:      nav.prev      || null,
 //       isLoading: nav.isLoading || false,
 //     });
 //   }, []);
 
+//   // ── handleSaveAndContinue: "Save & Next" button ───────────────────────────
 //   const handleSaveAndContinue = async () => {
+//     // If child registered a next handler (multi-day forms), delegate to it.
+//     // The child is responsible for calling nextStep (advanceStep) itself when done.
 //     if (childNav.next) {
 //       await childNav.next();
 //       return;
 //     }
-//     const sectionKey = currentStepKey;
+//     const sectionKey   = currentStepKey;
 //     if (!sectionKey) return;
 //     const sectionValue = formData[sectionKey];
-//     const extras = { venueData: formData.venue };
-//     const ok = await saveSection(sectionKey, sectionValue, extras);
+//     const extras       = { venueData: formData.venue };
+//     const ok           = await saveSection(sectionKey, sectionValue, extras);
 //     if (ok) advanceStep();
 //   };
 
+//   // ── handleBack: "Back" button ─────────────────────────────────────────────
+//   // For multi-day child forms (those that registered childNav.prev), delegate
+//   // back to the child — it will either go to the previous day, or call
+//   // goBackStep (prevStep) when it is already on day 0.
+//   // For all other steps, go directly to the previous parent step.
 //   const handleBack = () => {
-//     if (childNav.prev) { childNav.prev(); return; }
+//     if (childNav.prev) {
+//       childNav.prev();
+//       return;
+//     }
 //     if (currentStep > 0) setCurrentStep((prev) => prev - 1);
 //   };
 
 //   const isMultiDayForm = () => {
-//     const multiDayKeys = ['venue', 'icts', 'purchase', 'media'];
+//     const multiDayKeys = ["venue", "icts", "purchase", "media"];
 //     return multiDayKeys.includes(currentStepKey) && (formData.event.eventDays || []).length > 1;
 //   };
 
 //   const isAllDaysCompleted = () => {
 //     if (!isMultiDayForm()) return true;
 //     const sectionData = formData[currentStepKey];
-//     const eventDays = formData.event.eventDays || [];
-//     if (currentStepKey === 'icts') {
-//       if (typeof sectionData !== 'object' || Array.isArray(sectionData)) return false;
+//     const eventDays   = formData.event.eventDays || [];
+//     if (currentStepKey === "icts") {
+//       if (typeof sectionData !== "object" || Array.isArray(sectionData)) return false;
 //       return eventDays.every((_, index) => sectionData[index] && Object.keys(sectionData[index]).length > 0);
 //     }
 //     if (!Array.isArray(sectionData) || sectionData.length !== eventDays.length) return false;
-//     return sectionData.every(day => {
-//       if (currentStepKey === 'venue') return day.participants && day.selectedVenues && day.selectedVenues.length > 0;
-//       if (currentStepKey === 'purchase') return day.selectedPersons && day.selectedPersons.trim() !== '';
-//       if (currentStepKey === 'media') return day.designType && day.designType.trim() !== '';
+//     return sectionData.every((day) => {
+//       if (currentStepKey === "venue")    return day.participants && day.selectedVenues && day.selectedVenues.length > 0;
+//       if (currentStepKey === "purchase") return day.selectedPersons && day.selectedPersons.trim() !== "";
+//       if (currentStepKey === "media")    return day.designType && day.designType.trim() !== "";
 //       return false;
 //     });
 //   };
@@ -797,8 +881,8 @@
 //       onAudioDataChange: handleAudioDataChange,
 //       eventId,
 //       errors: formErrors.audio || {},
-//       venueData: formData.venue,          // ← add this (same as icts)
-//       eventDays: formData.event.eventDays, // ← add this (same as icts)
+//       venueData: formData.venue,
+//       eventDays: formData.event.eventDays,
 //     },
 //     transport: {
 //       transportData: formData.transport,
@@ -817,7 +901,6 @@
 //       onAccommodationDataChange: handleAccommodationDataChange,
 //       eventId,
 //       errors: formErrors.accommodation || {},
-//       // ✅ Pass eventDays so AccommodationForm can read the guest list
 //       eventDays: formData.event.eventDays,
 //     },
 //     purchase: {
@@ -833,16 +916,26 @@
 //       eventId,
 //       eventDays: formData.event.eventDays,
 //       errors: formErrors.media || {},
-//       onSave: async () => {
-//         const ok = await saveSection("media", formData.media);
-//         if (ok) advanceStep();
-//       },
+//       // onSave is NOT passed — MediaForm owns its own PUT call via registerChildNavigation.
+//       // advanceStep is passed as nextStep so MediaForm can advance the parent after saving.
 //     },
 //   };
 
 //   const progress = currentStep === 0 ? 0 : Math.min(20 + (currentStep - 1) * 10, 100);
 
 //   if (!CurrentComponent) return null;
+
+//   // ── Full-page success screen ───────────────────────────────────────────────
+//   if (submitSuccess) {
+//     return (
+//       <FormSubmitted
+//         onSubmitAnother={() => {
+//           navigate("/dashboard");
+//         }}
+//       />
+//     );
+//   }
+
 
 //   return (
 //     <div className="flex h-screen bg-[#16162A]">
@@ -863,16 +956,12 @@
 //               <p className="text-red-400 text-sm">{apiError}</p>
 //             </div>
 //           )}
-//           {submitSuccess && (
-//             <div className="mt-4 rounded-lg bg-green-500/10 border border-green-500/40 px-4 py-3">
-//               <p className="text-green-300 text-sm">Event submitted successfully.</p>
-//             </div>
-//           )}
 //         </div>
+
 //         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
 //           <CurrentComponent
 //             nextStep={advanceStep}
-//             prevStep={handleBack}
+//             prevStep={goBackStep}          
 //             registerChildNavigation={registerChildNavigation}
 //             setSelectedRequirements={setSelectedRequirements}
 //             eventDays={formData.event.eventDays}
@@ -883,6 +972,7 @@
 //             onSave={sectionProps[currentStepKey]?.onSave}
 //           />
 //         </div>
+
 //         <div className="px-6 pb-6">
 //           <div className="flex justify-between gap-4">
 //             <button
@@ -892,6 +982,7 @@
 //             >
 //               ← Back
 //             </button>
+
 //             {currentStep === steps.length - 1 ? (
 //               <button
 //                 onClick={submitEvent}
@@ -906,7 +997,11 @@
 //                 disabled={isLoading || childNav.isLoading}
 //                 className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
 //               >
-//                 {isLoading || childNav.isLoading ? "Saving..." : isMultiDayForm() && !isAllDaysCompleted() ? "Next Day →" : "Save & Next"}
+//                 {isLoading || childNav.isLoading
+//                   ? "Saving..."
+//                   : isMultiDayForm() && !isAllDaysCompleted()
+//                   ? "Next Day →"
+//                   : "Save & Next"}
 //               </button>
 //             )}
 //           </div>
@@ -915,6 +1010,7 @@
 //     </div>
 //   );
 // }
+
 
 
 
@@ -935,6 +1031,8 @@ import FormSubmitted from "../Components/Forms/FormSubmitted";
 
 const BASE_URL = "https://sece-events.onrender.com";
 
+// ── Empty factories ───────────────────────────────────────────────────────────
+
 const emptyVenueDay = () => ({
   participants: "",
   selectedVenues: [],
@@ -947,103 +1045,56 @@ const emptyPurchaseDay = () => ({
   certificateQty: "",
   selectedPersons: "",
   studentData: {
-    giftType: [],
-    registrationKitNeeded: "",
-    trophyType: [],
-    basicTrophyQty: "",
-    eliteTrophyQty: "",
-    cashPrizeAmount: "",
-    voucherWorth: "",
-    registrationKitQty: "",
-    specialRequirements: "",
+    giftType: [], registrationKitNeeded: "", trophyType: [],
+    basicTrophyQty: "", eliteTrophyQty: "", cashPrizeAmount: "",
+    voucherWorth: "", registrationKitQty: "", specialRequirements: "",
   },
   guestData: {
-    giftType: [],
-    registrationKitNeeded: "",
-    trophyType: [],
-    basicTrophyQty: "",
-    eliteTrophyQty: "",
-    cashPrizeAmount: "",
-    voucherWorth: "",
-    registrationKitQty: "",
-    specialRequirements: "",
+    giftType: [], registrationKitNeeded: "", trophyType: [],
+    basicTrophyQty: "", eliteTrophyQty: "", cashPrizeAmount: "",
+    voucherWorth: "", registrationKitQty: "", specialRequirements: "",
   },
 });
 
 const emptyMediaDay = () => ({
   designType: "",
   poster: {
-    contentPoster: "",
-    referencePoster: null,
-    contentCertificate: "",
-    referenceCertificate: null,
-    contentTrophy: "",
-    displayNeeded: [],
-    sizeForFlex: "",
-    sizeForGlass: "",
-    deliveryDate: "",
-    priority: "",
-    specialReq: "",
+    contentPoster: "", referencePoster: null,
+    contentCertificate: "", referenceCertificate: null,
+    contentTrophy: "", displayNeeded: [],
+    sizeForFlex: "", sizeForGlass: "",
+    deliveryDate: "", priority: "", specialReq: "",
   },
   video: {
-    contentVideo: "",
-    preEvent: [],
-    eventCoverage: [],
-    postEvent: [],
-    specialVideos: [],
-    referenceVideo: null,
-    deliveryDate: "",
-    priority: "",
-    specialReq: "",
+    contentVideo: "", preEvent: [], eventCoverage: [],
+    postEvent: [], specialVideos: [], referenceVideo: null,
+    deliveryDate: "", priority: "", specialReq: "",
   },
 });
 
 const emptyFoodDay = () => ({
   id: crypto.randomUUID(),
-  date: null,
-  resourcePersonType: [],
-  resourcePersons: "",
-  internalCount: "",
-  staffName: "",
-  mobileNumber: "",
-  foodTypes: [],
-  specialRequirements: "",
+  date: null, resourcePersonType: [], resourcePersons: "",
+  internalCount: "", staffName: "", mobileNumber: "",
+  foodTypes: [], specialRequirements: "",
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
 });
 
 const defaultAccommodation = {
-  checkIn: null,
-  checkOut: null,
-  singleRooms: "",
-  doubleRooms: "",
-  suiteRooms: "",
-  dBlockRooms: "",
-  roomType: "",
-  dine: "",
-  dineType: "",
-  hostelGuests: "1",
-  amenityGuests: "1",
-  guests: [],
-  special: "",
+  checkIn: null, checkOut: null, singleRooms: "", doubleRooms: "",
+  suiteRooms: "", dBlockRooms: "", roomType: "", dine: "", dineType: "",
+  hostelGuests: "1", amenityGuests: "1", guests: [], special: "",
 };
 
 const defaultAudio = {};
 
 const defaultTransport = () => ({
-  pickupDate: null,
-  dropDate: null,
-  pickupLocation: "",
-  dropLocation: "",
-  vistaTransport: [],
-  staffCount: "",
-  totalPassengers: "",
-  busCount: "",
-  accompanyingStaffName: "",
-  accompanyingStaffMobile: "",
-  specialRequirements: "",
-  checkpoints: [],
+  pickupDate: null, dropDate: null, pickupLocation: "", dropLocation: "",
+  vistaTransport: [], staffCount: "", totalPassengers: "", busCount: "",
+  accompanyingStaffName: "", accompanyingStaffMobile: "",
+  specialRequirements: "", checkpoints: [],
 });
 
 const ensureLength = (items, length, factory) => {
@@ -1109,8 +1160,8 @@ const validateEventRequisition = (data) => {
 };
 
 const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
-  const formData = new FormData();
-  formData.append("organizerId", user?._id ?? "");
+  const fd = new FormData();
+  fd.append("organizerId", user?._id ?? "");
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
@@ -1120,13 +1171,9 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
-        name: o.name || "",
-        department: o.department || "",
-        mobile: parseInt(o.mobile) || 0,
-        designation: o.designation || "",
-        email: o.empEmail || "",
-        empId: o.empId || "",
-        facultyId: user?._id ?? "",
+        name: o.name || "", department: o.department || "",
+        mobile: parseInt(o.mobile) || 0, designation: o.designation || "",
+        email: o.empEmail || "", empId: o.empId || "", facultyId: user?._id ?? "",
       })),
     },
     eventDetails: {
@@ -1143,14 +1190,11 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       numberOfDays: eventRequisition.eventDays.length,
       eventSchedule: (eventRequisition.eventDays || []).map((day) => ({
         eventDate: day.date ? new Date(day.date).toISOString() : "",
-        startTime: day.startTime || "",
-        endTime: day.endTime || "",
+        startTime: day.startTime || "", endTime: day.endTime || "",
         totalGuests: parseInt(day.numGuests) || 0,
         guests: (day.guests || []).map((g) => ({
-          name: g.name || "",
-          organization: g.organization || "",
-          designation: g.designation || "",
-          mobile: parseInt(g.mobile) || 0,
+          name: g.name || "", organization: g.organization || "",
+          designation: g.designation || "", mobile: parseInt(g.mobile) || 0,
           gender: g.gender || "",
         })),
       })),
@@ -1164,11 +1208,11 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       mediaRequired: eventRequisition.requirements.includes("media"),
     },
   };
-  formData.append("requestDetails", JSON.stringify(requestDetails));
+  fd.append("requestDetails", JSON.stringify(requestDetails));
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
-    formData.append("previousEventDocumentation", eventRequisition.file);
+    fd.append("previousEventDocumentation", eventRequisition.file);
   }
-  return formData;
+  return fd;
 };
 
 const validateVenueData = (venueData) => {
@@ -1205,12 +1249,10 @@ const buildVenuePayload = (venueData) => {
       if (card.hallReqs?.includes("Dias Table") && card.diasTable) hallRequirements.push({ type: "Dias Table", quantity: parseInt(card.diasTable) });
       if (card.hallReqs?.includes("Audience Chair") && card.audienceChair) hallRequirements.push({ type: "Audience Chair", quantity: parseInt(card.audienceChair) });
       venues.push({
-        dayIndex,
-        venueName: card.venueName || "",
+        dayIndex, venueName: card.venueName || "",
         numberOfParticipants: parseInt(card.participants) || 0,
         seatingCapacity: parseInt(card.seatingCapacity) || 0,
-        hallRequirements,
-        specialRequirements: card.specialReqs || "",
+        hallRequirements, specialRequirements: card.specialReqs || "",
       });
     });
   });
@@ -1246,8 +1288,7 @@ const buildIctsPayload = (ictsData) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
       ictses.push({
-        dayIndex,
-        venueName,
+        dayIndex, venueName,
         desktopLaptop: card.desktopLaptop === "Yes",
         internetFacility: card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
@@ -1354,16 +1395,11 @@ const validateMediaData = (mediaData) => {
   return {};
 };
 
-// ── buildMediaPayload: matches backend shape exactly ─────────────────────────
-// PUT body → { mediaRequirementDetails: { mediaRequirements: [...] } }
 const buildMediaPayload = (mediaData) => {
   const mediaRequirements = mediaData.map((day, dayIndex) => {
     const typeOfMedia = [];
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
-
-    // Build sizes: Flex and Glass Sticker use dedicated inputs; all other
-    // display options are included with an empty value string.
     const sizes = [];
     (day.poster?.displayNeeded || []).forEach((type) => {
       if (type === "Flex") {
@@ -1374,10 +1410,8 @@ const buildMediaPayload = (mediaData) => {
         sizes.push({ type, value: "" });
       }
     });
-
     return {
-      dayIndex,
-      typeOfMedia,
+      dayIndex, typeOfMedia,
       poster: {
         posterContent:             day.poster?.contentPoster       || "",
         referencePosterFiles:      [],
@@ -1403,13 +1437,10 @@ const buildMediaPayload = (mediaData) => {
       },
     };
   });
-
   return { mediaRequirementDetails: { mediaRequirements } };
 };
 
-const validateAudioData = (_audioData) => {
-  return {};
-};
+const validateAudioData = (_audioData) => { return {}; };
 
 const validateTransportData = (transportData) => {
   if (!Array.isArray(transportData) || transportData.length === 0) return { transport: "Enter transport information" };
@@ -1431,14 +1462,12 @@ const validateFoodData = (foodData) => {
   const errors = foodData.map((form) => {
     const err = {};
     if (!form.date) err.date = "Date is required";
-    if (!form.resourcePersonType || form.resourcePersonType.length === 0)
-      err.resourcePersonType = "Resource type is required";
+    if (!form.resourcePersonType || form.resourcePersonType.length === 0) err.resourcePersonType = "Resource type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
     if (!form.internalCount?.trim()) err.internalCount = "Internal accompanying count is required";
     if (!form.staffName?.trim()) err.staffName = "Staff name is required";
     if (!form.mobileNumber?.trim()) err.mobileNumber = "Staff mobile is required";
-    if (!form.foodTypes || form.foodTypes.length === 0)
-      err.foodTypes = "Food type is required";
+    if (!form.foodTypes || form.foodTypes.length === 0) err.foodTypes = "Food type is required";
     return err;
   });
   if (errors.some((e) => Object.keys(e).length > 0)) return errors;
@@ -1458,7 +1487,7 @@ const buildPayloadForSection = (sectionKey, data) => {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
     case "icts":                return { ictsDetails: buildIctsPayload(data) };
     case "purchase":            return { purchaseDetails: buildPurchasePayload(data) };
-    case "media":               return buildMediaPayload(data);   // already { mediaRequirementDetails: {...} }
+    case "media":               return buildMediaPayload(data);
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
     case "foodandrefreshments": return { foodDetails: data };
@@ -1482,16 +1511,12 @@ const validateSection = (sectionKey, data, extras = {}) => {
   }
 };
 
-// ── Build the full submit payload from all collected formData ─────────────────
-// Called by submitEvent — sends everything the backend needs in one PATCH body.
 const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
-  const media = buildMediaPayload(formData.media);
-  const venue = buildVenuePayload(formData.venue);
-  const icts  = buildIctsPayload(formData.icts);
+  const media    = buildMediaPayload(formData.media);
+  const venue    = buildVenuePayload(formData.venue);
+  const icts     = buildIctsPayload(formData.icts);
   const purchase = buildPurchasePayload(formData.purchase);
-
   return {
-    // Re-send core event data so the backend is guaranteed up-to-date
     organizerDetails: {
       previousEventDocumentation: formData.event.doc === "Yes",
       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
@@ -1500,23 +1525,18 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       organizingDepartment: formData.event.department,
       organizerCount: parseInt(formData.event.numOrganizers) || 0,
       organizers: (formData.event.organizers || []).map((o) => ({
-        name: o.name || "",
-        department: o.department || "",
-        mobile: parseInt(o.mobile) || 0,
-        designation: o.designation || "",
-        email: o.empEmail || "",
-        empId: o.empId || "",
-        facultyId: user?._id ?? "",
+        name: o.name || "", department: o.department || "",
+        mobile: parseInt(o.mobile) || 0, designation: o.designation || "",
+        email: o.empEmail || "", empId: o.empId || "", facultyId: user?._id ?? "",
       })),
     },
-    // Section payloads
-    venueDetails:      venue,
-    ictsDetails:       icts,
-    purchaseDetails:   purchase,
-    ...media,           // spreads { mediaRequirementDetails: { mediaRequirements: [...] } }
-    audioDetails:      formData.audio,
-    transportDetails:  formData.transport,
-    foodDetails:       formData.foodandrefreshments,
+    venueDetails:        venue,
+    ictsDetails:         icts,
+    purchaseDetails:     purchase,
+    ...media,
+    audioDetails:        formData.audio,
+    transportDetails:    formData.transport,
+    foodDetails:         formData.foodandrefreshments,
     accommodationDetails: formData.accommodation,
   };
 };
@@ -1536,9 +1556,7 @@ export default function Form() {
       reason: "", numOrganizers: "", organizers: [],
       eventData: {}, eventDays: [], requirements: [],
     },
-    venue: [],
-    icts: {},
-    audio: defaultAudio,
+    venue: [], icts: {}, audio: defaultAudio,
     transport: [defaultTransport()],
     foodandrefreshments: [emptyFoodDay()],
     accommodation: defaultAccommodation,
@@ -1549,20 +1567,28 @@ export default function Form() {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [childNav, setChildNav] = useState({ next: null, prev: null, isLoading: false });
+
+  // childNav extended with isOnLastDay + nextDayLabel from MediaForm
+  // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
+  // isOnLastDay: false → the child still has more day tabs (always show "Next Day" label)
+  const [childNav, setChildNav] = useState({
+    next: null, prev: null, isLoading: false,
+    isOnLastDay: true,   // default true so non-multi-day forms always show correct button
+    nextDayLabel: "Save & Next",
+  });
 
   const scrollContainerRef = useRef(null);
 
   const baseSteps = [{ key: "event", label: "Event Requisition Details", component: EventRequistionDetails }];
   const requirementMap = {
-    venue:               { label: "Venue Details",               component: VenueForm },
-    icts:                { label: "ICTS Details",                component: ICTSForm },
-    audio:               { label: "Audio Details",               component: AudioForm },
-    transport:           { label: "Transport Details",           component: TransportForm },
+    venue:               { label: "Venue Details",                 component: VenueForm },
+    icts:                { label: "ICTS Details",                  component: ICTSForm },
+    audio:               { label: "Audio Details",                 component: AudioForm },
+    transport:           { label: "Transport Details",             component: TransportForm },
     foodandrefreshments: { label: "Food and Refreshments Details", component: FoodAndRefreshments },
-    accommodation:       { label: "Accommodation Details",       component: AccommodationForm },
-    purchase:            { label: "Purchase Details",            component: Purchase },
-    media:               { label: "Media Requirement Details",   component: MediaForm },
+    accommodation:       { label: "Accommodation Details",         component: AccommodationForm },
+    purchase:            { label: "Purchase Details",              component: Purchase },
+    media:               { label: "Media Requirement Details",     component: MediaForm },
   };
 
   const dynamicSteps = selectedRequirements.map((key) => ({ key, ...requirementMap[key] }));
@@ -1570,16 +1596,17 @@ export default function Form() {
   const CurrentComponent = steps[currentStep]?.component;
   const currentStepKey   = steps[currentStep]?.key;
 
-  // ── Refs so callbacks never read stale closures ───────────────────────────
+  // Stable refs
   const stepsRef       = useRef(steps);
   const currentStepRef = useRef(currentStep);
   const formDataRef    = useRef(formData);
+  const eventIdRef     = useRef(eventId);
 
   useEffect(() => { stepsRef.current       = steps;       }, [steps]);
   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
   useEffect(() => { formDataRef.current    = formData;    }, [formData]);
+  useEffect(() => { eventIdRef.current     = eventId;     }, [eventId]);
 
-  // ── advanceStep: moves parent forward one step ────────────────────────────
   const advanceStep = useCallback(() => {
     const step  = currentStepRef.current;
     const total = stepsRef.current.length;
@@ -1587,9 +1614,6 @@ export default function Form() {
     if (step < total - 1) setCurrentStep((prev) => prev + 1);
   }, []);
 
-  // ── goBackStep: moves parent backward one step ────────────────────────────
-  // This is the ONLY back-navigation function passed as prevStep to children.
-  // It does NOT call childNav.prev — that would create a circular call.
   const goBackStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
@@ -1613,23 +1637,33 @@ export default function Form() {
     setFormData((prev) => ({ ...prev, [sectionKey]: value }));
   }, []);
 
-  const handleVenueDataChange        = useCallback((v) => updateFormSection("venue",               v), [updateFormSection]);
-  const handleIctsDataChange         = useCallback((v) => updateFormSection("icts",                v), [updateFormSection]);
-  const handleAudioDataChange        = useCallback((v) => updateFormSection("audio",               v), [updateFormSection]);
-  const handleTransportDataChange    = useCallback((v) => updateFormSection("transport",           v), [updateFormSection]);
-  const handleFoodDataChange         = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
-  const handleAccommodationDataChange= useCallback((v) => updateFormSection("accommodation",       v), [updateFormSection]);
-  const handlePurchaseDataChange     = useCallback((v) => updateFormSection("purchase",            v), [updateFormSection]);
-  const handleMediaDataChange        = useCallback((v) => updateFormSection("media",               v), [updateFormSection]);
+  const handleVenueDataChange         = useCallback((v) => updateFormSection("venue",               v), [updateFormSection]);
+  const handleIctsDataChange          = useCallback((v) => updateFormSection("icts",                v), [updateFormSection]);
+  const handleAudioDataChange         = useCallback((v) => updateFormSection("audio",               v), [updateFormSection]);
+  const handleTransportDataChange     = useCallback((v) => updateFormSection("transport",           v), [updateFormSection]);
+  const handleFoodDataChange          = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
+  const handleAccommodationDataChange = useCallback((v) => updateFormSection("accommodation",       v), [updateFormSection]);
+  const handlePurchaseDataChange      = useCallback((v) => updateFormSection("purchase",            v), [updateFormSection]);
+  const handleMediaDataChange         = useCallback((v) => updateFormSection("media",               v), [updateFormSection]);
 
-  // ── saveSection: PUT each section individually as the user fills it ───────
-  const saveSection = async (sectionKey, sectionValue, extras = {}) => {
+  // ── saveSection ───────────────────────────────────────────────────────────
+  // Media section: accepts either a FormData (from MediaForm with files) or
+  // falls back to building JSON payload from the current formData.media state.
+  const saveSection = async (sectionKey, sectionValueOrFormData, extras = {}) => {
     setApiError("");
-    const errors = validateSection(sectionKey, sectionValue, extras);
-    if (Object.keys(errors).length > 0) {
-      setFormErrors((prev) => ({ ...prev, [sectionKey]: errors }));
-      return false;
+
+    // For media with files, sectionValueOrFormData is already a FormData built
+    // by MediaForm's buildMediaFormData — skip our JSON validation/build.
+    const isFormDataPayload = sectionValueOrFormData instanceof FormData;
+
+    if (!isFormDataPayload) {
+      const errors = validateSection(sectionKey, sectionValueOrFormData, extras);
+      if (Object.keys(errors).length > 0) {
+        setFormErrors((prev) => ({ ...prev, [sectionKey]: errors }));
+        return false;
+      }
     }
+
     if (!eventId && sectionKey !== "event") {
       setApiError("Event must be created before saving this section.");
       return false;
@@ -1638,7 +1672,7 @@ export default function Form() {
     try {
       let response;
       if (sectionKey === "event") {
-        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValue, user });
+        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${BASE_URL}/api/events/${eventId}` : `${BASE_URL}/api/events`;
         response = await fetch(url, {
@@ -1646,8 +1680,16 @@ export default function Form() {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           body: payload,
         });
+      } else if (isFormDataPayload) {
+        // ── Media with files: send as multipart, no Content-Type header ───
+        // The browser sets Content-Type automatically with the correct boundary.
+        response = await fetch(`${BASE_URL}/api/events/${eventIdRef.current}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: sectionValueOrFormData,
+        });
       } else {
-        const payload = buildPayloadForSection(sectionKey, sectionValue);
+        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData);
         response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1674,8 +1716,7 @@ export default function Form() {
     }
   };
 
-  // ── submitEvent: PATCH /submit with ALL accumulated form data ─────────────
-  // Sends every section's data in the body so the backend has the full picture.
+  // ── submitEvent ───────────────────────────────────────────────────────────
   const submitEvent = async () => {
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
@@ -1684,10 +1725,7 @@ export default function Form() {
       const fullPayload = buildFullSubmitPayload(formDataRef.current, selectedRequirements, user);
       const response = await fetch(`${BASE_URL}/api/events/${eventId}/submit`, {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(fullPayload),
       });
       const data = await response.json();
@@ -1700,18 +1738,22 @@ export default function Form() {
     }
   };
 
+  // ── registerChildNavigation ───────────────────────────────────────────────
+  // Accepts the extended nav object from MediaForm:
+  //   { next, prev, isLoading, isOnLastDay, nextDayLabel }
+  // For all other forms, isOnLastDay defaults to true (no day tabs to track).
   const registerChildNavigation = useCallback((nav = {}) => {
     setChildNav({
-      next:      nav.next      || null,
-      prev:      nav.prev      || null,
-      isLoading: nav.isLoading || false,
+      next:         nav.next         || null,
+      prev:         nav.prev         || null,
+      isLoading:    nav.isLoading    || false,
+      isOnLastDay:  nav.isOnLastDay  !== undefined ? nav.isOnLastDay  : true,
+      nextDayLabel: nav.nextDayLabel || "Save & Next",
     });
   }, []);
 
-  // ── handleSaveAndContinue: "Save & Next" button ───────────────────────────
+  // ── handleSaveAndContinue ─────────────────────────────────────────────────
   const handleSaveAndContinue = async () => {
-    // If child registered a next handler (multi-day forms), delegate to it.
-    // The child is responsible for calling nextStep (advanceStep) itself when done.
     if (childNav.next) {
       await childNav.next();
       return;
@@ -1724,39 +1766,26 @@ export default function Form() {
     if (ok) advanceStep();
   };
 
-  // ── handleBack: "Back" button ─────────────────────────────────────────────
-  // For multi-day child forms (those that registered childNav.prev), delegate
-  // back to the child — it will either go to the previous day, or call
-  // goBackStep (prevStep) when it is already on day 0.
-  // For all other steps, go directly to the previous parent step.
+  // ── handleBack ────────────────────────────────────────────────────────────
   const handleBack = () => {
-    if (childNav.prev) {
-      childNav.prev();
-      return;
-    }
+    if (childNav.prev) { childNav.prev(); return; }
     if (currentStep > 0) setCurrentStep((prev) => prev - 1);
   };
 
-  const isMultiDayForm = () => {
-    const multiDayKeys = ["venue", "icts", "purchase", "media"];
-    return multiDayKeys.includes(currentStepKey) && (formData.event.eventDays || []).length > 1;
-  };
+  // ── Button logic ──────────────────────────────────────────────────────────
+  // isLastParentStep: true when we are on the last step in the parent's step list.
+  // showSubmit:       true only when it's the last parent step AND the child
+  //                   signals it is also on its last day (isOnLastDay).
+  //                   This prevents Submit appearing on Day 1 of a 2-day MediaForm.
+  const isLastParentStep = currentStep === steps.length - 1;
+  const showSubmit       = isLastParentStep && childNav.isOnLastDay;
 
-  const isAllDaysCompleted = () => {
-    if (!isMultiDayForm()) return true;
-    const sectionData = formData[currentStepKey];
-    const eventDays   = formData.event.eventDays || [];
-    if (currentStepKey === "icts") {
-      if (typeof sectionData !== "object" || Array.isArray(sectionData)) return false;
-      return eventDays.every((_, index) => sectionData[index] && Object.keys(sectionData[index]).length > 0);
-    }
-    if (!Array.isArray(sectionData) || sectionData.length !== eventDays.length) return false;
-    return sectionData.every((day) => {
-      if (currentStepKey === "venue")    return day.participants && day.selectedVenues && day.selectedVenues.length > 0;
-      if (currentStepKey === "purchase") return day.selectedPersons && day.selectedPersons.trim() !== "";
-      if (currentStepKey === "media")    return day.designType && day.designType.trim() !== "";
-      return false;
-    });
+  // Label for the forward button when it's "Save & Next" territory
+  const forwardLabel = () => {
+    if (isLoading || childNav.isLoading) return "Saving...";
+    // Child is on a non-last day → show the day label it gave us (e.g. "Day 2 →")
+    if (childNav.next && !childNav.isOnLastDay) return childNav.nextDayLabel || "Next Day →";
+    return "Save & Next";
   };
 
   const sectionProps = {
@@ -1775,52 +1804,43 @@ export default function Form() {
         const merged = { ...formData.event, requirements: selectedReqs };
         updateFormSection("event", merged);
         const ok = await saveSection("event", merged);
-        if (ok) {
-          setSelectedRequirements(selectedReqs);
-          advanceStep();
-        }
+        if (ok) { setSelectedRequirements(selectedReqs); advanceStep(); }
       },
     },
     venue: {
       venueData: formData.venue,
       onVenueDataChange: handleVenueDataChange,
       eventDays: formData.event.eventDays,
-      eventId,
-      errors: formErrors.venue || {},
+      eventId, errors: formErrors.venue || {},
     },
     icts: {
       venueData: formData.venue,
       ictsData: formData.icts,
       onIctsDataChange: handleIctsDataChange,
       eventDays: formData.event.eventDays,
-      eventId,
-      errors: formErrors.icts || {},
+      eventId, errors: formErrors.icts || {},
     },
     audio: {
       audioData: formData.audio,
       onAudioDataChange: handleAudioDataChange,
-      eventId,
-      errors: formErrors.audio || {},
+      eventId, errors: formErrors.audio || {},
       venueData: formData.venue,
       eventDays: formData.event.eventDays,
     },
     transport: {
       transportData: formData.transport,
       onTransportDataChange: handleTransportDataChange,
-      eventId,
-      errors: formErrors.transport || {},
+      eventId, errors: formErrors.transport || {},
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,
       onFoodDataChange: handleFoodDataChange,
-      eventId,
-      errors: formErrors.foodandrefreshments || {},
+      eventId, errors: formErrors.foodandrefreshments || {},
     },
     accommodation: {
       accommodationData: formData.accommodation,
       onAccommodationDataChange: handleAccommodationDataChange,
-      eventId,
-      errors: formErrors.accommodation || {},
+      eventId, errors: formErrors.accommodation || {},
       eventDays: formData.event.eventDays,
     },
     purchase: {
@@ -1836,26 +1856,28 @@ export default function Form() {
       eventId,
       eventDays: formData.event.eventDays,
       errors: formErrors.media || {},
-      // onSave is NOT passed — MediaForm owns its own PUT call via registerChildNavigation.
-      // advanceStep is passed as nextStep so MediaForm can advance the parent after saving.
+      // onSave receives a FormData built by MediaForm (includes File objects).
+      // We pass it directly to saveSection which detects FormData and skips
+      // JSON serialisation, sending it as multipart so files reach the backend.
+      onSave: async (formDataPayload) => {
+        const ok = await saveSection("media", formDataPayload);
+        if (ok) advanceStep();
+      },
     },
   };
 
   const progress = currentStep === 0 ? 0 : Math.min(20 + (currentStep - 1) * 10, 100);
 
-  if (!CurrentComponent) return null;
-
-  // ── Full-page success screen ───────────────────────────────────────────────
+  // Full-page success screen
   if (submitSuccess) {
     return (
       <FormSubmitted
-        onSubmitAnother={() => {
-          navigate("/dashboard");
-        }}
+        onSubmitAnother={() => { navigate("/dashboard"); }}
       />
     );
   }
 
+  if (!CurrentComponent) return null;
 
   return (
     <div className="flex h-screen bg-[#16162A]">
@@ -1881,7 +1903,7 @@ export default function Form() {
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
           <CurrentComponent
             nextStep={advanceStep}
-            prevStep={goBackStep}          
+            prevStep={goBackStep}
             registerChildNavigation={registerChildNavigation}
             setSelectedRequirements={setSelectedRequirements}
             eventDays={formData.event.eventDays}
@@ -1903,7 +1925,12 @@ export default function Form() {
               ← Back
             </button>
 
-            {currentStep === steps.length - 1 ? (
+            {/* ── Right button ──────────────────────────────────────────────
+                showSubmit = last parent step AND child is on its last day.
+                On Day 1 of a 2-day MediaForm, isOnLastDay is false →
+                showSubmit is false → "Next Day →" is shown instead.
+            ─────────────────────────────────────────────────────────────── */}
+            {showSubmit ? (
               <button
                 onClick={submitEvent}
                 disabled={!eventId || isLoading || childNav.isLoading}
@@ -1917,11 +1944,7 @@ export default function Form() {
                 disabled={isLoading || childNav.isLoading}
                 className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading || childNav.isLoading
-                  ? "Saving..."
-                  : isMultiDayForm() && !isAllDaysCompleted()
-                  ? "Next Day →"
-                  : "Save & Next"}
+                {forwardLabel()}
               </button>
             )}
           </div>
