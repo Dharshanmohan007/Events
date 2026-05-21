@@ -1,13 +1,29 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ChevronDown,
   ArrowRight,
 } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
+
 import { useAuth } from "../../Components/AuthContext";
 import { API_BASE } from "../../utils/apiConfig";
 
 export default function PurchaseDetails() {
+
   const { user } = useAuth();
+  const [employeeId, setEmployeeId] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!user && token) {
+      try {
+        const decoded = jwtDecode(token);
+        setEmployeeId(decoded.id || decoded._id || "");
+      } catch {
+        setEmployeeId("");
+      }
+    }
+  }, [user]);
 
   const emptyPerson = {
     giftType: "",
@@ -26,7 +42,10 @@ export default function PurchaseDetails() {
     requirement: "",
     idCardQty: "",
     certificateQty: "",
+
     persons: "",
+    deliveryDate: "",
+
     students: emptyPerson,
     guests: emptyPerson,
   });
@@ -47,7 +66,10 @@ export default function PurchaseDetails() {
     }));
   };
 
+  /* ================= BUILD GIFT ITEMS ================= */
+
   const buildGiftItems = (section) => {
+
     const giftItems = [];
 
     /* TROPHY */
@@ -56,12 +78,14 @@ export default function PurchaseDetails() {
         "Trophy"
       )
     ) {
+
       const trophy = [];
 
       if (
         section.trophyType ===
           "Basic" ||
-        section.trophyType === "Both"
+        section.trophyType ===
+          "Both"
       ) {
         trophy.push({
           trophyType: "Basic",
@@ -75,7 +99,8 @@ export default function PurchaseDetails() {
       if (
         section.trophyType ===
           "Elite" ||
-        section.trophyType === "Both"
+        section.trophyType ===
+          "Both"
       ) {
         trophy.push({
           trophyType: "Elite",
@@ -115,13 +140,21 @@ export default function PurchaseDetails() {
         "Voucher"
       )
     ) {
+      const rawWorth =
+        section.voucherWorth || "";
+      const normalizedWorth =
+        rawWorth
+          .toString()
+          .replace(/[₹,\s]/g, "");
+
       giftItems.push({
         giftType: "Voucher",
+
         voucher: [
           {
             voucherWorth:
-              section.voucherWorth ||
-              "",
+              normalizedWorth || "",
+
             quantity:
               parseInt(
                 section.voucherQty
@@ -134,7 +167,10 @@ export default function PurchaseDetails() {
     return giftItems;
   };
 
+  /* ================= BUILD PAYLOAD ================= */
+
   const buildPayload = () => {
+
     const requirementNeeded = [];
 
     if (
@@ -144,9 +180,12 @@ export default function PurchaseDetails() {
     ) {
       requirementNeeded.push({
         type: "ID Card",
+
         hardCount:
-          parseInt(form.idCardQty) ||
-          0,
+          parseInt(
+            form.idCardQty
+          ) || 0,
+
         softCount: 0,
       });
     }
@@ -158,10 +197,12 @@ export default function PurchaseDetails() {
     ) {
       requirementNeeded.push({
         type: "Certificate",
+
         hardCount:
           parseInt(
             form.certificateQty
           ) || 0,
+
         softCount: 0,
       });
     }
@@ -169,30 +210,41 @@ export default function PurchaseDetails() {
     const requiredFor = [];
 
     if (
-      form.persons === "Students" ||
+      form.persons ===
+        "Students" ||
       form.persons === "Both"
     ) {
-      requiredFor.push("Students");
+      requiredFor.push(
+        "Students"
+      );
     }
 
     if (
       form.persons === "Guest" ||
       form.persons === "Both"
     ) {
-      requiredFor.push("Guests");
+      requiredFor.push(
+        "Guests"
+      );
     }
 
     return {
+
       employee:
-        user?.id ||
+        user?.id || 
         user?._id ||
-        "",
+        employeeId ||
+        "6a0411af4579d3137b255e71",
 
       purchases: [
         {
           dayIndex: 1,
-          deliveryDate: "",
+
+          deliveryDate:
+            form.deliveryDate || "",
+
           requirementNeeded,
+
           requiredFor,
 
           students: {
@@ -245,43 +297,83 @@ export default function PurchaseDetails() {
     };
   };
 
+  /* ================= SUBMIT ================= */
+
   const handleSubmit = async () => {
+
     setApiError("");
     setSuccess(false);
     setIsLoading(true);
 
     try {
-      const payload = buildPayload();
-      const token = localStorage.getItem("token");
+
+      const payload =
+        buildPayload();
+
+      if (!payload.employee) {
+        throw new Error(
+          "Unable to determine employee id. Please login again."
+        );
+      }
+
+      const token =
+        localStorage.getItem(
+          "token"
+        );
+
       const requestUrl = `${API_BASE}/api/purchase/create`;
 
-      const response = await fetch(requestUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
+      const response =
+        await fetch(
+          requestUrl,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              ...(token
+                ? {
+                    Authorization: `Bearer ${token}`,
+                  }
+                : {}),
+            },
+
+            body: JSON.stringify(
+              payload
+            ),
+          }
+        );
 
       let data;
+
       try {
-        data = await response.json();
+        data =
+          await response.json();
       } catch {
         data = null;
       }
 
       if (!response.ok) {
         throw new Error(
-          (data && data.message) ||
+          (data &&
+            data.message) ||
             `Purchase submission failed with status ${response.status}`
         );
       }
 
       setSuccess(true);
+
     } catch (error) {
-      setApiError(error.message || "Unable to send purchase data.");
+
+      setApiError(
+        error.message ||
+          "Unable to send purchase data."
+      );
+
     } finally {
+
       setIsLoading(false);
     }
   };
@@ -289,8 +381,10 @@ export default function PurchaseDetails() {
   return (
     <div
       className="w-full min-h-screen
-      bg-[#141428] p-6 text-white"
+      bg-[#141428]
+      p-6 text-white"
     >
+
       <h1 className="text-xl">
         Purchase Details
       </h1>
@@ -315,12 +409,13 @@ export default function PurchaseDetails() {
           placeholder="Select Requirement"
         />
 
-        {/* REQUIREMENT FIELDS */}
+    
         {form.requirement && (
           <div
             className="grid grid-cols-1
             md:grid-cols-2 gap-4"
           >
+
             {(form.requirement ===
               "Certificate / ID card" ||
               form.requirement ===
@@ -328,7 +423,9 @@ export default function PurchaseDetails() {
               <InputField
                 label="Id Card Hard copy Quantity"
                 placeholder="52"
-                value={form.idCardQty}
+                value={
+                  form.idCardQty
+                }
                 onChange={(e) =>
                   setField(
                     "idCardQty",
@@ -359,23 +456,46 @@ export default function PurchaseDetails() {
           </div>
         )}
 
-        {/* PERSONS */}
-        <CustomDropdown
-          label="Select Required Persons*"
-          value={form.persons}
-          setValue={(value) =>
-            setField(
-              "persons",
-              value
-            )
-          }
-          options={[
-            "Students",
-            "Guest",
-            "Both",
-          ]}
-          placeholder="Select Required Persons"
-        />
+       
+        <div
+          className="grid grid-cols-1
+          md:grid-cols-2 gap-4"
+        >
+
+          {/* PERSONS */}
+          <CustomDropdown
+            label="Select Required Persons*"
+            value={form.persons}
+            setValue={(value) =>
+              setField(
+                "persons",
+                value
+              )
+            }
+            options={[
+              "Students",
+              "Guest",
+              "Both",
+            ]}
+            placeholder="Select Required Persons"
+          />
+
+          {/* DELIVERY DATE */}
+          <InputField
+            label="Delivery Date *"
+            type="date"
+            value={
+              form.deliveryDate
+            }
+            onChange={(e) =>
+              setField(
+                "deliveryDate",
+                e.target.value
+              )
+            }
+            placeholder="Select Delivery Date"
+          />
+        </div>
 
         {/* STUDENTS */}
         {(form.persons ===
@@ -416,8 +536,8 @@ export default function PurchaseDetails() {
           <div
             className="bg-red-500/10
             border border-red-500/30
-            text-red-300 rounded-lg
-            px-4 py-3"
+            text-red-300
+            rounded-lg px-4 py-3"
           >
             {apiError}
           </div>
@@ -428,16 +548,17 @@ export default function PurchaseDetails() {
           <div
             className="bg-green-500/10
             border border-green-500/30
-            text-green-300 rounded-lg
-            px-4 py-3"
+            text-green-300
+            rounded-lg px-4 py-3"
           >
-            Purchase Details Submitted
-            Successfully
+            Purchase Details
+            Submitted Successfully
           </div>
         )}
 
         {/* BUTTON */}
         <div className="flex justify-end">
+
           <button
             onClick={handleSubmit}
             disabled={isLoading}
@@ -448,11 +569,14 @@ export default function PurchaseDetails() {
             px-10 py-3 rounded-lg
             flex items-center gap-2"
           >
+
             {isLoading
               ? "Sending..."
               : "Submit"}
 
-            <ArrowRight size={18} />
+            <ArrowRight
+              size={18}
+            />
           </button>
         </div>
       </div>
@@ -470,6 +594,7 @@ function PersonSection({
 
   const handleFieldChange =
     (field) => (e) => {
+
       onChange({
         ...data,
         [field]:
@@ -494,25 +619,25 @@ function PersonSection({
 
   return (
     <div
-      className="w-full bg-[#1b1b35]
+      className="w-full
+      bg-[#1b1b35]
       rounded-xl p-5
       border border-[#2f2f5c]"
     >
 
       <h2
         className="text-[#8b3dff]
-        text-2xl font-semibold mb-5"
+        text-2xl font-semibold
+        mb-5"
       >
         {title}
       </h2>
 
-      {/* ROW */}
       <div
         className="grid grid-cols-1
         md:grid-cols-2 gap-4 mb-4"
       >
 
-        {/* GIFT TYPE */}
         <CustomDropdown
           label="Gift Type *"
           value={data.giftType}
@@ -531,7 +656,6 @@ function PersonSection({
           placeholder="Select Gift Type"
         />
 
-        {/* KIT */}
         <CustomDropdown
           label="Registration Kit Needed *"
           value={
@@ -552,10 +676,10 @@ function PersonSection({
         />
       </div>
 
-      {/* TROPHY */}
       {hasTrophy && (
         <>
           <div className="mb-4">
+
             <CustomDropdown
               label="Type of Trophy Wanted *"
               value={
@@ -564,6 +688,7 @@ function PersonSection({
               setValue={(value) =>
                 onChange({
                   ...data,
+
                   trophyType: value,
 
                   basicTrophyQty:
@@ -588,7 +713,6 @@ function PersonSection({
             />
           </div>
 
-          {/* BASIC */}
           {(data.trophyType ===
             "Basic" ||
             data.trophyType ===
@@ -607,7 +731,6 @@ function PersonSection({
             </div>
           )}
 
-          {/* ELITE */}
           {(data.trophyType ===
             "Elite" ||
             data.trophyType ===
@@ -628,9 +751,9 @@ function PersonSection({
         </>
       )}
 
-      {/* CASH */}
       {hasCash && (
         <div className="mb-4">
+
           <InputField
             label="Cash Prize Amount *"
             placeholder="₹ 5000"
@@ -644,16 +767,18 @@ function PersonSection({
         </div>
       )}
 
-      {/* VOUCHER */}
       {hasVoucher && (
         <div
           className="grid grid-cols-1
           md:grid-cols-2 gap-4 mb-4"
         >
+
           <InputField
             label="Voucher Quantity *"
             placeholder="2"
-            value={data.voucherQty}
+            value={
+              data.voucherQty
+            }
             onChange={handleFieldChange(
               "voucherQty"
             )}
@@ -681,10 +806,10 @@ function PersonSection({
         </div>
       )}
 
-      {/* KIT QTY */}
       {data.registrationKitNeeded ===
         "Yes" && (
         <div className="mb-4">
+
           <InputField
             label="Registration Kit Quantity *"
             placeholder="2"
@@ -698,8 +823,8 @@ function PersonSection({
         </div>
       )}
 
-      {/* TEXTAREA */}
       <div className="w-full">
+
         <label
           className="text-sm text-white
           mb-2 block"
@@ -738,6 +863,7 @@ function InputField({
   onChange,
   type = "text",
 }) {
+
   return (
     <div className="w-full">
 
@@ -826,10 +952,12 @@ function CustomDropdown({
       {isOpen && (
         <div
           className="absolute z-50
-          mt-2 w-full bg-[#141428]
+          mt-2 w-full
+          bg-[#141428]
           border border-[#5b21b6]
           rounded-xl overflow-hidden"
         >
+
           {options.map(
             (item, index) => (
               <div
