@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import CustomInput from "../CustomInput";
+import { Info } from "lucide-react";
+import VenueInfoPopup from "./VenueInfoPopup"; // ← separated into its own file
 
-const BASE_URL = 'https://sece-events.onrender.com';
+const BASE_URL = "https://sece-events.onrender.com";
 
 const VENUES = [
   { venue: "Main Board Room", capacity: 20 },
@@ -58,6 +60,8 @@ const HALL_REQUIREMENTS = [
   "Audience Chair",
 ];
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 const ErrorMsg = ({ msg }) =>
   msg ? <p className="text-red-400 text-xs mt-1">{msg}</p> : null;
 
@@ -77,8 +81,6 @@ function validateVenueCard(card) {
     e.diasTable = "Number of dias tables is required";
   if (card.hallReqs?.includes("Audience Chair") && (!card.audienceChair || parseInt(card.audienceChair) < 1))
     e.audienceChair = "Number of audience chairs is required";
-  if (!card.specialReqs?.trim())
-    e.specialReqs = "Special requirements field is required";
   return e;
 }
 
@@ -98,9 +100,10 @@ function validateDay(dayData) {
 }
 
 function buildVenuePayload(venueData) {
-  const totalParticipants = venueData.reduce((sum, day) => {
-    return sum + (parseInt(day.participants) || 0);
-  }, 0);
+  const totalParticipants = venueData.reduce(
+    (sum, day) => sum + (parseInt(day.participants) || 0),
+    0
+  );
 
   const venues = [];
   venueData.forEach((day, dayIndex) => {
@@ -129,9 +132,14 @@ function buildVenuePayload(venueData) {
   return { totalParticipants, venues };
 }
 
-function MultiVenueSelect({ label, options, selected, onChange, error }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+// ─── Multi-venue dropdown ─────────────────────────────────────────────────────
+
+function MultiVenueSelect({ label, options, selected, onChange, error, totalParticipants }) {
+  const [open, setOpen]               = useState(false);
+  const [search, setSearch]           = useState("");
+  const [capacityError, setCapacityError] = useState("");
+  const ref       = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -141,12 +149,37 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (open && searchRef.current) searchRef.current.focus();
+  }, [open]);
+
+  const getSelectedCapacitySum = (selectedVenues) =>
+    selectedVenues.reduce((sum, name) => {
+      const venue = VENUES.find((v) => v.venue === name);
+      return sum + (venue?.capacity || 0);
+    }, 0);
+
   const toggle = (venue) => {
-    onChange(
-      selected.includes(venue)
-        ? selected.filter((v) => v !== venue)
-        : [...selected, venue]
-    );
+    setCapacityError("");
+    if (selected.includes(venue)) {
+      onChange(selected.filter((v) => v !== venue));
+    } else {
+      if (totalParticipants > 0) {
+        const venueObj      = VENUES.find((v) => v.venue === venue);
+        const venueCapacity = venueObj?.capacity || 0;
+        if (venueCapacity > 0) {
+          const currentSum = getSelectedCapacitySum(selected);
+          const newSum     = currentSum + venueCapacity;
+          if (newSum > totalParticipants) {
+            setCapacityError(
+              `Total venue capacity (${newSum}) exceeds total participants (${totalParticipants}). Cannot add "${venue}".`
+            );
+            return;
+          }
+        }
+      }
+      onChange([...selected, venue]);
+    }
   };
 
   const displayText =
@@ -156,6 +189,15 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
         ? selected.join(" / ")
         : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
 
+  const filteredOptions = (() => {
+    const q               = search.toLowerCase().trim();
+    const selectedOptions = options.filter((o) => selected.includes(o.venue));
+    const unselected      = options.filter((o) => !selected.includes(o.venue));
+    const combined        = [...selectedOptions, ...unselected];
+    if (!q) return combined;
+    return combined.filter((o) => o.venue.toLowerCase().includes(q));
+  })();
+
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
@@ -164,38 +206,135 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
-            }`}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+          }`}
         >
           <span className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}>
             {displayText || "Select venues..."}
           </span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
+
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-y-auto custom-scrollbar">
-            {options.length === 0 ? (
-              <div className="px-4 py-3 text-sm text-gray-400">No venues available for this capacity</div>
-            ) : (
-              options.map((opt, i) => {
-                const isSelected = selected.includes(opt.venue);
-                return (
-                  <div key={i} onClick={() => toggle(opt.venue)} className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"}`}>
-                    <span>{opt.venue}</span>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <span className="text-xs text-gray-400">Cap: {opt.capacity === 0 ? "Open" : opt.capacity}</span>
-                      {isSelected && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
-                    </div>
-                  </div>
-                );
-              })
+          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col">
+            {/* Search */}
+            <div className="p-2 border-b border-[#3A3A5A]">
+              <div className="relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Search venues..."
+                  className="w-full bg-[#2A2A3F] border border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                />
+                {search && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Capacity error */}
+            {capacityError && (
+              <div className="mx-2 mt-2 flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                <svg
+                  className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <p className="text-red-400 text-xs">{capacityError}</p>
+              </div>
             )}
+
+            {/* Options list */}
+            <div className="max-h-52 overflow-y-auto custom-scrollbar">
+              {filteredOptions.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-gray-400">No venues found</div>
+              ) : (
+                filteredOptions.map((opt, i) => {
+                  const isSelected = selected.includes(opt.venue);
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => toggle(opt.venue)}
+                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${
+                        isSelected
+                          ? "bg-purple-600/30 text-white"
+                          : "text-white hover:bg-purple-500/20"
+                      }`}
+                    >
+                      <span className="flex-1">{opt.venue}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs text-gray-400">
+                          Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
+                        </span>
+                        {isSelected && (
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="w-4 h-4 text-purple-400"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -204,9 +343,13 @@ function MultiVenueSelect({ label, options, selected, onChange, error }) {
   );
 }
 
+// ─── Hall Requirements dropdown ───────────────────────────────────────────────
+
 function HallRequirementsSelect({ label, selected, onChange, error }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const [open, setOpen]     = useState(false);
+  const [search, setSearch] = useState("");
+  const ref       = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -216,37 +359,143 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const toggle = (item) => {
-    onChange(selected.includes(item) ? selected.filter((v) => v !== item) : [...selected, item]);
-  };
+  useEffect(() => {
+    if (open && searchRef.current) searchRef.current.focus();
+  }, [open]);
+
+  const toggle = (item) =>
+    onChange(
+      selected.includes(item)
+        ? selected.filter((v) => v !== item)
+        : [...selected, item]
+    );
+
+  const filteredItems = (() => {
+    const q             = search.toLowerCase().trim();
+    const selectedItems = HALL_REQUIREMENTS.filter((r) => selected.includes(r));
+    const unselected    = HALL_REQUIREMENTS.filter((r) => !selected.includes(r));
+    const combined      = [...selectedItems, ...unselected];
+    if (!q) return combined;
+    return combined.filter((r) => r.toLowerCase().includes(q));
+  })();
 
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">{label}</span>
-        <div onClick={() => setOpen(!open)} className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"}`}>
-          <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm"}>
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          {label}
+        </span>
+        <div
+          onClick={() => setOpen(!open)}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+          }`}
+        >
+          <span
+            className={
+              selected.length
+                ? "text-white text-sm truncate max-w-[85%]"
+                : "text-gray-500 text-sm"
+            }
+          >
             {selected.length ? selected.join(" / ") : "Select requirements..."}
           </span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          >
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
+
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
-            {HALL_REQUIREMENTS.map((item, i) => {
-              const isSelected = selected.includes(item);
-              return (
-                <div key={i} onClick={() => toggle(item)} className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"}`}>
-                  <span>{item}</span>
-                  {isSelected && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12" />
+          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col">
+            <div className="p-2 border-b border-[#3A3A5A]">
+              <div className="relative">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                  placeholder="Search requirements..."
+                  className="w-full bg-[#2A2A3F] border border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                />
+                {search && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-3.5 h-3.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2.5}
+                    >
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
                     </svg>
-                  )}
-                </div>
-              );
-            })}
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="max-h-52 overflow-y-auto custom-scrollbar">
+              {filteredItems.length === 0 ? (
+                <div className="px-4 py-3 text-sm text-gray-400">No requirements found</div>
+              ) : (
+                filteredItems.map((item, i) => {
+                  const isSelected = selected.includes(item);
+                  return (
+                    <div
+                      key={i}
+                      onClick={() => toggle(item)}
+                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
+                        isSelected
+                          ? "bg-purple-600/30 text-white"
+                          : "text-white hover:bg-purple-500/20"
+                      }`}
+                    >
+                      <span>{item}</span>
+                      {isSelected && (
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="w-4 h-4 text-purple-400"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -255,10 +504,12 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
   );
 }
 
-function VenueDetailCard({ venueName, venueCapacity, index, data, onChange, errors = {} }) {
-  const showGuestChair = data.hallReqs?.includes("Guest Chair");
-  const showWaterBottles = data.hallReqs?.includes("Water Bottles");
-  const showDiasTable = data.hallReqs?.includes("Dias Table");
+// ─── Venue Detail Card ────────────────────────────────────────────────────────
+
+function VenueDetailCard({ venueName, index, data, onChange, errors = {}, onInfoClick }) {
+  const showGuestChair    = data.hallReqs?.includes("Guest Chair");
+  const showWaterBottles  = data.hallReqs?.includes("Water Bottles");
+  const showDiasTable     = data.hallReqs?.includes("Dias Table");
   const showAudienceChair = data.hallReqs?.includes("Audience Chair");
 
   const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
@@ -267,57 +518,90 @@ function VenueDetailCard({ venueName, venueCapacity, index, data, onChange, erro
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-400 bg-[#2A2A45] px-2 py-1 rounded-full">
-            Capacity: {venueCapacity === 0 ? "Open" : venueCapacity}
-          </span>
-          <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs text-white font-bold">{index}</div>
-        </div>
+        <button
+          onClick={() => onInfoClick(venueName)}
+          title="View venue details"
+          className="w-6 h-6 rounded-full flex items-center justify-center bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-500/40 hover:text-white transition-all"
+        >
+          <Info size={14} />
+        </button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <CustomInput labelBg="#1E1E35" label="Number of Participants *" type="number" value={data.participants || ""} onChange={update("participants")} />
+          <CustomInput
+            labelBg="#1E1E35"
+            label="Number of Participants *"
+            type="number"
+            value={data.participants || ""}
+            onChange={update("participants")}
+          />
           <ErrorMsg msg={errors.participants} />
         </div>
         <div>
-          <CustomInput labelBg="#1E1E35" label="Number of Seating Capacity Required *" type="number" value={data.seatingCapacity || ""} onChange={update("seatingCapacity")} />
+          <CustomInput
+            labelBg="#1E1E35"
+            label="Number of Seating Capacity Required *"
+            type="number"
+            value={data.seatingCapacity || ""}
+            onChange={update("seatingCapacity")}
+          />
           <ErrorMsg msg={errors.seatingCapacity} />
         </div>
       </div>
 
       <div>
-        <HallRequirementsSelect label="Hall Requirements *" selected={data.hallReqs || []} onChange={(val) => onChange({ ...data, hallReqs: val })} error={errors.hallReqs} />
+        <HallRequirementsSelect
+          label="Hall Requirements *"
+          selected={data.hallReqs || []}
+          onChange={(val) => onChange({ ...data, hallReqs: val })}
+          error={errors.hallReqs}
+        />
       </div>
 
-      {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {showGuestChair && (
-            <div>
-              <CustomInput labelBg="#1E1E35" label="No. of Guest Chair *" type="number" value={data.guestChairs || ""} onChange={update("guestChairs")} />
-              <ErrorMsg msg={errors.guestChairs} />
+      {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) &&
+        (() => {
+          const activeFields = [
+            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair *",    field: "guestChairs",   error: errors.guestChairs },
+            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles *",  field: "waterBottles",  error: errors.waterBottles },
+            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table *",     field: "diasTable",     error: errors.diasTable },
+            showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair *", field: "audienceChair", error: errors.audienceChair },
+          ].filter(Boolean);
+
+          const count       = activeFields.length;
+          const colsPerRow  = Math.min(count, 4);
+          const gridClass   =
+            colsPerRow === 1 ? "grid grid-cols-1 gap-4" :
+            colsPerRow === 2 ? "grid grid-cols-2 gap-4" :
+            colsPerRow === 3 ? "grid grid-cols-3 gap-4" :
+                               "grid grid-cols-4 gap-4";
+          const remainder   = count % 4;
+          const spanClass   =
+            remainder === 1 ? "col-span-4" :
+            remainder === 2 ? "col-span-2" :
+            remainder === 3 ? "col-span-1" : "";
+
+          return (
+            <div className={gridClass}>
+              {activeFields.map((f, idx) => {
+                const isInLastRow =
+                  count > 4 && idx >= count - remainder && remainder !== 0;
+                return (
+                  <div key={f.key} className={isInLastRow ? spanClass : ""}>
+                    <CustomInput
+                      labelBg="#1E1E35"
+                      label={f.label}
+                      type="number"
+                      value={data[f.field] || ""}
+                      onChange={update(f.field)}
+                    />
+                    <ErrorMsg msg={f.error} />
+                  </div>
+                );
+              })}
             </div>
-          )}
-          {showWaterBottles && (
-            <div>
-              <CustomInput labelBg="#1E1E35" label="No. of Water Bottles *" type="number" value={data.waterBottles || ""} onChange={update("waterBottles")} />
-              <ErrorMsg msg={errors.waterBottles} />
-            </div>
-          )}
-          {showDiasTable && (
-            <div>
-              <CustomInput labelBg="#1E1E35" label="No. of Dias Table *" type="number" value={data.diasTable || ""} onChange={update("diasTable")} />
-              <ErrorMsg msg={errors.diasTable} />
-            </div>
-          )}
-          {showAudienceChair && (
-            <div>
-              <CustomInput labelBg="#1E1E35" label="No. of Audience Chair *" type="number" value={data.audienceChair || ""} onChange={update("audienceChair")} />
-              <ErrorMsg msg={errors.audienceChair} />
-            </div>
-          )}
-        </div>
-      )}
+          );
+        })()}
 
       <div>
         <div className="relative w-full">
@@ -329,7 +613,9 @@ function VenueDetailCard({ venueName, venueCapacity, index, data, onChange, erro
             onChange={update("specialReqs")}
             rows={3}
             placeholder="Enter any special requirements..."
-            className={`w-full bg-transparent border ${errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${
+              errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
+            } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
           />
         </div>
         <ErrorMsg msg={errors.specialReqs} />
@@ -337,6 +623,8 @@ function VenueDetailCard({ venueName, venueCapacity, index, data, onChange, erro
     </div>
   );
 }
+
+// ─── Day Timeline ─────────────────────────────────────────────────────────────
 
 export function DayTimeline({ days, currentDayIndex, completedDays }) {
   if (!days || days.length === 0) return null;
@@ -346,14 +634,29 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
       <div className="flex items-center justify-center">
         {days.map((day, index) => {
           const isCompleted = completedDays.includes(index);
-          const isCurrent = index === currentDayIndex;
+          const isCurrent   = index === currentDayIndex;
 
           return (
             <React.Fragment key={index}>
               <div className="flex flex-col items-center min-w-[140px]">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${isCompleted ? "bg-purple-600 border-purple-600 text-white" : isCurrent ? "border-purple-500 text-purple-400" : "border-gray-600 text-gray-500"}`}>
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
+                    isCompleted
+                      ? "bg-purple-600 border-purple-600 text-white"
+                      : isCurrent
+                        ? "border-purple-500 text-purple-400"
+                        : "border-gray-600 text-gray-500"
+                  }`}
+                >
                   {isCompleted ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                   ) : (
@@ -362,11 +665,27 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
                 </div>
                 {day.date && (
                   <div className="mt-2 text-center">
-                    <p className={`text-xs font-semibold ${isCompleted ? "text-purple-400" : isCurrent ? "text-purple-300" : "text-gray-400"}`}>
+                    <p
+                      className={`text-xs font-semibold ${
+                        isCompleted
+                          ? "text-purple-400"
+                          : isCurrent
+                            ? "text-purple-300"
+                            : "text-gray-400"
+                      }`}
+                    >
                       {day.date}
                     </p>
                     {day.startTime && day.endTime && (
-                      <p className={`text-xs ${isCompleted ? "text-purple-400" : isCurrent ? "text-purple-300" : "text-gray-500"}`}>
+                      <p
+                        className={`text-xs ${
+                          isCompleted
+                            ? "text-purple-400"
+                            : isCurrent
+                              ? "text-purple-300"
+                              : "text-gray-500"
+                        }`}
+                      >
                         ({day.startTime} - {day.endTime})
                       </p>
                     )}
@@ -374,7 +693,12 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
                 )}
               </div>
               {index < days.length - 1 && (
-                <div className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${isCompleted ? "bg-purple-500" : "bg-gray-600"}`} style={{ minWidth: "60px" }} />
+                <div
+                  className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${
+                    isCompleted ? "bg-purple-500" : "bg-gray-600"
+                  }`}
+                  style={{ minWidth: "60px" }}
+                />
               )}
             </React.Fragment>
           );
@@ -383,6 +707,8 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
     </div>
   );
 }
+
+// ─── Main VenueForm ───────────────────────────────────────────────────────────
 
 export default function VenueForm({
   nextStep,
@@ -394,10 +720,13 @@ export default function VenueForm({
   eventId,
 }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  const [completedDays, setCompletedDays] = useState([]);
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const [completedDays, setCompletedDays]     = useState([]);
+  const [errors, setErrors]                   = useState({});
+  const [isLoading, setIsLoading]             = useState(false);
+  const [apiError, setApiError]               = useState("");
+
+  // Popup state — only a venue name string (or null when closed)
+  const [popupVenue, setPopupVenue] = useState(null);
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -410,7 +739,6 @@ export default function VenueForm({
         }))
   );
 
-  // ── Always-fresh ref — this is what handleNext reads (no stale closures) ──
   const stateRef = useRef({});
   stateRef.current = {
     venueData,
@@ -422,14 +750,11 @@ export default function VenueForm({
     prevStep,
   };
 
-  // ── Sync to parent ────────────────────────────────────────────────────────
   useEffect(() => {
     if (onVenueDataChange) onVenueDataChange(venueData);
-    // onVenueDataChange intentionally omitted — stable callback
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [venueData]);
 
-  // ── Resize venueData array when eventDays length changes ──────────────────
   useEffect(() => {
     if (initialVenueData.length > 0) {
       setVenueData(initialVenueData);
@@ -437,7 +762,7 @@ export default function VenueForm({
     }
     setVenueData((prev) => {
       const nextDays = eventDays.length;
-      const updated = prev.slice(0, nextDays);
+      const updated  = prev.slice(0, nextDays);
       while (updated.length < nextDays) {
         updated.push({ participants: "", selectedVenues: [], othersText: "", venueCards: [] });
       }
@@ -445,11 +770,11 @@ export default function VenueForm({
     });
   }, [eventDays.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Derive current day from state (for rendering) ─────────────────────────
-  const currentDay = venueData[currentDayIndex] || { participants: "", selectedVenues: [], othersText: "", venueCards: [] };
-  const currentErrors = errors[currentDayIndex] || {};
+  const currentDay    = venueData[currentDayIndex] || {
+    participants: "", selectedVenues: [], othersText: "", venueCards: [],
+  };
+  const currentErrors   = errors[currentDayIndex] || {};
   const participantCount = parseInt(currentDay?.participants) || 0;
-  const eligibleVenues = VENUES.filter((v) => v.capacity === 0 || v.capacity >= participantCount);
 
   const updateCurrentDay = (newData) => {
     setVenueData((prev) => {
@@ -458,8 +783,8 @@ export default function VenueForm({
       return updated;
     });
     setErrors((prev) => {
-      const updatedErrors = { ...prev };
-      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
+      const updatedErrors      = { ...prev };
+      const currentDayErrors   = { ...(updatedErrors[currentDayIndex] || {}) };
       Object.keys(newData).forEach((field) => { delete currentDayErrors[field]; });
       updatedErrors[currentDayIndex] = currentDayErrors;
       return updatedErrors;
@@ -468,21 +793,27 @@ export default function VenueForm({
 
   const handleVenueSelection = (selectedVenues) => {
     const existingCards = currentDay.venueCards || [];
-    const updatedCards = selectedVenues.map((name) => {
+    const updatedCards  = selectedVenues.map((name) => {
       const existing = existingCards.find((c) => c.venueName === name);
-      return existing || {
-        venueName: name, participants: "", seatingCapacity: "",
-        hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
-        audienceChair: "", specialReqs: "",
-      };
+      return (
+        existing || {
+          venueName: name, participants: "", seatingCapacity: "",
+          hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
+          audienceChair: "", specialReqs: "",
+        }
+      );
     });
     setVenueData((prev) => {
       const updated = [...prev];
-      updated[currentDayIndex] = { ...updated[currentDayIndex], selectedVenues, venueCards: updatedCards };
+      updated[currentDayIndex] = {
+        ...updated[currentDayIndex],
+        selectedVenues,
+        venueCards: updatedCards,
+      };
       return updated;
     });
     setErrors((prev) => {
-      const updatedErrors = { ...prev };
+      const updatedErrors    = { ...prev };
       const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
       delete currentDayErrors.selectedVenues;
       updatedErrors[currentDayIndex] = currentDayErrors;
@@ -492,7 +823,7 @@ export default function VenueForm({
 
   const updateVenueCard = (cardIndex, updated) => {
     setVenueData((prev) => {
-      const data = [...prev];
+      const data  = [...prev];
       const cards = [...(data[currentDayIndex].venueCards || [])];
       cards[cardIndex] = updated;
       data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
@@ -500,10 +831,10 @@ export default function VenueForm({
     });
   };
 
-  // ── Stable handleNext — reads ALL live state via stateRef ─────────────────
   const handleNext = useCallback(async () => {
-    const { venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep } = stateRef.current;
-    const dayData = venueData[currentDayIndex];
+    const { venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep } =
+      stateRef.current;
+    const dayData   = venueData[currentDayIndex];
     const dayErrors = validateDay(dayData);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
@@ -517,13 +848,13 @@ export default function VenueForm({
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildVenuePayload(venueData);
-        const id = eventId || '';
+        const payload  = buildVenuePayload(venueData);
+        const id       = eventId || "";
         const response = await fetch(`${BASE_URL}/api/events/${id}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({ venueDetails: payload }),
         });
@@ -540,25 +871,22 @@ export default function VenueForm({
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // stable forever — reads live state via stateRef
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Stable handleBack ─────────────────────────────────────────────────────
   const handleBack = useCallback(() => {
     const { currentDayIndex, prevStep } = stateRef.current;
     if (currentDayIndex > 0) setCurrentDayIndex((prev) => prev - 1);
     else if (prevStep) prevStep();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // stable forever
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // ── Register with parent once on mount ───────────────────────────────────
   useEffect(() => {
     if (!registerChildNavigation) return;
     registerChildNavigation({ next: handleNext, prev: handleBack, isLoading: false });
     return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
   }, [registerChildNavigation, handleNext, handleBack]);
 
-  // Sync isLoading so parent button shows "Saving..."
   useEffect(() => {
     if (!registerChildNavigation) return;
     registerChildNavigation({ next: handleNext, prev: handleBack, isLoading });
@@ -568,78 +896,104 @@ export default function VenueForm({
     .map((name) => VENUES.find((v) => v.venue === name))
     .filter(Boolean);
 
+  const handleInfoClick  = useCallback((venueName) => setPopupVenue(venueName), []);
+  const handlePopupClose = useCallback(() => setPopupVenue(null), []);
+
   return (
-    <div className="flex flex-col gap-6 pb-6">
-      <DayTimeline days={eventDays} currentDayIndex={currentDayIndex} completedDays={completedDays} />
-
-      <h2 className="text-white text-lg font-bold">
-        Venue Details – Day {currentDayIndex + 1}
-      </h2>
-
-      {(apiError || Object.keys(currentErrors).length > 0) && (
-        <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
-          <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-          </svg>
-          <div className="text-red-400 text-sm">
-            {apiError && <p>{apiError}</p>}
-            {Object.keys(currentErrors).length > 0 && (
-              <div>
-                {currentErrors.participants && <p>• {currentErrors.participants}</p>}
-                {currentErrors.selectedVenues && <p>• {currentErrors.selectedVenues}</p>}
-                {currentErrors.venueCards && <p>• Please fill in all required fields for each venue</p>}
-              </div>
-            )}
-          </div>
-        </div>
+    <>
+      {/* ── VenueInfoPopup is now a fully standalone component ── */}
+      {popupVenue && (
+        <VenueInfoPopup venueName={popupVenue} onClose={handlePopupClose} />
       )}
 
-      <CustomInput
-        label="Total Number of Participants *"
-        type="number"
-        value={currentDay.participants}
-        onChange={(e) => updateCurrentDay({ participants: e.target.value })}
-      />
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <MultiVenueSelect
-          label="Venue Required *"
-          options={participantCount > 0 ? eligibleVenues : VENUES}
-          selected={currentDay.selectedVenues}
-          onChange={handleVenueSelection}
-          error={
-            currentErrors.selectedVenues && currentDay.selectedVenues.length === 0
-              ? currentErrors.selectedVenues
-              : ""
-          }
+      <div className="flex flex-col gap-6 pb-6">
+        <DayTimeline
+          days={eventDays}
+          currentDayIndex={currentDayIndex}
+          completedDays={completedDays}
         />
-        <div>
-          <div className="relative">
-            <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">Others</span>
-            <input
-              value={currentDay.othersText}
-              onChange={(e) => updateCurrentDay({ othersText: e.target.value })}
-              className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500"
-            />
+
+        <h2 className="text-white text-lg font-bold">
+          Venue Details – Day {currentDayIndex + 1}
+        </h2>
+
+        {(apiError || Object.keys(currentErrors).length > 0) && (
+          <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
+            <svg
+              className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <div className="text-red-400 text-sm">
+              {apiError && <p>{apiError}</p>}
+              {Object.keys(currentErrors).length > 0 && (
+                <div>
+                  {currentErrors.participants   && <p>• {currentErrors.participants}</p>}
+                  {currentErrors.selectedVenues && <p>• {currentErrors.selectedVenues}</p>}
+                  {currentErrors.venueCards     && <p>• Please fill in all required fields for each venue</p>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <CustomInput
+          label="Total Number of Participants *"
+          type="number"
+          value={currentDay.participants}
+          onChange={(e) => updateCurrentDay({ participants: e.target.value })}
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <MultiVenueSelect
+            label="Venue Required *"
+            options={VENUES}
+            selected={currentDay.selectedVenues}
+            onChange={handleVenueSelection}
+            totalParticipants={participantCount}
+            error={
+              currentErrors.selectedVenues && currentDay.selectedVenues.length === 0
+                ? currentErrors.selectedVenues
+                : ""
+            }
+          />
+          <div>
+            <div className="relative">
+              <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">
+                Others
+              </span>
+              <input
+                value={currentDay.othersText}
+                onChange={(e) => updateCurrentDay({ othersText: e.target.value })}
+                className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      {selectedVenueObjects.length > 0 && (
-        <div className="flex flex-col gap-4">
-          {selectedVenueObjects.map((v, i) => (
-            <VenueDetailCard
-              key={v.venue}
-              venueName={v.venue}
-              venueCapacity={v.capacity}
-              index={i + 1}
-              data={currentDay.venueCards?.[i] || {}}
-              onChange={(updated) => updateVenueCard(i, updated)}
-              errors={(currentErrors.venueCards && currentErrors.venueCards[i]) || {}}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+        {selectedVenueObjects.length > 0 && (
+          <div className="flex flex-col gap-4">
+            {selectedVenueObjects.map((v, i) => (
+              <VenueDetailCard
+                key={v.venue}
+                venueName={v.venue}
+                venueCapacity={v.capacity}
+                index={i + 1}
+                data={currentDay.venueCards?.[i] || {}}
+                onChange={(updated) => updateVenueCard(i, updated)}
+                errors={(currentErrors.venueCards && currentErrors.venueCards[i]) || {}}
+                onInfoClick={handleInfoClick}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

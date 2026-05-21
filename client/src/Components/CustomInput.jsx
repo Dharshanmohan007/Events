@@ -1,8 +1,5 @@
 import React from "react";
 
-const baseStyle =
-  "w-full bg-transparent border border-[#3A3A5A] text-white  rounded-lg focus:outline-none focus:border-purple-500";
-
 export default function CustomInput({
   label,
   type = "text",
@@ -10,7 +7,7 @@ export default function CustomInput({
   onChange,
   className = "",
   labelBg = "#16162A",
-
+  borderColor = "#3A3A5A",
 }) {
   const isDarkBg = type === "date" || type === "time";
 
@@ -27,9 +24,15 @@ export default function CustomInput({
         type={type}
         {...(value !== undefined ? { value } : {})}
         {...(onChange ? { onChange } : {})}
-        className={`${baseStyle}   p-3.5 text-sm ${
+        className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border ${
           isDarkBg ? "text-gray-400 [color-scheme:dark]" : ""
-        } ${className}` }
+        } ${className}`}
+        style={{
+          borderColor: borderColor,
+          // focus border handled below via onFocus/onBlur if needed
+        }}
+        onFocus={e => (e.target.style.borderColor = "#a855f7")}
+        onBlur={e => (e.target.style.borderColor = borderColor)}
       />
     </div>
   );

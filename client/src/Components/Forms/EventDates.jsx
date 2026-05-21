@@ -1,31 +1,64 @@
 import React, { useState } from 'react'
 import CustomInput from "../CustomInput";
 import CustomSelect from '../CustomSelect';
+import TimePickerInput from "../TimePickerInput";
 
 const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange }) => (
-  <div className=' flex flex-col gap-6'>
+  <div className='flex flex-col gap-6'>
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
       <div>
-        <CustomInput labelBg="#1E1E35" label={`Day ${dayIndex} · Guest ${guestIndex} – Name *`} value={data.name || ""} onChange={(e) => onChange({ ...data, name: e.target.value })} />
+        <CustomInput
+          labelBg="#2E3645"
+          label={`Day ${dayIndex} · Guest ${guestIndex} – Name *`}
+          value={data.name || ""}
+          onChange={(e) => onChange({ ...data, name: e.target.value })}
+          borderColor="#FFFFFF66"
+        />
         {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
       </div>
       <div>
-        <CustomInput labelBg="#1E1E35" label={`Day ${dayIndex} · Guest ${guestIndex} – Designation *`} value={data.designation || ""} onChange={(e) => onChange({ ...data, designation: e.target.value })} />
+        <CustomInput
+          labelBg="#2E3645"
+          label={`Day ${dayIndex} · Guest ${guestIndex} – Designation *`}
+          value={data.designation || ""}
+          onChange={(e) => onChange({ ...data, designation: e.target.value })}
+          borderColor="#FFFFFF66"
+        />
         {errors.designation && <p className="text-red-400 text-xs mt-1">{errors.designation}</p>}
       </div>
       <div>
-        <CustomInput labelBg="#1E1E35" label={`Day ${dayIndex} · Guest ${guestIndex} – Organization *`} value={data.organization || ""} onChange={(e) => onChange({ ...data, organization: e.target.value })} />
+        <CustomInput
+          labelBg="#2E3645"
+          label={`Day ${dayIndex} · Guest ${guestIndex} – Organization *`}
+          value={data.organization || ""}
+          onChange={(e) => onChange({ ...data, organization: e.target.value })}
+          borderColor="#FFFFFF66"
+        />
         {errors.organization && <p className="text-red-400 text-xs mt-1">{errors.organization}</p>}
       </div>
     </div>
-    
+
     <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
       <div>
-        <CustomInput labelBg="#1E1E35" label={`Day ${dayIndex} · Guest ${guestIndex} – Mobile Number *`} type="tel" value={data.mobile || ""} onChange={(e) => onChange({ ...data, mobile: e.target.value })} />
+        <CustomInput
+          labelBg="#2E3645"
+          label={`Day ${dayIndex} · Guest ${guestIndex} – Mobile Number *`}
+          type="tel"
+          value={data.mobile || ""}
+          onChange={(e) => onChange({ ...data, mobile: e.target.value })}
+          borderColor="#FFFFFF66"
+        />
         {errors.mobile && <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>}
       </div>
       <div>
-        <CustomSelect labelBg="#1E1E35" options={["Male", "Female", "Others"]} label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`} value={data.gender || ""} onChange={(val) => onChange({ ...data, gender: val })} />
+        <CustomSelect
+          labelBg="#2E3645"
+          options={["Male", "Female", "Others"]}
+          label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`}
+          value={data.gender || ""}
+          onChange={(val) => onChange({ ...data, gender: val })}
+          borderColor="#FFFFFF66"
+        />
         {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
       </div>
     </div>
@@ -58,11 +91,22 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
         </div>
         <div>
-          <CustomInput labelBg="#1E1E35" type="time" label={`Day ${dayIndex} – Start Time *`} value={dayData?.startTime || ""} onChange={(e) => updateDay({ ...dayData, startTime: e.target.value })} />
+          <TimePickerInput
+            labelBg="#1E1E35"
+            label={`Day ${dayIndex} – Start Time *`}
+            value={dayData?.startTime || ""}
+            onChange={(e) => updateDay({ ...dayData, startTime: e.target.value })}
+          />
           {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
         </div>
+
         <div>
-          <CustomInput labelBg="#1E1E35" type="time" label={`Day ${dayIndex} – End Time *`} value={dayData?.endTime || ""} onChange={(e) => updateDay({ ...dayData, endTime: e.target.value })} />
+          <TimePickerInput
+            labelBg="#1E1E35"
+            label={`Day ${dayIndex} – End Time *`}
+            value={dayData?.endTime || ""}
+            onChange={(e) => updateDay({ ...dayData, endTime: e.target.value })}
+          />
           {errors.endTime && <p className="text-red-400 text-xs mt-1">{errors.endTime}</p>}
         </div>
       </div>
@@ -75,22 +119,29 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
         </div>
       </div>
 
-      {/* Guest fields */}
+      {/* Guest fields — each guest in its own separated card */}
       {guestCount > 0 && (
-        <div className='flex flex-col gap-5'>
+        <div className='flex flex-col gap-4'>
           {Array.from({ length: guestCount }, (_, i) => (
-            <GuestFields
+            <div
               key={i}
-              guestIndex={i + 1}
-              dayIndex={dayIndex}
-              data={(dayData.guests && dayData.guests[i]) || {}}
-              errors={(errors.guests && errors.guests[i]) || {}}
-              onChange={(updated) => {
-                const guests = [...(dayData.guests || [])];
-                guests[i] = updated;
-                updateDay({ ...dayData, guests });
-              }}
-            />
+              className='rounded-xl border border-[#3A3A5A] bg-[#2E3645] p-4 sm:p-6'
+            >
+              {/* <h3 className='text-purple-300 text-xs font-semibold tracking-wide mb-5'>
+                Guest {i + 1}
+              </h3> */}
+              <GuestFields
+                guestIndex={i + 1}
+                dayIndex={dayIndex}
+                data={(dayData.guests && dayData.guests[i]) || {}}
+                errors={(errors.guests && errors.guests[i]) || {}}
+                onChange={(updated) => {
+                  const guests = [...(dayData.guests || [])];
+                  guests[i] = updated;
+                  updateDay({ ...dayData, guests });
+                }}
+              />
+            </div>
           ))}
         </div>
       )}

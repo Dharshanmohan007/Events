@@ -56,7 +56,7 @@ export default function EventRequirements({ nextStep, setSelectedRequirements, o
   return (
     <div className='px-6 py-6 rounded-xl'>
       <h1 className="text-white text-lg font-bold mb-6 playfair">Event Requirements</h1>
-      <div className="grid grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-6 mb-6">
         {Object.keys(values).map((key) => (
           <div key={key}>
             <CustomSelect
