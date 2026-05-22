@@ -1,51 +1,67 @@
 import React, {
   useState,
-  forwardRef,
   memo,
   useRef,
   useEffect,
   useCallback,
 } from "react";
 import DatePicker from "react-datepicker";
-import { CalendarDays, Trash2, Plus } from "lucide-react";
+import { Trash2, Plus } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
-import CustomSelect from "../CustomSelect";
 
 const BASE_URL = "https://sece-events.onrender.com";
 
-// ─── DateInput ───────────────────────────────────────────────────────────────
-const DateInput = forwardRef(({ value, onClick, label }, ref) => (
-  <div className="relative w-full">
-    <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
-      {label}
-    </label>
-    <input
-      ref={ref}
-      value={value || ""}
-      readOnly
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (onClick) onClick(e);
-      }}
-      className="w-full h-[52px] px-4 pr-12 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
-    />
-    <div
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (onClick) onClick(e);
-      }}
-      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
-    >
-      <CalendarDays size={18} />
-    </div>
-  </div>
-));
-DateInput.displayName = "DateInput";
+// ─── DatePicker dark theme override (injected once) ──────────────────────────
+const DATE_PICKER_STYLES = `
+  .food-datepicker-popper {
+    z-index: 9999 !important;
+  }
+  .food-datepicker-popper .react-datepicker {
+    background-color: #1E1E2F !important;
+    border: 1px solid #3A3A5A !important;
+    border-radius: 12px !important;
+    font-family: inherit !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__header {
+    background-color: #1E1E2F !important;
+    border-bottom: 1px solid #3A3A5A !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+  .food-datepicker-popper .react-datepicker__current-month,
+  .food-datepicker-popper .react-datepicker__day-name,
+  .food-datepicker-popper .react-datepicker-time__header {
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day {
+    color: #fff !important;
+    border-radius: 6px !important;
+  }
+  .food-datepicker-popper .react-datepicker__day:hover {
+    background-color: #7c3aed !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day--selected,
+  .food-datepicker-popper .react-datepicker__day--keyboard-selected {
+    background-color: #7c3aed !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day--outside-month {
+    color: #555580 !important;
+  }
+  .food-datepicker-popper .react-datepicker__navigation-icon::before {
+    border-color: #aaa !important;
+  }
+  .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    border-color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__triangle {
+    display: none !important;
+  }
+`;
 
-// ─── Multi-select for resource person type ───────────────────────────────────
+// ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
 function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f38" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -59,9 +75,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
   }, []);
 
   const displayText =
-    selected.length === 0
-      ? options.join(" / ")
-      : selected.join(", ");
+    selected.length === 0 ? options.join(" / ") : selected.join(", ");
 
   return (
     <div className="relative w-full" ref={ref}>
@@ -103,29 +117,26 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto">
+        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
           {options.map((opt, i) => {
             const isSelected = selected.includes(opt);
             return (
               <div
                 key={i}
                 onClick={() => onToggle(opt)}
-                className={`flex items-center gap-3 px-4 py-2.5 text-sm cursor-pointer transition-colors ${
+                className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-colors ${
                   isSelected
-                    ? "bg-purple-600/20 text-white"
-                    : "text-white hover:bg-purple-500/20"
+                    ? "bg-purple-600/30 text-white"
+                    : "text-gray-300 hover:bg-purple-500/20 hover:text-white"
                 }`}
               >
-                <span
-                  className={`w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-colors ${
-                    isSelected
-                      ? "bg-purple-600 border-purple-600"
-                      : "border-gray-500"
-                  }`}
-                >
+                {/* Option label on the left */}
+                <span>{opt}</span>
+                {/* Tick mark on the right — visible only when selected */}
+                <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center ml-3">
                   {isSelected && (
                     <svg
-                      className="w-3 h-3 text-white"
+                      className="w-4 h-4 text-purple-400"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -139,7 +150,6 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
                     </svg>
                   )}
                 </span>
-                {opt}
               </div>
             );
           })}
@@ -193,12 +203,11 @@ function createForm() {
   return {
     id: crypto.randomUUID(),
     date: null,
-    resourcePersonType: [],   // multi-select
+    resourcePersonType: [],
     resourcePersons: "",
     internalCount: "",
-    staffName: "",
-    mobileNumber: "",
-    foodTypes: [],            // multi-select: ["Breakfast","Lunch","Dinner","Morning Refreshment","Evening Refreshment"]
+    staffList: [],
+    foodTypes: [],
     breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
     lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
     dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -216,14 +225,37 @@ function validateFoodForms(forms) {
       err.resourcePersonType = "Resource person type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
     if (!form.internalCount?.trim()) err.internalCount = "Internal count is required";
-    if (!form.staffName?.trim()) err.staffName = "Staff name is required";
-    if (!form.mobileNumber?.trim()) err.mobileNumber = "Staff mobile is required";
     if (!form.foodTypes || form.foodTypes.length === 0)
       err.foodTypes = "Food type is required";
+    const count = parseInt(form.internalCount) || 0;
+    if (count > 0) {
+      const staffErrors = (form.staffList || []).slice(0, count).map((staff) => {
+        const se = {};
+        if (!staff.name?.trim()) se.name = "Staff name is required";
+        if (!staff.mobile?.trim()) se.mobile = "Staff mobile is required";
+        return se;
+      });
+      if (staffErrors.some((se) => Object.keys(se).length > 0)) {
+        err.staffList = staffErrors;
+      }
+    }
     return err;
   });
   if (errors.some((e) => Object.keys(e).length > 0)) return errors;
   return {};
+}
+
+// ─── Sync staffList length when internalCount changes ─────────────────────────
+function syncStaffList(staffList, count) {
+  const n = Math.max(0, parseInt(count) || 0);
+  if (staffList.length === n) return staffList;
+  if (staffList.length < n) {
+    return [
+      ...staffList,
+      ...Array.from({ length: n - staffList.length }, () => ({ name: "", mobile: "" })),
+    ];
+  }
+  return staffList.slice(0, n);
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
@@ -236,9 +268,26 @@ export default function FoodAndRefreshments({
   eventId,
   errors: propErrors = {},
 }) {
-  const [forms, setForms] = useState(() =>
-    initialFoodData && initialFoodData.length > 0 ? initialFoodData : [createForm()]
-  );
+  // Inject dark datepicker styles once
+  useEffect(() => {
+    const id = "food-datepicker-dark";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = DATE_PICKER_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
+
+  const [forms, setForms] = useState(() => {
+    if (initialFoodData && initialFoodData.length > 0) {
+      return initialFoodData.map((f) => ({
+        ...f,
+        staffList: f.staffList || syncStaffList([], f.internalCount || ""),
+      }));
+    }
+    return [createForm()];
+  });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
@@ -252,12 +301,18 @@ export default function FoodAndRefreshments({
     if (onChangeRef.current) onChangeRef.current(forms);
   }, [forms]);
 
-  // Generic field change
   const handleChange = (id, field, value, section = null) => {
     setForms((prev) =>
       prev.map((form) => {
         if (form.id !== id) return form;
         if (section) return { ...form, [section]: { ...form[section], [field]: value } };
+        if (field === "internalCount") {
+          return {
+            ...form,
+            internalCount: value,
+            staffList: syncStaffList(form.staffList || [], value),
+          };
+        }
         return { ...form, [field]: value };
       })
     );
@@ -271,7 +326,32 @@ export default function FoodAndRefreshments({
     });
   };
 
-  // Multi-select toggle helper
+  const handleStaffChange = (id, staffIndex, field, value) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const updatedStaff = form.staffList.map((s, i) =>
+          i === staffIndex ? { ...s, [field]: value } : s
+        );
+        return { ...form, staffList: updatedStaff };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const formErr = { ...(updated[idx] || {}) };
+      if (formErr.staffList) {
+        const staffErrs = [...formErr.staffList];
+        staffErrs[staffIndex] = { ...(staffErrs[staffIndex] || {}), [field]: "" };
+        formErr.staffList = staffErrs;
+      }
+      updated[idx] = formErr;
+      return updated;
+    });
+  };
+
   const handleMultiToggle = (id, field, option) => {
     setForms((prev) =>
       prev.map((form) => {
@@ -303,12 +383,16 @@ export default function FoodAndRefreshments({
     return errors[idx]?.[field] || "";
   };
 
-  // ─── Build payload per backend shape ───────────────────────────────────────
+  const getStaffError = (id, staffIndex, field) => {
+    if (!Array.isArray(errors)) return "";
+    const idx = forms.findIndex((f) => f.id === id);
+    return errors[idx]?.staffList?.[staffIndex]?.[field] || "";
+  };
+
   const buildPayload = (latest) => {
     return {
       refreshmentDetails: {
         refreshments: latest.map((form) => {
-          // Build foodTypes array dynamically from selections
           const MEAL_KEYS = ["Breakfast", "Lunch", "Dinner"];
           const foodTypesPayload = (form.foodTypes || []).map((type) => {
             if (MEAL_KEYS.includes(type)) {
@@ -325,7 +409,6 @@ export default function FoodAndRefreshments({
                 },
               };
             }
-            // Refreshment types (no veg/nonveg breakdown)
             return {
               type,
               participants: { vegCount: 0, nonVegCount: 0 },
@@ -338,12 +421,10 @@ export default function FoodAndRefreshments({
             resourcePersonType: form.resourcePersonType || [],
             numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
             numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
-            accompanyingStaff: [
-              {
-                name: form.staffName || "",
-                mobile: parseInt(form.mobileNumber) || 0,
-              },
-            ],
+            accompanyingStaff: (form.staffList || []).map((s) => ({
+              name: s.name || "",
+              mobile: parseInt(s.mobile) || 0,
+            })),
             foodTypes: foodTypesPayload,
             specialRequirements: form.specialRequirements || "",
           };
@@ -438,30 +519,40 @@ export default function FoodAndRefreshments({
           key={form.id}
           className="relative bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
         >
-          {/* Delete button for duplicated forms */}
+          {/* ── Delete button: inside top-right corner of the card ── */}
           {index !== 0 && (
-            <button
-              type="button"
-              onClick={() => handleDelete(form.id)}
-              className="absolute top-3 right-3 w-10 h-10 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center transition-colors z-10"
-            >
-              <Trash2 size={16} />
-            </button>
+            <div className="flex justify-end pt-4 pr-4">
+              <button
+                type="button"
+                onClick={() => handleDelete(form.id)}
+                className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-full transition-all"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
           )}
 
-          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className={`p-5 grid grid-cols-1 md:grid-cols-2 gap-5 ${index !== 0 ? "pt-2" : ""}`}>
 
-            {/* Row 1: Date + Resource Person Type (multi-select) */}
+            {/* Row 1: Date + Resource Person Type */}
             <div className="w-full">
-              <DatePicker
-                selected={form.date}
-                onChange={(date) => handleChange(form.id, "date", date)}
-                dateFormat="dd/MM/yyyy"
-                shouldCloseOnSelect
-                popperPlacement="bottom-start"
-                withPortal={false}
-                customInput={<DateInput label="Select Date *" />}
-              />
+              <div className="relative">
+                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                  Select Date *
+                </label>
+                <DatePicker
+                  selected={form.date}
+                  onChange={(date) => handleChange(form.id, "date", date)}
+                  dateFormat="dd/MM/yyyy"
+                  shouldCloseOnSelect
+                  popperPlacement="bottom-start"
+                  popperClassName="food-datepicker-popper"
+                  popperProps={{ strategy: "fixed" }}
+                  className="w-full h-[52px] px-4 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  wrapperClassName="w-full"
+                  calendarClassName="food-dark-cal"
+                />
+              </div>
               {getError(form.id, "date") && (
                 <p className="text-red-400 text-xs mt-1">{getError(form.id, "date")}</p>
               )}
@@ -513,35 +604,56 @@ export default function FoodAndRefreshments({
               )}
             </div>
 
-            {/* Row 3: Staff Name + Mobile */}
-            <div>
-              <CustomInput
-                label="Internal Accompanying Staff Name *"
-                labelBg="#1f1f38"
-                value={form.staffName}
-                onChange={(e) => handleChange(form.id, "staffName", e.target.value)}
-              />
-              {getError(form.id, "staffName") && (
-                <p className="text-red-400 text-xs mt-1">{getError(form.id, "staffName")}</p>
-              )}
-            </div>
+            {/* Dynamic Staff Containers */}
+            {(form.staffList || []).length > 0 && (
+              <div className="col-span-1 md:col-span-2 grid grid-cols-1 gap-4">
+                {(form.staffList || []).map((staff, staffIndex) => (
+                  <div
+                    key={staffIndex}
+                    className="bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
+                  >
+                    <h3 className="text-purple-400 font-semibold text-sm mb-4">
+                      Staff {staffIndex + 1}
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <CustomInput
+                          label={`Staff ${staffIndex + 1} Name *`}
+                          labelBg="#2a2a4a"
+                          value={staff.name}
+                          onChange={(e) =>
+                            handleStaffChange(form.id, staffIndex, "name", e.target.value)
+                          }
+                        />
+                        {getStaffError(form.id, staffIndex, "name") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getStaffError(form.id, staffIndex, "name")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomInput
+                          label={`Staff ${staffIndex + 1} Mobile Number *`}
+                          labelBg="#2a2a4a"
+                          value={staff.mobile}
+                          onChange={(e) =>
+                            handleStaffChange(form.id, staffIndex, "mobile", e.target.value)
+                          }
+                          type="number"
+                        />
+                        {getStaffError(form.id, staffIndex, "mobile") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getStaffError(form.id, staffIndex, "mobile")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <div>
-              <CustomInput
-                label="Internal Accompanying Staff Mobile Number *"
-                labelBg="#1f1f38"
-                value={form.mobileNumber}
-                onChange={(e) => handleChange(form.id, "mobileNumber", e.target.value)}
-                type="number"
-              />
-              {getError(form.id, "mobileNumber") && (
-                <p className="text-red-400 text-xs mt-1">
-                  {getError(form.id, "mobileNumber")}
-                </p>
-              )}
-            </div>
-
-            {/* Row 4: Food Type multi-select (full width) */}
+            {/* Food Type multi-select */}
             <div className="col-span-1 md:col-span-2">
               <MultiSelect
                 label="Food Type *"
@@ -555,7 +667,7 @@ export default function FoodAndRefreshments({
               )}
             </div>
 
-            {/* Conditional Meal Sections: show only if selected */}
+            {/* Conditional Meal Sections */}
             {MEAL_SECTIONS.map((meal) =>
               form.foodTypes.includes(meal) ? (
                 <MealSection
@@ -570,7 +682,7 @@ export default function FoodAndRefreshments({
               ) : null
             )}
 
-            {/* Special Requirements */}
+            {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
@@ -582,7 +694,7 @@ export default function FoodAndRefreshments({
                   onChange={(e) =>
                     handleChange(form.id, "specialRequirements", e.target.value)
                   }
-                  className="w-full rounded-xl bg-[#232347] border border-[#3d3d68] px-4 py-4 text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
+                  className="w-full rounded-xl bg-transparent border border-[#3d3d68] px-4 py-4 text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
                 />
               </div>
             </div>

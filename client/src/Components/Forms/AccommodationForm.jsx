@@ -1,15 +1,13 @@
 import React, {
   useState,
-  forwardRef,
   useRef,
   useEffect,
   useCallback,
 } from "react";
-import DatePicker from "react-datepicker";
-import { CalendarDays, Clock, User, Phone, Plus, Trash2 } from "lucide-react";
-import "react-datepicker/dist/react-datepicker.css";
+import { Phone, Plus, Trash2, Check, Search, ChevronDown } from "lucide-react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
+import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-time picker
 
 const BASE_URL = "https://sece-events.onrender.com";
 
@@ -52,16 +50,11 @@ function buildRoomOptions() {
   return opts;
 }
 
-// ─── Flatten guests from eventDays ────────────────────────────────────────────
-// eventDays shape: [{ date, startTime, endTime, numGuests,
-//   guests: [{ name, designation, organization, mobile, gender }] }]
-// We generate a local-only guestId for checkbox tracking — it is NEVER sent to backend.
 function flattenGuests(eventDays = []) {
   const seen = new Set();
   const result = [];
   eventDays.forEach((day, dayIdx) => {
     (day.guests || []).forEach((g, gIdx) => {
-      // Local key only — used for checkbox state, never in the API payload
       const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
         .replace(/\s+/g, "")
         .toLowerCase()}`;
@@ -74,12 +67,11 @@ function flattenGuests(eventDays = []) {
   return result;
 }
 
-// ─── Empty accommodation block ─────────────────────────────────────────────────
 function emptyAccommodation() {
   return {
     checkIn: null,
     checkOut: null,
-    selectedGuestIds: [],   // local tracking only
+    selectedGuestIds: [],
     roomTypes: [],
     roomCounts: {},
     singleRooms: "",
@@ -92,7 +84,6 @@ function emptyAccommodation() {
   };
 }
 
-// ─── Validator ─────────────────────────────────────────────────────────────────
 function validateAccommodation(acc) {
   const e = {};
   if (!acc.checkIn) e.checkIn = "Check-in date & time is required";
@@ -102,32 +93,25 @@ function validateAccommodation(acc) {
   return e;
 }
 
-// ─── Build backend payload ─────────────────────────────────────────────────────
-// NOTE: guestId is intentionally excluded — backend only expects name/mobile/gender.
-// The guestId we generate is a local UI key, not a MongoDB ObjectId.
 function buildPayload(accommodations, allGuests) {
   return {
     accommodationDetails: {
       accommodations: accommodations.map((acc) => {
-        // Resolve selected guests from the flat list
         const selectedGuests = allGuests.filter((g) =>
           acc.selectedGuestIds.includes(g.guestId)
         );
 
-        // roomOccupancy — single / double counts
         const roomOccupancy = [];
         if (parseInt(acc.singleRooms) > 0)
           roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
         if (parseInt(acc.doubleRooms) > 0)
           roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
 
-        // roomCategory — from multi-selected room types
         const roomCategory = (acc.roomTypes || []).map((rt) => ({
           type: rt,
           count: parseInt(acc.roomCounts?.[rt]) || 0,
         }));
 
-        // dineInCounts
         const dineInCounts = [];
         if (acc.dine === "Yes") {
           if (acc.dineTypes.includes("Hostel") && parseInt(acc.hostelGuests) > 0)
@@ -139,7 +123,6 @@ function buildPayload(accommodations, allGuests) {
         return {
           checkInDateTime: acc.checkIn ? acc.checkIn.toISOString() : "",
           checkOutDateTime: acc.checkOut ? acc.checkOut.toISOString() : "",
-          // ✅ Only send name/mobile/gender — NO guestId (not a real ObjectId)
           guests: selectedGuests.map((g) => ({
             name: g.name || "",
             mobile: parseInt(g.mobile) || 0,
@@ -156,36 +139,189 @@ function buildPayload(accommodations, allGuests) {
   };
 }
 
-// ─── DateInput ─────────────────────────────────────────────────────────────────
-const DateInput = forwardRef(({ value, onClick, label }, ref) => (
-  <div className="relative w-full">
-    <input
-      ref={ref}
-      value={value || ""}
-      onClick={onClick}
-      readOnly
-      className="w-full p-3 rounded-lg bg-transparent border border-[#3a3a5a] text-white cursor-pointer focus:border-[#ab45ff] outline-none transition"
-    />
-    <label className="absolute left-3 -top-2 text-xs text-gray-300 bg-[#1f1f38] px-1">
-      {label}
-    </label>
-    <div className="absolute right-3 top-3 flex gap-2 text-gray-400">
-      <CalendarDays size={14} />
-      <Clock size={14} />
+// ─── Custom Checkbox ──────────────────────────────────────────────────────────
+function PurpleCheckbox({ checked, onChange }) {
+  return (
+    <div
+      onClick={onChange}
+      className="cursor-pointer flex-shrink-0"
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: 5,
+        border: checked ? "none" : "2px solid #ab45ff",
+        backgroundColor: checked ? "#ab45ff" : "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.15s ease",
+      }}
+    >
+      {checked && <Check size={13} color="#fff" strokeWidth={3} />}
     </div>
-  </div>
-));
-DateInput.displayName = "DateInput";
+  );
+}
 
-// ─── MultiSelect ───────────────────────────────────────────────────────────────
-function MultiSelect({
-  label,
-  options,
-  value = [],
-  onChange,
-  error,
-  labelBg = "#1f1f38",
-}) {
+// ─── Gender Icon — human profile silhouette (filled violet) ──────────────────
+function GenderIcon({ gender }) {
+  const g = (gender || "").toLowerCase();
+
+  if (g === "female") {
+    // Female profile silhouette — head + dress/skirt body
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+        {/* Head */}
+        <circle cx="12" cy="6" r="3.5" />
+        {/* Body — dress shape (wider at bottom) */}
+        <path d="M7 21c0-3.5 1.5-7 5-8.5C16.5 14 17 17.5 17 21H7z" />
+        {/* Shoulders/neck connector */}
+        <path d="M9.5 12.5 Q12 10.5 14.5 12.5" fill="none" stroke="#ab45ff" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
+  // Male profile silhouette — head + rectangular torso
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+      {/* Head */}
+      <circle cx="12" cy="6" r="3.5" />
+      {/* Body — rectangular torso */}
+      <path d="M8 13h8c.5 0 1 .4 1 1v7H7v-7c0-.6.4-1 1-1z" />
+    </svg>
+  );
+}
+
+// ─── Phone Icon filled violet ─────────────────────────────────────────────────
+function PhoneIconFilled() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+    </svg>
+  );
+}
+
+// ─── Room Type MultiSelect with search, tick on right→left, violet selected bg ─
+function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef();
+
+  useEffect(() => {
+    function handler(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = options.filter((o) =>
+    o.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggle = (opt) => {
+    if (value.includes(opt)) onChange(value.filter((v) => v !== opt));
+    else onChange([...value, opt]);
+  };
+
+  return (
+    <div className="relative w-full" ref={ref}>
+      {/* Selected tags shown at top when dropdown open */}
+      {open && value.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {value.map((v) => (
+            <span
+              key={v}
+              className="flex items-center gap-1 bg-purple-700/40 border border-purple-500/50 text-purple-200 text-xs px-2 py-1 rounded-md"
+            >
+              {v}
+              <span
+                className="cursor-pointer hover:text-white ml-1"
+                onClick={() => toggle(v)}
+              >
+                ×
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Trigger */}
+      <div
+        className={`relative w-full p-3 rounded-lg bg-transparent border ${
+          error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
+        } text-white cursor-pointer flex items-center justify-between transition`}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}>
+          {value.length === 0
+            ? "Select..."
+            : value.length === 1
+            ? value[0]
+            : `${value.length} rooms selected`}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </div>
+      <label
+        className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
+        style={{ backgroundColor: labelBg }}
+      >
+        {label}
+      </label>
+
+      {open && (
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-hidden">
+          {/* Search */}
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#3a3a5a]">
+            <Search size={13} className="text-gray-400 flex-shrink-0" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Search..."
+              className="bg-transparent text-white text-sm outline-none w-full placeholder-gray-500"
+            />
+          </div>
+
+          {filtered.length === 0 ? (
+            <div className="px-4 py-3 text-xs text-gray-500">No results</div>
+          ) : (
+            filtered.map((opt) => {
+              const selected = value.includes(opt);
+              return (
+                <div
+                  key={opt}
+                  onClick={() => toggle(opt)}
+                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                    selected
+                      ? "bg-purple-700/30 text-white"
+                      : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                  }`}
+                >
+                  <span>{opt}</span>
+                  {selected && (
+                    <Check size={14} className="text-purple-400 flex-shrink-0" />
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Dine MultiSelect (keep checkbox style as before) ─────────────────────────
+function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -210,28 +346,13 @@ function MultiSelect({
         } text-white cursor-pointer flex items-center justify-between transition`}
         onClick={() => setOpen((o) => !o)}
       >
-        <span
-          className={`text-sm truncate ${
-            value.length === 0 ? "text-gray-500" : "text-white"
-          }`}
-        >
+        <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}>
           {value.length === 0 ? "Select..." : value.join(", ")}
         </span>
-        <svg
-          className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
-        </svg>
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+        />
       </div>
       <label
         className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
@@ -257,6 +378,7 @@ function MultiSelect({
           ))}
         </div>
       )}
+      {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
   );
 }
@@ -323,29 +445,25 @@ function AccommodationBlock({
         )}
       </div>
 
-      {/* Check In / Out */}
+      {/* Check In / Out — using CustomDateTimePicker */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="w-full">
-          <DatePicker
-            selected={acc.checkIn}
+          <CustomDateTimePicker
+            label="Check In Date & Time *"
+            value={acc.checkIn}
             onChange={(date) => onChange({ ...acc, checkIn: date })}
-            showTimeSelect
-            dateFormat="dd/MM/yyyy h:mm aa"
-            customInput={<DateInput label="Check In Date & Time *" />}
-            withPortal
+            placeholder="__/__/____  --:-- --"
           />
           {errors.checkIn && (
             <p className="text-red-400 text-xs mt-1">{errors.checkIn}</p>
           )}
         </div>
         <div className="w-full">
-          <DatePicker
-            selected={acc.checkOut}
+          <CustomDateTimePicker
+            label="Check Out Date & Time *"
+            value={acc.checkOut}
             onChange={(date) => onChange({ ...acc, checkOut: date })}
-            showTimeSelect
-            dateFormat="dd/MM/yyyy h:mm aa"
-            customInput={<DateInput label="Check Out Date & Time *" />}
-            withPortal
+            placeholder="__/__/____  --:-- --"
           />
           {errors.checkOut && (
             <p className="text-red-400 text-xs mt-1">{errors.checkOut}</p>
@@ -359,7 +477,8 @@ function AccommodationBlock({
           Select the Guest who needed Accommodation
         </p>
         <p className="text-xs text-gray-400">
-          Selected Guest : {selectedCount} / {totalGuests}
+          Selected Guest : {selectedCount}{" "}
+          <span className="text-purple-400">/ {totalGuests}</span>
         </p>
       </div>
       <div className="mb-6">
@@ -368,30 +487,34 @@ function AccommodationBlock({
             No guests found. Please add guests in the Event Requisition step.
           </p>
         ) : (
-          allGuests.map((g) => (
-            <div
-              key={g.guestId}
-              className="flex justify-between items-center bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2"
-            >
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={acc.selectedGuestIds.includes(g.guestId)}
-                  onChange={() => toggleGuest(g.guestId)}
-                  className="accent-[#ab45ff]"
-                />
-                <span className="text-sm">{g.name}</span>
+          allGuests.map((g) => {
+            const checked = acc.selectedGuestIds.includes(g.guestId);
+            return (
+              <div
+                key={g.guestId}
+                className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
+                onClick={() => toggleGuest(g.guestId)}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <PurpleCheckbox
+                    checked={checked}
+                    onChange={() => toggleGuest(g.guestId)}
+                  />
+                  <span className="text-sm text-white truncate">{g.name}</span>
+                </div>
+                <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
+                  <span className="flex items-center gap-1.5">
+                    <GenderIcon gender={g.gender} />
+                    <span className="text-gray-300">{g.gender || "—"}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <PhoneIconFilled />
+                    <span className="text-gray-300">{g.mobile || "—"}</span>
+                  </span>
+                </div>
               </div>
-              <div className="flex gap-6 text-xs text-gray-400">
-                <span className="flex items-center gap-1">
-                  <User size={14} /> {g.gender || "—"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Phone size={14} /> {g.mobile || "—"}
-                </span>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -413,9 +536,9 @@ function AccommodationBlock({
         />
       </div>
 
-      {/* Room type multi-select */}
+      {/* Room type multi-select — no checkbox, tick on right, search, violet bg selected */}
       <div className="mb-4">
-        <MultiSelect
+        <RoomMultiSelect
           label="Type of Room Wanted *"
           options={roomOptions}
           value={acc.roomTypes}
@@ -423,16 +546,15 @@ function AccommodationBlock({
           error={errors.roomTypes}
           labelBg="#1f1f38"
         />
-        {errors.roomTypes && (
-          <p className="text-red-400 text-xs mt-1">{errors.roomTypes}</p>
-        )}
       </div>
 
       {/* Dynamic room count inputs per selected room type */}
       {acc.roomTypes.length > 0 && (
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          {acc.roomTypes.map((roomType) => (
-            <div key={roomType}>
+          {acc.roomTypes.map((roomType, i) => {
+            const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;
+            return (
+            <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
               <CustomInput
                 label={`No. of ${roomType} Rooms *`}
                 value={acc.roomCounts?.[roomType] || ""}
@@ -446,7 +568,8 @@ function AccommodationBlock({
                 </p>
               )}
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -486,9 +609,7 @@ function AccommodationBlock({
               <CustomInput
                 label="No. of Guests in Hostel Dine-in *"
                 value={acc.hostelGuests}
-                onChange={(e) =>
-                  onChange({ ...acc, hostelGuests: e.target.value })
-                }
+                onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
                 type="number"
                 labelBg="#1f1f38"
               />
@@ -497,28 +618,27 @@ function AccommodationBlock({
               <CustomInput
                 label="No. of Guests in Amenity Dine-in *"
                 value={acc.amenityGuests}
-                onChange={(e) =>
-                  onChange({ ...acc, amenityGuests: e.target.value })
-                }
+                onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
                 type="number"
                 labelBg="#1f1f38"
               />
             )}
           </div>
-
-          <div className="relative mt-2">
-            <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38] z-10 pointer-events-none">
-              Special Requirements, If any
-            </span>
-            <textarea
-              value={acc.special}
-              onChange={(e) => onChange({ ...acc, special: e.target.value })}
-              rows={4}
-              className="w-full bg-transparent border border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
-            />
-          </div>
         </>
       )}
+
+      {/* Special Requirements — always shown */}
+      <div className="relative mt-2">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38] z-10 pointer-events-none">
+          Special Requirements, If any
+        </span>
+        <textarea
+          value={acc.special}
+          onChange={(e) => onChange({ ...acc, special: e.target.value })}
+          rows={4}
+          className="w-full bg-transparent border border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
+        />
+      </div>
     </div>
   );
 }
@@ -552,7 +672,6 @@ export default function AccommodationForm({
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  // ── Refs ─────────────────────────────────────────────────────────────────────
   const accommodationsRef = useRef(accommodations);
   useEffect(() => { accommodationsRef.current = accommodations; }, [accommodations]);
 
@@ -562,12 +681,10 @@ export default function AccommodationForm({
   const onChangeRef = useRef(onAccommodationDataChange);
   useEffect(() => { onChangeRef.current = onAccommodationDataChange; }, [onAccommodationDataChange]);
 
-  // Sync to parent
   useEffect(() => {
     if (onChangeRef.current) onChangeRef.current({ accommodations });
   }, [accommodations]);
 
-  // ── Block CRUD ────────────────────────────────────────────────────────────────
   const updateBlock = (index, updated) => {
     setAccommodations((prev) => prev.map((a, i) => (i === index ? updated : a)));
     setBlockErrors((prev) => prev.map((e, i) => (i === index ? {} : e)));
@@ -583,7 +700,6 @@ export default function AccommodationForm({
     setBlockErrors((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ── Navigation ────────────────────────────────────────────────────────────────
   const handleNext = useCallback(async () => {
     const latest = accommodationsRef.current;
     const latestGuests = allGuestsRef.current;
@@ -596,8 +712,6 @@ export default function AccommodationForm({
     setApiError("");
     try {
       const payload = buildPayload(latest, latestGuests);
-
-      // Debug: log payload to console so you can inspect what's being sent
       console.log("Accommodation payload:", JSON.stringify(payload, null, 2));
 
       const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
@@ -612,7 +726,6 @@ export default function AccommodationForm({
       const data = await response.json();
 
       if (!response.ok) {
-        // Show the actual backend validation message so you know exactly which field fails
         const msg = data?.message || data?.error || JSON.stringify(data);
         throw new Error(msg || `Server error: ${response.status}`);
       }
@@ -652,7 +765,6 @@ export default function AccommodationForm({
     });
   }, [isLoading, registerChildNavigation]);
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
     <div className="text-white w-full">
       {apiError && (
@@ -683,7 +795,7 @@ export default function AccommodationForm({
           allGuests={allGuests}
           errors={blockErrors[index] || {}}
           roomOptions={roomOptions}
-          canRemove={accommodations.length > 1}
+          canRemove={index > 0}
         />
       ))}
     </div>

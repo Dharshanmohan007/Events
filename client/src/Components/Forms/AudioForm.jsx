@@ -24,24 +24,51 @@ function defaultVenueSection() {
   };
 }
 
+/** Returns the maximum available count for a given equipment key at a venue. */
+function getMaxForKey(venueName, key, venueInfoMap) {
+  const info = venueInfoMap?.[venueName?.toLowerCase()];
+  if (!info || !info.audio) return Infinity;
+  const val = info.audio[key];
+  return val !== undefined && val !== null ? Number(val) : Infinity;
+}
+
+function venueInfoLoaded(venueName, venueInfoMap) {
+  // Returns true if we have a definitive answer about this venue in the map.
+  // If venueInfoMap is empty (still fetching), we consider it unloaded.
+  return Object.keys(venueInfoMap || {}).length > 0;
+}
+
 function validateDay(dayVenues, dayData, venueInfoMap) {
   if (!dayVenues || dayVenues.length === 0) return {};
   const errors = {};
   dayVenues.forEach((venueName) => {
     const s = dayData?.[venueName] || defaultVenueSection();
     const ve = {};
+
+    // If the venue map hasn't loaded yet, skip validation for this venue entirely.
+    if (!venueInfoLoaded(venueName, venueInfoMap)) return;
+
     const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
 
-    if (hasEquipment) {
-      if (!s.audioRequired || s.audioRequired.length === 0)
-        ve.audioRequired = "Select at least one audio requirement";
+    // Venues with no equipment are always valid — nothing to fill in.
+    if (!hasEquipment) return;
 
-      (s.audioRequired || []).forEach((key) => {
-        const qty = s.quantities?.[key];
-        if (qty === "" || qty === undefined || parseInt(qty) < 0)
-          ve[`qty_${key}`] = `Quantity required for ${AUDIO_KEY_META.find(m => m.key === key)?.label || key}`;
-      });
-    }
+    if (!s.audioRequired || s.audioRequired.length === 0)
+      ve.audioRequired = "Select at least one audio requirement";
+
+    (s.audioRequired || []).forEach((key) => {
+      const qty = s.quantities?.[key];
+      const qtyNum = parseInt(qty);
+      const max = getMaxForKey(venueName, key, venueInfoMap);
+      const label = AUDIO_KEY_META.find(m => m.key === key)?.label || key;
+
+      if (qty === "" || qty === undefined || isNaN(qtyNum) || qtyNum < 1) {
+        ve[`qty_${key}`] = `Quantity required for ${label}`;
+      } else if (isFinite(max) && qtyNum > max) {
+        ve[`qty_${key}`] = `Only ${max} ${label}${max === 1 ? "" : "s"} available at this venue`;
+      }
+    });
+
     if (Object.keys(ve).length > 0) errors[venueName] = ve;
   });
   return errors;
@@ -53,12 +80,20 @@ function getAvailableAudioForVenue(venueName, venueInfoMap) {
   return AUDIO_KEY_META.filter(({ key }) => (info.audio[key] ?? 0) > 0);
 }
 
-function buildAudioPayload(audioData, eventDays, venueData) {
+function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
   const audios = [];
   eventDays.forEach((_day, dayIndex) => {
     const venueNames = venueData[dayIndex]?.selectedVenues || [];
     venueNames.forEach((venueName) => {
+      // Skip venues that have no equipment at all — backend rejects empty audioItems
+      const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
+      if (!hasEquipment) return;
+
       const s = audioData[dayIndex]?.[venueName] || defaultVenueSection();
+
+      // Skip venues where the user made no selections (nothing to save)
+      if (!s.audioRequired || s.audioRequired.length === 0) return;
+
       const audioItems = (s.audioRequired || []).map((key) => ({
         type: AUDIO_KEY_META.find(m => m.key === key)?.label || key,
         quantity: parseInt(s.quantities?.[key] || 0),
@@ -117,18 +152,21 @@ function AudioRequirementsSelect({
       <div className="w-full">
         <div className="relative w-full">
           <span
-            className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+            className="absolute left-3 -top-[9px] text-xs text-gray-500 px-1 z-10 pointer-events-none"
             style={{ backgroundColor: labelBg }}
           >
             Audio Requirements
           </span>
-          <div className="w-full bg-transparent border border-[#3A3A5A] rounded-lg p-4 flex items-center gap-2">
-            <svg className="w-4 h-4 text-yellow-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
+          <div className="w-full bg-transparent border border-[#3A3A5A] rounded-lg p-4 flex items-center justify-between cursor-not-allowed opacity-50">
+            <span className="text-gray-500 text-sm">Select requirements...</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              className="text-gray-600 flex-shrink-0"
+            >
+              <polyline points="6 9 12 15 18 9" />
             </svg>
-            <span className="text-yellow-500 text-sm font-medium">N/A — No equipment available for this venue</span>
           </div>
         </div>
       </div>
@@ -195,33 +233,75 @@ function AudioRequirementsSelect({
 
 // ── EquipmentQuantityInputs — smart odd/even layout ───────────────────────────
 
-function EquipmentQuantityInputs({ selectedKeys, quantities, onChange, errors = {}, labelBg = "#1E1E35" }) {
+function EquipmentQuantityInputs({
+  selectedKeys,
+  quantities,
+  onChange,
+  errors = {},
+  labelBg = "#1E1E35",
+  venueName,
+  venueInfoMap,
+}) {
   if (!selectedKeys || selectedKeys.length === 0) return null;
 
   const isOdd = selectedKeys.length % 2 !== 0;
+
+  const handleChange = (key, rawValue) => {
+    onChange({ ...quantities, [key]: rawValue });
+  };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {selectedKeys.map((key, idx) => {
         const meta = AUDIO_KEY_META.find(m => m.key === key);
         const label = meta?.label || key;
-        // When total count is odd, stretch the last item to fill the full row
         const isLastOdd = isOdd && idx === selectedKeys.length - 1;
+        const max = getMaxForKey(venueName, key, venueInfoMap);
+        const currentQty = parseInt(quantities?.[key]);
+        const exceedsMax = isFinite(max) && !isNaN(currentQty) && currentQty > max;
+
+        const hasError = !!(errors[`qty_${key}`] || exceedsMax);
 
         return (
           <div key={key} className={isLastOdd ? "sm:col-span-2" : ""}>
-            <CustomInput
-              labelBg={labelBg}
-              label={`${label} Quantity *`}
-              type="number"
-              value={quantities?.[key] || ""}
-              onChange={(e) =>
-                onChange({ ...quantities, [key]: e.target.value })
-              }
-            />
-            {errors[`qty_${key}`] && (
-              <p className="text-red-400 text-xs mt-1">{errors[`qty_${key}`]}</p>
-            )}
+            {/* Red border overlay when error — sits on top of CustomInput's own border */}
+            <div className={`relative rounded-lg ${hasError ? "ring-1 ring-red-400" : ""}`}>
+              <CustomInput
+                labelBg={labelBg}
+                label={`${label} Quantity *`}
+                type="number"
+                min={1}
+                max={isFinite(max) ? max : undefined}
+                value={quantities?.[key] || ""}
+                onChange={(e) => handleChange(key, e.target.value)}
+                error={hasError}
+              />
+            </div>
+
+            {/* Error / hint line */}
+            {errors[`qty_${key}`] ? (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                {errors[`qty_${key}`]}
+              </p>
+            ) : exceedsMax ? (
+              <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                Only {max} {label}{max === 1 ? "" : "s"} available — add extra needs in Special Requirements
+              </p>
+            ) : isFinite(max) ? (
+              <p className="text-gray-500 text-xs mt-1">
+                Max available: {max}
+              </p>
+            ) : null}
           </div>
         );
       })}
@@ -279,7 +359,18 @@ function AudioVenueCard({
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       {/* Card Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
+          {hasNoEquipment && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#2C2C3E] text-gray-400 border border-[#3A3A5A]">
+              <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+              </svg>
+              No equipment available
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <InfoButton onClick={() => onShowInfo(venueName)} />
         </div>
@@ -313,6 +404,8 @@ function AudioVenueCard({
           quantities={data.quantities || {}}
           onChange={(newQty) => updateField("quantities", newQty)}
           errors={errors}
+          venueName={venueName}
+          venueInfoMap={venueInfoMap}
         />
       )}
 
@@ -443,10 +536,16 @@ export default function AudioForm({
   const handleNext = useCallback(async () => {
     const latestAudioData = audioDataRef.current;
     const venues = getVenuesForDay(currentDayIndex);
-    const dayErrors = validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
-    const hasErrors = Object.keys(dayErrors).length > 0;
-    setErrors(hasErrors ? dayErrors : {});
-    if (hasErrors) return;
+
+    // If venue info is still loading, don't block — treat as no-equipment venues
+    if (venueInfoLoading) {
+      setErrors({});
+    } else {
+      const dayErrors = validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
+      const hasErrors = Object.keys(dayErrors).length > 0;
+      setErrors(hasErrors ? dayErrors : {});
+      if (hasErrors) return;
+    }
 
     setCompletedDays((prev) =>
       prev.includes(currentDayIndex) ? prev : [...prev, currentDayIndex]
@@ -456,7 +555,7 @@ export default function AudioForm({
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildAudioPayload(latestAudioData, eventDays, venueData);
+        const payload = buildAudioPayload(latestAudioData, eventDays, venueData, venueInfoMap);
         const response = await fetch(`${BASE_URL}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
@@ -478,7 +577,7 @@ export default function AudioForm({
       setErrors({});
       setCurrentDayIndex((prev) => prev + 1);
     }
-  }, [currentDayIndex, isLastDay, eventDays, venueData, eventId, nextStep, getVenuesForDay, venueInfoMap]);
+  }, [currentDayIndex, isLastDay, eventDays, venueData, eventId, nextStep, getVenuesForDay, venueInfoMap, venueInfoLoading]);
 
   const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
