@@ -36,7 +36,7 @@ const MediaRequestTable = ({
                             <th className="px-6 py-4 font-semibold">Department</th>
                             <th className="px-6 py-4 font-semibold">Type</th>
                             <th className="px-6 py-4 font-semibold">Due Date</th>
-                            <th className="px-6 py-4 font-semibold">Acknowledge Status</th>
+                            <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-center">Action</th>
                         </tr>
                     </thead>

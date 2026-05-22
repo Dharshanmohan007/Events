@@ -6,6 +6,11 @@ import VenueDetailsPanel from './VenueDetailsPanel'
 import RejectionReasonPopup from './RejectionReasonPopup'
 import IctcsDetailsPanel from './IctcsDetailsPanel'
 import AudioDetailsPanel from './AudioDetailsPanel'
+import TransportationDetailsPanel from './TransportationDetailsPanel'
+import FoodRefreshmentDetailsPanel from './FoodRefreshmentDetailsPanel'
+import AccommodationDetailsPanel from './AccommodationDetailsPanel'
+import PurchaseDetailsPanel from './PurchaseDetailsPanel'
+import MediaDetailsPanel from './MediaDetailsPanel'
 
 const EventDetailsPage = () => {
     // ==========================================  states ========================================
@@ -44,7 +49,12 @@ const EventDetailsPage = () => {
                     {activeTab === 'Venue Details' && <VenueDetailsPanel />}
                     {activeTab === 'ICTCS Details' && <IctcsDetailsPanel />}
                     {activeTab === 'Audio Details' && <AudioDetailsPanel />}
-                    {!['Venue Details', 'ICTCS Details', 'Audio Details'].includes(activeTab) && (
+                    {activeTab === 'Transportation Details' && <TransportationDetailsPanel />}
+                    {activeTab === 'Food Details' && <FoodRefreshmentDetailsPanel />}
+                    {activeTab === 'Accommodation Details' && <AccommodationDetailsPanel />}
+                    {activeTab === 'Purchase Details' && <PurchaseDetailsPanel />}
+                    {activeTab === 'Media Details' && <MediaDetailsPanel />}
+                    {!['Venue Details', 'ICTCS Details', 'Audio Details', 'Transportation Details', 'Food Details', 'Accommodation Details', 'Purchase Details', 'Media Details'].includes(activeTab) && (
                         <EventRequisitionDetailsPanel activeTab={activeTab} />
                     )}
                 </section>

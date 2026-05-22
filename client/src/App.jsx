@@ -1,6 +1,5 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { showErrorToast, showSuccessToast } from "./Components/CustomToast";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
@@ -14,6 +13,9 @@ import Reports from './Pages/Dashboards/ICTC-Dashboard/Reports'
 import IctcEventDetailsPage from './Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage'
 import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
+import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
+import PosterDetailView from './Pages/Dashboards/Media-Dashboard/PosterDetailView'
+import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
 import AdminDashboard from './Pages/Dashboards/Admin-Dashboard/AdminDashboard'
 import AdminEventsListPage from './Pages/Dashboards/Admin-Dashboard/AdminEventsListPage'
 import AdminDashboardLayout from './Pages/Dashboards/Admin-Dashboard/AdminDashboardLayout'
@@ -23,15 +25,19 @@ import FacultyManagementPage from './Pages/Dashboards/Admin-Dashboard/FacultyMan
 import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/AccommodationDashboard'
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
+import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
 import SignUp from './Pages/SignUp'
 import ForgetPassword from './Components/ForgetPassword'
 
 // Auth Context
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
-import { useEffect } from "react";
 import EventDetailsPage from "./Pages/Dashboards/Admin-Dashboard/EventDetailsPage";
 import FacultyDashboard from "./Pages/Dashboards/Faculty-Dashboard/FacultyDashboard";
+import FacultyVenueListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyVenueListPage";
+import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyfeedbackPage";
+import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage";
+import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage";
 
 
 
@@ -58,6 +64,9 @@ function AppRoutes() {
       <Route path='/dashboard-audio' element={<AUDIODashboard />} />
       <Route path='/dashboard-transports' element={<TransportsDashboard />} />
       <Route path='/dashboard-media' element={<MediaDashboard />} />
+      <Route path='/dashboard-poster' element={<PosterDashboard />} />
+      <Route path='/dashboard-poster/detailView/:posterId' element={<PosterDetailView />} />
+      <Route path='/dashboard-video' element={<VideoDashboard />} />
       {/* Admin routes  */}
       <Route path='/dashboard-admin' element={<AdminDashboardLayout />}>
         <Route index element={<AdminDashboard />} />
@@ -69,7 +78,12 @@ function AppRoutes() {
       </Route>
 
       <Route path="/dashboard-faculty" element={<FacultyDashboard />} />
+      <Route path="/dashboard-faculty/events" element={<FacultyEventsListPage />} />
+      <Route path="/dashboard-faculty/events/detailView/:eventId" element={<FacultyEventsDetailViewPage />} />
+      <Route path="/dashboard-faculty/venues" element={<FacultyVenueListPage />} />
+      <Route path="/dashboard-faculty/feedback/:eventId" element={<FacultyfeedbackPage />} />
       <Route path='/dashboard-accommodation' element={<AccommodationDashboard />} />
+      <Route path='/dashboard-venue' element={<VenueDashboard />} />
       <Route path='/dashboard-food' element={<FoodDashboard />} />
       <Route path='/dashboard-purchase' element={<PurchaseDashboard />} />
       <Route path='/dashboard-admin' element={<AdminDashboard />} />
