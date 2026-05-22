@@ -669,7 +669,7 @@ const MediaDetailsPage = () => {
                   }
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-[#1f1f38] 
                     border
                     border-[#3a3a5a]
                     rounded-md

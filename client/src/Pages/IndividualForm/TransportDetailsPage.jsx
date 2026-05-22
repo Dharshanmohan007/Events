@@ -11,114 +11,66 @@ import {
   ChevronDown,
   ArrowRight,
 } from "lucide-react";
-import {jwtDecode} from "jwt-decode";
+
+import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
 
 import "react-datepicker/dist/react-datepicker.css";
 
+const createTransportForm = () => ({
+  pickupDateTime: null,
+  dropDateTime: null,
+  pickupLocation: "",
+  dropLocation: "",
+  checkpoints: [],
+  draggedIndex: null,
+  totalPassengers: "",
+  vehicleType: "",
+  showVehicleDropdown: false,
+  vehicleCount: "",
+  staffOptionType: "",
+  showStaffDropdown: false,
+  staffDetails: [],
+  specialRequirement: "",
+});
+
 const TransportDetailsPage = () => {
-  // =========================
-  // DATE STATES
-  // =========================
-  const [pickupDateTime, setPickupDateTime] =
-    useState(null);
-
-  const [dropDateTime, setDropDateTime] =
-    useState(null);
-
-  // =========================
-  // LOCATION STATES
-  // =========================
-  const [pickupLocation, setPickupLocation] =
-    useState("");
-
-  const [dropLocation, setDropLocation] =
-    useState("");
-
-  // =========================
-  // CHECKPOINTS
-  // =========================
-  const [checkpoints, setCheckpoints] =
-    useState([]);
-
-  const [draggedIndex, setDraggedIndex] =
-    useState(null);
-
-  // =========================
-  // PASSENGERS
-  // =========================
-  const [totalPassengers, setTotalPassengers] =
-    useState("");
-
-  // =========================
-  // VEHICLE DROPDOWN
-  // =========================
-  const [vehicleType, setVehicleType] =
-    useState("");
-
-  const [
-    showVehicleDropdown,
-    setShowVehicleDropdown,
-  ] = useState(false);
-
-  const [vehicleCount, setVehicleCount] =
-    useState("");
-
-  // =========================
-  // STAFF DROPDOWN
-  // =========================
-  const [staffOptionType, setOptionType] =
-    useState("");
-
-  const [showStaffDropdown, setShowStaffDropdown] =
-    useState(false);
-
-  // =========================
-  // STAFF DETAILS
-  // =========================
-  const [staffDetails, setStaffDetails] =
-    useState([]);
-
-  // =========================
-  // SPECIAL REQUIREMENT
-  // =========================
-  const [
-    specialRequirement,
-    setSpecialRequirement,
-  ] = useState("");
+  const [transportForms, setTransportForms] = useState([
+    createTransportForm(),
+  ]);
 
   const [employeeId, setEmployeeId] = useState("");
   const [token, setToken] = useState("");
-  const [validationErrors, setValidationErrors] = useState([]);
-  const [submitMessage, setSubmitMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [validationErrors, setValidationErrors] =
+    useState([]);
+  const [submitMessage, setSubmitMessage] =
+    useState("");
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+    const storedToken =
+      localStorage.getItem("token");
+
     if (storedToken) {
       setToken(storedToken);
+
       try {
-        const decoded = jwtDecode(storedToken);
+        const decoded =
+          jwtDecode(storedToken);
+
         if (decoded?.id) {
           setEmployeeId(decoded.id);
         }
       } catch (error) {
-        console.error("Failed to decode token:", error);
+        console.error(
+          "Failed to decode token:",
+          error
+        );
       }
     }
   }, []);
 
-  useEffect(() => {
-    console.log("TransportDetailsPage mounted/updated", {
-      API_BASE,
-      tokenAvailable: Boolean(token),
-      employeeId,
-    });
-  }, [token, employeeId]);
-
-  // =========================
-  // OPTIONS
-  // =========================
   const vehicleOptions = [
     "Bus",
     "Van",
@@ -126,173 +78,126 @@ const TransportDetailsPage = () => {
     "Outsource Car",
   ];
 
-  const staffOptions = ["1", "2", "3", "4"];
+  const staffOptions = [
+    "1",
+    "2",
+    "3",
+    "4",
+  ];
+
+  // =========================
+  // ADD NEW FORM
+  // =========================
+  const addTransportForm = () => {
+    setTransportForms((prev) => [
+      ...prev,
+      createTransportForm(),
+    ]);
+  };
+
+  // =========================
+  // UPDATE FORM FIELD
+  // =========================
+  const updateFormField = (
+    formIndex,
+    field,
+    value
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    updatedForms[formIndex][field] =
+      value;
+
+    setTransportForms(updatedForms);
+  };
 
   // =========================
   // CHECKPOINT FUNCTIONS
   // =========================
-  const addCheckpoint = () => {
-    const updated = [...checkpoints, ""];
-    console.log("addCheckpoint", updated);
-    setCheckpoints(updated);
+  const addCheckpoint = (formIndex) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    updatedForms[
+      formIndex
+    ].checkpoints.push("");
+
+    setTransportForms(updatedForms);
   };
 
   const updateCheckpoint = (
-    index,
+    formIndex,
+    checkpointIndex,
     value
   ) => {
-    const updated = [...checkpoints];
+    const updatedForms = [
+      ...transportForms,
+    ];
 
-    updated[index] = value;
-    console.log("updateCheckpoint", index, value, updated);
+    updatedForms[
+      formIndex
+    ].checkpoints[checkpointIndex] = value;
 
-    setCheckpoints(updated);
+    setTransportForms(updatedForms);
   };
 
-  const removeCheckpoint = (index) => {
-    const updated = checkpoints.filter(
-      (_, i) => i !== index
-    );
+  const removeCheckpoint = (
+    formIndex,
+    checkpointIndex
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
 
-    setCheckpoints(updated);
-  };
+    updatedForms[
+      formIndex
+    ].checkpoints =
+      updatedForms[
+        formIndex
+      ].checkpoints.filter(
+        (_, i) =>
+          i !== checkpointIndex
+      );
 
-  const buildTransportPayload = () => {
-    const checkpointList = checkpoints
-      .map((location) => location.trim())
-      .filter(Boolean);
-
-    return {
-      employee: employeeId || "6a0411af4579d3137b255e70",
-      pickupDateTime: pickupDateTime
-        ? pickupDateTime.toISOString()
-        : null,
-      dropDateTime: dropDateTime
-        ? dropDateTime.toISOString()
-        : null,
-      pickupLocation: pickupLocation.trim(),
-      dropLocation: dropLocation.trim(),
-      checkpoints: checkpointList.map((location) => ({ location })),
-      totalPassengers: Number(totalPassengers) || 0,
-      vehicles: vehicleType
-        ? [
-            {
-              type: vehicleType,
-              count: Number(vehicleCount) || 0,
-            },
-          ]
-        : [],
-      numberOfBusNeeded:
-        vehicleType === "Bus"
-          ? Number(vehicleCount) || 0
-          : 0,
-      numberOfAccompanyingStaff:
-        Number(staffOptionType) || staffDetails.length,
-      accompanyingStaff: staffDetails.map((staff) => ({
-        name: staff.name.trim(),
-        mobile: staff.mobile ? Number(staff.mobile) : staff.mobile,
-      })),
-      specialRequirements: specialRequirement.trim(),
-      status: "Pending",
-    };
-  };
-
-  const handleSubmit = async () => {
-    console.log("Transport handleSubmit invoked");
-    console.log("API_BASE:", API_BASE, "token:", token);
-    const errors = [];
-    if (!pickupDateTime) {
-      errors.push("Pickup Date & Time is required.");
-    }
-    if (!dropDateTime) {
-      errors.push("Drop Date & Time is required.");
-    }
-    if (!pickupLocation.trim()) {
-      errors.push("Pickup Location is required.");
-    }
-    if (!dropLocation.trim()) {
-      errors.push("Drop Location is required.");
-    }
-    if (!checkpoints.some((location) => location.trim())) {
-      errors.push("At least one checkpoint is required.");
-    }
-    if (!totalPassengers) {
-      errors.push("Total Passengers is required.");
-    }
-    if (!vehicleType) {
-      errors.push("Vehicle type is required.");
-    }
-    if (!vehicleCount) {
-      errors.push("Vehicle count is required.");
-    }
-    if (!staffOptionType) {
-      errors.push("Number of accompanying staff is required.");
-    }
-    if (
-      staffDetails.some(
-        (staff) => !staff.name.trim() || !staff.mobile
-      )
-    ) {
-      errors.push("All accompanying staff must have a name and mobile number.");
-    }
-
-    setValidationErrors(errors);
-    setSubmitMessage("");
-    console.log("Transport submit validation errors:", errors);
-    if (errors.length) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const payload = buildTransportPayload();
-      console.log("Transport payload:", payload);
-      const requestUrl = `${API_BASE}/api/transports`;
-      console.log("Transport request URL:", requestUrl);
-      const response = await fetch(requestUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        data = null;
-      }
-
-      console.log("Transport response:", response.status, data);
-      if (!response.ok) {
-        throw new Error(
-          (data && data.message) ||
-            `Transport submission failed with status ${response.status}`
-        );
-      }
-
-      setValidationErrors([]);
-      setSubmitMessage("Transport data submitted successfully.");
-    } catch (error) {
-      setValidationErrors([error.message || "Unable to send transport data."]);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setTransportForms(updatedForms);
   };
 
   // =========================
   // DRAG FUNCTIONS
   // =========================
-  const handleDragStart = (index) => {
-    setDraggedIndex(index);
+  const handleDragStart = (
+    formIndex,
+    index
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    updatedForms[formIndex].draggedIndex =
+      index;
+
+    setTransportForms(updatedForms);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
   };
 
-  const handleDrop = (dropIndex) => {
+  const handleDrop = (
+    formIndex,
+    dropIndex
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    const draggedIndex =
+      updatedForms[formIndex]
+        .draggedIndex;
+
     if (
       draggedIndex === null ||
       draggedIndex === dropIndex
@@ -300,33 +205,92 @@ const TransportDetailsPage = () => {
       return;
     }
 
-    const updatedCheckpoints = [
-      ...checkpoints,
+    const checkpoints = [
+      ...updatedForms[formIndex]
+        .checkpoints,
     ];
 
     const draggedItem =
-      updatedCheckpoints[draggedIndex];
+      checkpoints[draggedIndex];
 
-    updatedCheckpoints.splice(
+    checkpoints.splice(
       draggedIndex,
       1
     );
 
-    updatedCheckpoints.splice(
+    checkpoints.splice(
       dropIndex,
       0,
       draggedItem
     );
 
-    setCheckpoints(updatedCheckpoints);
+    updatedForms[formIndex].checkpoints =
+      checkpoints;
 
-    setDraggedIndex(null);
+    updatedForms[formIndex].draggedIndex =
+      null;
+
+    setTransportForms(updatedForms);
+  };
+
+  // =========================
+  // STAFF DETAILS
+  // =========================
+  const handleStaffCount = (
+    formIndex,
+    option
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    updatedForms[
+      formIndex
+    ].staffOptionType = option;
+
+    updatedForms[
+      formIndex
+    ].showStaffDropdown = false;
+
+    const count = Number(option);
+
+    updatedForms[
+      formIndex
+    ].staffDetails = Array.from(
+      { length: count },
+      () => ({
+        name: "",
+        mobile: "",
+      })
+    );
+
+    setTransportForms(updatedForms);
+  };
+
+  const updateStaffDetail = (
+    formIndex,
+    staffIndex,
+    field,
+    value
+  ) => {
+    const updatedForms = [
+      ...transportForms,
+    ];
+
+    updatedForms[
+      formIndex
+    ].staffDetails[staffIndex][field] =
+      value;
+
+    setTransportForms(updatedForms);
   };
 
   // =========================
   // VEHICLE LABELS
   // =========================
-  const getVehicleLabel = () => {
+  const getVehicleLabel = (
+    vehicleType
+  ) => {
     switch (vehicleType) {
       case "Car":
         return "How many cars needed *";
@@ -345,7 +309,9 @@ const TransportDetailsPage = () => {
     }
   };
 
-  const getVehiclePlaceholder = () => {
+  const getVehiclePlaceholder = (
+    vehicleType
+  ) => {
     switch (vehicleType) {
       case "Car":
         return "Enter number of cars";
@@ -364,16 +330,212 @@ const TransportDetailsPage = () => {
     }
   };
 
+  // =========================
+  // BUILD PAYLOAD
+  // =========================
+  const buildTransportPayload = (
+    form
+  ) => {
+    return {
+      employee:
+        employeeId ||
+        "6a0411af4579d3137b255e70",
+
+      pickupDateTime:
+        form.pickupDateTime
+          ? form.pickupDateTime.toISOString()
+          : null,
+
+      dropDateTime:
+        form.dropDateTime
+          ? form.dropDateTime.toISOString()
+          : null,
+
+      pickupLocation:
+        form.pickupLocation.trim(),
+
+      dropLocation:
+        form.dropLocation.trim(),
+
+      checkpoints:
+        form.checkpoints.map(
+          (location) => ({
+            location,
+          })
+        ),
+
+      totalPassengers:
+        Number(
+          form.totalPassengers
+        ) || 0,
+
+      vehicles: form.vehicleType
+        ? [
+            {
+              type: form.vehicleType,
+              count:
+                Number(
+                  form.vehicleCount
+                ) || 0,
+            },
+          ]
+        : [],
+
+      numberOfBusNeeded:
+        form.vehicleType === "Bus"
+          ? Number(
+              form.vehicleCount
+            ) || 0
+          : 0,
+
+      numberOfAccompanyingStaff:
+        Number(
+          form.staffOptionType
+        ) || 0,
+
+      accompanyingStaff:
+        form.staffDetails.map(
+          (staff) => ({
+            name: staff.name,
+            mobile: Number(
+              staff.mobile
+            ),
+          })
+        ),
+
+      specialRequirements:
+        form.specialRequirement,
+
+      status: "Pending",
+    };
+  };
+
+  // =========================
+  // SUBMIT
+  // =========================
+  const handleSubmit = async () => {
+    const errors = [];
+
+    transportForms.forEach(
+      (form, index) => {
+        if (!form.pickupDateTime) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Pickup Date & Time is required`
+          );
+        }
+
+        if (!form.dropDateTime) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Drop Date & Time is required`
+          );
+        }
+
+        if (
+          !form.pickupLocation.trim()
+        ) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Pickup Location is required`
+          );
+        }
+
+        if (
+          !form.dropLocation.trim()
+        ) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Drop Location is required`
+          );
+        }
+
+        if (
+          !form.totalPassengers
+        ) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Total passengers required`
+          );
+        }
+
+        if (!form.vehicleType) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Vehicle type required`
+          );
+        }
+
+        if (!form.vehicleCount) {
+          errors.push(
+            `Form ${
+              index + 1
+            }: Vehicle count required`
+          );
+        }
+      }
+    );
+
+    setValidationErrors(errors);
+
+    if (errors.length) return;
+
+    setIsSubmitting(true);
+
+    try {
+      for (const form of transportForms) {
+        const payload =
+          buildTransportPayload(form);
+
+        await fetch(
+          `${API_BASE}/api/transports`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type":
+                "application/json",
+              ...(token && {
+                Authorization: `Bearer ${token}`,
+              }),
+            },
+            body: JSON.stringify(
+              payload
+            ),
+          }
+        );
+      }
+
+      setSubmitMessage(
+        "All transport forms submitted successfully."
+      );
+
+      setValidationErrors([]);
+    } catch (error) {
+      setValidationErrors([
+        "Unable to submit transport forms.",
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#141428] text-white p-5">
-      {/* TITLE */}
       <h1 className="text-3xl font-bold mb-6">
         Transport Details Form
       </h1>
 
-      {/* HEADER */}
+      {/* ADD BUTTON */}
       <div className="flex justify-end mb-5">
         <button
+          type="button"
+          onClick={addTransportForm}
           className="
             flex
             items-center
@@ -391,542 +553,634 @@ const TransportDetailsPage = () => {
         </button>
       </div>
 
-      {/* MAIN CARD */}
-      <div
-        className="
-          bg-[#1b1b35]
-          border
-          border-[#2a2a40]
-          rounded-2xl
-          p-6
-        "
-      >
-        {/* DATE PICKERS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-
-          {/* PICKUP DATE */}
-          <div>
-            <label className="block text-sm mb-2">
-              Pickup Date & Time *
-            </label>
-
-            <div className="relative">
-              <DatePicker
-                selected={pickupDateTime}
-                onChange={(date) =>
-                  setPickupDateTime(date)
-                }
-                showTimeSelect
-                dateFormat="dd/MM/yyyy h:mm aa"
-                placeholderText="Select pickup date & time"
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  pr-20
-                  text-white
-                  outline-none
-                "
-              />
-
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
-                <CalendarDays size={18} />
-                <Clock3 size={18} />
-              </div>
-            </div>
-          </div>
-
-          {/* DROP DATE */}
-          <div>
-            <label className="block text-sm mb-2">
-              Drop Date & Time *
-            </label>
-
-            <div className="relative">
-              <DatePicker
-                selected={dropDateTime}
-                onChange={(date) =>
-                  setDropDateTime(date)
-                }
-                showTimeSelect
-                dateFormat="dd/MM/yyyy h:mm aa"
-                placeholderText="Select drop date & time"
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  pr-20
-                  text-white
-                  outline-none
-                "
-              />
-
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
-                <CalendarDays size={18} />
-                <Clock3 size={18} />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* PICKUP LOCATION */}
-        <div className="mt-5">
-          <label className="block text-sm mb-2">
-            Pickup Location *
-          </label>
-
-          <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
-            <MapPin size={18} />
-
-            <input
-              type="text"
-              value={pickupLocation}
-              onChange={(e) =>
-                setPickupLocation(
-                  e.target.value
-                )
-              }
-              placeholder="Enter pickup location"
-              className="bg-transparent outline-none w-full text-white"
-            />
-          </div>
-        </div>
-
-        {/* ADD CHECKPOINT */}
-        <div className="flex justify-center mt-5">
-          <button
-            type="button"
-            onClick={addCheckpoint}
-            className="flex items-center gap-2 text-[#9b5cff] font-medium"
+      {/* MULTIPLE FORMS */}
+      {transportForms.map(
+        (form, formIndex) => (
+          <div
+            key={formIndex}
+            className="
+              bg-[#1b1b35]
+              border
+              border-[#2a2a40]
+              rounded-2xl
+              p-6
+              mb-8
+            "
           >
-            <Plus
-              size={16}
-              className="bg-[#9b5cff] rounded-full p-0.5 text-white"
-            />
-            Add Checkpoint
-          </button>
-        </div>
+            <h2 className="text-2xl font-bold mb-6 text-[#8b5cf6]">
+              Transport Form{" "}
+              {formIndex + 1}
+            </h2>
 
-        {/* CHECKPOINT LIST */}
-        {checkpoints.length > 0 && (
-          <div className="mt-5 space-y-3">
-            {checkpoints.map(
-              (checkpoint, index) => (
-                <div
-                  key={index}
-                  draggable
-                  onDragStart={() =>
-                    handleDragStart(index)
-                  }
-                  onDragOver={handleDragOver}
-                  onDrop={() =>
-                    handleDrop(index)
-                  }
-                  className="
-                    bg-[#26264a]
-                    rounded-md
-                    px-4
-                    py-4
-                    flex
-                    items-center
-                    justify-between
-                  "
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <GripVertical
+            {/* DATE PICKERS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm mb-2">
+                  Pickup Date &
+                  Time *
+                </label>
+
+                <div className="relative">
+                  <DatePicker
+                    selected={
+                      form.pickupDateTime
+                    }
+                    onChange={(date) =>
+                      updateFormField(
+                        formIndex,
+                        "pickupDateTime",
+                        date
+                      )
+                    }
+                    showTimeSelect
+                    dateFormat="dd/MM/yyyy h:mm aa"
+                    placeholderText="Select pickup date & time"
+                    className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      pr-20
+                      text-white
+                      outline-none
+                    "
+                  />
+
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
+                    <CalendarDays
                       size={18}
-                      className="text-[#8d8da8]"
                     />
+                    <Clock3 size={18} />
+                  </div>
+                </div>
+              </div>
 
-                    <MapPin size={18} />
+              <div>
+                <label className="block text-sm mb-2">
+                  Drop Date &
+                  Time *
+                </label>
 
-                    <input
-                      type="text"
-                      value={checkpoint}
-                      onChange={(e) =>
-                        updateCheckpoint(
-                          index,
-                          e.target.value
+                <div className="relative">
+                  <DatePicker
+                    selected={
+                      form.dropDateTime
+                    }
+                    onChange={(date) =>
+                      updateFormField(
+                        formIndex,
+                        "dropDateTime",
+                        date
+                      )
+                    }
+                    showTimeSelect
+                    dateFormat="dd/MM/yyyy h:mm aa"
+                    placeholderText="Select drop date & time"
+                    className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      pr-20
+                      text-white
+                      outline-none
+                    "
+                  />
+
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2 pointer-events-none">
+                    <CalendarDays
+                      size={18}
+                    />
+                    <Clock3 size={18} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* PICKUP LOCATION */}
+            <div className="mt-5">
+              <label className="block text-sm mb-2">
+                Pickup Location *
+              </label>
+
+              <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
+                <MapPin size={18} />
+
+                <input
+                  type="text"
+                  value={
+                    form.pickupLocation
+                  }
+                  onChange={(e) =>
+                    updateFormField(
+                      formIndex,
+                      "pickupLocation",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter pickup location"
+                  className="bg-transparent outline-none w-full text-white"
+                />
+              </div>
+            </div>
+
+            {/* ADD CHECKPOINT */}
+            <div className="flex justify-center mt-5">
+              <button
+                type="button"
+                onClick={() =>
+                  addCheckpoint(
+                    formIndex
+                  )
+                }
+                className="flex items-center gap-2 text-[#9b5cff] font-medium"
+              >
+                <Plus
+                  size={16}
+                  className="bg-[#9b5cff] rounded-full p-0.5 text-white"
+                />
+                Add Checkpoint
+              </button>
+            </div>
+
+            {/* CHECKPOINTS */}
+            {form.checkpoints.length >
+              0 && (
+              <div className="mt-5 space-y-3">
+                {form.checkpoints.map(
+                  (
+                    checkpoint,
+                    checkpointIndex
+                  ) => (
+                    <div
+                      key={
+                        checkpointIndex
+                      }
+                      draggable
+                      onDragStart={() =>
+                        handleDragStart(
+                          formIndex,
+                          checkpointIndex
                         )
                       }
-                      placeholder={`Checkpoint ${
-                        index + 1
-                      }`}
-                      className="bg-transparent outline-none text-white w-full"
-                    />
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      removeCheckpoint(index)
-                    }
-                  >
-                    <X
-                      size={18}
-                      className="text-red-500"
-                    />
-                  </button>
-                </div>
-              )
-            )}
-          </div>
-        )}
-
-        {/* DROP LOCATION */}
-        <div className="mt-5">
-          <label className="block text-sm mb-2">
-            Drop Location *
-          </label>
-
-          <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
-            <MapPin size={18} />
-
-            <input
-              type="text"
-              value={dropLocation}
-              onChange={(e) =>
-                setDropLocation(
-                  e.target.value
-                )
-              }
-              placeholder="Enter drop location"
-              className="bg-transparent outline-none w-full text-white"
-            />
-          </div>
-        </div>
-
-        {/* PASSENGER + VEHICLE */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-
-          {/* PASSENGERS */}
-          <div>
-            <label className="block text-sm mb-2">
-              Total Number of Passengers *
-            </label>
-
-            <input
-              type="number"
-              value={totalPassengers}
-              onChange={(e) =>
-                setTotalPassengers(
-                  e.target.value
-                )
-              }
-              placeholder="Enter total passengers"
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                outline-none
-              "
-            />
-          </div>
-
-          {/* VEHICLE TYPE */}
-          <div className="relative">
-            <label className="block text-sm mb-2">
-              Type of Vehicle Needed *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowVehicleDropdown(
-                  !showVehicleDropdown
-                )
-              }
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
-              "
-            >
-              <span>
-                {vehicleType ||
-                  "Select Vehicle"}
-              </span>
-
-              <ChevronDown size={18} />
-            </div>
-
-            {showVehicleDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {vehicleOptions.map(
-                  (option, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setVehicleType(option);
-                        setShowVehicleDropdown(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                      onDragOver={
+                        handleDragOver
+                      }
+                      onDrop={() =>
+                        handleDrop(
+                          formIndex,
+                          checkpointIndex
+                        )
+                      }
+                      className="
+                        bg-[#26264a]
+                        rounded-md
+                        px-4
+                        py-4
+                        flex
+                        items-center
+                        justify-between
+                      "
                     >
-                      {option}
+                      <div className="flex items-center gap-3 w-full">
+                        <GripVertical
+                          size={18}
+                          className="text-[#8d8da8]"
+                        />
+
+                        <MapPin
+                          size={18}
+                        />
+
+                        <input
+                          type="text"
+                          value={
+                            checkpoint
+                          }
+                          onChange={(
+                            e
+                          ) =>
+                            updateCheckpoint(
+                              formIndex,
+                              checkpointIndex,
+                              e.target
+                                .value
+                            )
+                          }
+                          placeholder={`Checkpoint ${
+                            checkpointIndex +
+                            1
+                          }`}
+                          className="bg-transparent outline-none text-white w-full"
+                        />
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          removeCheckpoint(
+                            formIndex,
+                            checkpointIndex
+                          )
+                        }
+                      >
+                        <X
+                          size={18}
+                          className="text-red-500"
+                        />
+                      </button>
                     </div>
                   )
                 )}
               </div>
             )}
-          </div>
-        </div>
 
-        {/* VEHICLE COUNT */}
-        {vehicleType && (
-          <div className="mt-5">
-            <label className="block text-sm mb-2">
-              {getVehicleLabel()}
-            </label>
+            {/* DROP LOCATION */}
+            <div className="mt-5">
+              <label className="block text-sm mb-2">
+                Drop Location *
+              </label>
 
-            <input
-              type="number"
-              value={vehicleCount}
-              onChange={(e) =>
-                setVehicleCount(
-                  e.target.value
-                )
-              }
-              placeholder={getVehiclePlaceholder()}
-              className="
-                w-full
-                bg-[#1f1f38]
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                outline-none
-              "
-            />
-          </div>
-        )}
+              <div className="flex items-center gap-3 border border-[#3a3a5a] rounded-md px-4 py-3 bg-[#1f1f38]">
+                <MapPin size={18} />
 
-        {/* STAFF DROPDOWN */}
-        <div className="relative mt-5">
-          <label className="block text-sm mb-2">
-            Number of Accompanying Staff *
-          </label>
-
-          <div
-            onClick={() =>
-              setShowStaffDropdown(
-                !showStaffDropdown
-              )
-            }
-            className="
-              w-full
-              bg-[#1f1f38]
-              border
-              border-[#3a3a5a]
-              rounded-md
-              px-4
-              py-3
-              flex
-              justify-between
-              items-center
-              cursor-pointer
-            "
-          >
-            <span>
-              {staffOptionType ||
-                "Select Staff Count"}
-            </span>
-
-            <ChevronDown size={18} />
-          </div>
-
-          {showStaffDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-              {staffOptions.map(
-                (option, index) => (
-                  <div
-                    key={index}
-                    onClick={() => {
-                                      setOptionType(option);
-
-                      setShowStaffDropdown(
-                        false
-                      );
-
-                      const count =
-                        Number(option);
-
-                      const newStaff =
-                        Array.from(
-                          {
-                            length: count,
-                          },
-                          () => ({
-                            name: "",
-                            mobile: "",
-                          })
-                        );
-
-                      console.log("staff count selected", count, newStaff);
-                      setStaffDetails(
-                        newStaff
-                      );
-                    }}
-                    className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                  >
-                    {option}
-                  </div>
-                )
-              )}
+                <input
+                  type="text"
+                  value={
+                    form.dropLocation
+                  }
+                  onChange={(e) =>
+                    updateFormField(
+                      formIndex,
+                      "dropLocation",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter drop location"
+                  className="bg-transparent outline-none w-full text-white"
+                />
+              </div>
             </div>
-          )}
-        </div>
 
-        {/* STAFF DETAILS */}
-        {staffDetails.length > 0 && (
-          <div className="mt-5 space-y-5">
-            {staffDetails.map(
-              (staff, index) => (
+            {/* PASSENGER + VEHICLE */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+              <div>
+                <label className="block text-sm mb-2">
+                  Total Number of
+                  Passengers *
+                </label>
+
+                <input
+                  type="number"
+                  value={
+                    form.totalPassengers
+                  }
+                  onChange={(e) =>
+                    updateFormField(
+                      formIndex,
+                      "totalPassengers",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Enter total passengers"
+                  className="
+                    w-full
+                    bg-[#1f1f38]
+                    border
+                    border-[#3a3a5a]
+                    rounded-md
+                    px-4
+                    py-3
+                    outline-none
+                  "
+                />
+              </div>
+
+              <div className="relative">
+                <label className="block text-sm mb-2">
+                  Type of Vehicle
+                  Needed *
+                </label>
+
                 <div
-                  key={index}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                  onClick={() =>
+                    updateFormField(
+                      formIndex,
+                      "showVehicleDropdown",
+                      !form.showVehicleDropdown
+                    )
+                  }
+                  className="
+                    w-full
+                    bg-[#1f1f38]
+                    border
+                    border-[#3a3a5a]
+                    rounded-md
+                    px-4
+                    py-3
+                    flex
+                    justify-between
+                    items-center
+                    cursor-pointer
+                  "
                 >
-                  <input
-                    type="text"
-                    value={staff.name}
-                    onChange={(e) => {
-                      const updated = [
-                        ...staffDetails,
-                      ];
+                  <span>
+                    {form.vehicleType ||
+                      "Select Vehicle"}
+                  </span>
 
-                      updated[index].name =
-                        e.target.value;
-                      console.log("staff name changed", index, updated[index].name, updated);
-
-                      setStaffDetails(
-                        updated
-                      );
-                    }}
-                    placeholder={`Staff ${
-                      index + 1
-                    } Name`}
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      outline-none
-                    "
-                  />
-
-                  <input
-                    type="number"
-                    value={staff.mobile}
-                    onChange={(e) => {
-                      const updated = [
-                        ...staffDetails,
-                      ];
-
-                      updated[index].mobile =
-                        e.target.value;
-                      console.log("staff mobile changed", index, updated[index].mobile, updated);
-
-                      setStaffDetails(
-                        updated
-                      );
-                    }}
-                    placeholder={`Staff ${
-                      index + 1
-                    } Mobile Number`}
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      outline-none
-                    "
+                  <ChevronDown
+                    size={18}
                   />
                 </div>
-              )
+
+                {form.showVehicleDropdown && (
+                  <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                    {vehicleOptions.map(
+                      (
+                        option,
+                        index
+                      ) => (
+                        <div
+                          key={index}
+                          onClick={() => {
+                            updateFormField(
+                              formIndex,
+                              "vehicleType",
+                              option
+                            );
+
+                            updateFormField(
+                              formIndex,
+                              "showVehicleDropdown",
+                              false
+                            );
+                          }}
+                          className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                        >
+                          {option}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* VEHICLE COUNT */}
+            {form.vehicleType && (
+              <div className="mt-5">
+                <label className="block text-sm mb-2">
+                  {getVehicleLabel(
+                    form.vehicleType
+                  )}
+                </label>
+
+                <input
+                  type="number"
+                  value={
+                    form.vehicleCount
+                  }
+                  onChange={(e) =>
+                    updateFormField(
+                      formIndex,
+                      "vehicleCount",
+                      e.target.value
+                    )
+                  }
+                  placeholder={getVehiclePlaceholder(
+                    form.vehicleType
+                  )}
+                  className="
+                    w-full
+                    bg-[#1f1f38]
+                    border
+                    border-[#3a3a5a]
+                    rounded-md
+                    px-4
+                    py-3
+                    outline-none
+                  "
+                />
+              </div>
             )}
+
+            {/* STAFF DROPDOWN */}
+            <div className="relative mt-5">
+              <label className="block text-sm mb-2">
+                Number of
+                Accompanying Staff *
+              </label>
+
+              <div
+                onClick={() =>
+                  updateFormField(
+                    formIndex,
+                    "showStaffDropdown",
+                    !form.showStaffDropdown
+                  )
+                }
+                className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  flex
+                  justify-between
+                  items-center
+                  cursor-pointer
+                "
+              >
+                <span>
+                  {form.staffOptionType ||
+                    "Select Staff Count"}
+                </span>
+
+                <ChevronDown
+                  size={18}
+                />
+              </div>
+
+              {form.showStaffDropdown && (
+                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                  {staffOptions.map(
+                    (
+                      option,
+                      index
+                    ) => (
+                      <div
+                        key={index}
+                        onClick={() =>
+                          handleStaffCount(
+                            formIndex,
+                            option
+                          )
+                        }
+                        className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                      >
+                        {option}
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* STAFF DETAILS */}
+            {form.staffDetails.length >
+              0 && (
+              <div className="mt-5 space-y-5">
+                {form.staffDetails.map(
+                  (
+                    staff,
+                    staffIndex
+                  ) => (
+                    <div
+                      key={staffIndex}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-5"
+                    >
+                      <input
+                        type="text"
+                        value={
+                          staff.name
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          updateStaffDetail(
+                            formIndex,
+                            staffIndex,
+                            "name",
+                            e.target
+                              .value
+                          )
+                        }
+                        placeholder={`Staff ${
+                          staffIndex +
+                          1
+                        } Name`}
+                        className="
+                          w-full
+                          bg-[#1f1f38]
+                          border
+                          border-[#3a3a5a]
+                          rounded-md
+                          px-4
+                          py-3
+                          outline-none
+                        "
+                      />
+
+                      <input
+                        type="number"
+                        value={
+                          staff.mobile
+                        }
+                        onChange={(
+                          e
+                        ) =>
+                          updateStaffDetail(
+                            formIndex,
+                            staffIndex,
+                            "mobile",
+                            e.target
+                              .value
+                          )
+                        }
+                        placeholder={`Staff ${
+                          staffIndex +
+                          1
+                        } Mobile Number`}
+                        className="
+                          w-full
+                          bg-[#1f1f38]
+                          border
+                          border-[#3a3a5a]
+                          rounded-md
+                          px-4
+                          py-3
+                          outline-none
+                        "
+                      />
+                    </div>
+                  )
+                )}
+              </div>
+            )}
+
+            {/* SPECIAL REQUIREMENT */}
+            <div className="mt-5">
+              <label className="block text-sm mb-2">
+                Special Requirement
+              </label>
+
+              <textarea
+                rows={4}
+                value={
+                  form.specialRequirement
+                }
+                onChange={(e) =>
+                  updateFormField(
+                    formIndex,
+                    "specialRequirement",
+                    e.target.value
+                  )
+                }
+                placeholder="Enter any special requirements"
+                className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  outline-none
+                  resize-none
+                "
+              />
+            </div>
           </div>
-        )}
+        )
+      )}
 
-        {/* SPECIAL REQUIREMENT */}
-        <div className="mt-5">
-          <label className="block text-sm mb-2">
-            Special Requirement
-          </label>
-
-          <textarea
-            rows={4}
-            value={specialRequirement}
-            onChange={(e) =>
-              setSpecialRequirement(
-                e.target.value
-              )
-            }
-            placeholder="Enter any special requirements"
-            className="
-              w-full
-              bg-[#1f1f38]
-              border
-              border-[#3a3a5a]
-              rounded-md
-              px-4
-              py-3
-              outline-none
-              resize-none
-            "
-          />
-        </div>
-      </div>
-
-      {/* NEXT BUTTON */}
-      {validationErrors.length > 0 && (
+      {/* ERRORS */}
+      {validationErrors.length >
+        0 && (
         <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
           <ul className="list-disc list-inside space-y-1">
-            {validationErrors.map((error, idx) => (
-              <li key={idx}>{error}</li>
-            ))}
+            {validationErrors.map(
+              (error, idx) => (
+                <li key={idx}>
+                  {error}
+                </li>
+              )
+            )}
           </ul>
         </div>
       )}
 
+      {/* SUCCESS */}
       {submitMessage && (
         <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
           {submitMessage}
         </div>
       )}
 
+      {/* SUBMIT */}
       <div className="flex justify-end mt-6">
         <button
           type="button"
-          onClick={() => {
-            console.log("Transport submit button clicked");
-            handleSubmit();
-          }}
+          onClick={handleSubmit}
           disabled={isSubmitting}
           className="
             bg-[#8b5cf6]
@@ -945,7 +1199,10 @@ const TransportDetailsPage = () => {
             gap-2
           "
         >
-          {isSubmitting ? "Submitting..." : "Submit"}
+          {isSubmitting
+            ? "Submitting..."
+            : "Submit"}
+
           <ArrowRight size={18} />
         </button>
       </div>
@@ -953,4 +1210,4 @@ const TransportDetailsPage = () => {
   );
 };
 
-export default TransportDetailsPage;  
+export default TransportDetailsPage;
