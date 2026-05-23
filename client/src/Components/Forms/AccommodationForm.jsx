@@ -167,25 +167,18 @@ function GenderIcon({ gender }) {
   const g = (gender || "").toLowerCase();
 
   if (g === "female") {
-    // Female profile silhouette — head + dress/skirt body
     return (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
-        {/* Head */}
         <circle cx="12" cy="6" r="3.5" />
-        {/* Body — dress shape (wider at bottom) */}
         <path d="M7 21c0-3.5 1.5-7 5-8.5C16.5 14 17 17.5 17 21H7z" />
-        {/* Shoulders/neck connector */}
         <path d="M9.5 12.5 Q12 10.5 14.5 12.5" fill="none" stroke="#ab45ff" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
     );
   }
 
-  // Male profile silhouette — head + rectangular torso
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
-      {/* Head */}
       <circle cx="12" cy="6" r="3.5" />
-      {/* Body — rectangular torso */}
       <path d="M8 13h8c.5 0 1 .4 1 1v7H7v-7c0-.6.4-1 1-1z" />
     </svg>
   );
@@ -200,7 +193,7 @@ function PhoneIconFilled() {
   );
 }
 
-// ─── Room Type MultiSelect with search, tick on right→left, violet selected bg ─
+// ─── Room Type MultiSelect — NO tags above, search, tick on right, violet bg selected ─
 function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -228,27 +221,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
 
   return (
     <div className="relative w-full" ref={ref}>
-      {/* Selected tags shown at top when dropdown open */}
-      {open && value.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
-          {value.map((v) => (
-            <span
-              key={v}
-              className="flex items-center gap-1 bg-purple-700/40 border border-purple-500/50 text-purple-200 text-xs px-2 py-1 rounded-md"
-            >
-              {v}
-              <span
-                className="cursor-pointer hover:text-white ml-1"
-                onClick={() => toggle(v)}
-              >
-                ×
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Trigger */}
+      {/* Trigger — NO tags shown above, removed entirely */}
       <div
         className={`relative w-full p-3 rounded-lg bg-transparent border ${
           error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
@@ -320,7 +293,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
   );
 }
 
-// ─── Dine MultiSelect (keep checkbox style as before) ─────────────────────────
+// ─── Dine MultiSelect — tick on RIGHT, violet bg for selected, NO checkbox ─────
 function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
@@ -342,7 +315,7 @@ function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#
     <div className="relative w-full" ref={ref}>
       <div
         className={`relative w-full p-3 rounded-lg bg-transparent border ${
-          error ? "border-red-400" : "border-[#3a3a5a]"
+          error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
         } text-white cursor-pointer flex items-center justify-between transition`}
         onClick={() => setOpen((o) => !o)}
       >
@@ -360,24 +333,34 @@ function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#
       >
         {label}
       </label>
+
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-hidden">
-          {options.map((opt) => (
-            <label
-              key={opt}
-              className="flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-[#2a2a4a] text-sm text-white"
-            >
-              <input
-                type="checkbox"
-                checked={value.includes(opt)}
-                onChange={() => toggle(opt)}
-                className="accent-[#ab45ff]"
-              />
-              {opt}
-            </label>
-          ))}
+          {options.map((opt) => {
+            const selected = value.includes(opt);
+            return (
+              <div
+                key={opt}
+                onClick={() => toggle(opt)}
+                className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                  selected
+                    ? "bg-purple-700/30 text-white"
+                    : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                }`}
+              >
+                <span>{opt}</span>
+                {/* Tick on the RIGHT — spacing reserved always to prevent layout shift */}
+                <span className="flex-shrink-0 w-4 flex items-center justify-center">
+                  {selected && (
+                    <Check size={14} className="text-purple-400" />
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
+
       {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
     </div>
   );
@@ -536,7 +519,7 @@ function AccommodationBlock({
         />
       </div>
 
-      {/* Room type multi-select — no checkbox, tick on right, search, violet bg selected */}
+      {/* Room type multi-select — NO tags above, search, tick on right, violet bg selected */}
       <div className="mb-4">
         <RoomMultiSelect
           label="Type of Room Wanted *"
@@ -554,20 +537,20 @@ function AccommodationBlock({
           {acc.roomTypes.map((roomType, i) => {
             const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;
             return (
-            <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
-              <CustomInput
-                label={`No. of ${roomType} Rooms *`}
-                value={acc.roomCounts?.[roomType] || ""}
-                onChange={(e) => handleRoomCount(roomType, e.target.value)}
-                type="number"
-                labelBg="#1f1f38"
-              />
-              {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
-                <p className="text-yellow-400 text-xs mt-1">
-                  Only 1 room available for {roomType}
-                </p>
-              )}
-            </div>
+              <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
+                <CustomInput
+                  label={`No. of ${roomType} Rooms *`}
+                  value={acc.roomCounts?.[roomType] || ""}
+                  onChange={(e) => handleRoomCount(roomType, e.target.value)}
+                  type="number"
+                  labelBg="#1f1f38"
+                />
+                {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
+                  <p className="text-yellow-400 text-xs mt-1">
+                    Only 1 room available for {roomType}
+                  </p>
+                )}
+              </div>
             );
           })}
         </div>
@@ -604,7 +587,11 @@ function AccommodationBlock({
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
+          <div
+            className={`grid gap-4 mb-4 ${
+              showHostel && showAmenity ? "md:grid-cols-2" : "grid-cols-1"
+            }`}
+          >
             {showHostel && (
               <CustomInput
                 label="No. of Guests in Hostel Dine-in *"

@@ -5,11 +5,12 @@ import { DayTimeline } from "./VenueForm";
 
 const BASE_URL = "https://sece-events.onrender.com";
 
-const REQUIREMENT_OPTIONS   = ["Certificate", "Id Card"];
-const PERSON_OPTIONS        = ["Students", "Guest", "Both"];
-const GIFT_TYPE_OPTIONS     = ["Trophy", "Cash Prize", "Voucher"];
-const TROPHY_TYPE_OPTIONS   = ["Basic", "Elite"];
-const VOUCHER_WORTH_OPTIONS = ["₹ 500", "₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"];
+const REQUIREMENT_OPTIONS        = ["Certificate", "Id Card"];
+const PERSON_OPTIONS             = ["Students", "Guest", "Both"];
+const STUDENT_GIFT_TYPE_OPTIONS  = ["Trophy", "Cash Prize", "Voucher"];
+const GUEST_GIFT_TYPE_OPTIONS    = ["Trophy", "Glass Cup", "Voucher"];
+const TROPHY_TYPE_OPTIONS        = ["Basic", "Elite"];
+const VOUCHER_WORTH_OPTIONS      = ["₹ 500", "₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"];
 
 const ErrorMsg = ({ msg }) =>
   msg ? <p className="text-red-400 text-xs mt-1">{msg}</p> : null;
@@ -39,7 +40,7 @@ function emptyPurchaseDay() {
       trophyType: [],
       basicTrophyQty: "",
       eliteTrophyQty: "",
-      cashPrizeAmount: "",
+      glassCupQty: "",
       voucherWorth: "",
       registrationKitQty: "",
       specialRequirements: "",
@@ -61,7 +62,7 @@ function buildPurchasePayload(dayData) {
     if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
     if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
 
-    const buildPersonData = (personData = {}) => {
+    const buildStudentData = (personData = {}) => {
       const giftItems = [];
       if (personData.giftType?.includes("Trophy")) {
         giftItems.push({
@@ -83,12 +84,34 @@ function buildPurchasePayload(dayData) {
       };
     };
 
+    const buildGuestData = (personData = {}) => {
+      const giftItems = [];
+      if (personData.giftType?.includes("Trophy")) {
+        giftItems.push({
+          type: "Trophy",
+          trophyTypes: personData.trophyType || [],
+          basicQty: parseInt(personData.basicTrophyQty) || 0,
+          eliteQty: parseInt(personData.eliteTrophyQty) || 0,
+        });
+      }
+      if (personData.giftType?.includes("Glass Cup"))
+        giftItems.push({ type: "Glass Cup", qty: parseInt(personData.glassCupQty) || 0 });
+      if (personData.giftType?.includes("Voucher"))
+        giftItems.push({ type: "Voucher", worth: personData.voucherWorth || "" });
+      return {
+        registrationKitNeeded: personData.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(personData.registrationKitQty) || 0,
+        specialRequirements: personData.specialRequirements || "",
+        giftItems,
+      };
+    };
+
     return {
       dayIndex,
       requirementNeeded,
       requiredFor,
-      students: buildPersonData(day.studentData),
-      guests:   buildPersonData(day.guestData),
+      students: buildStudentData(day.studentData),
+      guests:   buildGuestData(day.guestData),
     };
   });
 
@@ -245,7 +268,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelBg = "#1E1E35
 
 // ── Validation ────────────────────────────────────────────────────────────────
 
-function validatePersonCard(data) {
+function validateStudentCard(data) {
   const e = {};
   if (!data.giftType || data.giftType.length === 0) e.giftType = "Gift type is required";
   if (!data.registrationKitNeeded) e.registrationKitNeeded = "This field is required";
@@ -255,6 +278,21 @@ function validatePersonCard(data) {
     if (data.trophyType?.includes("Elite") && !data.eliteTrophyQty?.trim()) e.eliteTrophyQty = "Elite trophy quantity is required";
   }
   if (data.giftType?.includes("Cash Prize") && !data.cashPrizeAmount?.trim()) e.cashPrizeAmount = "Cash prize amount is required";
+  if (data.giftType?.includes("Voucher") && !data.voucherWorth) e.voucherWorth = "Voucher worth is required";
+  if (data.registrationKitNeeded === "Yes" && !data.registrationKitQty?.trim()) e.registrationKitQty = "Registration kit quantity is required";
+  return e;
+}
+
+function validateGuestCard(data) {
+  const e = {};
+  if (!data.giftType || data.giftType.length === 0) e.giftType = "Gift type is required";
+  if (!data.registrationKitNeeded) e.registrationKitNeeded = "This field is required";
+  if (data.giftType?.includes("Trophy")) {
+    if (!data.trophyType || data.trophyType.length === 0) e.trophyType = "Trophy type is required";
+    if (data.trophyType?.includes("Basic") && !data.basicTrophyQty?.trim()) e.basicTrophyQty = "Basic trophy quantity is required";
+    if (data.trophyType?.includes("Elite") && !data.eliteTrophyQty?.trim()) e.eliteTrophyQty = "Elite trophy quantity is required";
+  }
+  if (data.giftType?.includes("Glass Cup") && !data.glassCupQty?.trim()) e.glassCupQty = "Glass cup quantity is required";
   if (data.giftType?.includes("Voucher") && !data.voucherWorth) e.voucherWorth = "Voucher worth is required";
   if (data.registrationKitNeeded === "Yes" && !data.registrationKitQty?.trim()) e.registrationKitQty = "Registration kit quantity is required";
   return e;
@@ -271,21 +309,20 @@ function validateDay(data) {
   if (!data.selectedPersons)
     e.selectedPersons = "Please select required persons";
   if (data.selectedPersons === "Students" || data.selectedPersons === "Both") {
-    const se = validatePersonCard(data.studentData || {});
+    const se = validateStudentCard(data.studentData || {});
     if (Object.keys(se).length > 0) e.studentData = se;
   }
   if (data.selectedPersons === "Guest" || data.selectedPersons === "Both") {
-    const ge = validatePersonCard(data.guestData || {});
+    const ge = validateGuestCard(data.guestData || {});
     if (Object.keys(ge).length > 0) e.guestData = ge;
   }
   return e;
 }
 
-// ── PersonCard ────────────────────────────────────────────────────────────────
+// ── StudentCard ───────────────────────────────────────────────────────────────
 
-function PersonCard({ title, data, onChange, errors = {} }) {
-  const update      = (field) => (val) => onChange({ ...data, [field]: val });
-  const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
+function StudentCard({ data, onChange, errors = {} }) {
+  const updateInput = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
   const hasTrophy  = data.giftType?.includes("Trophy");
   const hasCash    = data.giftType?.includes("Cash Prize");
@@ -293,22 +330,28 @@ function PersonCard({ title, data, onChange, errors = {} }) {
   const showBasic  = data.trophyType?.includes("Basic");
   const showElite  = data.trophyType?.includes("Elite");
 
+  // trophy qty: 1 selected = full width, both = 2 cols
+  const trophyBothSelected = showBasic && showElite;
+  // cash+voucher: both = 2 cols, only one = full width
+  const cashVoucherBoth = hasCash && hasVoucher;
+
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
-      <h3 className="text-purple-400 text-base font-semibold">{title}</h3>
+      <h3 className="text-purple-400 text-base font-semibold">Students</h3>
 
+      {/* Gift Type + Registration Kit Needed — always side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <MultiSelect
             labelBg="#1E1E35"
             label="Gift Type *"
-            options={GIFT_TYPE_OPTIONS}
+            options={STUDENT_GIFT_TYPE_OPTIONS}
             selected={data.giftType || []}
             onChange={(val) => {
               const updated = { ...data, giftType: val };
-              if (!val.includes("Trophy"))     { updated.trophyType = []; updated.basicTrophyQty = ""; updated.eliteTrophyQty = ""; }
-              if (!val.includes("Cash Prize"))  updated.cashPrizeAmount = "";
-              if (!val.includes("Voucher"))     updated.voucherWorth = "";
+              if (!val.includes("Trophy"))    { updated.trophyType = []; updated.basicTrophyQty = ""; updated.eliteTrophyQty = ""; }
+              if (!val.includes("Cash Prize")) updated.cashPrizeAmount = "";
+              if (!val.includes("Voucher"))    updated.voucherWorth = "";
               onChange(updated);
             }}
             error={errors.giftType}
@@ -326,6 +369,7 @@ function PersonCard({ title, data, onChange, errors = {} }) {
         </div>
       </div>
 
+      {/* Trophy type select — full width */}
       {hasTrophy && (
         <div>
           <TrophyTypeSelect
@@ -342,8 +386,9 @@ function PersonCard({ title, data, onChange, errors = {} }) {
         </div>
       )}
 
+      {/* Trophy qty: 1 selected = full width, both = 2 cols */}
       {hasTrophy && (showBasic || showElite) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${trophyBothSelected ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {showBasic && (
             <div>
               <CustomInput labelBg="#1E1E35" label="Basic Trophy Quantity *" type="number"
@@ -361,43 +406,168 @@ function PersonCard({ title, data, onChange, errors = {} }) {
         </div>
       )}
 
-      {hasCash && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <CustomInput labelBg="#1E1E35" label="Cash Prize Amount *" type="number"
-              value={data.cashPrizeAmount || ""} onChange={updateInput("cashPrizeAmount")} />
-            <ErrorMsg msg={errors.cashPrizeAmount} />
-          </div>
+      {/* Cash Prize + Voucher: both = 2 cols, single = full width */}
+      {(hasCash || hasVoucher) && (
+        <div className={`grid gap-4 ${cashVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+          {hasCash && (
+            <div>
+              <CustomInput labelBg="#1E1E35" label="Cash Prize Amount *" type="number"
+                value={data.cashPrizeAmount || ""} onChange={updateInput("cashPrizeAmount")} />
+              <ErrorMsg msg={errors.cashPrizeAmount} />
+            </div>
+          )}
           {hasVoucher && (
             <div>
               <CustomSelect labelBg="#1E1E35" label="Voucher worth *" value={data.voucherWorth || ""}
-                onChange={update("voucherWorth")} options={VOUCHER_WORTH_OPTIONS} />
+                onChange={(val) => onChange({ ...data, voucherWorth: val })} options={VOUCHER_WORTH_OPTIONS} />
               {errors.voucherWorth && <ErrorMsg msg={errors.voucherWorth} />}
             </div>
           )}
         </div>
       )}
 
-      {hasVoucher && !hasCash && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <CustomSelect labelBg="#1E1E35" label="Voucher worth *" value={data.voucherWorth || ""}
-              onChange={update("voucherWorth")} options={VOUCHER_WORTH_OPTIONS} />
-            {errors.voucherWorth && <ErrorMsg msg={errors.voucherWorth} />}
-          </div>
-        </div>
-      )}
-
+      {/* Registration Kit Qty — always full width single row */}
       {data.registrationKitNeeded === "Yes" && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <CustomInput labelBg="#1E1E35" label="Registration Kit Quantity *" type="number"
-              value={data.registrationKitQty || ""} onChange={updateInput("registrationKitQty")} />
-            <ErrorMsg msg={errors.registrationKitQty} />
-          </div>
+        <div>
+          <CustomInput labelBg="#1E1E35" label="Registration Kit Quantity *" type="number"
+            value={data.registrationKitQty || ""} onChange={updateInput("registrationKitQty")} />
+          <ErrorMsg msg={errors.registrationKitQty} />
         </div>
       )}
 
+      {/* Special Requirements */}
+      <div className="relative w-full">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          Special Requirements, if any
+        </span>
+        <textarea
+          value={data.specialRequirements || ""}
+          onChange={updateInput("specialRequirements")}
+          rows={3}
+          placeholder="Enter any special requirements..."
+          className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ── GuestCard ─────────────────────────────────────────────────────────────────
+
+function GuestCard({ data, onChange, errors = {} }) {
+  const updateInput = (field) => (e) => onChange({ ...data, [field]: e.target.value });
+
+  const hasTrophy   = data.giftType?.includes("Trophy");
+  const hasGlassCup = data.giftType?.includes("Glass Cup");
+  const hasVoucher  = data.giftType?.includes("Voucher");
+  const showBasic   = data.trophyType?.includes("Basic");
+  const showElite   = data.trophyType?.includes("Elite");
+
+  const trophyBothSelected  = showBasic && showElite;
+  // glass cup + voucher: both = 2 cols, single = full width
+  const glassCupVoucherBoth = hasGlassCup && hasVoucher;
+
+  return (
+    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+      <h3 className="text-purple-400 text-base font-semibold">Guest</h3>
+
+      {/* Gift Type + Registration Kit Needed — always side by side */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <MultiSelect
+            labelBg="#1E1E35"
+            label="Gift Type *"
+            options={GUEST_GIFT_TYPE_OPTIONS}
+            selected={data.giftType || []}
+            onChange={(val) => {
+              const updated = { ...data, giftType: val };
+              if (!val.includes("Trophy"))    { updated.trophyType = []; updated.basicTrophyQty = ""; updated.eliteTrophyQty = ""; }
+              if (!val.includes("Glass Cup"))  updated.glassCupQty = "";
+              if (!val.includes("Voucher"))    updated.voucherWorth = "";
+              onChange(updated);
+            }}
+            error={errors.giftType}
+          />
+        </div>
+        <div>
+          <CustomSelect
+            labelBg="#1E1E35"
+            label="Registration Kit Needed *"
+            value={data.registrationKitNeeded || ""}
+            onChange={(val) => onChange({ ...data, registrationKitNeeded: val, registrationKitQty: "" })}
+            options={["Yes", "No"]}
+          />
+          {errors.registrationKitNeeded && <ErrorMsg msg={errors.registrationKitNeeded} />}
+        </div>
+      </div>
+
+      {/* Trophy type select — full width */}
+      {hasTrophy && (
+        <div>
+          <TrophyTypeSelect
+            label="Type of Trophy Wanted *"
+            selected={data.trophyType || []}
+            onChange={(val) => {
+              const updated = { ...data, trophyType: val };
+              if (!val.includes("Basic")) updated.basicTrophyQty = "";
+              if (!val.includes("Elite")) updated.eliteTrophyQty = "";
+              onChange(updated);
+            }}
+            error={errors.trophyType}
+          />
+        </div>
+      )}
+
+      {/* Trophy qty: 1 selected = full width, both = 2 cols */}
+      {hasTrophy && (showBasic || showElite) && (
+        <div className={`grid gap-4 ${trophyBothSelected ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+          {showBasic && (
+            <div>
+              <CustomInput labelBg="#1E1E35" label="Basic Trophy Quantity *" type="number"
+                value={data.basicTrophyQty || ""} onChange={updateInput("basicTrophyQty")} />
+              <ErrorMsg msg={errors.basicTrophyQty} />
+            </div>
+          )}
+          {showElite && (
+            <div>
+              <CustomInput labelBg="#1E1E35" label="Elite Trophy Quantity *" type="number"
+                value={data.eliteTrophyQty || ""} onChange={updateInput("eliteTrophyQty")} />
+              <ErrorMsg msg={errors.eliteTrophyQty} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Glass Cup + Voucher: both = 2 cols, single = full width */}
+      {(hasGlassCup || hasVoucher) && (
+        <div className={`grid gap-4 ${glassCupVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+          {hasGlassCup && (
+            <div>
+              <CustomInput labelBg="#1E1E35" label="Glass Cup Quantity *" type="number"
+                value={data.glassCupQty || ""} onChange={updateInput("glassCupQty")} />
+              <ErrorMsg msg={errors.glassCupQty} />
+            </div>
+          )}
+          {hasVoucher && (
+            <div>
+              <CustomSelect labelBg="#1E1E35" label="Voucher worth *" value={data.voucherWorth || ""}
+                onChange={(val) => onChange({ ...data, voucherWorth: val })} options={VOUCHER_WORTH_OPTIONS} />
+              {errors.voucherWorth && <ErrorMsg msg={errors.voucherWorth} />}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Registration Kit Qty — always full width single row */}
+      {data.registrationKitNeeded === "Yes" && (
+        <div>
+          <CustomInput labelBg="#1E1E35" label="Registration Kit Quantity *" type="number"
+            value={data.registrationKitQty || ""} onChange={updateInput("registrationKitQty")} />
+          <ErrorMsg msg={errors.registrationKitQty} />
+        </div>
+      )}
+
+      {/* Special Requirements */}
       <div className="relative w-full">
         <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
@@ -428,10 +598,28 @@ export default function Purchase({
 }) {
   const dayCount = eventDays.length;
 
+  // Sanitize loaded guestData: strip "Cash Prize" (replaced by "Glass Cup")
+  // so old saved data never shows a stale gift type in the Guest card.
+  const sanitizeDay = (day) => {
+    if (!day) return emptyPurchaseDay();
+    const guestGiftType = (day.guestData?.giftType || []).filter(
+      (g) => g !== "Cash Prize"
+    );
+    return {
+      ...day,
+      guestData: {
+        ...emptyPurchaseDay().guestData,
+        ...(day.guestData || {}),
+        giftType: guestGiftType,
+        cashPrizeAmount: "",
+      },
+    };
+  };
+
   const [dayData, setDayData] = useState(() => {
     const count = Math.max(dayCount, 0);
     return Array.from({ length: count }, (_, i) =>
-      initialPurchaseData?.[i] ?? emptyPurchaseDay()
+      sanitizeDay(initialPurchaseData?.[i])
     );
   });
 
@@ -441,28 +629,24 @@ export default function Purchase({
   const [isLoading, setIsLoading]             = useState(false);
   const [apiError, setApiError]               = useState("");
 
-  // Always-fresh refs
   const dayDataRef = useRef(dayData);
   useEffect(() => { dayDataRef.current = dayData; }, [dayData]);
 
   const onChangeRef = useRef(onPurchaseDataChange);
   useEffect(() => { onChangeRef.current = onPurchaseDataChange; }, [onPurchaseDataChange]);
 
-  // Notify parent on every change
   useEffect(() => {
     if (onChangeRef.current) onChangeRef.current(dayData);
   }, [dayData]);
 
-  // Resize dayData when eventDays count changes
   useEffect(() => {
     if (dayCount === 0) return;
     setDayData((prev) => {
       if (prev.length === dayCount) return prev;
-      return Array.from({ length: dayCount }, (_, i) => prev[i] ?? emptyPurchaseDay());
+      return Array.from({ length: dayCount }, (_, i) => sanitizeDay(prev[i]));
     });
   }, [dayCount]);
 
-  // Clamp currentDayIndex
   useEffect(() => {
     if (dayCount > 0 && currentDayIndex >= dayCount) {
       setCurrentDayIndex(dayCount - 1);
@@ -479,17 +663,18 @@ export default function Purchase({
   const showStudent     = current.selectedPersons === "Students" || current.selectedPersons === "Both";
   const showGuest       = current.selectedPersons === "Guest"    || current.selectedPersons === "Both";
 
+  // requirement qty: 1 selected = full width, both = 2 cols
+  const requirementBoth = showIdCard && showCertificate;
+
   const updateCurrent = (patch) => {
     setDayData((prev) => {
       const updated = [...prev];
       updated[currentDayIndex] = { ...(updated[currentDayIndex] ?? emptyPurchaseDay()), ...patch };
       return updated;
     });
-    // Clear errors for current day when user edits
     setErrors((prev) => ({ ...prev, [currentDayIndex]: {} }));
   };
 
-  // ── handleNext ────────────────────────────────────────────────────────────
   const handleNext = useCallback(async () => {
     const latestDayData  = dayDataRef.current;
     const currentDayData = latestDayData[currentDayIndex] ?? emptyPurchaseDay();
@@ -498,7 +683,6 @@ export default function Purchase({
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
 
-    // Mark current day completed immediately — before any async work
     setCompletedDays((prev) =>
       prev.includes(currentDayIndex) ? prev : [...prev, currentDayIndex]
     );
@@ -531,7 +715,6 @@ export default function Purchase({
     }
   }, [currentDayIndex, isLastDay, eventId, nextStep]);
 
-  // ── handleBack ────────────────────────────────────────────────────────────
   const handleBack = useCallback(() => {
     if (currentDayIndex > 0) {
       setErrors((prev) => ({ ...prev, [currentDayIndex]: {} }));
@@ -541,26 +724,18 @@ export default function Purchase({
     }
   }, [currentDayIndex, prevStep]);
 
-  // ── Stable nav registration ───────────────────────────────────────────────
-  // navRef is updated every render so proxies registered once on mount
-  // always call the latest handleNext / handleBack without re-registering.
   const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
-
-  // Update every render — no deps needed
   navRef.current = { next: handleNext, prev: handleBack, isLoading };
 
   useEffect(() => {
     if (!registerChildNavigation) return;
-
     const stableNext = (...args) => navRef.current.next(...args);
     const stablePrev = (...args) => navRef.current.prev(...args);
-
     registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
     return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerChildNavigation]); // run once on mount
+  }, [registerChildNavigation]);
 
-  // Keep parent's loading spinner in sync without re-registering handlers
   useEffect(() => {
     if (!registerChildNavigation) return;
     registerChildNavigation({
@@ -570,7 +745,6 @@ export default function Purchase({
     });
   }, [isLoading, registerChildNavigation]);
 
-  // Guard: no days
   if (dayCount === 0) {
     return (
       <div className="flex flex-col gap-6 pb-6">
@@ -607,6 +781,7 @@ export default function Purchase({
         </div>
       )}
 
+      {/* Requirement Needed — full width */}
       <div>
         <MultiSelect
           label="Requirement Needed *"
@@ -622,8 +797,9 @@ export default function Purchase({
         />
       </div>
 
+      {/* Requirement qty: 1 selected = full width, both = 2 cols */}
       {(showIdCard || showCertificate) && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={`grid gap-4 ${requirementBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {showIdCard && (
             <div>
               <CustomInput label="Id Card Hard Copy Quantity *" type="number"
@@ -658,8 +834,7 @@ export default function Purchase({
       </div>
 
       {showStudent && (
-        <PersonCard
-          title="Students"
+        <StudentCard
           data={current.studentData || {}}
           onChange={(updated) => updateCurrent({ studentData: updated })}
           errors={currentErrors.studentData || {}}
@@ -667,8 +842,7 @@ export default function Purchase({
       )}
 
       {showGuest && (
-        <PersonCard
-          title="Guest"
+        <GuestCard
           data={current.guestData || {}}
           onChange={(updated) => updateCurrent({ guestData: updated })}
           errors={currentErrors.guestData || {}}

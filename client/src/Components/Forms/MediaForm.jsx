@@ -257,7 +257,7 @@ function PosterSection({ data, onChange, errors = {} }) {
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <div className="flex items-center gap-3 pb-3 border-b border-[#3A3A5A]">
-        <div className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(167,139,250,0.5)]" />
+        {/* <div className="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(167,139,250,0.5)]" /> */}
         <h3 className="text-white text-base font-semibold">Poster</h3>
       </div>
 
@@ -297,19 +297,22 @@ function PosterSection({ data, onChange, errors = {} }) {
           selected={data.displayNeeded || []} onChange={update("displayNeeded")} error={errors.displayNeeded} />
       </div>
 
-      {showFlex && (
-        <div className="rounded-lg border border-purple-500/30 bg-purple-600/5 p-4">
-          <CustomInput labelBg="#1a1a2e" label="Size for Flex *"
-            value={data.sizeForFlex || ""} onChange={updateInput("sizeForFlex")} placeholder="e.g. 4ft x 6ft" />
-          <ErrorMsg msg={errors.sizeForFlex} />
-        </div>
-      )}
-
-      {showGlass && (
-        <div className="rounded-lg border border-purple-500/30 bg-purple-600/5 p-4">
-          <CustomInput labelBg="#1a1a2e" label="Size for Glass Sticker *"
-            value={data.sizeForGlass || ""} onChange={updateInput("sizeForGlass")} placeholder="e.g. A4" />
-          <ErrorMsg msg={errors.sizeForGlass} />
+      {(showFlex || showGlass) && (
+        <div className="flex gap-4">
+          {showFlex && (
+            <div className="flex-1">
+              <CustomInput labelBg="#1e1e35" label="Size for Flex *"
+                value={data.sizeForFlex || ""} onChange={updateInput("sizeForFlex")} placeholder="e.g. 4ft x 6ft" />
+              <ErrorMsg msg={errors.sizeForFlex} />
+            </div>
+          )}
+          {showGlass && (
+            <div className="flex-1">
+              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker *"
+                value={data.sizeForGlass || ""} onChange={updateInput("sizeForGlass")} placeholder="e.g. A4" />
+              <ErrorMsg msg={errors.sizeForGlass} />
+            </div>
+          )}
         </div>
       )}
 
@@ -346,7 +349,7 @@ function VideoSection({ data, onChange, errors = {} }) {
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <div className="flex items-center gap-3 pb-3 border-b border-[#3A3A5A]">
-        <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
+        {/* <div className="w-2.5 h-2.5 rounded-full bg-violet-400 shadow-[0_0_8px_rgba(139,92,246,0.5)]" /> */}
         <h3 className="text-white text-base font-semibold">Video</h3>
       </div>
 
@@ -645,7 +648,7 @@ export default function MediaForm({
       />
 
       <h2 className="text-white text-lg font-bold">
-        Media Requirement Details – Day {currentDayIndex + 1}
+        Media Requirement Details
         {dayCount > 1 && (
           <span className="ml-2 text-sm font-normal text-gray-400">
             ({currentDayIndex + 1} of {dayCount})
@@ -683,9 +686,9 @@ export default function MediaForm({
         </div>
       )}
 
-      <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6">
+      <div className="rounded-xl  ">
         <CustomSelect
-          labelBg="#1E1E35"
+          // labelBg="#1E1E35"
           label="Type of Design Required *"
           value={currentDay.designType || ""}
           onChange={handleDesignTypeChange}
