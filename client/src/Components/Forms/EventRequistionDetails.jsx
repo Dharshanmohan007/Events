@@ -3,7 +3,7 @@ import EventOrganizerDetails from './EventOrganizerDetails'
 import EventDetails from './EventDetails'
 import EventRequirements from './EventRequirements'
 
-// ─── Validators (kept here for local field-level error display) ───────────────
+// ─── Validators ───────────────────────────────────────────────────────────────
 
 function validateOrganizer(data = {}) {
   const e = {};
@@ -21,10 +21,18 @@ function validateOrganizer(data = {}) {
 
 function validateGuest(data = {}) {
   const e = {};
-  if (!data.name?.trim()) e.name = "Guest name is required";
+  if (!data.name?.trim()) {
+    e.name = "Guest name is required";
+  } else if (/^\d+$/.test(data.name.trim())) {
+    e.name = "Name cannot be a number";
+  }
   if (!data.designation?.trim()) e.designation = "Designation is required";
   if (!data.organization?.trim()) e.organization = "Organization is required";
-  if (!data.mobile?.trim()) e.mobile = "Mobile is required";
+  if (!data.mobile?.trim()) {
+    e.mobile = "Mobile number is required";
+  } else if (!/^[6-9]\d{9}$/.test(data.mobile.trim())) {
+    e.mobile = "Enter a valid 10-digit Indian mobile number";
+  }
   if (!data.gender) e.gender = "Gender is required";
   return e;
 }
@@ -81,8 +89,10 @@ function validateEventDetails(data = {}, days = []) {
   if (!data.society) e.society = "Society is required";
   if (data.society === "Other" && !data.societyOther?.trim())
     e.societyOther = "Please specify the society";
-  if (!data.logos) e.logos = "Logos selection is required";
-  if (data.logos === "Other" && !data.logosOther?.trim())
+  // logos is now an array
+  const logosArr = Array.isArray(data.logos) ? data.logos : data.logos ? [data.logos] : [];
+  if (logosArr.length === 0) e.logos = "Logos selection is required";
+  if (logosArr.includes("Other") && !data.logosOther?.trim())
     e.logosOther = "Please specify the logos";
   if (!days.length) e.numDays = "Enter the number of days";
   if (!data.audience) e.audience = "Target audience is required";
@@ -104,7 +114,6 @@ function validateRequirements(requirements = []) {
 
 export default function EventRequisitionDetails({
   nextStep,
-  // onSave is called by Form.jsx's sectionProps.event.onSave — it handles the API call
   onSave,
   setSelectedRequirements,
   setEventDays,
@@ -115,7 +124,6 @@ export default function EventRequisitionDetails({
   errors: parentErrors = {},
   isLoading: parentIsLoading = false,
 }) {
-  // ── Local state (mirrors what Form.jsx stores in formData.event) ─────────
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
@@ -130,12 +138,10 @@ export default function EventRequisitionDetails({
 
   const [requirements, setRequirements] = useState(initialEventRequisition.requirements || []);
 
-  // ── Local validation errors ───────────────────────────────────────────────
   const [orgErrors, setOrgErrors] = useState({});
   const [eventErrors, setEventErrors] = useState({});
   const [reqErrors, setReqErrors] = useState({});
 
-  // ── Sync local state → parent (Form.jsx formData.event) ──────────────────
   const lastSynced = useRef(null);
 
   useEffect(() => {
@@ -145,7 +151,6 @@ export default function EventRequisitionDetails({
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
     };
-    // Serialize without the File object for comparison
     const comparable = JSON.stringify({
       doc, finance, budget, department, reason,
       numOrganizers, organizers, eventData,
@@ -158,26 +163,20 @@ export default function EventRequisitionDetails({
     }
   }, [doc, finance, budget, department, file, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
 
-  // ── Keep parent eventDays in sync ─────────────────────────────────────────
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
     if (setEventDays) setEventDays(days);
   };
 
-  // ── Requirements change handler ────────────────────────────────────────────
   const handleRequirementsChange = (selectedReqs) => {
     setRequirements(selectedReqs);
     if (setSelectedRequirements) setSelectedRequirements(selectedReqs);
     setReqErrors({});
   };
 
-  // ── Called when user clicks "Save & Next" in EventRequirements ────────────
-  //    This is the ONLY place we trigger validation + hand off to Form.jsx.
-  //    Form.jsx's onSave handles the actual API call (POST /api/events).
   const handleSaveAndNext = async (selectedReqs) => {
     const currentRequirements = selectedReqs ?? requirements;
 
-    // Validate all three sections locally before handing off
     const oErr = validateOrganizerSection({
       doc, file, reason, budget, finance, department, numOrganizers, organizers,
     });
@@ -197,14 +196,11 @@ export default function EventRequisitionDetails({
       return;
     }
 
-    // Merge everything into a single object and hand it to Form.jsx's onSave.
-    // Form.jsx will build the FormData payload and POST to /api/events.
     if (onSave) {
       await onSave(currentRequirements);
     }
   };
 
-  // Merge parent errors (from Form.jsx re-validation) with local errors
   const mergedOrgErrors = { ...orgErrors, ...parentErrors };
   const mergedEventErrors = { ...eventErrors, ...parentErrors };
   const mergedReqErrors = { ...reqErrors, ...parentErrors };
@@ -239,7 +235,6 @@ export default function EventRequisitionDetails({
       <hr className="my-1 border-[#333351]" />
 
       <EventRequirements
-        // nextStep here is handleSaveAndNext — called when user clicks Save & Next
         nextStep={handleSaveAndNext}
         setSelectedRequirements={setRequirements}
         onRequirementsChange={handleRequirementsChange}

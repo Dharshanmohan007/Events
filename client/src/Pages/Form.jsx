@@ -116,8 +116,9 @@ const validateEventRequisition = (data) => {
   if (data.eventData?.eventType === "Other" && !data.eventData?.eventTypeOther?.trim()) errors.eventTypeOther = "Please specify the event type";
   if (!data.eventData?.society) errors.society = "Society is required";
   if (data.eventData?.society === "Other" && !data.eventData?.societyOther?.trim()) errors.societyOther = "Please specify the society";
-  if (!data.eventData?.logos) errors.logos = "Logos selection is required";
-  if (data.eventData?.logos === "Other" && !data.eventData?.logosOther?.trim()) errors.logosOther = "Please specify the logos";
+  const logosArr = Array.isArray(data.eventData?.logos) ? data.eventData.logos : data.eventData?.logos ? [data.eventData.logos] : [];
+  if (logosArr.length === 0) errors.logos = "Logos selection is required";
+  if (logosArr.includes("Other") && !data.eventData?.logosOther?.trim()) errors.logosOther = "Please specify the logos";
   if (!data.eventData?.audience) errors.audience = "Target audience is required";
   if (!data.eventDays || !data.eventDays.length) errors.eventDays = "At least one event day is required";
   const dayErrors = (data.eventDays || []).map((day, idx) => {
@@ -168,7 +169,11 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       eventTypeOther: eventRequisition.eventData.eventTypeOther || "",
       professionalSociety: eventRequisition.eventData.society ? [eventRequisition.eventData.society] : [],
       professionalSocietyOther: eventRequisition.eventData.societyOther || "",
-      logosInPoster: eventRequisition.eventData.logos ? [eventRequisition.eventData.logos] : [],
+      logosInPoster: Array.isArray(eventRequisition.eventData.logos)
+        ? eventRequisition.eventData.logos
+        : eventRequisition.eventData.logos
+        ? [eventRequisition.eventData.logos]
+        : [],
       logosOther: eventRequisition.eventData.logosOther || "",
       targetAudience: eventRequisition.eventData.audience || "",
       numberOfDays: eventRequisition.eventDays.length,

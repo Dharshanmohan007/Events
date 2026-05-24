@@ -6,7 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import DatePicker from "react-datepicker";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 
@@ -130,9 +130,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
                     : "text-gray-300 hover:bg-purple-500/20 hover:text-white"
                 }`}
               >
-                {/* Option label on the left */}
                 <span>{opt}</span>
-                {/* Tick mark on the right — visible only when selected */}
                 <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center ml-3">
                   {isSelected && (
                     <svg
@@ -197,6 +195,48 @@ const MealSection = memo(function MealSection({ title, data, onChange, labelBg =
     </div>
   );
 });
+
+// ─── Delete Confirmation Popup ────────────────────────────────────────────────
+function DeleteConfirmPopup({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Modal */}
+      <div className="relative bg-[#1e1e38] border border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+        {/* Icon */}
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15 border border-red-500/30 mx-auto mb-4">
+          <Trash2 size={22} className="text-red-400" />
+        </div>
+        <h3 className="text-white font-semibold text-center text-lg mb-2">
+          Delete Entry
+        </h3>
+        <p className="text-gray-400 text-sm text-center mb-6">
+          Are you sure you want to delete this entry? This action cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── Empty form factory ───────────────────────────────────────────────────────
 function createForm() {
@@ -292,6 +332,13 @@ export default function FoodAndRefreshments({
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
+  // ── Confirm popup state ──────────────────────────────────────────────────────
+  // { type: "form", formId } | { type: "staff", formId, staffIndex } | null
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // ── DatePicker refs (one per form, keyed by form.id) ────────────────────────
+  const datePickerRefs = useRef({});
+
   const formsRef = useRef(forms);
   useEffect(() => { formsRef.current = forms; }, [forms]);
 
@@ -375,7 +422,42 @@ export default function FoodAndRefreshments({
   };
 
   const handleAdd = () => setForms((prev) => [...prev, createForm()]);
-  const handleDelete = (id) => setForms((prev) => prev.filter((form) => form.id !== id));
+
+  // ── Delete form card (with popup) ───────────────────────────────────────────
+  const requestDeleteForm = (id) => {
+    setDeleteTarget({ type: "form", formId: id });
+  };
+
+  // ── Delete individual staff container ────────────────────────────────────────
+  const requestDeleteStaff = (formId, staffIndex) => {
+    setDeleteTarget({ type: "staff", formId, staffIndex });
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "form") {
+      setForms((prev) => prev.filter((form) => form.id !== deleteTarget.formId));
+    } else if (deleteTarget.type === "staff") {
+      const { formId, staffIndex } = deleteTarget;
+      setForms((prev) =>
+        prev.map((form) => {
+          if (form.id !== formId) return form;
+          const updatedStaff = form.staffList.filter((_, i) => i !== staffIndex);
+          const newCount = updatedStaff.length;
+          return {
+            ...form,
+            staffList: updatedStaff,
+            internalCount: String(newCount),
+          };
+        })
+      );
+    }
+
+    setDeleteTarget(null);
+  };
+
+  const handleCancelDelete = () => setDeleteTarget(null);
 
   const getError = (id, field) => {
     if (!Array.isArray(errors)) return "";
@@ -496,6 +578,14 @@ export default function FoodAndRefreshments({
 
   return (
     <div className="w-full">
+      {/* Delete confirmation popup */}
+      {deleteTarget && (
+        <DeleteConfirmPopup
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
+
       {apiError && (
         <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 mb-4">
           <p className="text-red-400 text-sm">{apiError}</p>
@@ -524,7 +614,7 @@ export default function FoodAndRefreshments({
             <div className="flex justify-end pt-4 pr-4">
               <button
                 type="button"
-                onClick={() => handleDelete(form.id)}
+                onClick={() => requestDeleteForm(form.id)}
                 className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-full transition-all"
               >
                 <Trash2 size={18} />
@@ -540,7 +630,17 @@ export default function FoodAndRefreshments({
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
                   Select Date *
                 </label>
+                {/* Calendar icon — clicking it opens the picker */}
+                <button
+                  type="button"
+                  onClick={() => datePickerRefs.current[form.id]?.setOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  <Calendar size={18} />
+                </button>
                 <DatePicker
+                  ref={(el) => { datePickerRefs.current[form.id] = el; }}
                   selected={form.date}
                   onChange={(date) => handleChange(form.id, "date", date)}
                   dateFormat="dd/MM/yyyy"
@@ -548,7 +648,7 @@ export default function FoodAndRefreshments({
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
                   popperProps={{ strategy: "fixed" }}
-                  className="w-full h-[52px] px-4 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
                   calendarClassName="food-dark-cal"
                 />
@@ -612,9 +712,20 @@ export default function FoodAndRefreshments({
                     key={staffIndex}
                     className="bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
                   >
-                    <h3 className="text-purple-400 font-semibold text-sm mb-4">
-                      Staff {staffIndex + 1}
-                    </h3>
+                    {/* Staff header row with title + delete button */}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-purple-400 font-semibold text-sm">
+                        Staff {staffIndex + 1}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => requestDeleteStaff(form.id, staffIndex)}
+                        className="w-8 h-8 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-full transition-all"
+                        title="Delete staff"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <CustomInput

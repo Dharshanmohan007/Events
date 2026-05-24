@@ -33,8 +33,6 @@ function getMaxForKey(venueName, key, venueInfoMap) {
 }
 
 function venueInfoLoaded(venueName, venueInfoMap) {
-  // Returns true if we have a definitive answer about this venue in the map.
-  // If venueInfoMap is empty (still fetching), we consider it unloaded.
   return Object.keys(venueInfoMap || {}).length > 0;
 }
 
@@ -45,12 +43,10 @@ function validateDay(dayVenues, dayData, venueInfoMap) {
     const s = dayData?.[venueName] || defaultVenueSection();
     const ve = {};
 
-    // If the venue map hasn't loaded yet, skip validation for this venue entirely.
     if (!venueInfoLoaded(venueName, venueInfoMap)) return;
 
     const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
 
-    // Venues with no equipment are always valid — nothing to fill in.
     if (!hasEquipment) return;
 
     if (!s.audioRequired || s.audioRequired.length === 0)
@@ -85,13 +81,11 @@ function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
   eventDays.forEach((_day, dayIndex) => {
     const venueNames = venueData[dayIndex]?.selectedVenues || [];
     venueNames.forEach((venueName) => {
-      // Skip venues that have no equipment at all — backend rejects empty audioItems
       const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
       if (!hasEquipment) return;
 
       const s = audioData[dayIndex]?.[venueName] || defaultVenueSection();
 
-      // Skip venues where the user made no selections (nothing to save)
       if (!s.audioRequired || s.audioRequired.length === 0) return;
 
       const audioItems = (s.audioRequired || []).map((key) => ({
@@ -250,6 +244,44 @@ function EquipmentQuantityInputs({
     onChange({ ...quantities, [key]: rawValue });
   };
 
+  // Allowed keys: digits, backspace, delete, tab, arrows, home, end
+  const handleKeyDown = (e, key) => {
+    const allowedKeys = [
+      "Backspace", "Delete", "Tab", "Home", "End",
+      "ArrowLeft", "ArrowRight",
+    ];
+    // Block anything that isn't a digit or an allowed control key
+    if (!allowedKeys.includes(e.key) && !/^\d$/.test(e.key)) {
+      // Allow ArrowUp / ArrowDown but override their behaviour
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const current = parseInt(quantities?.[key]) || 0;
+        const max = getMaxForKey(venueName, key, venueInfoMap);
+        const next = isFinite(max) ? Math.min(max, current + 1) : current + 1;
+        handleChange(key, String(next));
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const current = parseInt(quantities?.[key]) || 0;
+        handleChange(key, String(Math.max(0, current - 1)));
+      } else {
+        e.preventDefault(); // block minus, e, +, etc.
+      }
+    }
+  };
+
+  const handleInputChange = (key, e) => {
+    const raw = e.target.value;
+    // Allow empty string so user can clear the field
+    if (raw === "") {
+      handleChange(key, "");
+      return;
+    }
+    const parsed = parseInt(raw);
+    if (isNaN(parsed)) return;
+    // Never allow negative
+    handleChange(key, String(Math.max(0, parsed)));
+  };
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {selectedKeys.map((key, idx) => {
@@ -270,10 +302,11 @@ function EquipmentQuantityInputs({
                 labelBg={labelBg}
                 label={`${label} Quantity *`}
                 type="number"
-                min={1}
+                min={0}
                 max={isFinite(max) ? max : undefined}
                 value={quantities?.[key] || ""}
-                onChange={(e) => handleChange(key, e.target.value)}
+                onChange={(e) => handleInputChange(key, e)}
+                onKeyDown={(e) => handleKeyDown(e, key)}
                 error={hasError}
               />
             </div>
@@ -537,7 +570,6 @@ export default function AudioForm({
     const latestAudioData = audioDataRef.current;
     const venues = getVenuesForDay(currentDayIndex);
 
-    // If venue info is still loading, don't block — treat as no-equipment venues
     if (venueInfoLoading) {
       setErrors({});
     } else {

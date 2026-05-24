@@ -139,6 +139,52 @@ function buildPayload(accommodations, allGuests) {
   };
 }
 
+// ─── Delete Confirmation Popup ─────────────────────────────────────────────────
+function DeleteConfirmModal({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Modal */}
+      <div className="relative bg-[#1f1f38] border border-[#3a3a5a] rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+        <div className="flex flex-col items-center text-center gap-4">
+          {/* Icon */}
+          <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+            <Trash2 size={22} className="text-red-400" />
+          </div>
+          <div>
+            <h3 className="text-white font-semibold text-base mb-1">
+              Delete Accommodation
+            </h3>
+            <p className="text-gray-400 text-sm">
+              Are you sure you want to delete this accommodation block? This action cannot be undone.
+            </p>
+          </div>
+          <div className="flex gap-3 w-full mt-1">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 px-4 py-2.5 rounded-lg border border-[#3a3a5a] text-gray-300 text-sm font-medium hover:bg-[#2a2a4a] hover:text-white transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 hover:bg-red-600 active:bg-red-700 text-white text-sm font-medium transition"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Custom Checkbox ──────────────────────────────────────────────────────────
 function PurpleCheckbox({ checked, onChange }) {
   return (
@@ -193,7 +239,7 @@ function PhoneIconFilled() {
   );
 }
 
-// ─── Room Type MultiSelect — NO tags above, search, tick on right, violet bg selected ─
+// ─── Room Type MultiSelect — search, tick on right, violet bg selected, slash-joined display ─
 function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -219,25 +265,30 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
     else onChange([...value, opt]);
   };
 
+  // ── Display text: join selected options with " / " ──
+  const displayText =
+    value.length === 0
+      ? "Select..."
+      : value.join(" / ");
+
   return (
     <div className="relative w-full" ref={ref}>
-      {/* Trigger — NO tags shown above, removed entirely */}
+      {/* Trigger */}
       <div
         className={`relative w-full p-3 rounded-lg bg-transparent border ${
           error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
         } text-white cursor-pointer flex items-center justify-between transition`}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}>
-          {value.length === 0
-            ? "Select..."
-            : value.length === 1
-            ? value[0]
-            : `${value.length} rooms selected`}
+        <span
+          className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}
+          title={value.length > 0 ? value.join(" / ") : undefined}
+        >
+          {displayText}
         </span>
         <ChevronDown
           size={16}
-          className={`text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`text-gray-400 flex-shrink-0 ml-2 transition-transform ${open ? "rotate-180" : ""}`}
         />
       </div>
       <label
@@ -377,6 +428,8 @@ function AccommodationBlock({
   roomOptions,
   canRemove,
 }) {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const selectedCount = acc.selectedGuestIds.length;
   const totalGuests = allGuests.length;
 
@@ -407,226 +460,262 @@ function AccommodationBlock({
     });
   };
 
+  // ── Single / Double room handlers — clamp min to 0 ──
+  const handleSingleRoomsChange = (e) => {
+    const raw = e.target.value;
+    // Allow empty string while typing
+    if (raw === "") {
+      onChange({ ...acc, singleRooms: "" });
+      return;
+    }
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed)) return;
+    onChange({ ...acc, singleRooms: String(Math.max(0, parsed)) });
+  };
+
+  const handleDoubleRoomsChange = (e) => {
+    const raw = e.target.value;
+    if (raw === "") {
+      onChange({ ...acc, doubleRooms: "" });
+      return;
+    }
+    const parsed = parseInt(raw, 10);
+    if (isNaN(parsed)) return;
+    onChange({ ...acc, doubleRooms: String(Math.max(0, parsed)) });
+  };
+
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
 
   return (
-    <div className="bg-[#1f1f38] border border-[#3a3a5a] p-5 rounded-xl mb-4 relative">
-      {/* Block header */}
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-purple-400 text-sm font-semibold tracking-wide">
-          Accommodation {index + 1}
-        </h3>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="text-red-400 hover:text-red-300 transition flex items-center gap-1 text-xs"
-          >
-            <Trash2 size={14} /> Remove
-          </button>
-        )}
-      </div>
+    <>
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <DeleteConfirmModal
+          onConfirm={() => {
+            setShowDeleteModal(false);
+            onRemove();
+          }}
+          onCancel={() => setShowDeleteModal(false)}
+        />
+      )}
 
-      {/* Check In / Out — using CustomDateTimePicker */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="w-full">
-          <CustomDateTimePicker
-            label="Check In Date & Time *"
-            value={acc.checkIn}
-            onChange={(date) => onChange({ ...acc, checkIn: date })}
-            placeholder="__/__/____  --:-- --"
-          />
-          {errors.checkIn && (
-            <p className="text-red-400 text-xs mt-1">{errors.checkIn}</p>
+      <div className="bg-[#1f1f38] border border-[#3a3a5a] p-5 rounded-xl mb-4 relative">
+        {/* Block header */}
+        <div className="flex items-center justify-end mb-5">
+          {canRemove && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteModal(true)}
+              className="flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 p-3 rounded-full transition"
+            >
+              <Trash2 size={20} />
+            </button>
           )}
         </div>
-        <div className="w-full">
-          <CustomDateTimePicker
-            label="Check Out Date & Time *"
-            value={acc.checkOut}
-            onChange={(date) => onChange({ ...acc, checkOut: date })}
-            placeholder="__/__/____  --:-- --"
-          />
-          {errors.checkOut && (
-            <p className="text-red-400 text-xs mt-1">{errors.checkOut}</p>
-          )}
-        </div>
-      </div>
 
-      {/* Guest Selection */}
-      <div className="flex justify-between mb-2">
-        <p className="text-purple-400 text-sm">
-          Select the Guest who needed Accommodation
-        </p>
-        <p className="text-xs text-gray-400">
-          Selected Guest : {selectedCount}{" "}
-          <span className="text-purple-400">/ {totalGuests}</span>
-        </p>
-      </div>
-      <div className="mb-6">
-        {totalGuests === 0 ? (
-          <p className="text-gray-500 text-xs py-2 px-1">
-            No guests found. Please add guests in the Event Requisition step.
+        {/* Check In / Out — using CustomDateTimePicker */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="w-full">
+            <CustomDateTimePicker
+              label="Check In Date & Time *"
+              value={acc.checkIn}
+              onChange={(date) => onChange({ ...acc, checkIn: date })}
+              placeholder="__/__/____  --:-- --"
+            />
+            {errors.checkIn && (
+              <p className="text-red-400 text-xs mt-1">{errors.checkIn}</p>
+            )}
+          </div>
+          <div className="w-full">
+            <CustomDateTimePicker
+              label="Check Out Date & Time *"
+              value={acc.checkOut}
+              onChange={(date) => onChange({ ...acc, checkOut: date })}
+              placeholder="__/__/____  --:-- --"
+            />
+            {errors.checkOut && (
+              <p className="text-red-400 text-xs mt-1">{errors.checkOut}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Guest Selection */}
+        <div className="flex justify-between mb-2">
+          <p className="text-purple-400 text-sm">
+            Select the Guest who needed Accommodation
           </p>
-        ) : (
-          allGuests.map((g) => {
-            const checked = acc.selectedGuestIds.includes(g.guestId);
-            return (
-              <div
-                key={g.guestId}
-                className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
-                onClick={() => toggleGuest(g.guestId)}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <PurpleCheckbox
-                    checked={checked}
-                    onChange={() => toggleGuest(g.guestId)}
-                  />
-                  <span className="text-sm text-white truncate">{g.name}</span>
+          <p className="text-xs text-gray-400">
+            Selected Guest : {selectedCount}{" "}
+            <span className="text-purple-400">/ {totalGuests}</span>
+          </p>
+        </div>
+        <div className="mb-6">
+          {totalGuests === 0 ? (
+            <p className="text-gray-500 text-xs py-2 px-1">
+              No guests found. Please add guests in the Event Requisition step.
+            </p>
+          ) : (
+            allGuests.map((g) => {
+              const checked = acc.selectedGuestIds.includes(g.guestId);
+              return (
+                <div
+                  key={g.guestId}
+                  className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
+                  onClick={() => toggleGuest(g.guestId)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <PurpleCheckbox
+                      checked={checked}
+                      onChange={() => toggleGuest(g.guestId)}
+                    />
+                    <span className="text-sm text-white truncate">{g.name}</span>
+                  </div>
+                  <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
+                    <span className="flex items-center gap-1.5">
+                      <GenderIcon gender={g.gender} />
+                      <span className="text-gray-300">{g.gender || "—"}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <PhoneIconFilled />
+                      <span className="text-gray-300">{g.mobile || "—"}</span>
+                    </span>
+                  </div>
                 </div>
-                <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
-                  <span className="flex items-center gap-1.5">
-                    <GenderIcon gender={g.gender} />
-                    <span className="text-gray-300">{g.gender || "—"}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <PhoneIconFilled />
-                    <span className="text-gray-300">{g.mobile || "—"}</span>
-                  </span>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+              );
+            })
+          )}
+        </div>
 
-      {/* Single & Double counts */}
-      <div className="grid md:grid-cols-2 gap-4 mb-4">
-        <CustomInput
-          label="No. of Single Rooms"
-          value={acc.singleRooms}
-          onChange={(e) => onChange({ ...acc, singleRooms: e.target.value })}
-          type="number"
-          labelBg="#1f1f38"
-        />
-        <CustomInput
-          label="No. of Double Rooms"
-          value={acc.doubleRooms}
-          onChange={(e) => onChange({ ...acc, doubleRooms: e.target.value })}
-          type="number"
-          labelBg="#1f1f38"
-        />
-      </div>
-
-      {/* Room type multi-select — NO tags above, search, tick on right, violet bg selected */}
-      <div className="mb-4">
-        <RoomMultiSelect
-          label="Type of Room Wanted *"
-          options={roomOptions}
-          value={acc.roomTypes}
-          onChange={handleRoomTypeChange}
-          error={errors.roomTypes}
-          labelBg="#1f1f38"
-        />
-      </div>
-
-      {/* Dynamic room count inputs per selected room type */}
-      {acc.roomTypes.length > 0 && (
+        {/* Single & Double counts — clamped to min 0 */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          {acc.roomTypes.map((roomType, i) => {
-            const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;
-            return (
-              <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
+          <CustomInput
+            label="No. of Single Rooms"
+            value={acc.singleRooms}
+            onChange={handleSingleRoomsChange}
+            type="number"
+            min={0}
+            labelBg="#1f1f38"
+          />
+          <CustomInput
+            label="No. of Double Rooms"
+            value={acc.doubleRooms}
+            onChange={handleDoubleRoomsChange}
+            type="number"
+            min={0}
+            labelBg="#1f1f38"
+          />
+        </div>
+
+        {/* Room type multi-select — slash-joined display, search, tick on right */}
+        <div className="mb-4">
+          <RoomMultiSelect
+            label="Type of Room Wanted *"
+            options={roomOptions}
+            value={acc.roomTypes}
+            onChange={handleRoomTypeChange}
+            error={errors.roomTypes}
+            labelBg="#1f1f38"
+          />
+        </div>
+
+        {/* Dynamic room count inputs per selected room type */}
+        {acc.roomTypes.length > 0 && (
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            {acc.roomTypes.map((roomType, i) => {
+              const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;
+              return (
+                <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
+                  <CustomInput
+                    label={`No. of ${roomType} Rooms *`}
+                    value={acc.roomCounts?.[roomType] || ""}
+                    onChange={(e) => handleRoomCount(roomType, e.target.value)}
+                    type="number"
+                    labelBg="#1f1f38"
+                  />
+                  {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
+                    <p className="text-yellow-400 text-xs mt-1">
+                      Only 1 room available for {roomType}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Dine-in */}
+        <div className="mb-4">
+          <CustomSelect
+            label="Do You want Dine-in Request for this Guest?"
+            value={acc.dine}
+            onChange={(val) =>
+              onChange({
+                ...acc,
+                dine: val,
+                dineTypes: [],
+                hostelGuests: "",
+                amenityGuests: "",
+              })
+            }
+            options={["Yes", "No"]}
+            labelBg="#1f1f38"
+          />
+        </div>
+
+        {acc.dine === "Yes" && (
+          <>
+            <div className="mb-4">
+              <MultiSelect
+                label="Select the Dine-in Wanted *"
+                options={DINE_OPTIONS}
+                value={acc.dineTypes}
+                onChange={(types) => onChange({ ...acc, dineTypes: types })}
+                labelBg="#1f1f38"
+              />
+            </div>
+
+            <div
+              className={`grid gap-4 mb-4 ${
+                showHostel && showAmenity ? "md:grid-cols-2" : "grid-cols-1"
+              }`}
+            >
+              {showHostel && (
                 <CustomInput
-                  label={`No. of ${roomType} Rooms *`}
-                  value={acc.roomCounts?.[roomType] || ""}
-                  onChange={(e) => handleRoomCount(roomType, e.target.value)}
+                  label="No. of Guests in Hostel Dine-in *"
+                  value={acc.hostelGuests}
+                  onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
                   type="number"
                   labelBg="#1f1f38"
                 />
-                {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
-                  <p className="text-yellow-400 text-xs mt-1">
-                    Only 1 room available for {roomType}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+              )}
+              {showAmenity && (
+                <CustomInput
+                  label="No. of Guests in Amenity Dine-in *"
+                  value={acc.amenityGuests}
+                  onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
+                  type="number"
+                  labelBg="#1f1f38"
+                />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Special Requirements — always shown */}
+        <div className="relative mt-2">
+          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38] z-10 pointer-events-none">
+            Special Requirements, If any
+          </span>
+          <textarea
+            value={acc.special}
+            onChange={(e) => onChange({ ...acc, special: e.target.value })}
+            rows={4}
+            className="w-full bg-transparent border border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
+          />
         </div>
-      )}
-
-      {/* Dine-in */}
-      <div className="mb-4">
-        <CustomSelect
-          label="Do You want Dine-in Request for this Guest?"
-          value={acc.dine}
-          onChange={(val) =>
-            onChange({
-              ...acc,
-              dine: val,
-              dineTypes: [],
-              hostelGuests: "",
-              amenityGuests: "",
-            })
-          }
-          options={["Yes", "No"]}
-          labelBg="#1f1f38"
-        />
       </div>
-
-      {acc.dine === "Yes" && (
-        <>
-          <div className="mb-4">
-            <MultiSelect
-              label="Select the Dine-in Wanted *"
-              options={DINE_OPTIONS}
-              value={acc.dineTypes}
-              onChange={(types) => onChange({ ...acc, dineTypes: types })}
-              labelBg="#1f1f38"
-            />
-          </div>
-
-          <div
-            className={`grid gap-4 mb-4 ${
-              showHostel && showAmenity ? "md:grid-cols-2" : "grid-cols-1"
-            }`}
-          >
-            {showHostel && (
-              <CustomInput
-                label="No. of Guests in Hostel Dine-in *"
-                value={acc.hostelGuests}
-                onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
-                type="number"
-                labelBg="#1f1f38"
-              />
-            )}
-            {showAmenity && (
-              <CustomInput
-                label="No. of Guests in Amenity Dine-in *"
-                value={acc.amenityGuests}
-                onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
-                type="number"
-                labelBg="#1f1f38"
-              />
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Special Requirements — always shown */}
-      <div className="relative mt-2">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38] z-10 pointer-events-none">
-          Special Requirements, If any
-        </span>
-        <textarea
-          value={acc.special}
-          onChange={(e) => onChange({ ...acc, special: e.target.value })}
-          rows={4}
-          className="w-full bg-transparent border border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
-        />
-      </div>
-    </div>
+    </>
   );
 }
 

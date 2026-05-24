@@ -28,23 +28,16 @@ export default function FormSubmitted({ onSubmitAnother }) {
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
                    w-[600px] h-[600px] rounded-full pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
-        }}
+        // style={{
+        //   background:
+        //     "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
+        // }}
       />
 
       {/* Card */}
       <div
         className={`
-          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px]
-          border border-purple-600/20 bg-[rgba(30,30,53,0.6)] backdrop-blur-xl
-          w-full max-w-[480px]
-          transition-[opacity,transform] duration-500 ease-out
-          ${visible
-            ? "opacity-100 translate-y-0 scale-100"
-            : "opacity-0 translate-y-6 scale-[0.97]"}
-        `}
+          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px]w-full max-w-[480px]`}
       >
 
         {/*
@@ -56,10 +49,7 @@ export default function FormSubmitted({ onSubmitAnother }) {
         <div
           className={`
             flex items-center justify-center
-            w-20 h-20 rounded-full bg-violet-600
-            shadow-[0_0_40px_rgba(124,58,237,0.45)]
-            ${visible ? "opacity-100 scale-100" : "opacity-0 scale-[0.6]"}
-          `}
+            w-20 h-20 rounded-full bg-violet-600`}
           style={{
             transition:
               "opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s",
@@ -109,14 +99,9 @@ export default function FormSubmitted({ onSubmitAnother }) {
             mt-2 px-8 py-3 rounded-[10px] border-0 cursor-pointer
             bg-violet-600 hover:bg-violet-700
             text-white text-[15px] font-semibold tracking-wide
-            shadow-[0_4px_20px_rgba(124,58,237,0.35)]
-            hover:shadow-[0_6px_28px_rgba(124,58,237,0.5)]
-            transition-[opacity,transform,background-color,box-shadow]
-            duration-200 ease-out delay-[450ms]
-            ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
           `}
         >
-          Submit Another Form
+          Go to Dashboard
         </button>
 
       </div>

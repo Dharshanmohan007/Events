@@ -8,8 +8,23 @@ export default function CustomInput({
   className = "",
   labelBg = "#16162A",
   borderColor = "#3A3A5A",
+  placeholder = "",
+  disabled = false,
 }) {
   const isDarkBg = type === "date" || type === "time";
+
+  // Generate a sensible default placeholder from the label if none provided
+  const derivedPlaceholder =
+    placeholder ||
+    (type === "date"
+      ? "DD/MM/YYYY"
+      : type === "time"
+      ? "HH:MM"
+      : type === "number"
+      ? "Enter number"
+      : label
+      ? `Enter ${label.replace(/\s*\*$/, "").toLowerCase()}`
+      : "");
 
   return (
     <div className="relative w-full">
@@ -24,15 +39,18 @@ export default function CustomInput({
         type={type}
         {...(value !== undefined ? { value } : {})}
         {...(onChange ? { onChange } : {})}
-        className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border ${
+        placeholder={derivedPlaceholder}
+        disabled={disabled}
+        className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border placeholder-gray-500 ${
           isDarkBg ? "text-gray-400 [color-scheme:dark]" : ""
-        } ${className}`}
+        } ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${className}`}
         style={{
           borderColor: borderColor,
-          // focus border handled below via onFocus/onBlur if needed
         }}
-        onFocus={e => (e.target.style.borderColor = "#a855f7")}
-        onBlur={e => (e.target.style.borderColor = borderColor)}
+        onFocus={(e) => {
+          if (!disabled) e.target.style.borderColor = "#a855f7";
+        }}
+        onBlur={(e) => (e.target.style.borderColor = borderColor)}
       />
     </div>
   );

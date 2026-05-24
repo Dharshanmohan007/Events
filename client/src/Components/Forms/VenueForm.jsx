@@ -514,6 +514,25 @@ function VenueDetailCard({ venueName, index, data, onChange, errors = {}, onInfo
 
   const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
+  // ── Capacity validation: look up this venue's max capacity from VENUES list ──
+  const venueObj      = VENUES.find((v) => v.venue === venueName);
+  const venueCapacity = venueObj?.capacity || 0; // 0 means open/no fixed limit
+
+  const enteredParticipants  = parseInt(data.participants) || 0;
+  const enteredSeating       = parseInt(data.seatingCapacity) || 0;
+
+  // Only show capacity errors when the venue has a defined capacity (> 0)
+  const participantCapError =
+    venueCapacity > 0 && enteredParticipants > venueCapacity
+      ? `${venueName} has only ${venueCapacity} seat capacity. Max ${venueCapacity} participants allowed.`
+      : "";
+
+  const seatingCapError =
+    venueCapacity > 0 && enteredSeating > venueCapacity
+      ? `${venueName} has only ${venueCapacity} seat capacity. Seating capacity required cannot exceed ${venueCapacity}.`
+      : "";
+  // ──────────────────────────────────────────────────────────────────────────────
+
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <div className="flex items-center justify-between">
@@ -536,7 +555,12 @@ function VenueDetailCard({ venueName, index, data, onChange, errors = {}, onInfo
             value={data.participants || ""}
             onChange={update("participants")}
           />
-          <ErrorMsg msg={errors.participants} />
+          {/* Show capacity error with priority; fallback to form validation error */}
+          {participantCapError ? (
+            <p className="text-red-400 text-xs mt-1">{participantCapError}</p>
+          ) : (
+            <ErrorMsg msg={errors.participants} />
+          )}
         </div>
         <div>
           <CustomInput
@@ -546,7 +570,12 @@ function VenueDetailCard({ venueName, index, data, onChange, errors = {}, onInfo
             value={data.seatingCapacity || ""}
             onChange={update("seatingCapacity")}
           />
-          <ErrorMsg msg={errors.seatingCapacity} />
+          {/* Show capacity error with priority; fallback to form validation error */}
+          {seatingCapError ? (
+            <p className="text-red-400 text-xs mt-1">{seatingCapError}</p>
+          ) : (
+            <ErrorMsg msg={errors.seatingCapacity} />
+          )}
         </div>
       </div>
 

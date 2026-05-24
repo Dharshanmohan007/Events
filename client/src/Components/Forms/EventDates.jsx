@@ -1,7 +1,12 @@
-import React, { useState } from 'react'
+import React from 'react'
 import CustomInput from "../CustomInput";
 import CustomSelect from '../CustomSelect';
 import TimePickerInput from "../TimePickerInput";
+
+// Indian mobile regex
+const MOBILE_REGEX = /^[6-9]\d{9}$/;
+// Disallow purely numeric names
+const NAME_REGEX = /^(?!\s*\d+\s*$).+/;
 
 const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange }) => (
   <div className='flex flex-col gap-6'>
@@ -11,8 +16,14 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
           labelBg="#2E3645"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Name *`}
           value={data.name || ""}
-          onChange={(e) => onChange({ ...data, name: e.target.value })}
+          onChange={(e) => {
+            const val = e.target.value;
+            // Prevent purely numeric input for name
+            if (/^\d+$/.test(val)) return;
+            onChange({ ...data, name: val });
+          }}
           borderColor="#FFFFFF66"
+          placeholder="Enter guest name"
         />
         {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
       </div>
@@ -23,6 +34,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
           value={data.designation || ""}
           onChange={(e) => onChange({ ...data, designation: e.target.value })}
           borderColor="#FFFFFF66"
+          placeholder="Enter designation"
         />
         {errors.designation && <p className="text-red-400 text-xs mt-1">{errors.designation}</p>}
       </div>
@@ -33,6 +45,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
           value={data.organization || ""}
           onChange={(e) => onChange({ ...data, organization: e.target.value })}
           borderColor="#FFFFFF66"
+          placeholder="Enter organization"
         />
         {errors.organization && <p className="text-red-400 text-xs mt-1">{errors.organization}</p>}
       </div>
@@ -45,8 +58,13 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
           label={`Day ${dayIndex} · Guest ${guestIndex} – Mobile Number *`}
           type="tel"
           value={data.mobile || ""}
-          onChange={(e) => onChange({ ...data, mobile: e.target.value })}
+          onChange={(e) => {
+            // Only allow digits, max 10
+            const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+            onChange({ ...data, mobile: val });
+          }}
           borderColor="#FFFFFF66"
+          placeholder="Enter 10-digit mobile number"
         />
         {errors.mobile && <p className="text-red-400 text-xs mt-1">{errors.mobile}</p>}
       </div>
@@ -58,6 +76,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
           value={data.gender || ""}
           onChange={(val) => onChange({ ...data, gender: val })}
           borderColor="#FFFFFF66"
+          placeholder="Select gender"
         />
         {errors.gender && <p className="text-red-400 text-xs mt-1">{errors.gender}</p>}
       </div>
@@ -71,9 +90,16 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
       const count = parseInt(val) || 1;
       const existingGuests = dayData.guests || [];
-      const newGuests = Array.from({ length: count }, (_, i) =>
-        existingGuests[i] || { name: "", designation: "", organization: "" }
-      );
+      // Preserve existing guest data — only add empty entries or trim from end
+      let newGuests;
+      if (count > existingGuests.length) {
+        const extra = Array.from({ length: count - existingGuests.length }, () => ({
+          name: "", designation: "", organization: "", mobile: "", gender: "",
+        }));
+        newGuests = [...existingGuests, ...extra];
+      } else {
+        newGuests = existingGuests.slice(0, count);
+      }
       updateDay({ ...dayData, numGuests: val, guests: newGuests });
     }
   };
@@ -87,7 +113,13 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
       {/* Date / Time */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         <div>
-          <CustomInput labelBg="#1E1E35" type="date" label={`Day ${dayIndex} – Event Date *`} value={dayData?.date || ""} onChange={(e) => updateDay({ ...dayData, date: e.target.value })} />
+          <CustomInput
+            labelBg="#1E1E35"
+            type="date"
+            label={`Day ${dayIndex} – Event Date *`}
+            value={dayData?.date || ""}
+            onChange={(e) => updateDay({ ...dayData, date: e.target.value })}
+          />
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
         </div>
         <div>
@@ -99,7 +131,6 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
           />
           {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
         </div>
-
         <div>
           <TimePickerInput
             labelBg="#1E1E35"
@@ -114,12 +145,19 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
       {/* Guests count */}
       <div className='grid grid-cols-1 sm:grid-cols-1 gap-4'>
         <div>
-          <CustomInput labelBg="#1E1E35" label={`Day ${dayIndex} – Total Number of Guests *`} type="number" value={dayData?.numGuests || ""} onChange={handleGuestsChange} />
+          <CustomInput
+            labelBg="#1E1E35"
+            label={`Day ${dayIndex} – Total Number of Guests *`}
+            type="number"
+            value={dayData?.numGuests || ""}
+            onChange={handleGuestsChange}
+            placeholder="Enter number of guests"
+          />
           {errors.numGuests && <p className="text-red-400 text-xs mt-1">{errors.numGuests}</p>}
         </div>
       </div>
 
-      {/* Guest fields — each guest in its own separated card */}
+      {/* Guest fields */}
       {guestCount > 0 && (
         <div className='flex flex-col gap-4'>
           {Array.from({ length: guestCount }, (_, i) => (
@@ -127,9 +165,6 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
               key={i}
               className='rounded-xl border border-[#3A3A5A] bg-[#2E3645] p-4 sm:p-6'
             >
-              {/* <h3 className='text-purple-300 text-xs font-semibold tracking-wide mb-5'>
-                Guest {i + 1}
-              </h3> */}
               <GuestFields
                 guestIndex={i + 1}
                 dayIndex={dayIndex}

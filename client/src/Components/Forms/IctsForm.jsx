@@ -8,9 +8,10 @@ import { Info } from "lucide-react";
 const BASE_URL = "https://sece-events.onrender.com";
 
 const REQUIREMENTS_OPTIONS = [
-  "Chief Guest AV / Stage LED Back Drop",
-  "Painter",
-  "Wiring patt",
+  "Chief Guest AV",
+  "Stage LED Back Drop",
+  "Pointer",
+  "Writing Pad",
   "Webcam",
 ];
 
