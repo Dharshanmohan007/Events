@@ -9,43 +9,54 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, verify stored token
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const storedUser = localStorage.getItem("user");
-    if (token && storedUser) {
-      // Optimistically set user from storage, then verify with server
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {}
-      fetch(`${API_BASE}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` },
+const logout = useCallback(() => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  setUser(null);
+}, []);
+
+useEffect(() => {
+  const token = localStorage.getItem("token");
+  const storedUser = localStorage.getItem("user");
+
+  if (token && storedUser) {
+    try {
+      setUser(JSON.parse(storedUser));
+    } catch {}
+
+    fetch(`${API_BASE}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          throw new Error("Unauthorized");
+        }
+
+        return r.json();
       })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.id) {
-            setUser(data);
-            localStorage.setItem("user", JSON.stringify(data));
-          } else {
-            logout();
-          }
-        })
-        .catch(() => logout())
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, []);
+      .then((data) => {
+        setUser(data);
+        localStorage.setItem("user", JSON.stringify(data));
+      })
+      .catch((err) => {
+        console.error(err);
+        logout();
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  } else {
+    setLoading(false);
+  }
+}, [logout]);
 
   const login = useCallback((userData) => {
     setUser(userData);
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  }, []);
+
 
   /**
    * Check if the current user has a specific permission

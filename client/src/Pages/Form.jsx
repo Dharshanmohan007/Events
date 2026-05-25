@@ -874,7 +874,7 @@ export default function Form() {
         <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps} />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden ">
-        <div className="px-12 pt-4 pb-3 border-[#2A2A45] ">
+        <div className="px-6 pt-4 pb-3 border-[#2A2A45] ">
           <h1 className="text-white text-xl font-bold playfair">{steps[currentStep]?.label}</h1>
           <div className="flex flex-row  gap-5 ">
             <div className="w-full h-1.5 bg-gray-700 rounded mt-3">

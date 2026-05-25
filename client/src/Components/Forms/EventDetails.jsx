@@ -62,7 +62,7 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
   const dayCount = parseInt(numDays) > 0 ? parseInt(numDays) : 0;
 
   return (
-    <div className='px-6 py-6 rounded-xl'>
+    <div className='px-1 py-6 rounded-xl'>
       <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
       {/* Event Name */}
