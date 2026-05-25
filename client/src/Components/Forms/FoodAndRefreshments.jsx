@@ -1,600 +1,817 @@
 import React, {
   useState,
-  forwardRef,
   memo,
+  useRef,
+  useEffect,
+  useCallback,
 } from "react";
-
 import DatePicker from "react-datepicker";
-
-import {
-  CalendarDays,
-  Trash2,
-} from "lucide-react";
-
+import { Trash2, Plus, Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
-
 import CustomInput from "../CustomInput";
-import CustomSelect from "../CustomSelect";
 
+const BASE_URL = "https://sece-events.onrender.com";
 
-
-const DateInput = forwardRef(
-  (
-    {
-      value,
-      onClick,
-      label,
-    },
-    ref
-  ) => {
-    return (
-      <div className="relative w-full">
-        {/* LABEL */}
-
-        <label
-          className="
-            absolute
-            -top-2
-            left-3
-            z-10
-            bg-[#1f1f38]
-            px-2
-            text-xs
-            text-white
-          "
-        >
-          {label}
-        </label>
-
-        {/* INPUT */}
-
-        <input
-          ref={ref}
-          value={value || ""}
-          readOnly
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (onClick) {
-              onClick(e);
-            }
-          }}
-          className="
-            w-full
-            h-[52px]
-            px-4
-            pr-12
-            rounded-xl
-            border
-            border-[#3d3d68]
-            text-white
-            outline-none
-            cursor-pointer
-            focus:border-purple-500
-          "
-        />
-
-
-
-        <div
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            if (onClick) {
-              onClick(e);
-            }
-          }}
-          className="
-            absolute
-            right-4
-            top-1/2
-            -translate-y-1/2
-            text-gray-400
-            cursor-pointer
-          "
-        >
-          <CalendarDays size={18} />
-        </div>
-      </div>
-    );
+// ─── DatePicker dark theme override (injected once) ──────────────────────────
+const DATE_PICKER_STYLES = `
+  .food-datepicker-popper {
+    z-index: 9999 !important;
   }
-);
+  .food-datepicker-popper .react-datepicker {
+    background-color: #1E1E2F !important;
+    border: 1px solid #3A3A5A !important;
+    border-radius: 12px !important;
+    font-family: inherit !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__header {
+    background-color: #1E1E2F !important;
+    border-bottom: 1px solid #3A3A5A !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+  .food-datepicker-popper .react-datepicker__current-month,
+  .food-datepicker-popper .react-datepicker__day-name,
+  .food-datepicker-popper .react-datepicker-time__header {
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day {
+    color: #fff !important;
+    border-radius: 6px !important;
+  }
+  .food-datepicker-popper .react-datepicker__day:hover {
+    background-color: #7c3aed !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day--selected,
+  .food-datepicker-popper .react-datepicker__day--keyboard-selected {
+    background-color: #7c3aed !important;
+    color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__day--outside-month {
+    color: #555580 !important;
+  }
+  .food-datepicker-popper .react-datepicker__navigation-icon::before {
+    border-color: #aaa !important;
+  }
+  .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+    border-color: #fff !important;
+  }
+  .food-datepicker-popper .react-datepicker__triangle {
+    display: none !important;
+  }
+`;
 
-DateInput.displayName = "DateInput";
+// ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
+function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f38" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
+  const displayText =
+    selected.length === 0 ? options.join(" / ") : selected.join(", ");
 
-const Meal = memo(function Meal({
-  title,
-  data,
-  onChange,
-}) {
   return (
-    <div
-      className="
-        col-span-1
-        md:col-span-2
-        bg-[#2a2a4a]
-        border
-        border-[#3b3b66]
-        rounded-2xl
-        p-5
-      "
-    >
-      <h2 className="text-purple-400 font-semibold text-lg mb-5">
-        {title}
-      </h2>
+    <div className="relative w-full" ref={ref}>
+      <span
+        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+        style={{ backgroundColor: labelBg }}
+      >
+        {label}
+      </span>
+      <div
+        onClick={() => setOpen((p) => !p)}
+        className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
+          open ? "border-purple-500" : "border-[#3A3A5A]"
+        }`}
+      >
+        <span
+          className={`text-sm truncate ${
+            selected.length === 0 ? "text-gray-500" : "text-white"
+          }`}
+        >
+          {displayText}
+        </span>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`text-gray-400 flex-shrink-0 transition-transform duration-200 ml-2 ${
+            open ? "rotate-180" : ""
+          }`}
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
 
+      {open && (
+        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
+          {options.map((opt, i) => {
+            const isSelected = selected.includes(opt);
+            return (
+              <div
+                key={i}
+                onClick={() => onToggle(opt)}
+                className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-colors ${
+                  isSelected
+                    ? "bg-purple-600/30 text-white"
+                    : "text-gray-300 hover:bg-purple-500/20 hover:text-white"
+                }`}
+              >
+                <span>{opt}</span>
+                <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center ml-3">
+                  {isSelected && (
+                    <svg
+                      className="w-4 h-4 text-purple-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={3}
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  )}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Meal section ─────────────────────────────────────────────────────────────
+const MealSection = memo(function MealSection({ title, data, onChange, labelBg = "#1f1f38" }) {
+  return (
+    <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
+      <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <CustomInput
-          label="Veg Participants"
+          label="No. of veg In Participants Menu *"
+          labelBg={labelBg}
+          type="number"
           value={data.vegParticipants}
-          onChange={(e) =>
-            onChange(
-              "vegParticipants",
-              e.target.value
-            )
-          }
+          onChange={(e) => onChange("vegParticipants", e.target.value)}
         />
-
         <CustomInput
-          label="Veg Guest"
+          label="No. of veg In Guest/VIP Menu *"
+          labelBg={labelBg}
+          type="number"
           value={data.vegGuest}
-          onChange={(e) =>
-            onChange(
-              "vegGuest",
-              e.target.value
-            )
-          }
+          onChange={(e) => onChange("vegGuest", e.target.value)}
         />
-
         <CustomInput
-          label="Non-Veg Participants"
+          label="No. of Non-veg In Participants Menu *"
+          labelBg={labelBg}
+          type="number"
           value={data.nonVegParticipants}
-          onChange={(e) =>
-            onChange(
-              "nonVegParticipants",
-              e.target.value
-            )
-          }
+          onChange={(e) => onChange("nonVegParticipants", e.target.value)}
         />
-
         <CustomInput
-          label="Non-Veg Guest"
+          label="No. of Non-veg In Guest/VIP Menu *"
+          labelBg={labelBg}
+          type="number"
           value={data.nonVegGuest}
-          onChange={(e) =>
-            onChange(
-              "nonVegGuest",
-              e.target.value
-            )
-          }
+          onChange={(e) => onChange("nonVegGuest", e.target.value)}
         />
       </div>
     </div>
   );
 });
 
+// ─── Delete Confirmation Popup ────────────────────────────────────────────────
+function DeleteConfirmPopup({ onConfirm, onCancel }) {
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onCancel}
+      />
+      {/* Modal */}
+      <div className="relative bg-[#1e1e38] border border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+        {/* Icon */}
+        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15 border border-red-500/30 mx-auto mb-4">
+          <Trash2 size={22} className="text-red-400" />
+        </div>
+        <h3 className="text-white font-semibold text-center text-lg mb-2">
+          Delete Entry
+        </h3>
+        <p className="text-gray-400 text-sm text-center mb-6">
+          Are you sure you want to delete this entry? This action cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-medium transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-
-export default function FoodAndRefreshments({
-  nextStep,
-  handlePrevious,
-}) {
-
-
-  const createForm = () => ({
+// ─── Empty form factory ───────────────────────────────────────────────────────
+function createForm() {
+  return {
     id: crypto.randomUUID(),
-
     date: null,
-
-    resourceType: "",
+    resourcePersonType: [],
     resourcePersons: "",
     internalCount: "",
-
-    staffName: "",
-    mobileNumber: "",
-
-    foodType: "",
-
+    staffList: [],
+    foodTypes: [],
+    breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+    lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+    dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
     specialRequirements: "",
+  };
+}
 
-    breakfast: {
-      vegParticipants: "",
-      vegGuest: "",
-      nonVegParticipants: "",
-      nonVegGuest: "",
-    },
-
-    lunch: {
-      vegParticipants: "",
-      vegGuest: "",
-      nonVegParticipants: "",
-      nonVegGuest: "",
-    },
-
-    dinner: {
-      vegParticipants: "",
-      vegGuest: "",
-      nonVegParticipants: "",
-      nonVegGuest: "",
-    },
+// ─── Validation ───────────────────────────────────────────────────────────────
+function validateFoodForms(forms) {
+  if (!forms || forms.length === 0) return { _global: "Enter at least one food entry" };
+  const errors = forms.map((form) => {
+    const err = {};
+    if (!form.date) err.date = "Date is required";
+    if (!form.resourcePersonType || form.resourcePersonType.length === 0)
+      err.resourcePersonType = "Resource person type is required";
+    if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
+    if (!form.internalCount?.trim()) err.internalCount = "Internal count is required";
+    if (!form.foodTypes || form.foodTypes.length === 0)
+      err.foodTypes = "Food type is required";
+    const count = parseInt(form.internalCount) || 0;
+    if (count > 0) {
+      const staffErrors = (form.staffList || []).slice(0, count).map((staff) => {
+        const se = {};
+        if (!staff.name?.trim()) se.name = "Staff name is required";
+        if (!staff.mobile?.trim()) se.mobile = "Staff mobile is required";
+        return se;
+      });
+      if (staffErrors.some((se) => Object.keys(se).length > 0)) {
+        err.staffList = staffErrors;
+      }
+    }
+    return err;
   });
+  if (errors.some((e) => Object.keys(e).length > 0)) return errors;
+  return {};
+}
 
-  const [forms, setForms] = useState([
-    createForm(),
-  ]);
+// ─── Sync staffList length when internalCount changes ─────────────────────────
+function syncStaffList(staffList, count) {
+  const n = Math.max(0, parseInt(count) || 0);
+  if (staffList.length === n) return staffList;
+  if (staffList.length < n) {
+    return [
+      ...staffList,
+      ...Array.from({ length: n - staffList.length }, () => ({ name: "", mobile: "" })),
+    ];
+  }
+  return staffList.slice(0, n);
+}
 
+// ─── Main Component ───────────────────────────────────────────────────────────
+export default function FoodAndRefreshments({
+  nextStep,
+  prevStep,
+  registerChildNavigation,
+  foodData: initialFoodData,
+  onFoodDataChange,
+  eventId,
+  errors: propErrors = {},
+}) {
+  // Inject dark datepicker styles once
+  useEffect(() => {
+    const id = "food-datepicker-dark";
+    if (!document.getElementById(id)) {
+      const style = document.createElement("style");
+      style.id = id;
+      style.textContent = DATE_PICKER_STYLES;
+      document.head.appendChild(style);
+    }
+  }, []);
 
-  const handleChange = (
-    id,
-    field,
-    value,
-    section = null
-  ) => {
-    setForms((prevForms) =>
-      prevForms.map((form) => {
-        if (form.id !== id) {
-          return form;
-        }
+  const [forms, setForms] = useState(() => {
+    if (initialFoodData && initialFoodData.length > 0) {
+      return initialFoodData.map((f) => ({
+        ...f,
+        staffList: f.staffList || syncStaffList([], f.internalCount || ""),
+      }));
+    }
+    return [createForm()];
+  });
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-        if (section) {
+  // ── Confirm popup state ──────────────────────────────────────────────────────
+  // { type: "form", formId } | { type: "staff", formId, staffIndex } | null
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
+  // ── DatePicker refs (one per form, keyed by form.id) ────────────────────────
+  const datePickerRefs = useRef({});
+
+  const formsRef = useRef(forms);
+  useEffect(() => { formsRef.current = forms; }, [forms]);
+
+  const onChangeRef = useRef(onFoodDataChange);
+  useEffect(() => { onChangeRef.current = onFoodDataChange; }, [onFoodDataChange]);
+  useEffect(() => {
+    if (onChangeRef.current) onChangeRef.current(forms);
+  }, [forms]);
+
+  const handleChange = (id, field, value, section = null) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        if (section) return { ...form, [section]: { ...form[section], [field]: value } };
+        if (field === "internalCount") {
           return {
             ...form,
-
-            [section]: {
-              ...form[section],
-
-              [field]: value,
-            },
+            internalCount: value,
+            staffList: syncStaffList(form.staffList || [], value),
           };
         }
+        return { ...form, [field]: value };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      updated[idx] = { ...(updated[idx] || {}), [field]: "" };
+      return updated;
+    });
+  };
 
+  const handleStaffChange = (id, staffIndex, field, value) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const updatedStaff = form.staffList.map((s, i) =>
+          i === staffIndex ? { ...s, [field]: value } : s
+        );
+        return { ...form, staffList: updatedStaff };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const formErr = { ...(updated[idx] || {}) };
+      if (formErr.staffList) {
+        const staffErrs = [...formErr.staffList];
+        staffErrs[staffIndex] = { ...(staffErrs[staffIndex] || {}), [field]: "" };
+        formErr.staffList = staffErrs;
+      }
+      updated[idx] = formErr;
+      return updated;
+    });
+  };
+
+  const handleMultiToggle = (id, field, option) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const current = form[field] || [];
+        const exists = current.includes(option);
         return {
           ...form,
-
-          [field]: value,
+          [field]: exists ? current.filter((v) => v !== option) : [...current, option],
         };
       })
     );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      updated[idx] = { ...(updated[idx] || {}), [field]: "" };
+      return updated;
+    });
   };
 
+  const handleAdd = () => setForms((prev) => [...prev, createForm()]);
 
-  const handleAdd = () => {
-    setForms((prev) => [
-      ...prev,
-      createForm(),
-    ]);
+  // ── Delete form card (with popup) ───────────────────────────────────────────
+  const requestDeleteForm = (id) => {
+    setDeleteTarget({ type: "form", formId: id });
   };
 
-  const handleDelete = (id) => {
-    setForms((prev) =>
-      prev.filter(
-        (form) => form.id !== id
-      )
-    );
+  // ── Delete individual staff container ────────────────────────────────────────
+  const requestDeleteStaff = (formId, staffIndex) => {
+    setDeleteTarget({ type: "staff", formId, staffIndex });
   };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "form") {
+      setForms((prev) => prev.filter((form) => form.id !== deleteTarget.formId));
+    } else if (deleteTarget.type === "staff") {
+      const { formId, staffIndex } = deleteTarget;
+      setForms((prev) =>
+        prev.map((form) => {
+          if (form.id !== formId) return form;
+          const updatedStaff = form.staffList.filter((_, i) => i !== staffIndex);
+          const newCount = updatedStaff.length;
+          return {
+            ...form,
+            staffList: updatedStaff,
+            internalCount: String(newCount),
+          };
+        })
+      );
+    }
+
+    setDeleteTarget(null);
+  };
+
+  const handleCancelDelete = () => setDeleteTarget(null);
+
+  const getError = (id, field) => {
+    if (!Array.isArray(errors)) return "";
+    const idx = forms.findIndex((f) => f.id === id);
+    return errors[idx]?.[field] || "";
+  };
+
+  const getStaffError = (id, staffIndex, field) => {
+    if (!Array.isArray(errors)) return "";
+    const idx = forms.findIndex((f) => f.id === id);
+    return errors[idx]?.staffList?.[staffIndex]?.[field] || "";
+  };
+
+  const buildPayload = (latest) => {
+    return {
+      refreshmentDetails: {
+        refreshments: latest.map((form) => {
+          const MEAL_KEYS = ["Breakfast", "Lunch", "Dinner"];
+          const foodTypesPayload = (form.foodTypes || []).map((type) => {
+            if (MEAL_KEYS.includes(type)) {
+              const mealData = form[type.toLowerCase()] || {};
+              return {
+                type,
+                participants: {
+                  vegCount: parseInt(mealData.vegParticipants) || 0,
+                  nonVegCount: parseInt(mealData.nonVegParticipants) || 0,
+                },
+                vipGuests: {
+                  vegCount: parseInt(mealData.vegGuest) || 0,
+                  nonVegCount: parseInt(mealData.nonVegGuest) || 0,
+                },
+              };
+            }
+            return {
+              type,
+              participants: { vegCount: 0, nonVegCount: 0 },
+              vipGuests: { vegCount: 0, nonVegCount: 0 },
+            };
+          });
+
+          return {
+            date: form.date ? form.date.toISOString() : "",
+            resourcePersonType: form.resourcePersonType || [],
+            numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
+            numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
+            accompanyingStaff: (form.staffList || []).map((s) => ({
+              name: s.name || "",
+              mobile: parseInt(s.mobile) || 0,
+            })),
+            foodTypes: foodTypesPayload,
+            specialRequirements: form.specialRequirements || "",
+          };
+        }),
+      },
+    };
+  };
+
+  const handleNext = useCallback(async () => {
+    const latest = formsRef.current;
+    const errs = validateFoodForms(latest);
+    const hasErrors = !Array.isArray(errs)
+      ? Object.keys(errs).length > 0
+      : errs.some((e) => Object.keys(e).length > 0);
+    if (hasErrors) { setErrors(errs); return; }
+    setErrors({});
+    setIsLoading(true);
+    setApiError("");
+    try {
+      const payload = buildPayload(latest);
+      console.log("food payload:", payload);
+      const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
+      nextStep();
+    } catch (err) {
+      setApiError(err.message || "Failed to save food details. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, nextStep]);
+
+  const handleBack = useCallback(() => { if (prevStep) prevStep(); }, [prevStep]);
+
+  const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
+  useEffect(() => { navRef.current = { next: handleNext, prev: handleBack, isLoading }; });
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    const stableNext = (...args) => navRef.current.next(...args);
+    const stablePrev = (...args) => navRef.current.prev(...args);
+    registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
+    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerChildNavigation]);
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    registerChildNavigation({ next: navRef.current.next, prev: navRef.current.prev, isLoading });
+  }, [isLoading, registerChildNavigation]);
+
+  const RESOURCE_OPTIONS = ["VIP", "Trainer", "Placement"];
+  const FOOD_TYPE_OPTIONS = [
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Morning Refreshment",
+    "Evening Refreshment",
+  ];
+  const MEAL_SECTIONS = ["Breakfast", "Lunch", "Dinner"];
 
   return (
     <div className="w-full">
-   
+      {/* Delete confirmation popup */}
+      {deleteTarget && (
+        <DeleteConfirmPopup
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCancelDelete}
+        />
+      )}
+
+      {apiError && (
+        <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 mb-4">
+          <p className="text-red-400 text-sm">{apiError}</p>
+        </div>
+      )}
+
+      {/* Top-level Add button */}
+      <div className="flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={handleAdd}
+          className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+        >
+          <Plus size={16} />
+          Add
+        </button>
+      </div>
 
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="
-            bg-[#1f1f38]
-            border
-            border-[#32325a]
-            rounded-2xl
-            mb-6
-            overflow-visible
-          "
+          className="relative bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
         >
-   
-
-          <div className="flex justify-end p-5 pb-0">
-            {index === 0 ? (
+          {/* ── Delete button: inside top-right corner of the card ── */}
+          {index !== 0 && (
+            <div className="flex justify-end pt-4 pr-4">
               <button
                 type="button"
-                onClick={handleAdd}
-                className="
-                  px-5
-                  py-2.5
-                  rounded-xl
-                  bg-purple-600
-                  hover:bg-purple-500
-                  text-white
-                  font-medium
-                  transition-all
-                "
+                onClick={() => requestDeleteForm(form.id)}
+                className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-full transition-all"
               >
-                + Add
+                <Trash2 size={18} />
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() =>
-                  handleDelete(form.id)
-                }
-                className="
-                  w-10
-                  h-10
-                  rounded-full
-                  bg-[#ffd9d9]
-                  text-red-500
-                  flex
-                  items-center
-                  justify-center
-                "
-              >
-                <Trash2 size={16} />
-              </button>
-            )}
-          </div>
+            </div>
+          )}
 
-      
+          <div className={`p-5 grid grid-cols-1 md:grid-cols-2 gap-5 ${index !== 0 ? "pt-2" : ""}`}>
 
-          <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-5">
-            {/* DATE */}
-
+            {/* Row 1: Date + Resource Person Type */}
             <div className="w-full">
-              <DatePicker
-                selected={form.date}
-                onChange={(date) =>
-                  handleChange(
-                    form.id,
-                    "date",
-                    date
-                  )
-                }
-                dateFormat="dd/MM/yyyy"
-                shouldCloseOnSelect={true}
-                popperPlacement="bottom-start"
-                withPortal={false}
-                customInput={
-                  <DateInput label="Select Date *" />
-                }
-              />
+              <div className="relative">
+                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                  Select Date *
+                </label>
+                {/* Calendar icon — clicking it opens the picker */}
+                <button
+                  type="button"
+                  onClick={() => datePickerRefs.current[form.id]?.setOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  <Calendar size={18} />
+                </button>
+                <DatePicker
+                  ref={(el) => { datePickerRefs.current[form.id] = el; }}
+                  selected={form.date}
+                  onChange={(date) => handleChange(form.id, "date", date)}
+                  dateFormat="dd/MM/yyyy"
+                  shouldCloseOnSelect
+                  popperPlacement="bottom-start"
+                  popperClassName="food-datepicker-popper"
+                  popperProps={{ strategy: "fixed" }}
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  wrapperClassName="w-full"
+                  calendarClassName="food-dark-cal"
+                />
+              </div>
+              {getError(form.id, "date") && (
+                <p className="text-red-400 text-xs mt-1">{getError(form.id, "date")}</p>
+              )}
             </div>
 
+            <div>
+              <MultiSelect
+                label="Type of Resource Person *"
+                options={RESOURCE_OPTIONS}
+                selected={form.resourcePersonType}
+                onToggle={(opt) => handleMultiToggle(form.id, "resourcePersonType", opt)}
+                labelBg="#1f1f38"
+              />
+              {getError(form.id, "resourcePersonType") && (
+                <p className="text-red-400 text-xs mt-1">
+                  {getError(form.id, "resourcePersonType")}
+                </p>
+              )}
+            </div>
 
-            <CustomSelect
-              label="Type of resource Person *"
-              value={form.resourceType}
-              onChange={(val) =>
-                handleChange(
-                  form.id,
-                  "resourceType",
-                  val
-                )
-              }
-              options={[
-                "VIP",
-                "Trainer",
-                "Placement",
-              ]}
-            />
+            {/* Row 2: Resource Persons + Internal Count */}
+            <div>
+              <CustomInput
+                label="Total number of Resource Persons *"
+                labelBg="#1f1f38"
+                value={form.resourcePersons}
+                onChange={(e) => handleChange(form.id, "resourcePersons", e.target.value)}
+                type="number"
+              />
+              {getError(form.id, "resourcePersons") && (
+                <p className="text-red-400 text-xs mt-1">
+                  {getError(form.id, "resourcePersons")}
+                </p>
+              )}
+            </div>
 
+            <div>
+              <CustomInput
+                label="Total number of Internal Accompanying Persons *"
+                labelBg="#1f1f38"
+                value={form.internalCount}
+                onChange={(e) => handleChange(form.id, "internalCount", e.target.value)}
+                type="number"
+              />
+              {getError(form.id, "internalCount") && (
+                <p className="text-red-400 text-xs mt-1">
+                  {getError(form.id, "internalCount")}
+                </p>
+              )}
+            </div>
 
-            <CustomInput
-              label="Total number of resource Person *"
-              value={form.resourcePersons}
-              onChange={(e) =>
-                handleChange(
-                  form.id,
-                  "resourcePersons",
-                  e.target.value
-                )
-              }
-              type="number"
-            />
+            {/* Dynamic Staff Containers */}
+            {(form.staffList || []).length > 0 && (
+              <div className="col-span-1 md:col-span-2 grid grid-cols-1 gap-4">
+                {(form.staffList || []).map((staff, staffIndex) => (
+                  <div
+                    key={staffIndex}
+                    className="bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
+                  >
+                    {/* Staff header row with title + delete button */}
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-purple-400 font-semibold text-sm">
+                        Staff {staffIndex + 1}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => requestDeleteStaff(form.id, staffIndex)}
+                        className="w-8 h-8 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-400/50 rounded-full transition-all"
+                        title="Delete staff"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <CustomInput
+                          label={`Staff ${staffIndex + 1} Name *`}
+                          labelBg="#2a2a4a"
+                          value={staff.name}
+                          onChange={(e) =>
+                            handleStaffChange(form.id, staffIndex, "name", e.target.value)
+                          }
+                        />
+                        {getStaffError(form.id, staffIndex, "name") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getStaffError(form.id, staffIndex, "name")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomInput
+                          label={`Staff ${staffIndex + 1} Mobile Number *`}
+                          labelBg="#2a2a4a"
+                          value={staff.mobile}
+                          onChange={(e) =>
+                            handleStaffChange(form.id, staffIndex, "mobile", e.target.value)
+                          }
+                          type="number"
+                        />
+                        {getStaffError(form.id, staffIndex, "mobile") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getStaffError(form.id, staffIndex, "mobile")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-            <CustomInput
-              label="Total number of Internal Accompanying Person *"
-              value={form.internalCount}
-              onChange={(e) =>
-                handleChange(
-                  form.id,
-                  "internalCount",
-                  e.target.value
-                )
-              }
-              type="number"
-            />
-
-
-            <CustomInput
-              label="Internal Accompanying staff name *"
-              value={form.staffName}
-              onChange={(e) =>
-                handleChange(
-                  form.id,
-                  "staffName",
-                  e.target.value
-                )
-              }
-            />
-
-            <CustomInput
-              label="Internal Accompanying staff Mobile number *"
-              value={form.mobileNumber}
-              onChange={(e) =>
-                handleChange(
-                  form.id,
-                  "mobileNumber",
-                  e.target.value
-                )
-              }
-              type="number"
-            />
-
-
-
+            {/* Food Type multi-select */}
             <div className="col-span-1 md:col-span-2">
-              <CustomSelect
+              <MultiSelect
                 label="Food Type *"
-                value={form.foodType}
-                onChange={(val) =>
-                  handleChange(
-                    form.id,
-                    "foodType",
-                    val
-                  )
-                }
-                options={[
-                  "Breakfast",
-                  "Lunch",
-                  "Dinner",
-                  "Morning Refreshment",
-                  "Evening Refreshment",
-                ]}
+                options={FOOD_TYPE_OPTIONS}
+                selected={form.foodTypes}
+                onToggle={(opt) => handleMultiToggle(form.id, "foodTypes", opt)}
+                labelBg="#1f1f38"
               />
+              {getError(form.id, "foodTypes") && (
+                <p className="text-red-400 text-xs mt-1">{getError(form.id, "foodTypes")}</p>
+              )}
             </div>
 
+            {/* Conditional Meal Sections */}
+            {MEAL_SECTIONS.map((meal) =>
+              form.foodTypes.includes(meal) ? (
+                <MealSection
+                  key={meal}
+                  title={meal}
+                  data={form[meal.toLowerCase()]}
+                  onChange={(field, value) =>
+                    handleChange(form.id, field, value, meal.toLowerCase())
+                  }
+                  labelBg="#2a2a4a"
+                />
+              ) : null
+            )}
 
-            <Meal
-              title="Breakfast"
-              data={form.breakfast}
-              onChange={(field, value) =>
-                handleChange(
-                  form.id,
-                  field,
-                  value,
-                  "breakfast"
-                )
-              }
-            />
-
-
-
-            <Meal
-              title="Lunch"
-              data={form.lunch}
-              onChange={(field, value) =>
-                handleChange(
-                  form.id,
-                  field,
-                  value,
-                  "lunch"
-                )
-              }
-            />
-
-
-
-            <Meal
-              title="Dinner"
-              data={form.dinner}
-              onChange={(field, value) =>
-                handleChange(
-                  form.id,
-                  field,
-                  value,
-                  "dinner"
-                )
-              }
-            />
-
-
+            {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
-                <label
-                  className="
-                    absolute
-                    -top-2
-                    left-3
-                    z-10
-                    bg-[#1f1f38]
-                    px-2
-                    text-xs
-                    text-white
-                  "
-                >
-                  Special Requirements, If any *
+                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
+                  Special Requirements, If any
                 </label>
-
                 <textarea
                   rows={4}
-                  placeholder="reason"
                   value={form.specialRequirements}
                   onChange={(e) =>
-                    handleChange(
-                      form.id,
-                      "specialRequirements",
-                      e.target.value
-                    )
+                    handleChange(form.id, "specialRequirements", e.target.value)
                   }
-                  className="
-                    w-full
-                    rounded-xl
-                    bg-[#232347]
-                    border
-                    border-[#3d3d68]
-                    px-4
-                    py-4
-                    text-white
-                    placeholder:text-gray-400
-                    outline-none
-                    resize-none
-                    focus:border-purple-500
-                  "
+                  className="w-full rounded-xl bg-transparent border border-[#3d3d68] px-4 py-4 text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
                 />
               </div>
             </div>
           </div>
         </div>
       ))}
-
-
-      <div className="w-full mt-10 flex items-center justify-between">
-      
-
-        <button
-          type="button"
-          onClick={handlePrevious}
-          className="
-            min-w-[120px]
-            h-[46px]
-            rounded-xl
-            border
-            border-purple-600
-            text-purple-500
-            font-medium
-            bg-transparent
-          
-            transition-all
-            duration-300
-          "
-        >
-          ← Back
-        </button>
-
-
-
-        <button
-          type="button"
-          onClick={nextStep}
-          className="
-            min-w-[120px]
-            h-[46px]
-            rounded-xl
-            bg-gradient-to-r
-            from-purple-500
-            to-purple-600
-            text-white
-            font-medium
-            hover:opacity-90
-            transition-all
-            duration-300
-            shadow-lg
-            shadow-purple-900/30
-          "
-        >
-          Next →
-        </button>
-      </div>
     </div>
   );
 }

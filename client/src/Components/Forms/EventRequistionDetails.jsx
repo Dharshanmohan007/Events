@@ -3,8 +3,6 @@ import EventOrganizerDetails from './EventOrganizerDetails'
 import EventDetails from './EventDetails'
 import EventRequirements from './EventRequirements'
 
-const BASE_URL = 'https://sece-events.onrender.com'
-
 // ─── Validators ───────────────────────────────────────────────────────────────
 
 function validateOrganizer(data = {}) {
@@ -23,9 +21,19 @@ function validateOrganizer(data = {}) {
 
 function validateGuest(data = {}) {
   const e = {};
-  if (!data.name?.trim()) e.name = "Guest name is required";
+  if (!data.name?.trim()) {
+    e.name = "Guest name is required";
+  } else if (/^\d+$/.test(data.name.trim())) {
+    e.name = "Name cannot be a number";
+  }
   if (!data.designation?.trim()) e.designation = "Designation is required";
   if (!data.organization?.trim()) e.organization = "Organization is required";
+  if (!data.mobile?.trim()) {
+    e.mobile = "Mobile number is required";
+  } else if (!/^[6-9]\d{9}$/.test(data.mobile.trim())) {
+    e.mobile = "Enter a valid 10-digit Indian mobile number";
+  }
+  if (!data.gender) e.gender = "Gender is required";
   return e;
 }
 
@@ -43,7 +51,6 @@ function validateDay(day = {}, idx) {
   const guestErrors = Array.from({ length: guestCount }, (_, i) =>
     validateGuest((day.guests || [])[i])
   );
-
   if (guestErrors.some((ge) => Object.keys(ge).length > 0))
     e.guests = guestErrors;
 
@@ -67,7 +74,6 @@ function validateOrganizerSection(state) {
   const orgErrors = Array.from({ length: count }, (_, i) =>
     validateOrganizer((state.organizers || [])[i])
   );
-
   if (orgErrors.some((oe) => Object.keys(oe).length > 0))
     e.organizers = orgErrors;
 
@@ -78,124 +84,46 @@ function validateEventDetails(data = {}, days = []) {
   const e = {};
   if (!data.eventName?.trim()) e.eventName = "Event name is required";
   if (!data.eventType) e.eventType = "Event type is required";
-
   if (data.eventType === "Other" && !data.eventTypeOther?.trim())
     e.eventTypeOther = "Please specify the event type";
-
   if (!data.society) e.society = "Society is required";
-
   if (data.society === "Other" && !data.societyOther?.trim())
     e.societyOther = "Please specify the society";
-
-  if (!data.logos) e.logos = "Logos selection is required";
-
-  if (data.logos === "Other" && !data.logosOther?.trim())
+  // logos is now an array
+  const logosArr = Array.isArray(data.logos) ? data.logos : data.logos ? [data.logos] : [];
+  if (logosArr.length === 0) e.logos = "Logos selection is required";
+  if (logosArr.includes("Other") && !data.logosOther?.trim())
     e.logosOther = "Please specify the logos";
-
   if (!days.length) e.numDays = "Enter the number of days";
   if (!data.audience) e.audience = "Target audience is required";
 
   const dayErrors = days.map((d, i) => validateDay(d, i + 1));
-
   if (dayErrors.some((de) => Object.keys(de).length > 0))
     e.days = dayErrors;
 
   return e;
 }
 
-// ─── Build Payload ─────────────────────────────────────────────────────────────
-
-function buildPayload({
-  doc, file, reason, budget, finance, department,
-  numOrganizers, organizers, eventData, eventDays, requirements, user,
-}) {
-  const formData = new FormData();
-
-  // 🔴 Critical: dynamic organizerId
-  formData.append('organizerId', user?._id ?? null);
-
-  const requestDetails = {
-    organizerDetails: {
-      previousEventDocumentation: doc === "Yes",
-      previousEventReason: doc === "No" ? reason : "",
-      isBudgetApproved: budget === "Yes",
-      financeRequired: finance === "Yes",
-      organizingDepartment: department,
-      organizerCount: parseInt(numOrganizers) || 0,
-
-      organizers: (organizers || []).map(o => ({
-        name: o.name || "",
-        department: o.department || "",
-        mobile: parseInt(o.mobile) || 0,
-        designation: o.designation || "",
-        email: o.empEmail || "",
-        empId: o.empId || "",
-
-        // 🔴 Safe dynamic facultyId
-        facultyId: user?._id ?? null,
-      })),
-    },
-
-    eventDetails: {
-      eventName: eventData.eventName || "",
-      iic : eventData.involvedIIC || false,
-      involvedIIC: false,
-      eventType: eventData.eventType || "",
-      eventTypeOther: eventData.eventTypeOther || "",
-      professionalSociety: eventData.society ? [eventData.society] : [],
-      professionalSocietyOther: eventData.societyOther || "",
-      logosInPoster: eventData.logos ? [eventData.logos] : [],
-      logosOther: eventData.logosOther || "",
-      targetAudience: eventData.audience || "",
-      numberOfDays: eventDays.length,
-
-      eventSchedule: eventDays.map(day => ({
-        eventDate: day.date ? new Date(day.date).toISOString() : "",
-        startTime: day.startTime || "",
-        endTime: day.endTime || "",
-        totalGuests: parseInt(day.numGuests) || 0,
-
-        guests: (day.guests || []).map(g => ({
-          name: g.name || "",
-          organization: g.organization || "",
-          designation: g.designation || "",
-          mobile: parseInt(g.mobile) || 0,
-          gender: g.gender || "",
-        })),
-      })),
-    },
-
-    requirementDetails: {
-      venueRequired: requirements.includes("venue"),
-      audioRequired: requirements.includes("audio"),
-      ictsRequired: requirements.includes("icts"),
-      transportRequired: requirements.includes("transport"),
-      accommodationRequired: requirements.includes("accommodation"),
-      mediaRequired: requirements.includes("media"),
-    },
-  };
-
-  formData.append('requestDetails', JSON.stringify(requestDetails));
-
-  if (doc === "Yes" && file) {
-    formData.append('previousEventDocumentation', file);
-  }
-
-  return formData;
+function validateRequirements(requirements = []) {
+  if (!requirements || requirements.length === 0)
+    return { requirements: "Select at least one requirement" };
+  return {};
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function EventRequisitionDetails({
   nextStep,
+  onSave,
   setSelectedRequirements,
   setEventDays,
   setEventId,
   user,
   eventRequisition: initialEventRequisition = {},
-  setEventRequisition
+  setEventRequisition,
+  errors: parentErrors = {},
+  isLoading: parentIsLoading = false,
 }) {
-
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
@@ -206,159 +134,84 @@ export default function EventRequisitionDetails({
   const [organizers, setOrganizers] = useState(initialEventRequisition.organizers || []);
 
   const [eventData, setEventData] = useState(initialEventRequisition.eventData || {});
-  const [eventDays, setEventDaysLocal] = useState(initialEventRequisition.eventDays || []);
+  const [eventDaysLocal, setEventDaysLocal] = useState(initialEventRequisition.eventDays || []);
 
   const [requirements, setRequirements] = useState(initialEventRequisition.requirements || []);
 
-  const lastSyncedRequisition = useRef(null);
-
-  // Update parent state when local state changes, but avoid infinite loops by skipping identical values
-  useEffect(() => {
-    if (!setEventRequisition) return;
-
-    const nextRequisition = {
-      doc,
-      finance,
-      budget,
-      department,
-      file,
-      reason,
-      numOrganizers,
-      organizers,
-      eventData,
-      eventDays,
-      requirements,
-    };
-
-    const serializableRequisition = {
-      doc,
-      finance,
-      budget,
-      department,
-      reason,
-      numOrganizers,
-      organizers,
-      eventData,
-      eventDays,
-      requirements,
-      file: file
-        ? {
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            lastModified: file.lastModified,
-          }
-        : null,
-    };
-
-    const nextString = JSON.stringify(serializableRequisition);
-
-    if (nextString !== lastSyncedRequisition.current) {
-      lastSyncedRequisition.current = nextString;
-      setEventRequisition(nextRequisition);
-    }
-  }, [doc, finance, budget, department, file, reason, numOrganizers, organizers, eventData, eventDays, requirements, setEventRequisition]);
-
   const [orgErrors, setOrgErrors] = useState({});
   const [eventErrors, setEventErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState("");
+  const [reqErrors, setReqErrors] = useState({});
+
+  const lastSynced = useRef(null);
+
+  useEffect(() => {
+    if (!setEventRequisition) return;
+    const next = {
+      doc, finance, budget, department, file, reason,
+      numOrganizers, organizers, eventData,
+      eventDays: eventDaysLocal, requirements,
+    };
+    const comparable = JSON.stringify({
+      doc, finance, budget, department, reason,
+      numOrganizers, organizers, eventData,
+      eventDays: eventDaysLocal, requirements,
+      file: file ? { name: file.name, size: file.size, type: file.type } : null,
+    });
+    if (comparable !== lastSynced.current) {
+      lastSynced.current = comparable;
+      setEventRequisition(next);
+    }
+  }, [doc, finance, budget, department, file, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
-    setEventDays(days);
+    if (setEventDays) setEventDays(days);
   };
 
-  const requirementValues = requirements.reduce((acc, key) => ({ ...acc, [key]: "Yes" }), {});
+  const handleRequirementsChange = (selectedReqs) => {
+    setRequirements(selectedReqs);
+    if (setSelectedRequirements) setSelectedRequirements(selectedReqs);
+    setReqErrors({});
+  };
 
-  const handleNextWithValidation = async (selectedReqs) => {
-    console.log('handleNextWithValidation called with selectedReqs:', selectedReqs);
-    console.log('Current user:', user);
-    console.log('Current eventData:', eventData);
-    console.log('Current eventDays:', eventDays);
-
-    if (!user?._id) {
-      console.error('User not authenticated');
-      setApiError("User not authenticated. Please login again.");
-      return;
-    }
+  const handleSaveAndNext = async (selectedReqs) => {
+    const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = validateOrganizerSection({
-      doc, file, reason, budget, finance, department,
-      numOrganizers, organizers,
+      doc, file, reason, budget, finance, department, numOrganizers, organizers,
     });
-    console.log('Organizer errors:', oErr);
-
-    const eErr = validateEventDetails(eventData, eventDays);
-    console.log('Event errors:', eErr);
+    const eErr = validateEventDetails(eventData, eventDaysLocal);
+    const rErr = validateRequirements(currentRequirements);
 
     setOrgErrors(oErr);
     setEventErrors(eErr);
+    setReqErrors(rErr);
 
-    if (Object.keys(oErr).length > 0 || Object.keys(eErr).length > 0) {
-      console.log('Validation failed, scrolling to top');
+    if (
+      Object.keys(oErr).length > 0 ||
+      Object.keys(eErr).length > 0 ||
+      Object.keys(rErr).length > 0
+    ) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    console.log('Validation passed, proceeding with API call');
-    setIsLoading(true);
-    setApiError("");
-
-    try {
-      const payload = buildPayload({
-        doc, file, reason, budget, finance, department,
-        numOrganizers, organizers,
-        eventData,
-        eventDays,
-        requirements: selectedReqs,
-        user
-      });
-      console.log('Payload built:', payload);
-
-      const response = await fetch(`${BASE_URL}/api/events`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: payload,
-      });
-
-      console.log('API response status:', response.status);
-      const data = await response.json();
-      console.log('API response data:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || `Server error: ${response.status}`);
-      }
-
-      const eventId = data.data?._id;
-      console.log('Event created successfully, ID:', eventId);
-      if (eventId && setEventId) {
-        setEventId(eventId);
-      }
-
-      setRequirements(selectedReqs);
-      setSelectedRequirements(selectedReqs);
-      nextStep();
-
-    } catch (err) {
-      console.error('API Error:', err.message);
-      setApiError(err.message || "Failed to save event. Please try again.");
-    } finally {
-      setIsLoading(false);
+    if (onSave) {
+      await onSave(currentRequirements);
     }
   };
 
+  const mergedOrgErrors = { ...orgErrors, ...parentErrors };
+  const mergedEventErrors = { ...eventErrors, ...parentErrors };
+  const mergedReqErrors = { ...reqErrors, ...parentErrors };
+
+  const requirementValues = requirements.reduce(
+    (acc, key) => ({ ...acc, [key]: "Yes" }),
+    {}
+  );
+
   return (
-    <div className='w-full flex flex-col '>
-
-      {apiError && (
-        <div className="mx-6 rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
-          <p className="text-red-400 text-sm">{apiError}</p>
-        </div>
-      )}
-
+    <div className='w-full flex flex-col'>
       <EventOrganizerDetails
         doc={doc} setDoc={setDoc}
         finance={finance} setFinance={setFinance}
@@ -368,13 +221,13 @@ export default function EventRequisitionDetails({
         reason={reason} setReason={setReason}
         numOrganizers={numOrganizers} setNumOrganizers={setNumOrganizers}
         organizers={organizers} setOrganizers={setOrganizers}
-        errors={orgErrors}
+        errors={mergedOrgErrors}
       />
-      <hr className="my-1   border-[#333351]"/>
+      <hr className="my-1 border-[#333351]" />
 
       <EventDetails
         setEventDays={syncEventDays}
-        errors={eventErrors}
+        errors={mergedEventErrors}
         eventData={eventData}
         setEventData={setEventData}
         setErrors={setEventErrors}
@@ -382,12 +235,13 @@ export default function EventRequisitionDetails({
       <hr className="my-1 border-[#333351]" />
 
       <EventRequirements
-        nextStep={handleNextWithValidation}
+        nextStep={handleSaveAndNext}
         setSelectedRequirements={setRequirements}
-        isLoading={isLoading}
+        onRequirementsChange={handleRequirementsChange}
+        isLoading={parentIsLoading}
         initialValues={requirementValues}
+        errors={mergedReqErrors}
       />
-
     </div>
   );
 }
