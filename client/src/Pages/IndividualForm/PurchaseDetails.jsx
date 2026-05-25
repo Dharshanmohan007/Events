@@ -126,7 +126,7 @@ function DateTimePicker({ label, value, onChange, placeholder }) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between bg-[#1d1d39] px-4 py-3 rounded-lg border transition-colors ${
+        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
           open ? "border-purple-500" : "border-[#3a3a5a]"
         }`}
       >
@@ -641,46 +641,39 @@ export default function PurchaseDetails() {
           placeholder="Select Requirement"
         />
 
-        {form.requirement.length > 0 && (
-          <div
-            className="grid grid-cols-1
-            md:grid-cols-2 gap-4"
-          >
-            {form.requirement.includes("ID card") && (
-              <div>
-                <InputField
-                  label="Id Card Hard copy Quantity"
-                  placeholder="52"
-                  value={form.idCardQty}
-                  onChange={(e) => setField("idCardQty", e.target.value)}
-                  error={errors.idCardQty}
-                />
-                {errors.idCardQty && (
-                  <p className="text-red-400 text-sm mt-1">
-                    {errors.idCardQty}
-                  </p>
-                )}
-              </div>
-            )}
+       {form.requirement.length > 0 && (
+  <div
+    className={`grid gap-4 ${
+      form.requirement.length === 1
+        ? "grid-cols-1"
+        : "grid-cols-1 md:grid-cols-2"
+    }`}
+  >
+    {form.requirement.includes("ID card") && (
+      <div className="w-full">
+        <InputField
+          label="Id Card Hard copy Quantity"
+          placeholder="52"
+          value={form.idCardQty}
+          onChange={(e) => setField("idCardQty", e.target.value)}
+          error={errors.idCardQty}
+        />
+      </div>
+    )}
 
-            {form.requirement.includes("Certificate") && (
-              <div>
-                <InputField
-                  label="Certificate Hard Copy Quantity"
-                  placeholder="52"
-                  value={form.certificateQty}
-                  onChange={(e) => setField("certificateQty", e.target.value)}
-                  error={errors.certificateQty}
-                />
-                {errors.certificateQty && (
-                  <p className="text-red-400 text-sm mt-1">
-                    {errors.certificateQty}
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+    {form.requirement.includes("Certificate") && (
+      <div className="w-full">
+        <InputField
+          label="Certificate Hard Copy Quantity"
+          placeholder="52"
+          value={form.certificateQty}
+          onChange={(e) => setField("certificateQty", e.target.value)}
+          error={errors.certificateQty}
+        />
+      </div>
+    )}
+  </div>
+)}
 
         <div
           className="grid grid-cols-1
@@ -1015,15 +1008,26 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full bg-[#1d1d39]
+        className={`w-full 
+        bg-[#16162a]
         border rounded-md px-4 py-3
         text-sm text-gray-300
         placeholder:text-gray-500
         outline-none
-        focus:border-[#8b3dff] ${error ? "border-red-500" : "border-white/5"}`}
+        transition-all duration-300
+        focus:border-[#8b3dff]
+        ${
+          error
+            ? "border-red-500"
+            : "border-[#3a3a5a]"
+        }`}
       />
 
-      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
+      {error && (
+        <p className="text-red-400 text-sm mt-1">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -1075,7 +1079,7 @@ function CustomDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className={`
           w-full
-          bg-[#1f1f38]
+        
           border
           rounded-md
           px-4
