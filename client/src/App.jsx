@@ -62,10 +62,8 @@ function PublicRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path='/login' element={<Login />} />
-      <Route path='/' element={<EventsForm />} />
-      {/* <Route path='/login' element={<Login />} /> 
-      <Route path='/' element={<EventsForm />} /> */}
+      <Route path='/' element={<Login />} />
+      <Route path='/forms' element={<EventsForm />} />
       <Route path='/dashboard-ictcs' element={<ICTCSDashboard />} />
       <Route path='/dashboard-ictcs/events' element={<Events />} />
       <Route path='/dashboard-ictcs/events/:eventId' element={<IctcEventDetailsPage />} />
@@ -107,46 +105,11 @@ function AppRoutes() {
       <Route path='/dashboard-admin' element={<AdminDashboard />} />
       {/* Login Route */}
       <Route
-        path="/"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <Login />
-          </PublicRoute>
-        }
-      />
-      {/* Sign Up Route */}
-      <Route
-        path="/signup"
-        element={
-          <PublicRoute>
-            <SignUp />
-          </PublicRoute>
-        }
-      />
-      <Route
         path="/forget-password"
         element={
           <PublicRoute>
             <ForgetPassword />
           </PublicRoute>
-        }
-      />
-
-      {/* Protected Main Route */}
-      <Route
-        path="/forms"
-        element={
-          <ProtectedRoute>
-            <EventsForm />
-          </ProtectedRoute>
         }
       />
 
