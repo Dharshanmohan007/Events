@@ -21,9 +21,9 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
                     <thead className='sticky top-0 bg-[#151c2c]'>
                         <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
                             <th className="px-6 py-4 font-semibold">Event Name</th>
-                            <th className="px-6 py-4 font-semibold">Event Type</th>
                             <th className="px-6 py-4 font-semibold">Event Date</th>
-                            <th className="px-6 py-4 font-semibold">Dpt</th>
+                            <th className="px-6 py-4 font-semibold">Event Type</th>
+                            <th className="px-6 py-4 font-semibold">Dept</th>
                             <th className="px-6 py-4 font-semibold">Status</th>
                             <th className="px-6 py-4 font-semibold text-center">Action</th>
                         </tr>
@@ -40,8 +40,8 @@ const UpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" })
                                     className="border-t border-[#20283a] text-sm text-white"
                                 >
                                     <td className="px-6 py-4 font-medium whitespace-nowrap">{event.eventName}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{event.eventDate}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span

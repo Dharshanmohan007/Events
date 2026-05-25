@@ -25,10 +25,10 @@ export default function VenueCard({ venues = [] }) {
 
                         <div className="flex items-center gap-2">
                             <button className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#32354a] transition-colors">
-                                <Pencil size={14} />
+                                <Pencil size={14} className="text-[#059669]" />
                             </button>
                             <button className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-[#32354a] transition-colors">
-                                <Trash2 size={14} />
+                                <Trash2 size={14} className="text-[#FF0063]" />
                             </button>
                         </div>
                     </div>
