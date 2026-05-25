@@ -7,11 +7,13 @@ import { ToastContainer } from "react-toastify";
 import EventsForm from './Pages/EventsForm'
 import ICTCSDashboard from './Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard'
 import AUDIODashboard from './Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard'
+import AudioReportsPage from './Pages/Dashboards/AUDIO-Dashboard/AudioReportsPage'
 import Login from './Pages/Login'
 import Events from './Pages/Dashboards/ICTC-Dashboard/Events'
 import Reports from './Pages/Dashboards/ICTC-Dashboard/Reports'
 import IctcEventDetailsPage from './Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage'
 import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
+import TransportsReportsPage from './Pages/Dashboards/Transports-Dashboard/TransportsReportsPage'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
@@ -25,10 +27,14 @@ import AdminDashboardLayout from './Pages/Dashboards/Admin-Dashboard/AdminDashbo
 import VenueManagementPage from './Pages/Dashboards/Admin-Dashboard/VenueManagementPage'
 import AdminManagementPage from './Pages/Dashboards/Admin-Dashboard/AdminManagementPage'
 import FacultyManagementPage from './Pages/Dashboards/Admin-Dashboard/FacultyManagementPage'
+import AdminReportsPage from './Pages/Dashboards/Admin-Dashboard/AdminReportsPage'
 import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/AccommodationDashboard'
+import AccommodationReportsPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationReportsPage'
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
+import FoodReportsPage from './Pages/Dashboards/Food-Dashboard/FoodReportsPage'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
 import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
+import VenueReportsPage from './Pages/Dashboards/Venue-Dashboard/VenueReportsPage'
 import SignUp from './Pages/SignUp'
 import ForgetPassword from './Components/ForgetPassword'
 
@@ -65,7 +71,9 @@ function AppRoutes() {
       <Route path='/dashboard-ictcs/events/:eventId' element={<IctcEventDetailsPage />} />
       <Route path='/dashboard-ictcs/reports' element={<Reports />} />
       <Route path='/dashboard-audio' element={<AUDIODashboard />} />
+      <Route path='/dashboard-audio/reports' element={<AudioReportsPage />} />
       <Route path='/dashboard-transports' element={<TransportsDashboard />} />
+      <Route path='/dashboard-transports/reports' element={<TransportsReportsPage />} />
       <Route path='/dashboard-media' element={<MediaDashboard />} />
       <Route path='/dashboard-poster' element={<PosterDashboard />} />
       <Route path='/dashboard-poster/requests' element={<PosterRequestListPage />} />
@@ -80,6 +88,7 @@ function AppRoutes() {
         <Route path='VenueManagement' element={<VenueManagementPage />} />
         <Route path='AdminManagement' element={<AdminManagementPage />} />
         <Route path='FacultyManagement' element={<FacultyManagementPage />} />
+        <Route path='reports' element={<AdminReportsPage />} />
         <Route path='AdminEventsRequests/:eventId' element={<EventDetailsPage />} />
       </Route>
 
@@ -89,8 +98,11 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/venues" element={<FacultyVenueListPage />} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<FacultyfeedbackPage />} />
       <Route path='/dashboard-accommodation' element={<AccommodationDashboard />} />
+      <Route path='/dashboard-accommodation/reports' element={<AccommodationReportsPage />} />
       <Route path='/dashboard-venue' element={<VenueDashboard />} />
+      <Route path='/dashboard-venue/reports' element={<VenueReportsPage />} />
       <Route path='/dashboard-food' element={<FoodDashboard />} />
+      <Route path='/dashboard-food/reports' element={<FoodReportsPage />} />
       <Route path='/dashboard-purchase' element={<PurchaseDashboard />} />
       <Route path='/dashboard-admin' element={<AdminDashboard />} />
       {/* Login Route */}
