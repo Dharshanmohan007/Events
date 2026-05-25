@@ -5,10 +5,10 @@ export function ProtectedRoute({ children, requiredPermission }) {
   const { user, loading, hasPermission } = useAuth();
   const location = useLocation();
 
-  console.log("🔐 ProtectedRoute check:", { user, loading });
-
+  // Still verifying token with backend → render nothing (no flash)
   if (loading) return null;
 
+  // No user (never logged in, token deleted, or token expired) → login
   if (!user) {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
