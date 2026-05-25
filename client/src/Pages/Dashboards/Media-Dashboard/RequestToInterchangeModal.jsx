@@ -1,7 +1,16 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 
 const RequestToInterchangeModal = ({ onClose, isInterchangeOpen }) => {
+    const interchangeUsers = ['Karthick', 'Arun', 'Priya', 'Sathish']
+    const [selectedUser, setSelectedUser] = useState(interchangeUsers[0])
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+    const handleUserSelect = (user) => {
+        setSelectedUser(user)
+        setIsDropdownOpen(false)
+    }
+
     return (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/80 px-4 poppins" onClick={onClose}>
             <div className="w-full max-w-[496px] rounded-lg bg-[#0b1326] px-5 py-4 shadow-2xl border border-gray-700" onClick={(event) => event.stopPropagation()}>
@@ -15,6 +24,7 @@ const RequestToInterchangeModal = ({ onClose, isInterchangeOpen }) => {
                     >
                         <X size={16} className='' />
                     </button>
+
                 </div>
 
                 <form className="mt-7 space-y-5" onSubmit={(event) => event.preventDefault()}>
@@ -24,11 +34,31 @@ const RequestToInterchangeModal = ({ onClose, isInterchangeOpen }) => {
                         </span>
                         <button
                             type="button"
-                            className="flex h-8 w-full items-center justify-between rounded-[3px] border border-[#343b4a] bg-transparent p-4 text-left text-[12px] text-[#8f96a8]"
+                            onClick={() => setIsDropdownOpen((isOpen) => !isOpen)}
+                            className="flex h-8 w-full  items-center justify-between rounded-[3px] border border-[#343b4a] bg-transparent p-4 text-left text-[12px] text-[#8f96a8] outline-none focus:border-[#8B3DFF]"
                         >
-                            Karthick
-                            <ChevronDown size={15} className="text-white" />
+                            {selectedUser}
+                            <ChevronDown
+                                size={15}
+                                className={`text-white transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+                            />
                         </button>
+
+                        {isDropdownOpen && (
+                            <ul className="absolute left-0 top-[38px] z-20 max-h-40 w-full overflow-y-auto rounded-[3px] border border-[#343b4a] bg-[#101a31] py-1 text-[12px] text-white shadow-xl">
+                                {interchangeUsers.map((user) => (
+                                    <li key={user}>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleUserSelect(user)}
+                                            className={`w-full px-4 py-2 text-left transition-colors hover:bg-[#202a40] ${selectedUser === user ? 'bg-[#1a2440] text-white' : 'text-[#cfd5e5]'}`}
+                                        >
+                                            {user}
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </label>
 
                     <label className="relative block">

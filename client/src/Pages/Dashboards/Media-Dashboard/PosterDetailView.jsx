@@ -28,9 +28,10 @@ const DetailHeader = () => (
             <img src={smallLogo} alt="Logo" className="h-10 w-10" />
             <nav className="flex items-center gap-4 text-sm font-medium">
                 <Link to="/dashboard-poster" className="text-[#FFFFFF80]">Dashboard</Link>
-                <span className="border-b border-[#8B3DFF] pb-1 text-[#8B3DFF]">Request List</span>
-                <span className="text-[#FFFFFF80]">Calender</span>
-                <span className="text-[#FFFFFF80]">Reports</span>
+                <Link to="/dashboard-poster/requests" className="border-b border-[#8B3DFF] pb-1 text-[#8B3DFF]">Request List</Link>
+                <span className="text-[#FFFFFF80]">Calendar</span>
+                <Link to="/dashboard-poster/reports" className="text-[#FFFFFF80] hover:text-white">Reports</Link>
+                <Link to="/dashboard-poster/feedback" className="text-[#FFFFFF80] hover:text-white">Feedback</Link>
             </nav>
         </div>
 
@@ -108,7 +109,7 @@ const PosterDetailView = () => {
             <main className="px-5 pb-8 pt-3">
                 <div className="flex items-center justify-between gap-4">
                     <div className="text-sm font-semibold text-[#8c94a8]">
-                        <Link to="/dashboard-poster" className="hover:text-white">Poster</Link>
+                        <Link to="/dashboard-poster/requests" className="hover:text-white">Poster Request List</Link>
                         <span className="mx-2 text-[#596276]">&gt;</span>
                         <span className="text-[#D0BCFF]">{eventDetails.title}</span>
                     </div>
@@ -117,12 +118,12 @@ const PosterDetailView = () => {
                         <button
                             type="button"
                             onClick={() => setIsInterchangeOpen(true)}
-                            className="flex h-11 items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] hover:bg-linear-to-l hover:from-[#078B72] hover:to-[#035546] px-5 text-base font-medium text-white"
+                            className="flex h-10 items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] hover:bg-linear-to-l hover:from-[#078B72] hover:to-[#035546] px-5 text-base font-medium text-white"
                         >
                             <Shuffle size={17} />
                             Request to Interchange
                         </button>
-                        <button type="button" className="flex h-11 items-center gap-2 rounded-md bg-linear-to-r from-[#8D3CF2] to-[#55279E]  hover:bg-linear-to-l hover:from-[#8D3CF2] hover:to-[#55279E]  px-5 text-base font-medium text-white">
+                        <button type="button" className="flex h-10 items-center gap-2 rounded-md bg-linear-to-r from-[#8D3CF2] to-[#55279E]  hover:bg-linear-to-l hover:from-[#8D3CF2] hover:to-[#55279E]  px-5 text-base font-medium text-white">
                             <Check size={17} />
                             Acknowledge
                         </button>

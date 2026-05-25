@@ -14,6 +14,9 @@ import IctcEventDetailsPage from './Pages/Dashboards/ICTC-Dashboard/IctcEventDet
 import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
+import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
+import PosterReportsPage from './Pages/Dashboards/Media-Dashboard/PosterReportsPage'
+import PosterFeedbackPage from './Pages/Dashboards/Media-Dashboard/PosterFeedbackPage'
 import PosterDetailView from './Pages/Dashboards/Media-Dashboard/PosterDetailView'
 import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
 import AdminDashboard from './Pages/Dashboards/Admin-Dashboard/AdminDashboard'
@@ -65,6 +68,9 @@ function AppRoutes() {
       <Route path='/dashboard-transports' element={<TransportsDashboard />} />
       <Route path='/dashboard-media' element={<MediaDashboard />} />
       <Route path='/dashboard-poster' element={<PosterDashboard />} />
+      <Route path='/dashboard-poster/requests' element={<PosterRequestListPage />} />
+      <Route path='/dashboard-poster/reports' element={<PosterReportsPage />} />
+      <Route path='/dashboard-poster/feedback' element={<PosterFeedbackPage />} />
       <Route path='/dashboard-poster/detailView/:posterId' element={<PosterDetailView />} />
       <Route path='/dashboard-video' element={<VideoDashboard />} />
       {/* Admin routes  */}

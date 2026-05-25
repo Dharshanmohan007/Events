@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Filter, Hourglass, Search, Settings, Star } from 'lucide-react'
+import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Filter, Hourglass, Search, Settings, Star } from 'lucide-react'
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
 import { Link } from 'react-router-dom'
 import smallLogo from '../../../assets/small-logo.svg'
@@ -54,8 +54,12 @@ const DashboardHeader = () => (
     <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
         <div className="flex items-center gap-6">
             <img src={smallLogo} alt="Logo" className="h-11 w-11" />
-            <nav className="flex items-center gap-8 text-sm">
-                <span className="border-b border-[#8B3DFF] pb-2 font-semibold text-[#8B3DFF]">Dashboard</span>
+            <nav className="flex items-center gap-8 text-sm font-medium">
+                <Link to="/dashboard-poster" className="border-b border-[#8B3DFF] pb-2 text-[#8B3DFF]">Dashboard</Link>
+                <Link to="/dashboard-poster/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
+                <span className="pb-2 text-[#FFFFFF80]">Calendar</span>
+                <Link to="/dashboard-poster/reports" className="pb-2 text-[#FFFFFF80] hover:text-white">Reports</Link>
+                <Link to="/dashboard-poster/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
             </nav>
         </div>
 
@@ -115,12 +119,17 @@ const RequestTable = () => (
                 <Search size={14} className="text-[#8b93a4]" />
                 <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues" />
             </div>
-            {['Seminar', 'Acknowledged', '15/03/2026'].map((filter) => (
+            {["Filters"].map((filter) => (
                 <button key={filter} className="flex items-center gap-2 rounded-md border border-[#343b4a] bg-[#232A3C] px-3 py-2 text-xs text-white">
                     <Filter size={12} className="text-[#8b93a4]" />
                     {filter}
                 </button>
             ))}
+            <div>
+                <Link to="/dashboard-poster/requests" className="text-sm flex items-center gap-2 text-[#853FF9] font-medium cursor-pointer">
+                    View all <span><ArrowRight size={14} /></span>
+                </Link>
+            </div>
         </div>
 
         <div className="overflow-auto h-[calc(100vh-270px)] table-custom-scrollbar">
@@ -159,7 +168,7 @@ const FeedbackRatings = () => (
     <section className="rounded-lg border h-[calc(100vh-190px)] table-custom-scrollbar overflow-auto border-[#2a3347] bg-[#151c2c]  col-span-7">
         <div className="flex items-center justify-between sticky top-0 z-10 bg-[#151c2c] p-4">
             <h2 className="text-lg font-semibold text-white">Latest Feedback & Ratings</h2>
-            <button className="text-sm font-semibold text-[#8B3DFF]">View All -&gt;</button>
+            <Link to="/dashboard-poster/feedback" className="text-sm font-semibold text-[#8B3DFF]">View All -&gt;</Link>
         </div>
         <div className="mt-4 space-y-3 px-4">
             {feedbackRows.map((feedback, index) => (
