@@ -1,7 +1,8 @@
 import React from 'react'
-import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Filter, Hourglass, Search, Settings, Star } from 'lucide-react'
-import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
+import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Filter, Hourglass, Search, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 import smallLogo from '../../../assets/small-logo.svg'
 import profileAvatar from '../../../assets/profile-avatar.svg'
 
@@ -164,68 +165,6 @@ const RequestTable = () => (
     </section>
 )
 
-const FeedbackRatings = () => (
-    <section className="rounded-lg border h-[calc(100vh-190px)] table-custom-scrollbar overflow-auto border-[#2a3347] bg-[#151c2c]  col-span-7">
-        <div className="flex items-center justify-between sticky top-0 z-10 bg-[#151c2c] p-4">
-            <h2 className="text-lg font-semibold text-white">Latest Feedback & Ratings</h2>
-            <Link to="/dashboard-poster/feedback" className="text-sm font-semibold text-[#8B3DFF]">View All -&gt;</Link>
-        </div>
-        <div className="mt-4 space-y-3 px-4">
-            {feedbackRows.map((feedback, index) => (
-                <article key={index} className="rounded-md border border-[#2a3347] bg-[#20283A] p-2">
-                    <div className="flex items-start justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <img src={profileAvatar} alt="" className="h-10 w-10 rounded-full" />
-                            <div>
-                                <p className="text-xs font-medium text-[#DDE3F2]">{feedback.name}</p>
-                                <p className="text-xs text-[#FFFFFF66]">{feedback.department}</p>
-                            </div>
-                        </div>
-                        <div className="flex text-[#FFC107]">
-                            {Array.from({ length: 5 }, (_, starIndex) => (
-                                <Star key={starIndex} size={15} fill="currentColor" />
-                            ))}
-                        </div>
-                    </div>
-                    <p className="mt-2 text-xs italic leading-5 text-[#DDE3F2]/85">{feedback.quote}</p>
-                    <p className="mt-2 text-right text-[10px] text-[#FFFFFF66]">{feedback.time}</p>
-                </article>
-            ))}
-        </div>
-    </section>
-)
-
-const DepartmentChart = () => (
-    <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] p-4 col-span-5">
-        <div className="flex items-center gap-3 justify-between">
-            <h2 className="text-lg font-semibold text-white">Event Poster Request By Department</h2>
-            <button className="flex items-center gap-2 rounded-md border border-[#343b4a] bg-[#232A3C] px-3 py-2 text-xs text-white">
-                <Filter size={12} />
-                Filters
-            </button>
-        </div>
-        <div className="mt-6 grid grid-cols-[1fr_170px] items-center gap-4">
-            <div className="h-[360px]">
-                <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                        <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={95} outerRadius={140} paddingAngle={2} stroke="none" isAnimationActive={false}>
-                            {chartData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
-                        </Pie>
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="space-y-7">
-                {[...chartData, ...chartData].map((item, index) => (
-                    <div key={`${item.name}-${index}`} className="flex items-center gap-3 text-sm font-semibold text-white">
-                        <span className="h-4 w-4 rounded-sm" style={{ backgroundColor: item.color }} />
-                        {item.name}
-                    </div>
-                ))}
-            </div>
-        </div>
-    </section>
-)
-
 const PosterDashboard = () => {
     return (
         <section className="min-h-screen overflow-auto bg-[#0b1326] pt-16.25 text-white poppins table-custom-scrollbar">
@@ -245,8 +184,8 @@ const PosterDashboard = () => {
                 </div>
 
                 <div className="mt-8 grid grid-cols-12 gap-3">
-                    <FeedbackRatings />
-                    <DepartmentChart />
+                    <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
+                    <DepartmentRequestChart data={chartData} title="Event Poster Request By Department" />
                 </div>
             </main>
         </section>

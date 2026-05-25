@@ -1,8 +1,9 @@
 import React from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import PurchaseStatcard from './PurchaseStatcard'
 import PurchaseRequestTable from './PurchaseRequestTable'
-import PurchaseDepartmentPieChart from './PurchaseDepartmentPieChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const purchaseRequests = [
     {
@@ -109,7 +110,6 @@ const PurchaseDashboard = () => {
                 <div className='header-container sticky top-0'>
                     <DashboardHeader basePath="/dashboard-purchase" />
                 </div>
-
                 {/* main-container  */}
                 <div className='main-body-container  px-6 '>
                     {/* heading */}
@@ -117,22 +117,18 @@ const PurchaseDashboard = () => {
                         <h1 className='text-white text-lg font-medium'>Purchase & Procurement Dashboard Overview</h1>
                         <h1 className='text-[#FFFFFF80] text-sm'>Lorem Ipsumis simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</h1>
                     </div>
-
                     {/* stat cards  */}
                     <PurchaseStatcard />
-
                     {/* table and charts    */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
+                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         <PurchaseRequestTable requests={purchaseRequests} viewAllLink="/purchase-requests" />
+                    </div>
 
-                        {/* charts  */}
-                        <PurchaseDepartmentPieChart
-                            data={departmentData}
-                        />
+                    <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
+                        <FeedbackRatings feedbackLink="/dashboard-purchase/feedback" />
+                        <DepartmentRequestChart data={departmentData} title="Purchase Request By Department" />
                     </div>
                 </div>
-
             </section>
         </>
     )
