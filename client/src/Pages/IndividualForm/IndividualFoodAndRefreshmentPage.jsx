@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useState,
-  useRef,
-  useCallback,
-} from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 
 import {
   ChevronDown,
@@ -39,99 +34,54 @@ const MONTHS = [
 ];
 
 function getDaysInMonth(year, month) {
-  return new Date(
-    year,
-    month + 1,
-    0
-  ).getDate();
+  return new Date(year, month + 1, 0).getDate();
 }
 
-function getFirstDayOfMonth(
-  year,
-  month
-) {
-  return new Date(
-    year,
-    month,
-    1
-  ).getDay();
+function getFirstDayOfMonth(year, month) {
+  return new Date(year, month, 1).getDay();
 }
 
-function ScrollDrum({
-  items,
-  value,
-  onChange,
-}) {
+function ScrollDrum({ items, value, onChange }) {
   const containerRef = useRef(null);
 
   const ITEM_H = 40;
 
-  const isScrollingRef =
-    useRef(false);
+  const isScrollingRef = useRef(false);
 
-  const scrollTimerRef =
-    useRef(null);
+  const scrollTimerRef = useRef(null);
 
   useEffect(() => {
-    const el =
-      containerRef.current;
+    const el = containerRef.current;
 
     if (!el) return;
 
-    el.scrollTop =
-      value * ITEM_H;
+    el.scrollTop = value * ITEM_H;
   }, [value]);
 
-  const handleScroll =
-    useCallback(() => {
-      if (
-        isScrollingRef.current
-      )
-        return;
+  const handleScroll = useCallback(() => {
+    if (isScrollingRef.current) return;
 
-      const el =
-        containerRef.current;
+    const el = containerRef.current;
 
-      if (!el) return;
+    if (!el) return;
 
-      clearTimeout(
-        scrollTimerRef.current
-      );
+    clearTimeout(scrollTimerRef.current);
 
-      scrollTimerRef.current =
-        setTimeout(() => {
-          const idx = Math.round(
-            el.scrollTop / ITEM_H
-          );
+    scrollTimerRef.current = setTimeout(() => {
+      const idx = Math.round(el.scrollTop / ITEM_H);
 
-          const clamped = Math.max(
-            0,
-            Math.min(
-              items.length - 1,
-              idx
-            )
-          );
+      const clamped = Math.max(0, Math.min(items.length - 1, idx));
 
-          el.scrollTop =
-            clamped * ITEM_H;
+      el.scrollTop = clamped * ITEM_H;
 
-          if (clamped !== value)
-            onChange(clamped);
+      if (clamped !== value) onChange(clamped);
 
-          isScrollingRef.current =
-            false;
-        }, 80);
-    }, [
-      items.length,
-      onChange,
-      value,
-    ]);
+      isScrollingRef.current = false;
+    }, 80);
+  }, [items.length, onChange, value]);
 
   return (
-    <div
-      className="relative flex flex-col items-center"
-      style={{ width: 56 }}
-    >
+    <div className="relative flex flex-col items-center" style={{ width: 56 }}>
       <div
         className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg"
         style={{
@@ -153,8 +103,7 @@ function ScrollDrum({
         className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg"
         style={{
           height: ITEM_H * 2,
-          background:
-            "linear-gradient(to top, #1a1a35 0%, transparent 100%)",
+          background: "linear-gradient(to top, #1a1a35 0%, transparent 100%)",
         }}
       />
 
@@ -164,10 +113,8 @@ function ScrollDrum({
         style={{
           height: ITEM_H * 5,
           overflowY: "scroll",
-          scrollbarWidth:
-            "none",
-          msOverflowStyle:
-            "none",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
         }}
         className="w-full drum-scroll"
       >
@@ -179,39 +126,34 @@ function ScrollDrum({
 
         <div
           style={{
-            height:
-              ITEM_H * 2,
+            height: ITEM_H * 2,
           }}
         />
 
-        {items.map(
-          (item, i) => (
-            <div
-              key={i}
-              onClick={() => {
-                onChange(i);
+        {items.map((item, i) => (
+          <div
+            key={i}
+            onClick={() => {
+              onChange(i);
 
-                containerRef.current.scrollTop =
-                  i * ITEM_H;
-              }}
-              style={{
-                height: ITEM_H,
-              }}
-              className={`flex items-center justify-center text-base font-mono cursor-pointer select-none transition-colors ${
-                i === value
-                  ? "text-white font-semibold"
-                  : "text-gray-500 hover:text-gray-300"
-              }`}
-            >
-              {item}
-            </div>
-          )
-        )}
+              containerRef.current.scrollTop = i * ITEM_H;
+            }}
+            style={{
+              height: ITEM_H,
+            }}
+            className={`flex items-center justify-center text-base font-mono cursor-pointer select-none transition-colors ${
+              i === value
+                ? "text-white font-semibold"
+                : "text-gray-500 hover:text-gray-300"
+            }`}
+          >
+            {item}
+          </div>
+        ))}
 
         <div
           style={{
-            height:
-              ITEM_H * 2,
+            height: ITEM_H * 2,
           }}
         />
       </div>
@@ -219,311 +161,162 @@ function ScrollDrum({
   );
 }
 
-function CustomDateTimePicker({
-  label,
-  value,
-  onChange,
-  placeholder,
-}) {
-  const [open, setOpen] =
-    useState(false);
+function CustomDateTimePicker({ label, value, onChange, placeholder }) {
+  const [open, setOpen] = useState(false);
 
-  const [view, setView] =
-    useState("calendar");
+  const [view, setView] = useState("calendar");
 
-  const [
-    displayMonth,
-    setDisplayMonth,
-  ] = useState(() =>
-    value
-      ? value.getMonth()
-      : new Date().getMonth()
+  const [displayMonth, setDisplayMonth] = useState(() =>
+    value ? value.getMonth() : new Date().getMonth(),
   );
 
-  const [
-    displayYear,
-    setDisplayYear,
-  ] = useState(() =>
-    value
-      ? value.getFullYear()
-      : new Date().getFullYear()
+  const [displayYear, setDisplayYear] = useState(() =>
+    value ? value.getFullYear() : new Date().getFullYear(),
   );
 
-  const [yearPage, setYearPage] =
-    useState(() =>
-      Math.floor(
-        (value
-          ? value.getFullYear()
-          : new Date().getFullYear()) /
-          12
-      )
-    );
-
-  const [selectedDate, setSelectedDate] =
-    useState(value || null);
-
-  const HOURS = Array.from(
-    { length: 12 },
-    (_, i) =>
-      String(
-        i === 0 ? 12 : i
-      ).padStart(2, "0")
+  const [yearPage, setYearPage] = useState(() =>
+    Math.floor((value ? value.getFullYear() : new Date().getFullYear()) / 12),
   );
 
-  const MINUTES = Array.from(
-    { length: 60 },
-    (_, i) =>
-      String(i).padStart(
-        2,
-        "0"
-      )
+  const [selectedDate, setSelectedDate] = useState(value || null);
+
+  const HOURS = Array.from({ length: 12 }, (_, i) =>
+    String(i === 0 ? 12 : i).padStart(2, "0"),
   );
 
-  const getHourIdx = (
-    d
-  ) => {
+  const MINUTES = Array.from({ length: 60 }, (_, i) =>
+    String(i).padStart(2, "0"),
+  );
+
+  const getHourIdx = (d) => {
     if (!d) return 0;
 
-    const h =
-      d.getHours() % 12;
+    const h = d.getHours() % 12;
 
-    return h === 0
-      ? 0
-      : h;
+    return h === 0 ? 0 : h;
   };
 
-  const [hourIdx, setHourIdx] =
-    useState(() =>
-      getHourIdx(value)
-    );
+  const [hourIdx, setHourIdx] = useState(() => getHourIdx(value));
 
-  const [minuteIdx, setMinuteIdx] =
-    useState(() =>
-      value
-        ? value.getMinutes()
-        : 0
-    );
+  const [minuteIdx, setMinuteIdx] = useState(() =>
+    value ? value.getMinutes() : 0,
+  );
 
-  const [ampm, setAmpm] =
-    useState(() =>
-      value
-        ? value.getHours() >=
-          12
-          ? "PM"
-          : "AM"
-        : "AM"
-    );
+  const [ampm, setAmpm] = useState(() =>
+    value ? (value.getHours() >= 12 ? "PM" : "AM") : "AM",
+  );
 
   const ref = useRef(null);
 
   useEffect(() => {
-    const handler = (
-      e
-    ) => {
-      if (
-        ref.current &&
-        !ref.current.contains(
-          e.target
-        )
-      ) {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
         setOpen(false);
       }
     };
 
-    document.addEventListener(
-      "mousedown",
-      handler
-    );
+    document.addEventListener("mousedown", handler);
 
-    return () =>
-      document.removeEventListener(
-        "mousedown",
-        handler
-      );
+    return () => document.removeEventListener("mousedown", handler);
   }, []);
 
   const formatDisplay = () => {
-    if (!value)
-      return (
-        placeholder ||
-        "__/__/____ --:-- --"
-      );
+    if (!value) return placeholder || "__/__/____ --:-- --";
 
     const d = value;
 
-    const dd = String(
-      d.getDate()
-    ).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
 
-    const mm = String(
-      d.getMonth() + 1
-    ).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
 
-    const yyyy =
-      d.getFullYear();
+    const yyyy = d.getFullYear();
 
-    const rawH =
-      d.getHours();
+    const rawH = d.getHours();
 
-    const h12 =
-      rawH === 0
-        ? 12
-        : rawH > 12
-        ? rawH - 12
-        : rawH;
+    const h12 = rawH === 0 ? 12 : rawH > 12 ? rawH - 12 : rawH;
 
-    const hh = String(
-      h12
-    ).padStart(2, "0");
+    const hh = String(h12).padStart(2, "0");
 
-    const min = String(
-      d.getMinutes()
-    ).padStart(2, "0");
+    const min = String(d.getMinutes()).padStart(2, "0");
 
-    const ap =
-      rawH >= 12
-        ? "PM"
-        : "AM";
+    const ap = rawH >= 12 ? "PM" : "AM";
 
     return `${dd}/${mm}/${yyyy} ${hh}:${min} ${ap}`;
   };
 
-  const commitDateTime =
-    useCallback(
-      (
-        date,
-        hIdx,
-        mIdx,
-        ap
-      ) => {
-        if (!date) return;
+  const commitDateTime = useCallback(
+    (date, hIdx, mIdx, ap) => {
+      if (!date) return;
 
-        const d =
-          new Date(date);
+      const d = new Date(date);
 
-        let hours =
-          hIdx % 12;
+      let hours = hIdx % 12;
 
-        if (ap === "PM")
-          hours += 12;
+      if (ap === "PM") hours += 12;
 
-        d.setHours(
-          hours,
-          mIdx,
-          0,
-          0
-        );
+      d.setHours(hours, mIdx, 0, 0);
 
-        onChange(d);
-      },
-      [onChange]
-    );
+      onChange(d);
+    },
+    [onChange],
+  );
 
-  const handleDayClick = (
-    day
-  ) => {
-    const newDate =
-      new Date(
-        displayYear,
-        displayMonth,
-        day
-      );
+  const handleDayClick = (day) => {
+    const newDate = new Date(displayYear, displayMonth, day);
 
     setSelectedDate(newDate);
 
-    commitDateTime(
-      newDate,
-      hourIdx,
-      minuteIdx,
-      ampm
-    );
+    commitDateTime(newDate, hourIdx, minuteIdx, ampm);
 
     setView("time");
   };
 
-  const handleTimeConfirm =
-    () => {
-      commitDateTime(
-        selectedDate,
-        hourIdx,
-        minuteIdx,
-        ampm
-      );
+  const handleTimeConfirm = () => {
+    commitDateTime(selectedDate, hourIdx, minuteIdx, ampm);
 
-      setOpen(false);
+    setOpen(false);
 
-      setView("calendar");
-    };
+    setView("calendar");
+  };
 
   const prevMonth = () => {
     if (displayMonth === 0) {
       setDisplayMonth(11);
 
-      setDisplayYear(
-        (y) => y - 1
-      );
+      setDisplayYear((y) => y - 1);
     } else {
-      setDisplayMonth(
-        (m) => m - 1
-      );
+      setDisplayMonth((m) => m - 1);
     }
   };
 
   const nextMonth = () => {
-    if (
-      displayMonth === 11
-    ) {
+    if (displayMonth === 11) {
       setDisplayMonth(0);
 
-      setDisplayYear(
-        (y) => y + 1
-      );
+      setDisplayYear((y) => y + 1);
     } else {
-      setDisplayMonth(
-        (m) => m + 1
-      );
+      setDisplayMonth((m) => m + 1);
     }
   };
 
-  const daysInMonth =
-    getDaysInMonth(
-      displayYear,
-      displayMonth
-    );
+  const daysInMonth = getDaysInMonth(displayYear, displayMonth);
 
-  const firstDay =
-    getFirstDayOfMonth(
-      displayYear,
-      displayMonth
-    );
+  const firstDay = getFirstDayOfMonth(displayYear, displayMonth);
 
-  const yearStart =
-    yearPage * 12;
+  const yearStart = yearPage * 12;
 
-  const years =
-    Array.from(
-      { length: 12 },
-      (_, i) =>
-        yearStart + i
-    );
+  const years = Array.from({ length: 12 }, (_, i) => yearStart + i);
 
   return (
-    <div
-      ref={ref}
-      className="relative w-full"
-    >
-      <span className="block text-sm mb-2">
-        {label}
-      </span>
+    <div ref={ref} className="relative w-full">
+      <span className="block text-sm mb-2">{label}</span>
 
       <button
         type="button"
         onClick={() => {
           setOpen((p) => !p);
 
-          setView(
-            "calendar"
-          );
+          setView("calendar");
         }}
         className="
           w-full
@@ -539,20 +332,12 @@ function CustomDateTimePicker({
           text-left
         "
       >
-        <span
-          className={
-            value
-              ? "text-white"
-              : "text-[#8d8da8]"
-          }
-        >
+        <span className={value ? "text-white" : "text-[#8d8da8]"}>
           {formatDisplay()}
         </span>
 
         <div className="flex gap-2 text-[#b0b0c3]">
-          <CalendarDays
-            size={18}
-          />
+          <CalendarDays size={18} />
 
           <Clock size={18} />
         </div>
@@ -561,84 +346,50 @@ function CustomDateTimePicker({
       {open && (
         <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3A3A5A] rounded-xl shadow-2xl w-72 overflow-hidden">
           {/* CALENDAR */}
-          {view ===
-            "calendar" && (
+          {view === "calendar" && (
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button
                   type="button"
-                  onClick={
-                    prevMonth
-                  }
+                  onClick={prevMonth}
                   className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400"
                 >
-                  <ChevronLeft
-                    size={16}
-                  />
+                  <ChevronLeft size={16} />
                 </button>
 
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() =>
-                      setView(
-                        "month"
-                      )
-                    }
+                    onClick={() => setView("month")}
                     className="text-sm font-medium text-white"
                   >
-                    {
-                      MONTHS[
-                        displayMonth
-                      ]
-                    }
+                    {MONTHS[displayMonth]}
                   </button>
 
                   <button
                     type="button"
                     onClick={() => {
-                      setYearPage(
-                        Math.floor(
-                          displayYear /
-                            12
-                        )
-                      );
+                      setYearPage(Math.floor(displayYear / 12));
 
-                      setView(
-                        "year"
-                      );
+                      setView("year");
                     }}
                     className="text-sm font-medium text-white"
                   >
-                    {
-                      displayYear
-                    }
+                    {displayYear}
                   </button>
                 </div>
 
                 <button
                   type="button"
-                  onClick={
-                    nextMonth
-                  }
+                  onClick={nextMonth}
                   className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400"
                 >
-                  <ChevronRight
-                    size={16}
-                  />
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
               <div className="grid grid-cols-7 mb-1">
-                {[
-                  "Su",
-                  "Mo",
-                  "Tu",
-                  "We",
-                  "Th",
-                  "Fr",
-                  "Sa",
-                ].map((d) => (
+                {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
                   <div
                     key={d}
                     className="text-center text-xs text-gray-500 py-1"
@@ -650,42 +401,28 @@ function CustomDateTimePicker({
 
               <div className="grid grid-cols-7 gap-0.5">
                 {Array.from({
-                  length:
-                    firstDay,
-                }).map(
-                  (_, i) => (
-                    <div
-                      key={i}
-                    />
-                  )
-                )}
+                  length: firstDay,
+                }).map((_, i) => (
+                  <div key={i} />
+                ))}
 
                 {Array.from(
                   {
-                    length:
-                      daysInMonth,
+                    length: daysInMonth,
                   },
-                  (_, i) =>
-                    i + 1
+                  (_, i) => i + 1,
                 ).map((day) => {
                   const isSelected =
                     selectedDate &&
-                    selectedDate.getDate() ===
-                      day &&
-                    selectedDate.getMonth() ===
-                      displayMonth &&
-                    selectedDate.getFullYear() ===
-                      displayYear;
+                    selectedDate.getDate() === day &&
+                    selectedDate.getMonth() === displayMonth &&
+                    selectedDate.getFullYear() === displayYear;
 
                   return (
                     <button
                       key={day}
                       type="button"
-                      onClick={() =>
-                        handleDayClick(
-                          day
-                        )
-                      }
+                      onClick={() => handleDayClick(day)}
                       className={`text-xs py-1.5 rounded-lg ${
                         isSelected
                           ? "bg-purple-600 text-white"
@@ -700,16 +437,10 @@ function CustomDateTimePicker({
 
               <button
                 type="button"
-                onClick={() =>
-                  setView(
-                    "time"
-                  )
-                }
+                onClick={() => setView("time")}
                 className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 text-xs"
               >
-                <Clock
-                  size={14}
-                />
+                <Clock size={14} />
                 Set Time
               </button>
             </div>
@@ -719,34 +450,24 @@ function CustomDateTimePicker({
           {view === "month" && (
             <div className="p-3">
               <div className="grid grid-cols-3 gap-2">
-                {MONTHS.map(
-                  (m, i) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => {
-                        setDisplayMonth(
-                          i
-                        );
+                {MONTHS.map((m, i) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      setDisplayMonth(i);
 
-                        setView(
-                          "calendar"
-                        );
-                      }}
-                      className={`py-2 rounded-lg text-xs ${
-                        displayMonth ===
-                        i
-                          ? "bg-purple-600 text-white"
-                          : "text-gray-300 hover:bg-[#2a2a4a]"
-                      }`}
-                    >
-                      {m.slice(
-                        0,
-                        3
-                      )}
-                    </button>
-                  )
-                )}
+                      setView("calendar");
+                    }}
+                    className={`py-2 rounded-lg text-xs ${
+                      displayMonth === i
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-300 hover:bg-[#2a2a4a]"
+                    }`}
+                  >
+                    {m.slice(0, 3)}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -755,31 +476,24 @@ function CustomDateTimePicker({
           {view === "year" && (
             <div className="p-3">
               <div className="grid grid-cols-3 gap-2">
-                {years.map(
-                  (y) => (
-                    <button
-                      key={y}
-                      type="button"
-                      onClick={() => {
-                        setDisplayYear(
-                          y
-                        );
+                {years.map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    onClick={() => {
+                      setDisplayYear(y);
 
-                        setView(
-                          "calendar"
-                        );
-                      }}
-                      className={`py-2 rounded-lg text-xs ${
-                        displayYear ===
-                        y
-                          ? "bg-purple-600 text-white"
-                          : "text-gray-300 hover:bg-[#2a2a4a]"
-                      }`}
-                    >
-                      {y}
-                    </button>
-                  )
-                )}
+                      setView("calendar");
+                    }}
+                    className={`py-2 rounded-lg text-xs ${
+                      displayYear === y
+                        ? "bg-purple-600 text-white"
+                        : "text-gray-300 hover:bg-[#2a2a4a]"
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
               </div>
             </div>
           )}
@@ -790,71 +504,43 @@ function CustomDateTimePicker({
               <div className="flex items-center justify-center gap-2">
                 <ScrollDrum
                   items={HOURS}
-                  value={
-                    hourIdx
-                  }
-                  onChange={(
-                    i
-                  ) => {
-                    setHourIdx(
-                      i
-                    );
+                  value={hourIdx}
+                  onChange={(i) => {
+                    setHourIdx(i);
                   }}
                 />
 
-                <span className="text-white text-2xl font-mono">
-                  :
-                </span>
+                <span className="text-white text-2xl font-mono">:</span>
 
                 <ScrollDrum
-                  items={
-                    MINUTES
-                  }
-                  value={
-                    minuteIdx
-                  }
-                  onChange={(
-                    i
-                  ) => {
-                    setMinuteIdx(
-                      i
-                    );
+                  items={MINUTES}
+                  value={minuteIdx}
+                  onChange={(i) => {
+                    setMinuteIdx(i);
                   }}
                 />
 
                 <div className="flex flex-col gap-2 ml-2">
-                  {[
-                    "AM",
-                    "PM",
-                  ].map(
-                    (ap) => (
-                      <button
-                        key={ap}
-                        type="button"
-                        onClick={() =>
-                          setAmpm(
-                            ap
-                          )
-                        }
-                        className={`w-12 py-2 rounded-lg text-xs font-semibold ${
-                          ampm ===
-                          ap
-                            ? "bg-purple-600 text-white"
-                            : "bg-[#2a2a4a] text-gray-400"
-                        }`}
-                      >
-                        {ap}
-                      </button>
-                    )
-                  )}
+                  {["AM", "PM"].map((ap) => (
+                    <button
+                      key={ap}
+                      type="button"
+                      onClick={() => setAmpm(ap)}
+                      className={`w-12 py-2 rounded-lg text-xs font-semibold ${
+                        ampm === ap
+                          ? "bg-purple-600 text-white"
+                          : "bg-[#2a2a4a] text-gray-400"
+                      }`}
+                    >
+                      {ap}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <button
                 type="button"
-                onClick={
-                  handleTimeConfirm
-                }
+                onClick={handleTimeConfirm}
                 className="w-full mt-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium"
               >
                 Confirm
@@ -871,315 +557,198 @@ function CustomDateTimePicker({
 // MAIN COMPONENT
 // ======================================================
 
-const IndividualFoodAndRefreshment =
-  () => {
-    // =========================
-    // DROPDOWNS
-    // =========================
+const IndividualFoodAndRefreshment = () => {
+  // =========================
+  // DROPDOWNS
+  // =========================
 
-    const [
-      showResourceDropdown,
-      setShowResourceDropdown,
-    ] = useState(false);
+  const [showResourceDropdown, setShowResourceDropdown] = useState(false);
 
-    const [
-      showFoodDropdown,
-      setShowFoodDropdown,
-    ] = useState(false);
+  const [showFoodDropdown, setShowFoodDropdown] = useState(false);
 
   // =========================
-// SELECTED VALUES
-// =========================
+  // SELECTED VALUES
+  // =========================
 
-// CHANGE THIS
-const [
-  resourceType,
-  setResourceType,
-] = useState([]); // MULTISELECT ARRAY
+  // CHANGE THIS
+  const [resourceType, setResourceType] = useState([]); // MULTISELECT ARRAY
 
-const [foodType, setFoodType] =
-  useState("");
-    // =========================
-    // OPTIONS
-    // =========================
+  const [foodType, setFoodType] = useState("");
+  // =========================
+  // OPTIONS
+  // =========================
 
-    const resourceOptions = [
-      "VIP",
-      "Trainer",
-      "Placement",
-    ];
+  const resourceOptions = ["VIP", "Trainer", "Placement"];
 
-    const foodOptions = [
-      "Breakfast",
-      "Lunch",
-      "Dinner",
-      "Morning Refreshment",
-      "Evening Refreshment",
-    ];
+  const foodOptions = [
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Morning Refreshment",
+    "Evening Refreshment",
+  ];
 
-    // =========================
-    // INPUT STATES
-    // =========================
+  // =========================
+  // INPUT STATES
+  // =========================
 
-    const [
-      selectDate,
-      setSelectDate,
-    ] = useState(null);
+  const [selectDate, setSelectDate] = useState(null);
 
-    const [
-      totalResourcePerson,
-      setTotalResourcePerson,
-    ] = useState("");
+  const [totalResourcePerson, setTotalResourcePerson] = useState("");
 
-    const [
-      internalAccompanyingCount,
-      setInternalAccompanyingCount,
-    ] = useState("1");
+  const [internalAccompanyingCount, setInternalAccompanyingCount] =
+    useState("1");
 
-    // =========================
-    // DEFAULT ONE STAFF INPUT
-    // =========================
+  // =========================
+  // DEFAULT ONE STAFF INPUT
+  // =========================
 
-    const [
-      accompanyingStaffs,
-      setAccompanyingStaffs,
-    ] = useState([
-      {
-        name: "",
-        mobile: "",
-      },
-    ]);
+  const [accompanyingStaffs, setAccompanyingStaffs] = useState([
+    {
+      name: "",
+      mobile: "",
+    },
+  ]);
 
-    // =========================
-    // FOOD STATES
-    // =========================
+  // =========================
+  // FOOD STATES
+  // =========================
 
-    const [
-      vegParticipants,
-      setVegParticipants,
-    ] = useState("");
+  const [vegParticipants, setVegParticipants] = useState("");
 
-    const [vegGuest, setVegGuest] =
-      useState("");
+  const [vegGuest, setVegGuest] = useState("");
 
-    const [
-      nonVegParticipants,
-      setNonVegParticipants,
-    ] = useState("");
+  const [nonVegParticipants, setNonVegParticipants] = useState("");
 
-    const [
-      nonVegGuest,
-      setNonVegGuest,
-    ] = useState("");
+  const [nonVegGuest, setNonVegGuest] = useState("");
 
-    // =========================
-    // AUTH
-    // =========================
+  // =========================
+  // AUTH
+  // =========================
 
-    const [
-      employeeId,
-      setEmployeeId,
-    ] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
 
-    const [token, setToken] =
-      useState("");
+  const [token, setToken] = useState("");
 
-    const [
-      specialRequirement,
-      setSpecialRequirement,
-    ] = useState("");
+  const [specialRequirement, setSpecialRequirement] = useState("");
 
-    const [
-      validationErrors,
-      setValidationErrors,
-    ] = useState([]);
+  const [validationErrors, setValidationErrors] = useState([]);
 
-    const [
-      submitMessage,
-      setSubmitMessage,
-    ] = useState("");
+  const [submitMessage, setSubmitMessage] = useState("");
 
-    const [
-      isSubmitting,
-      setIsSubmitting,
-    ] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-      const storedToken =
-        localStorage.getItem(
-          "token"
-        );
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
 
-      if (storedToken) {
-        setToken(storedToken);
+    if (storedToken) {
+      setToken(storedToken);
 
-        try {
-          const decoded =
-            jwtDecode(
-              storedToken
-            );
+      try {
+        const decoded = jwtDecode(storedToken);
 
-          if (decoded?.id) {
-            setEmployeeId(
-              decoded.id
-            );
-          }
-        } catch (error) {
-          console.error(
-            "Failed to decode token:",
-            error
-          );
+        if (decoded?.id) {
+          setEmployeeId(decoded.id);
         }
+      } catch (error) {
+        console.error("Failed to decode token:", error);
       }
-    }, []);
+    }
+  }, []);
 
-    // =========================
-    // HANDLE STAFF COUNT
-    // =========================
+  // =========================
+  // HANDLE STAFF COUNT
+  // =========================
 
-    const handleStaffCount = (
-      value
-    ) => {
-      setInternalAccompanyingCount(
-        value
-      );
+  const handleStaffCount = (value) => {
+    setInternalAccompanyingCount(value);
 
-      const count =
-        parseInt(value);
+    const count = Number(value);
 
-      if (
-        !count ||
-        count < 1
-      ) {
+    if (value === "" || !Number.isInteger(count) || count < 1) {
+      if (accompanyingStaffs.length === 0) {
         setAccompanyingStaffs([
           {
             name: "",
             mobile: "",
           },
         ]);
-
-        return;
       }
 
-      const updatedStaffs =
-        Array.from(
-          {
-            length: count,
-          },
-          (_, index) => ({
-            name:
-              accompanyingStaffs[
-                index
-              ]?.name || "",
-            mobile:
-              accompanyingStaffs[
-                index
-              ]?.mobile || "",
-          })
-        );
+      return;
+    }
 
-      setAccompanyingStaffs(
-        updatedStaffs
-      );
-    };
+    const updatedStaffs = Array.from(
+      {
+        length: count,
+      },
+      (_, index) => ({
+        name: accompanyingStaffs[index]?.name || "",
+        mobile: accompanyingStaffs[index]?.mobile || "",
+      }),
+    );
 
-    // =========================
-    // HANDLE STAFF INPUT
-    // =========================
+    setAccompanyingStaffs(updatedStaffs);
+  };
 
-    const handleStaffChange = (
-      index,
-      field,
-      value
-    ) => {
-      const updated = [
-        ...accompanyingStaffs,
-      ];
+  // =========================
+  // HANDLE STAFF INPUT
+  // =========================
 
-      updated[index][field] =
-        value;
+  const handleStaffChange = (index, field, value) => {
+    const updated = [...accompanyingStaffs];
 
-      setAccompanyingStaffs(
-        updated
-      );
-    };
+    updated[index][field] = value;
 
-    // =========================
-    // BUILD PAYLOAD
-    // =========================
+    setAccompanyingStaffs(updated);
+  };
 
-   // =========================
-// BUILD PAYLOAD
-// =========================
+  // =========================
+  // BUILD PAYLOAD
+  // =========================
 
-const buildFoodPayload =
-  () => {
+  // =========================
+  // BUILD PAYLOAD
+  // =========================
+
+  const buildFoodPayload = () => {
     const participants = {
-      vegCount:
-        Number(
-          vegParticipants
-        ) || 0,
+      vegCount: Number(vegParticipants) || 0,
 
-      nonVegCount:
-        Number(
-          nonVegParticipants
-        ) || 0,
+      nonVegCount: Number(nonVegParticipants) || 0,
     };
 
     const vipGuests = {
-      vegCount:
-        Number(vegGuest) ||
-        0,
+      vegCount: Number(vegGuest) || 0,
 
-      nonVegCount:
-        Number(
-          nonVegGuest
-        ) || 0,
+      nonVegCount: Number(nonVegGuest) || 0,
     };
 
     return {
-      employee:
-        employeeId ||
-        "6a0411af4579d3137b255e70",
+      employee: employeeId || "6a0411af4579d3137b255e70",
 
-     date: selectDate
-  ? new Date(
-      selectDate.getTime() -
-        selectDate.getTimezoneOffset() *
-          60000
-    ).toISOString()
-  : null,
+      date: selectDate
+        ? new Date(
+            selectDate.getTime() - selectDate.getTimezoneOffset() * 60000,
+          ).toISOString()
+        : null,
 
       // CHANGE THIS
-      resourcePersonType:
-        resourceType,
+      resourcePersonType: resourceType,
 
-      numberOfResourcePersons:
-        Number(
-          totalResourcePerson
-        ) || 0,
+      numberOfResourcePersons: Number(totalResourcePerson) || 0,
 
-      numberOfInternalAccompanyingStaff:
-        Number(
-          internalAccompanyingCount
-        ) || 0,
+      numberOfInternalAccompanyingStaff: Number(internalAccompanyingCount) || 0,
 
-      accompanyingStaff:
-        accompanyingStaffs.map(
-          (
-            staff
-          ) => ({
-            name: staff.name.trim(),
-            mobile:
-              staff.mobile,
-          })
-        ),
+      accompanyingStaff: accompanyingStaffs.map((staff) => ({
+        name: staff.name.trim(),
+        mobile: staff.mobile,
+      })),
 
       foodTypes: foodType
         ? [
             {
-              type:
-                foodType,
+              type: foodType,
               participants,
               vipGuests,
             },
@@ -1190,175 +759,107 @@ const buildFoodPayload =
 
       vipGuests,
 
-      specialRequirements:
-        specialRequirement.trim(),
+      specialRequirements: specialRequirement.trim(),
 
-      status:
-        "Pending",
+      status: "Pending",
     };
   };
 
-    // =========================
-    // SUBMIT
-    // =========================
+  // =========================
+  // SUBMIT
+  // =========================
 
-    const handleSubmit =
-      async () => {
-        const errors = [];
+  const handleSubmit = async () => {
+    const errors = [];
 
-        if (!selectDate)
-          errors.push(
-            "Select Date is required."
-          );
+    if (!selectDate) errors.push("Select Date is required.");
 
-        if (!resourceType)
-          errors.push(
-            "Resource Person Type is required."
-          );
+    if (!resourceType) errors.push("Resource Person Type is required.");
 
-        if (
-          !totalResourcePerson
-        )
-          errors.push(
-            "Total Resource Person is required."
-          );
+    if (!totalResourcePerson) errors.push("Total Resource Person is required.");
 
-        if (
-          !internalAccompanyingCount
-        )
-          errors.push(
-            "Internal Accompanying Person count is required."
-          );
+    if (!internalAccompanyingCount || Number(internalAccompanyingCount) < 1)
+      errors.push("Internal Accompanying Person count is required.");
 
-        if (
-          accompanyingStaffs.some(
-            (staff) =>
-              !staff.name.trim() ||
-              !staff.mobile
-          )
-        ) {
-          errors.push(
-            "All accompanying staff must have a name and mobile number."
-          );
-        }
+    if (accompanyingStaffs.some((staff) => !staff.name.trim())) {
+      errors.push("Accompanying staff name is required.");
+    }
 
-        if (!foodType)
-          errors.push(
-            "Food Type is required."
-          );
+    if (accompanyingStaffs.some((staff) => !staff.mobile)) {
+      errors.push("Accompanying staff mobile number is required.");
+    }
 
-        if (!vegParticipants)
-          errors.push(
-            "Veg Participants count is required."
-          );
+    if (!foodType) errors.push("Food Type is required.");
 
-        if (
-          !nonVegParticipants
-        )
-          errors.push(
-            "Non-Veg Participants count is required."
-          );
+    if (!vegParticipants) errors.push("Veg Participants count is required.");
 
-        if (!vegGuest)
-          errors.push(
-            "Veg Guest count is required."
-          );
+    if (!nonVegParticipants)
+      errors.push("Non-Veg Participants count is required.");
 
-        if (!nonVegGuest)
-          errors.push(
-            "Non-Veg Guest count is required."
-          );
+    if (!vegGuest) errors.push("Veg Guest count is required.");
 
-        setValidationErrors(
-          errors
-        );
+    if (!nonVegGuest) errors.push("Non-Veg Guest count is required.");
 
-        setSubmitMessage("");
+    setValidationErrors(errors);
 
-        if (errors.length)
-          return;
+    setSubmitMessage("");
 
-        setIsSubmitting(true);
+    if (errors.length) return;
 
-        try {
-          const payload =
-            buildFoodPayload();
+    setIsSubmitting(true);
 
-          console.log(
-            "Food submit payload:",
-            payload
-          );
+    try {
+      const payload = buildFoodPayload();
 
-          const response =
-            await fetch(
-              `${API_BASE}/api/foods`,
-              {
-                method:
-                  "POST",
+      console.log("Food submit payload:", payload);
 
-                headers: {
-                  "Content-Type":
-                    "application/json",
+      const response = await fetch(`${API_BASE}/api/foods`, {
+        method: "POST",
 
-                  ...(token
-                    ? {
-                        Authorization: `Bearer ${token}`,
-                      }
-                    : {}),
-                },
+        headers: {
+          "Content-Type": "application/json",
 
-                body: JSON.stringify(
-                  payload
-                ),
+          ...(token
+            ? {
+                Authorization: `Bearer ${token}`,
               }
-            );
+            : {}),
+        },
 
-          const data =
-            await response.json();
+        body: JSON.stringify(payload),
+      });
 
-          console.log(
-            "Food submit response:",
-            response.status,
-            data
-          );
+      const data = await response.json();
 
-          if (
-            !response.ok
-          ) {
-            throw new Error(
-              data?.message ||
-                `Food submission failed: ${response.status}`
-            );
-          }
+      console.log("Food submit response:", response.status, data);
 
-          setValidationErrors(
-            []
-          );
+      if (!response.ok) {
+        throw new Error(
+          data?.message || `Food submission failed: ${response.status}`,
+        );
+      }
 
-          setSubmitMessage(
-            "Food request submitted successfully."
-          );
-        } catch (error) {
-          setValidationErrors([
-            error.message ||
-              "Unable to send food data.",
-          ]);
-        } finally {
-          setIsSubmitting(false);
-        }
-      };
+      setValidationErrors([]);
 
-    return (
-      <div className="min-h-screen bg-[#141428] text-white p-6">
-        {/* TITLE */}
-        <h1 className="text-white text-3xl font-bold mb-6">
-          Food and Refreshment 
-        </h1>
+      setSubmitMessage("Food request submitted successfully.");
+    } catch (error) {
+      setValidationErrors([error.message || "Unable to send food data."]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-        {/* HEADER */}
-        <div className="flex justify-end mb-6">
-          <button
-            className="
+  return (
+    <div className="min-h-screen bg-[#141428] text-white p-6">
+      {/* TITLE */}
+      <h1 className="text-white text-3xl font-bold mb-6">
+        Food and Refreshment
+      </h1>
+
+      {/* HEADER */}
+      <div className="flex justify-end mb-6">
+        <button
+          className="
             bg-[#7c3aed]
             hover:bg-[#6d28d9]
             px-5
@@ -1371,52 +872,42 @@ const buildFoodPayload =
             transition-all
             duration-300
           "
-          >
-            <Plus size={16} />
-            Add
-          </button>
-        </div>
+        >
+          <Plus size={16} />
+          Add
+        </button>
+      </div>
 
-        {/* MAIN CARD */}
-        <div
-          className="
+      {/* MAIN CARD */}
+      <div
+        className="
           bg-[#1b1b35]
           border
           border-[#2d2d4d]
           rounded-2xl
           p-5
         "
-        >
-          {/* TOP INPUTS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
-            {/* DATE */}
-            <CustomDateTimePicker
-              label="Select Date*"
-              value={
-                selectDate
-              }
-              onChange={
-                setSelectDate
-              }
-              placeholder="Select Date & Time"
-            />
+      >
+        {/* TOP INPUTS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+          {/* DATE */}
+          <CustomDateTimePicker
+            label="Select Date*"
+            value={selectDate}
+            onChange={setSelectDate}
+            placeholder="Select Date & Time"
+          />
 
-            {/* RESOURCE PERSON TYPE */}
-           {/* RESOURCE PERSON TYPE */}
-<div className="relative">
-  <label className="block text-sm mb-2">
-    Type of
-    resource
-    Person*
-  </label>
+          {/* RESOURCE PERSON TYPE */}
+          {/* RESOURCE PERSON TYPE */}
+          <div className="relative">
+            <label className="block text-sm mb-2">
+              Type of resource Person*
+            </label>
 
-  <div
-    onClick={() =>
-      setShowResourceDropdown(
-        !showResourceDropdown
-      )
-    }
-    className="
+            <div
+              onClick={() => setShowResourceDropdown(!showResourceDropdown)}
+              className="
     w-full
     bg-[#1f1f38]
     border
@@ -1429,282 +920,221 @@ const buildFoodPayload =
     items-center
     cursor-pointer
   "
-  >
-    <span
-      className={
-        resourceType.length > 0
-          ? "text-white"
-          : "text-[#8d8da8]"
-      }
-    >
-      {resourceType.length > 0
-        ? resourceType.join(
-            ", "
-          )
-        : "VIP / Trainer / Placement"}
-    </span>
-
-    <ChevronDown
-      size={18}
-      className={`transition-transform duration-300 ${
-        showResourceDropdown
-          ? "rotate-180"
-          : "rotate-0"
-      }`}
-    />
-  </div>
-
-  {showResourceDropdown && (
-    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-      {resourceOptions.map(
-        (
-          item,
-          index
-        ) => {
-          const isSelected =
-            resourceType.includes(
-              item
-            );
-
-          return (
-            <div
-              key={index}
-              onClick={() => {
-                if (
-                  isSelected
-                ) {
-                  setResourceType(
-                    resourceType.filter(
-                      (
-                        type
-                      ) =>
-                        type !==
-                        item
-                    )
-                  );
-                } else {
-                  setResourceType(
-                    [
-                      ...resourceType,
-                      item,
-                    ]
-                  );
-                }
-              }}
-              className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
-                isSelected
-                  ? "bg-[#3b82f6] text-white"
-                  : "hover:bg-[#3b82f6]"
-              }`}
             >
-              <span>
-                {item}
+              <span
+                className={
+                  resourceType.length > 0 ? "text-white" : "text-[#8d8da8]"
+                }
+              >
+                {resourceType.length > 0
+                  ? resourceType.join(", ")
+                  : "VIP / Trainer / Placement"}
               </span>
 
-              {isSelected && (
-                <span>
-                  ✓
-                </span>
-              )}
-            </div>
-          );
-        }
-      )}
-    </div>
-  )}
-</div>
-
-            {/* TOTAL RESOURCE PERSON */}
-            <div>
-              <label className="block text-sm mb-2">
-                Total number
-                of resource
-                Person*
-              </label>
-
-              <input
-                type="number"
-                value={
-                  totalResourcePerson
-                }
-                onChange={(
-                  e
-                ) =>
-                  setTotalResourcePerson(
-                    e.target
-                      .value
-                  )
-                }
-                placeholder="5"
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
+              <ChevronDown
+                size={18}
+                className={`transition-transform duration-300 ${
+                  showResourceDropdown ? "rotate-180" : "rotate-0"
+                }`}
               />
             </div>
 
-            {/* INTERNAL ACCOMPANYING COUNT */}
-            <div>
-              <label className="block text-sm mb-2">
-                Total number
-                of Internal
-                Accompanying
-                Person*
-              </label>
+            {showResourceDropdown && (
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                {resourceOptions.map((item, index) => {
+                  const isSelected = resourceType.includes(item);
 
-              <input
-                type="number"
-                min="1"
-                value={
-                  internalAccompanyingCount
-                }
-                onChange={(
-                  e
-                ) =>
-                  handleStaffCount(
-                    e.target
-                      .value
-                  )
-                }
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
-              />
-            </div>
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        if (isSelected) {
+                          setResourceType(
+                            resourceType.filter((type) => type !== item),
+                          );
+                        } else {
+                          setResourceType([...resourceType, item]);
+                        }
+                      }}
+                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                        isSelected
+                          ? "bg-[#3b82f6] text-white"
+                          : "hover:bg-[#3b82f6]"
+                      }`}
+                    >
+                      <span>{item}</span>
+
+                      {isSelected && <span>✓</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* DYNAMIC STAFF INPUTS */}
-          {accompanyingStaffs.map(
-            (
-              staff,
-              index
-            ) => (
-              <div
-                key={index}
-                className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5"
-              >
+          {/* TOTAL RESOURCE PERSON */}
+          <div>
+            <label className="block text-sm mb-2">
+              Total number of resource Person*
+            </label>
+
+            <input
+              type="number"
+              value={totalResourcePerson}
+              onChange={(e) => setTotalResourcePerson(e.target.value)}
+              placeholder="5"
+              className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  text-white
+                  outline-none
+                "
+            />
+          </div>
+
+          {/* INTERNAL ACCOMPANYING COUNT */}
+          <div>
+            <label className="block text-sm mb-2">
+              Total number of Internal Accompanying Person*
+            </label>
+
+            <input
+              type="number"
+              min="1"
+              value={internalAccompanyingCount}
+              onChange={(e) => handleStaffCount(e.target.value)}
+              className="
+                  w-full
+                  bg-[#1f1f38]
+                  border
+                  border-[#3a3a5a]
+                  rounded-md
+                  px-4
+                  py-3
+                  text-white
+                  outline-none
+                "
+            />
+          </div>
+        </div>
+
+        {/* DYNAMIC STAFF INPUTS */}
+        {/* DYNAMIC STAFF INPUTS */}
+        {Number(internalAccompanyingCount) > 0 &&
+          accompanyingStaffs.map((staff, index) => (
+            <div
+              key={index}
+              className="
+          bg-[#232344]
+          border
+          border-[#2f2f52]
+          rounded-2xl
+          p-5
+          mb-5
+        "
+            >
+              {/* STAFF TITLE */}
+              <h3 className="text-[#c084fc] text-lg font-semibold mb-5">
+                Staff {index + 1}
+              </h3>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {/* STAFF NAME */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    Internal
-                    Accompanying
-                    staff name{" "}
-                    {index +
-                      1}{" "}
-                    *
+                <div className="relative">
+                  <label
+                    className="
+                absolute
+                -top-3
+                left-4
+                px-2
+                text-sm
+                text-white
+                bg-[#232344]
+                z-10
+              "
+                  >
+                    Accompanying Staff Name *
                   </label>
 
                   <input
                     type="text"
-                    value={
-                      staff.name
+                    value={staff.name}
+                    onChange={(e) =>
+                      handleStaffChange(index, "name", e.target.value)
                     }
-                    onChange={(
-                      e
-                    ) =>
-                      handleStaffChange(
-                        index,
-                        "name",
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder={`Enter staff ${
-                      index +
-                      1
-                    } name`}
+                    required
                     className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
+                w-full
+                bg-transparent
+                border
+                border-[#7c3aed]
+                rounded-xl
+                px-4
+                py-4
+                text-white
+                outline-none
+                focus:border-[#a855f7]
+                transition-all
+                duration-300
+              "
                   />
                 </div>
 
                 {/* STAFF MOBILE */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    Internal
-                    Accompanying
-                    staff Mobile
-                    number{" "}
-                    {index +
-                      1}{" "}
-                    *
+                <div className="relative">
+                  <label
+                    className="
+                absolute
+                -top-3
+                left-4
+                px-2
+                text-sm
+                text-white
+                bg-[#232344]
+                z-10
+              "
+                  >
+                    Accompanying Staff Mobile Number *
                   </label>
 
                   <input
                     type="text"
-                    value={
-                      staff.mobile
+                    value={staff.mobile}
+                    onChange={(e) =>
+                      handleStaffChange(index, "mobile", e.target.value)
                     }
-                    onChange={(
-                      e
-                    ) =>
-                      handleStaffChange(
-                        index,
-                        "mobile",
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder={`Enter mobile number ${
-                      index +
-                      1
-                    }`}
+                    required
                     className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
+                w-full
+                bg-transparent
+                border
+                border-[#7c3aed]
+                rounded-xl
+                px-4
+                py-4
+                text-white
+                outline-none
+                focus:border-[#a855f7]
+                transition-all
+                duration-300
+              "
                   />
                 </div>
               </div>
-            )
-          )}
+            </div>
+          ))}
+        {/* FOOD TYPE */}
+        <div className="relative mb-6">
+          <label className="block text-sm mb-2">Food Type *</label>
 
-          {/* FOOD TYPE */}
-          <div className="relative mb-6">
-            <label className="block text-sm mb-2">
-              Food Type *
-            </label>
-
-            <div
-              onClick={() =>
-                setShowFoodDropdown(
-                  !showFoodDropdown
-                )
-              }
-              className="
+          <div
+            onClick={() => setShowFoodDropdown(!showFoodDropdown)}
+            className="
               w-full
               bg-[#1f1f38]
               border
@@ -1717,295 +1147,195 @@ const buildFoodPayload =
               items-center
               cursor-pointer
             "
-            >
-              <span
-                className={
-                  foodType
-                    ? "text-white"
-                    : "text-[#8d8da8]"
-                }
-              >
-                {foodType ||
-                  "Breakfast / Lunch / Dinner / Morning Refreshment / Evening Refreshment"}
-              </span>
+          >
+            <span className={foodType ? "text-white" : "text-[#8d8da8]"}>
+              {foodType ||
+                "Breakfast / Lunch / Dinner / Morning Refreshment / Evening Refreshment"}
+            </span>
 
-              <ChevronDown
-                size={18}
-                className={`transition-transform duration-300 ${
-                  showFoodDropdown
-                    ? "rotate-180"
-                    : "rotate-0"
-                }`}
-              />
-            </div>
-
-            {showFoodDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {foodOptions.map(
-                  (
-                    item,
-                    index
-                  ) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setFoodType(
-                          item
-                        );
-
-                        setShowFoodDropdown(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
-                )}
-              </div>
-            )}
+            <ChevronDown
+              size={18}
+              className={`transition-transform duration-300 ${
+                showFoodDropdown ? "rotate-180" : "rotate-0"
+              }`}
+            />
           </div>
 
-          {/* FOOD SECTION */}
-          {foodType && (
-            <div
-              className="
+          {showFoodDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              {foodOptions.map((item, index) => (
+                <div
+                  key={index}
+                  onClick={() => {
+                    setFoodType(item);
+
+                    setShowFoodDropdown(false);
+                  }}
+                  className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* FOOD SECTION */}
+        {foodType && (
+          <div
+            className="
               bg-[#252547]
               rounded-xl
               p-5
               mb-6
             "
-            >
-              <h2 className="text-[#a855f7] text-xl font-bold mb-5">
-                {foodType}
-              </h2>
+          >
+            <h2 className="text-[#a855f7] text-xl font-bold mb-5">
+              {foodType}
+            </h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* VEG PARTICIPANTS */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    No. of veg
-                    In
-                    Participants
-                    Menu*
-                  </label>
-
-                  <input
-                    type="number"
-                    value={
-                      vegParticipants
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setVegParticipants(
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder="10"
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-
-                {/* VEG GUEST */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    No. of veg
-                    In Guest/VIP
-                    Menu*
-                  </label>
-
-                  <input
-                    type="number"
-                    value={
-                      vegGuest
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setVegGuest(
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder="10"
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-
-                {/* NON VEG PARTICIPANTS */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    No. of
-                    Non-veg In
-                    Participants
-                    Menu*
-                  </label>
-
-                  <input
-                    type="number"
-                    value={
-                      nonVegParticipants
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setNonVegParticipants(
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder="10"
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-
-                {/* NON VEG GUEST */}
-                <div>
-                  <label className="block text-sm mb-2">
-                    No. of
-                    Non-veg In
-                    Guest/VIP
-                    Menu*
-                  </label>
-
-                  <input
-                    type="number"
-                    value={
-                      nonVegGuest
-                    }
-                    onChange={(
-                      e
-                    ) =>
-                      setNonVegGuest(
-                        e
-                          .target
-                          .value
-                      )
-                    }
-                    placeholder="10"
-                    className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-              </div>
-
-              {/* SPECIAL REQUIREMENTS */}
-              <div className="mt-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* VEG PARTICIPANTS */}
+              <div>
                 <label className="block text-sm mb-2">
-                  Special
-                  Requirements
+                  No. of veg In Participants Menu*
                 </label>
 
-                <textarea
-                  rows={4}
-                  value={
-                    specialRequirement
-                  }
-                  onChange={(
-                    e
-                  ) =>
-                    setSpecialRequirement(
-                      e
-                        .target
-                        .value
-                    )
-                  }
-                  placeholder="Enter special requirements"
-                  className="w-full bg-[#1f1f38] border border-[#3a3a5a] rounded-md px-4 py-3 text-white outline-none resize-none"
+                <input
+                  type="number"
+                  value={vegParticipants}
+                  onChange={(e) => setVegParticipants(e.target.value)}
+                  placeholder="10"
+                  className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                />
+              </div>
+
+              {/* VEG GUEST */}
+              <div>
+                <label className="block text-sm mb-2">
+                  No. of veg In Guest/VIP Menu*
+                </label>
+
+                <input
+                  type="number"
+                  value={vegGuest}
+                  onChange={(e) => setVegGuest(e.target.value)}
+                  placeholder="10"
+                  className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                />
+              </div>
+
+              {/* NON VEG PARTICIPANTS */}
+              <div>
+                <label className="block text-sm mb-2">
+                  No. of Non-veg In Participants Menu*
+                </label>
+
+                <input
+                  type="number"
+                  value={nonVegParticipants}
+                  onChange={(e) => setNonVegParticipants(e.target.value)}
+                  placeholder="10"
+                  className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                />
+              </div>
+
+              {/* NON VEG GUEST */}
+              <div>
+                <label className="block text-sm mb-2">
+                  No. of Non-veg In Guest/VIP Menu*
+                </label>
+
+                <input
+                  type="number"
+                  value={nonVegGuest}
+                  onChange={(e) => setNonVegGuest(e.target.value)}
+                  placeholder="10"
+                  className="
+                      w-full
+                      bg-[#1f1f38]
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
                 />
               </div>
             </div>
-          )}
 
-          {/* ERRORS */}
-          {validationErrors.length >
-            0 && (
-            <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
-              <ul className="list-disc list-inside space-y-1">
-                {validationErrors.map(
-                  (
-                    error,
-                    index
-                  ) => (
-                    <li
-                      key={
-                        index
-                      }
-                    >
-                      {error}
-                    </li>
-                  )
-                )}
-              </ul>
+            {/* SPECIAL REQUIREMENTS */}
+            <div className="mt-5">
+              <label className="block text-sm mb-2">Special Requirements</label>
+
+              <textarea
+                rows={4}
+                value={specialRequirement}
+                onChange={(e) => setSpecialRequirement(e.target.value)}
+                placeholder="Enter special requirements"
+                className="w-full bg-[#1f1f38] border border-[#3a3a5a] rounded-md px-4 py-3 text-white outline-none resize-none"
+              />
             </div>
-          )}
+          </div>
+        )}
 
-          {/* SUCCESS */}
-          {submitMessage && (
-            <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
-              {
-                submitMessage
-              }
-            </div>
-          )}
-        </div>
+        {/* ERRORS */}
+        {validationErrors.length > 0 && (
+          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+            <ul className="list-disc list-inside space-y-1">
+              {validationErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-    
-        <div className="flex justify-center md:justify-end mt-8">
-          <button
-            type="button"
-            onClick={
-              handleSubmit
-            }
-            disabled={
-              isSubmitting
-            }
-            className="
+        {/* SUCCESS */}
+        {submitMessage && (
+          <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+            {submitMessage}
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-center md:justify-end mt-8">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="
               bg-[#8b5cf6]
               hover:bg-[#7c3aed]
               disabled:opacity-60
@@ -2024,18 +1354,14 @@ const buildFoodPayload =
               shadow-lg
               shadow-purple-900/40
             "
-          >
-            {isSubmitting
-              ? "Submitting..."
-              : "Next"}
+        >
+          {isSubmitting ? "Submitting..." : "Next"}
 
-            <ArrowRight
-              size={20}
-            />
-          </button>
-        </div>
+          <ArrowRight size={20} />
+        </button>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 export default IndividualFoodAndRefreshment;
