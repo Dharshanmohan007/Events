@@ -859,8 +859,12 @@ function PersonSection({ title, data, onChange }) {
                 onChange({
                   ...data,
                   trophyType: value,
-                  basicTrophyQty: value.includes("Basic") ? data.basicTrophyQty : "",
-                  eliteTrophyQty: value.includes("Elite") ? data.eliteTrophyQty : "",
+                  basicTrophyQty: value.includes("Basic")
+                    ? data.basicTrophyQty
+                    : "",
+                  eliteTrophyQty: value.includes("Elite")
+                    ? data.eliteTrophyQty
+                    : "",
                 })
               }
               options={["Basic", "Elite"]}
@@ -868,27 +872,29 @@ function PersonSection({ title, data, onChange }) {
             />
           </div>
 
-          {Array.isArray(data.trophyType) && data.trophyType.includes("Basic") && (
-            <div className="mb-4">
-              <InputField
-                label="Basic Trophy Quantity *"
-                placeholder="2"
-                value={data.basicTrophyQty}
-                onChange={handleFieldChange("basicTrophyQty")}
-              />
-            </div>
-          )}
+          {Array.isArray(data.trophyType) &&
+            data.trophyType.includes("Basic") && (
+              <div className="mb-4">
+                <InputField
+                  label="Basic Trophy Quantity *"
+                  placeholder="2"
+                  value={data.basicTrophyQty}
+                  onChange={handleFieldChange("basicTrophyQty")}
+                />
+              </div>
+            )}
 
-          {Array.isArray(data.trophyType) && data.trophyType.includes("Elite") && (
-            <div className="mb-4">
-              <InputField
-                label="Elite Trophy Quantity *"
-                placeholder="2"
-                value={data.eliteTrophyQty}
-                onChange={handleFieldChange("eliteTrophyQty")}
-              />
-            </div>
-          )}
+          {Array.isArray(data.trophyType) &&
+            data.trophyType.includes("Elite") && (
+              <div className="mb-4">
+                <InputField
+                  label="Elite Trophy Quantity *"
+                  placeholder="2"
+                  value={data.eliteTrophyQty}
+                  onChange={handleFieldChange("eliteTrophyQty")}
+                />
+              </div>
+            )}
         </>
       )}
 
