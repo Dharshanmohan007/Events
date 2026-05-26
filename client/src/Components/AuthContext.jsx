@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
+import { decodeToken, isTokenExpired } from "../utils/tokenUtils";
 
 const API_BASE = "https://sece-events.onrender.com";
-
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -16,7 +16,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    // Prevent double-run in React StrictMode
     if (verifiedRef.current) return;
     verifiedRef.current = true;
 
@@ -24,68 +23,65 @@ export function AuthProvider({ children }) {
     const storedUser = localStorage.getItem("user");
 
     if (!token || !storedUser) {
-      // No credentials at all → go straight to login
       setLoading(false);
       return;
     }
 
-    // Optimistically restore user so the UI doesn't flash
+    const decoded = decodeToken(token);
+
+    if (!decoded || isTokenExpired(decoded)) {
+      logout();
+      setLoading(false);
+      return;
+    }
+
     try {
-      setUser(JSON.parse(storedUser));
+      const cached = JSON.parse(storedUser);
+      const roleFromToken = decoded.role || decoded.department || cached.role;
+      setUser({ ...cached, role: roleFromToken });
     } catch {
       logout();
       setLoading(false);
       return;
     }
 
-    // Verify token is still valid with the backend
     fetch(`${API_BASE}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (r) => {
-        if (r.status === 401 || r.status === 403) {
-          // Token expired or invalid → force logout
-          throw new Error("TOKEN_EXPIRED");
-        }
-        if (!r.ok) {
-          throw new Error("SERVER_ERROR");
-        }
+        if (r.status === 401 || r.status === 403) throw new Error("TOKEN_EXPIRED");
+        if (!r.ok) throw new Error("SERVER_ERROR");
         return r.json();
       })
       .then((data) => {
-        // Token valid → update user with fresh data from server
-        setUser(data);
-        localStorage.setItem("user", JSON.stringify(data));
+        const decoded2 = decodeToken(localStorage.getItem("token"));
+        const roleFromToken = decoded2?.role || decoded2?.department || data.role;
+        const freshUser = { ...data, role: roleFromToken };
+        setUser(freshUser);
+        localStorage.setItem("user", JSON.stringify(freshUser));
       })
       .catch((err) => {
         if (err.message === "TOKEN_EXPIRED") {
-          // Expired → clear everything, ProtectedRoute will redirect to login
           logout();
         } else {
-          // Network error or server error → keep the cached user
-          // so the app still works offline / during server downtime
           console.warn("Auth check failed (network/server):", err.message);
         }
       })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, [logout]);
 
-  // Listen for localStorage changes from other tabs
   useEffect(() => {
     const handleStorage = (e) => {
-      if (e.key === "token" && !e.newValue) {
-        // Token was removed in another tab → log out this tab too
-        setUser(null);
-      }
+      if (e.key === "token" && !e.newValue) setUser(null);
     };
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
+  // ── login: set user AND return the user so caller can navigate immediately
   const login = useCallback((userData) => {
     setUser(userData);
+    return userData; // return so Login.jsx can use it
   }, []);
 
   const hasPermission = useCallback(
@@ -96,39 +92,11 @@ export function AuthProvider({ children }) {
     [user]
   );
 
-  const hasAnyPermission = useCallback(
-    (permissions) => {
-      if (!user?.permissions) return false;
-      return permissions.some((p) => user.permissions.includes(p));
-    },
-    [user]
-  );
-
-  const hasAllPermissions = useCallback(
-    (permissions) => {
-      if (!user?.permissions) return false;
-      return permissions.every((p) => user.permissions.includes(p));
-    },
-    [user]
-  );
-
-  const isAdmin = user?.role?.startsWith("admin") || user?.role === "super_admin";
+  const isAdmin = user?.role === "admin" || user?.role === "super_admin";
   const isSuperAdmin = user?.role === "super_admin";
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        logout,
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
-        isAdmin,
-        isSuperAdmin,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, logout, hasPermission, isAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );
