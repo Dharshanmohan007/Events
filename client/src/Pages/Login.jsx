@@ -169,54 +169,39 @@ export default function LoginPage() {
     try {
       const data = await loginApi(email, password);
 
-      // ── DEBUG: remove after confirming role field name ──────────────
       console.log("RAW API DATA:", JSON.stringify(data));
-      const decodedDebug = decodeToken(data.token);
-      console.log("DECODED TOKEN:", JSON.stringify(decodedDebug));
-      // ────────────────────────────────────────────────────────────────
 
       if (!data.token) throw new Error("No token received from server");
 
-      // Save token first
       localStorage.setItem("token", data.token);
 
-      // Decode to get role — token is the source of truth
       const decoded = decodeToken(data.token);
+      console.log("DECODED TOKEN:", JSON.stringify(decoded));
 
-      // ⚠️ Check console to confirm the exact field name your backend uses
-      // It might be: decoded.role / decoded.department / decoded.userType / data.role
-      const role =
-        decoded?.role ||
-        decoded?.department ||
-        decoded?.userType ||
-        data.role ||
-        data.department;
+      // Role and department both come from the token
+      const role       = decoded?.role       || data.role;
+      const department = decoded?.department || data.department;
 
-      console.log("👤 Final role resolved:", role);
-
-      if (!role) {
-        throw new Error("Role not found in token. Check console for DECODED TOKEN fields.");
-      }
+      console.log(`👤 role: "${role}" | department: "${department}"`);
 
       const userData = {
-        _id:   data._id   || decoded?._id   || decoded?.id,
-        name:  data.name  || decoded?.name,
-        email: data.email || decoded?.email,
+        _id:        data._id        || decoded?.id,
+        name:       data.name       || decoded?.name,
+        email:      data.email      || decoded?.email,
         role,
+        department,
+        isadmin:    decoded?.isadmin ?? data.isadmin ?? false,
+        hasAccess:  decoded?.hasAccess ?? data.hasAccess ?? true,
       };
 
-      // Save to localStorage BEFORE calling login()
       localStorage.setItem("user", JSON.stringify(userData));
 
-      // ── KEY FIX: navigate FIRST, then update context ──────────────
-      // This prevents PublicRoute from seeing user=null and bouncing back
-      const destination = getRouteForRole(role);
-      console.log(`🚀 Navigating to: ${destination} (role: ${role})`);
+      // ── Navigate BEFORE login() to avoid PublicRoute bounce ──────────
+      const destination = getRouteForRole(role, department);
+      console.log(`🚀 Navigating to: ${destination}`);
 
       showSuccessToast("Login Successful");
       navigate(destination, { replace: true });
-
-      // Update context after navigation is already queued
       login(userData);
 
     } catch (err) {

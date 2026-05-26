@@ -1,48 +1,71 @@
 // utils/roleRoutes.js
 
-export const ROLE_ROUTES = {
-  // ── standard roles ──
-  user:                    "/forms",
-  faculty:                 "/dashboard-faculty",
-  ictcs:                   "/dashboard-ictcs",
-  audio:                   "/dashboard-audio",
-  transport:               "/dashboard-transports",
-  transports:              "/dashboard-transports",
-  media:                   "/dashboard-media",
-  accommodation:           "/dashboard-accommodation",
-  venue:                   "/dashboard-venue",
-  food:                    "/dashboard-food",
-  "food and refreshment":  "/dashboard-food",
-  "food_and_refreshment":  "/dashboard-food",
-  purchase:                "/dashboard-purchase",
-  admin:                   "/dashboard-admin",
-  super_admin:             "/dashboard-admin",
-  superadmin:              "/dashboard-admin",
-  "super admin":           "/dashboard-admin",
-
-  // ── your actual backend roles (from token) ──
-  "super admin 2":         "/dashboard-admin",
-  "super admin 1":         "/dashboard-admin",
+// Department name → dashboard route (for "head" role users)
+export const DEPARTMENT_ROUTES = {
+  venue:         "/dashboard-venue",
+  icts:          "/dashboard-ictcs",
+  ictcs:         "/dashboard-ictcs",
+  audio:         "/dashboard-audio",
+  transport:     "/dashboard-transports",
+  accomadation:  "/dashboard-accommodation",  // note: DB has typo "Accomadation"
+  accommodation: "/dashboard-accommodation",
+  purchase:      "/dashboard-purchase",
+  media:         "/dashboard-media",
+  poster:        "/dashboard-poster",
+  food:          "/dashboard-food",
+  video:         "/dashboard-video",
 };
 
-export function getRouteForRole(role) {
+// Role → dashboard route (for non-head roles)
+export const ROLE_ROUTES = {
+  faculty:         "/dashboard-faculty",
+  hod:             "/dashboard-faculty",   // HODs use faculty dashboard
+  "super admin 1": "/dashboard-admin",
+  "super admin 2": "/dashboard-admin",
+  "super admin":   "/dashboard-admin",
+  super_admin:     "/dashboard-admin",
+  superadmin:      "/dashboard-admin",
+  admin:           "/dashboard-admin",
+  user:            "/forms",
+};
+
+/**
+ * Main routing function.
+ * For "head" role → use department to decide dashboard.
+ * For all others  → use role directly.
+ */
+export function getRouteForRole(role, department) {
   if (!role) {
-    console.warn("⚠️ No role provided, falling back to /forms");
+    console.warn("⚠️ getRouteForRole: no role provided");
     return "/forms";
   }
 
-  const normalized = role.toLowerCase().trim();
-  const route = ROLE_ROUTES[normalized];
+  const normalizedRole = role.toLowerCase().trim();
+  const normalizedDept = department?.toLowerCase().trim() ?? "";
 
-  if (!route) {
-    console.warn(`⚠️ Unknown role: "${role}" → falling back to /forms`);
+  // ── "head" role: route by department ─────────────────────────────
+  if (normalizedRole === "head") {
+    const deptRoute = DEPARTMENT_ROUTES[normalizedDept];
+    if (deptRoute) {
+      console.log(`✅ head + dept "${department}" → ${deptRoute}`);
+      return deptRoute;
+    }
+    console.warn(`⚠️ head role but unknown department "${department}" → /forms`);
+    return "/forms";
   }
 
-  // ── safety net: if role contains "admin" anywhere → admin dashboard ──
-  if (!route && normalized.includes("admin")) {
-    console.warn(`⚠️ Role "${role}" contains "admin" → routing to /dashboard-admin`);
+  // ── All other roles: route by role string ─────────────────────────
+  const roleRoute = ROLE_ROUTES[normalizedRole];
+
+  // Safety net: anything containing "admin" → admin dashboard
+  if (!roleRoute && normalizedRole.includes("admin")) {
+    console.warn(`⚠️ Unknown admin variant "${role}" → /dashboard-admin`);
     return "/dashboard-admin";
   }
 
-  return route ?? "/forms";
+  if (!roleRoute) {
+    console.warn(`⚠️ Unknown role "${role}" → /forms`);
+  }
+
+  return roleRoute ?? "/forms";
 }
