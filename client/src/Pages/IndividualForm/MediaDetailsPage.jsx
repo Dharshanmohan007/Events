@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import {
   ChevronDown,
   Upload,
@@ -17,19 +18,27 @@ const MediaDetailsPage = () => {
   const [showTypeDropdown, setShowTypeDropdown] =
     useState(false);
 
-  const [selectedType, setSelectedType] =
-    useState("");
+  const [selectedTypes, setSelectedTypes] =
+    useState([]);
 
   const typeOptions = [
     "Poster",
     "Video",
   ];
 
+  const toggleTypeSelection = (type) => {
+    setSelectedTypes((prev) =>
+      prev.includes(type)
+        ? prev.filter((t) => t !== type)
+        : [...prev, type]
+    );
+  };
+
   // =========================
   // POSTER STATES
   // =========================
   const [showDisplayDropdown, setShowDisplayDropdown] =
-    useState(false);
+    useState(false);  
 
   const [
     showPosterPriorityDropdown,
@@ -215,10 +224,10 @@ const MediaDetailsPage = () => {
   const validatePoster = () => {
     console.log("validating poster...");
     const errors = [];
-    if (!selectedType) {
-      errors.push("Please select a Type of Design Required.");
+    if (!selectedTypes.includes("Poster")) {
+      return errors;
     }
-    if (selectedType === "Poster") {
+    if (selectedTypes.includes("Poster")) {
       if (!posterContent.trim()) {
         errors.push("Content for Poster is required.");
       }
@@ -251,10 +260,10 @@ const MediaDetailsPage = () => {
 
   const validateVideo = () => {
     const errors = [];
-    if (!selectedType) {
-      errors.push("Please select a Type of Design Required.");
+    if (!selectedTypes.includes("Video")) {
+      return errors;
     }
-    if (selectedType === "Video") {
+    if (selectedTypes.includes("Video")) {
       if (!videoContent.trim()) {
         errors.push("Content for Video is required.");
       }
@@ -315,14 +324,28 @@ const MediaDetailsPage = () => {
   };
 
   const handleNext = async () => {
-    console.log("activated function")
-    const errors = selectedType === "Poster" ? validatePoster() : selectedType === "Video" ? validateVideo() : [];
+    console.log("activated function");
+    
+    if (!selectedTypes.length) {
+      setValidationErrors(["Please select at least one Type of Design Required."]);
+      return;
+    }
+
+    const errors = [];
+    if (selectedTypes.includes("Poster")) {
+      errors.push(...validatePoster());
+    }
+    if (selectedTypes.includes("Video")) {
+      errors.push(...validateVideo());
+    }
+
     setValidationErrors(errors);
     if (errors.length) return;
 
     console.log("no errors");
 
-    if (selectedType === "Poster") {
+    // Submit Poster if selected
+    if (selectedTypes.includes("Poster")) {
       setIsSubmitting(true);
       setSubmitSuccess(false);
       try {
@@ -342,7 +365,8 @@ const MediaDetailsPage = () => {
       }
     }
 
-    if (selectedType === "Video") {
+    // Submit Video if selected
+    if (selectedTypes.includes("Video")) {
       setIsSubmitting(true);
       setSubmitSuccess(false);
       try {
@@ -394,7 +418,6 @@ const MediaDetailsPage = () => {
           }
           className="
             w-full
-            bg-[#1b1b35]
             border
             border-[#2d2d4d]
             rounded-md
@@ -404,18 +427,33 @@ const MediaDetailsPage = () => {
             justify-between
             items-center
             cursor-pointer
+            flex-wrap gap-2
           "
         >
-          <span
-            className={
-              selectedType
-                ? "text-white"
-                : "text-[#8d8da8]"
-            }
-          >
-            {selectedType ||
-              "Select Type"}
-          </span>
+          <div className="flex flex-wrap gap-2">
+            {selectedTypes.length > 0 ? (
+              selectedTypes.map((type) => (
+                <span
+                  key={type}
+                  className="bg-[#8b5cf6] text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                >
+                  {type}
+                  <X
+                    size={14}
+                    className="cursor-pointer hover:opacity-70"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTypeSelection(type);
+                    }}
+                  />
+                </span>
+              ))
+            ) : (
+              <span className="text-[#8d8da8]">
+                Select Types
+              </span>
+            )}
+          </div>
 
           <ChevronDown size={18} />
         </div>
@@ -427,12 +465,19 @@ const MediaDetailsPage = () => {
                 <div
                   key={index}
                   onClick={() => {
-                    setSelectedType(item);
-                    setShowTypeDropdown(false);
+                    toggleTypeSelection(item);
                   }}
-                  className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                  className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer flex items-center gap-3"
                 >
-                  {item}
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.includes(
+                      item
+                    )}
+                    onChange={() => {}}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <span>{item}</span>
                 </div>
               )
             )}
@@ -444,7 +489,7 @@ const MediaDetailsPage = () => {
       {/* ================= POSTER SECTION ==================== */}
       {/* ===================================================== */}
 
-      {selectedType === "Poster" && (
+      {selectedTypes.includes("Poster") && (
         <div className="bg-[#1b1b35] border border-[#2d2d4d] rounded-2xl p-6">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
             Poster
@@ -465,7 +510,7 @@ const MediaDetailsPage = () => {
               placeholder="reason"
               className="
                 w-full
-                bg-[#1f1f38]
+             
                 border
                 border-[#3a3a5a]
                 rounded-md
@@ -552,7 +597,7 @@ const MediaDetailsPage = () => {
               }
               className="
                 w-full
-                bg-[#1f1f38]
+               
                 border
                 border-[#3a3a5a]
                 rounded-md
@@ -638,7 +683,8 @@ const MediaDetailsPage = () => {
                 placeholder={`Enter ${selectedDisplay} Size`}
                 className="
                   w-full
-                  bg-[#1f1f38]
+                 
+
                   border
                   border-[#3a3a5a]
                   rounded-md
@@ -652,112 +698,92 @@ const MediaDetailsPage = () => {
           )}
 
           {/* DATE + PRIORITY */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm mb-2">
-                Delivery Date *
-              </label>
+         
+{/* DATE + PRIORITY */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
 
-              <div className="relative">
-                <input
-                  type="date"
-                  value={posterDeliveryDate}
-                  onChange={(e) =>
-                    setPosterDeliveryDate(
-                      e.target.value
-                    )
-                  }
-                  className="
-                    w-full
-                    bg-[#1f1f38] 
-                    border
-                    border-[#3a3a5a]
-                    rounded-md
-                    px-4
-                    py-3
-                    pr-12
-                    text-white
-                    outline-none
-                    appearance-none
-                  "
-                />
+  {/* DELIVERY DATE */}
+  <div className="w-full">
+    <CustomDateTimePicker
+      label="Delivery Date *"
+      value={
+        posterDeliveryDate
+          ? new Date(posterDeliveryDate)
+          : null
+      }
+      onChange={(date) =>
+        setPosterDeliveryDate(
+          date.toISOString()
+        )
+      }
+      placeholder="Select Delivery Date"
+    />
+  </div>
 
-                <CalendarDays
-                  size={18}
-                  className="
-                    absolute
-                    right-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-[#b0b0c3]
-                    pointer-events-none
-                  "
-                />
-              </div>
-            </div>
+  {/* PRIORITY */}
+  {/* PRIORITY */}
+<div className="relative w-full pt-[1px]">
+  <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+    Priority *
+  </label>
 
-            <div className="relative">
-              <label className="block text-sm mb-2">
-                Priority *
-              </label>
+  <div
+    onClick={() =>
+      setShowPosterPriorityDropdown(
+        !showPosterPriorityDropdown
+      )
+    }
+    className="
+      w-full
+      bg-transparent
+      border
+      border-[#3A3A5A]
+      rounded-lg
+      px-4
+      py-[13px]
+      flex
+      justify-between
+      items-center
+      cursor-pointer
+      text-white
+    "
+  >
+    <span>{posterPriority}</span>
 
-              <div
-                onClick={() =>
-                  setShowPosterPriorityDropdown(
-                    !showPosterPriorityDropdown
-                  )
-                }
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  flex
-                  justify-between
-                  items-center
-                  cursor-pointer
-                "
-              >
-                <span>
-                  {posterPriority}
-                </span>
+    <ChevronDown
+      size={18}
+      className="text-gray-400"
+    />
+  </div>
 
-                <ChevronDown size={18} />
-              </div>
+  {showPosterPriorityDropdown && (
+    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+      {priorityOptions.map(
+        (item, index) => (
+          <div
+            key={index}
+            onClick={() => {
+              setPosterPriority(item);
 
-              {showPosterPriorityDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {priorityOptions.map(
-                    (item, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setPosterPriority(
-                            item
-                          );
-
-                          setShowPosterPriorityDropdown(
-                            false
-                          );
-                        }}
-                        className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                      >
-                        {item}
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
+              setShowPosterPriorityDropdown(
+                false
+              );
+            }}
+            className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+          >
+            {item}
           </div>
+        )
+      )}
+    </div>
+  )}
+</div>
+</div>
 
           {/* Requirement */}
           <div>
             <label className="block text-sm mb-2">
-              Special Requirements, If any *
+              Special Requirements, If any 
             </label>
 
             <textarea
@@ -771,7 +797,7 @@ const MediaDetailsPage = () => {
               placeholder="reason"
               className="
                 w-full
-                bg-[#1f1f38]
+               
                 border
                 border-[#3a3a5a]
                 rounded-md
@@ -788,7 +814,7 @@ const MediaDetailsPage = () => {
       {/* ================= VIDEO SECTION ===================== */}
       {/* ===================================================== */}
 
-      {selectedType === "Video" && (
+      {selectedTypes.includes("Video") && (
         <div className="bg-[#1b1b35] border border-[#2d2d4d] rounded-2xl p-6 mt-8">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
             Video
@@ -851,107 +877,7 @@ const MediaDetailsPage = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div>
-              <label className="block text-sm mb-2">
-                Delivery Date *
-              </label>
-
-              <div className="relative">
-                <input
-                  type="date"
-                  value={videoDeliveryDate}
-                  onChange={(e) =>
-                    setVideoDeliveryDate(
-                      e.target.value
-                    )
-                  }
-                  className="
-                    w-full
-                    bg-[#1f1f38]
-                    border
-                    border-[#3a3a5a]
-                    rounded-md
-                    px-4
-                    py-3
-                    pr-12
-                    text-white
-                    outline-none
-                    appearance-none
-                  "
-                />
-
-                <CalendarDays
-                  size={18}
-                  className="
-                    absolute
-                    right-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-[#b0b0c3]
-                    pointer-events-none
-                  "
-                />
-              </div>
-            </div>
-
-            <div className="relative">
-              <label className="block text-sm mb-2">
-                Priority *
-              </label>
-
-              <div
-                onClick={() =>
-                  setShowVideoPriorityDropdown(
-                    !showVideoPriorityDropdown
-                  )
-                }
-                className="
-                  w-full
-                  bg-[#1f1f38]
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  flex
-                  justify-between
-                  items-center
-                  cursor-pointer
-                "
-              >
-                <span>
-                  {videoPriority}
-                </span>
-
-                <ChevronDown size={18} />
-              </div>
-
-              {showVideoPriorityDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {priorityOptions.map(
-                    (item, index) => (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          setVideoPriority(
-                            item
-                          );
-
-                          setShowVideoPriorityDropdown(
-                            false
-                          );
-                        }}
-                        className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                      >
-                        {item}
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+          
 
           {/* VIDEO UPLOAD */}
           <div className="mb-8">

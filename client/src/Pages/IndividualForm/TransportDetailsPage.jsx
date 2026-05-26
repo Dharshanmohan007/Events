@@ -567,7 +567,7 @@
                     rounded-md
                     px-4
                     py-3
-                    bg-[#1f1f38]
+                 
                     focus-within:border-[#3b82f6]
                     focus-within:ring-1
                     focus-within:ring-[#3b82f6]
@@ -642,10 +642,10 @@
                           )
                         }
                         className="
-                          bg-[#26264a]
+                          bg-[#282846]
                           rounded-md
                           px-4
-                          py-4
+                          py-2
                           flex
                           items-center
                           justify-between
@@ -725,7 +725,7 @@
                     rounded-md
                     px-4
                     py-3
-                    bg-[#1f1f38]
+                   
                     focus-within:border-[#3b82f6]
                     focus-within:ring-0
                     focus-within:ring-[#3b82f6]
@@ -776,7 +776,7 @@
                     placeholder="Enter total passengers"
                     className="
                       w-full
-                      bg-[#1f1f38]
+                     
                       border
                       border-[#3a3a5a]
                       rounded-md
@@ -807,7 +807,7 @@
                     }
                     className="
                       w-full
-                      bg-[#1f1f38]
+                     
                       border
                       border-[#3a3a5a]
                       rounded-md
@@ -983,7 +983,7 @@
                           )}
                           className="
                             w-full
-                            bg-[#1f1f38]
+                         
                             border
                             border-[#3a3a5a]
                             rounded-md
@@ -1060,7 +1060,7 @@
                   placeholder="Enter staff count"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                   
                     border
                     border-[#3a3a5a]
                     rounded-md
@@ -1220,7 +1220,7 @@
                   placeholder="Enter any special requirements"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                   
                     border
                     border-[#3a3a5a]
                     rounded-md

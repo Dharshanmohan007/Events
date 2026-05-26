@@ -320,7 +320,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
         }}
         className="
           w-full
-          bg-[#1f1f38]
+          
           border
           border-[#3a3a5a]
           rounded-md
@@ -573,7 +573,34 @@ const IndividualFoodAndRefreshment = () => {
   // CHANGE THIS
   const [resourceType, setResourceType] = useState([]); // MULTISELECT ARRAY
 
-  const [foodType, setFoodType] = useState("");
+const [selectedFoodTypes, setSelectedFoodTypes] = useState({
+    Breakfast: false,
+    Lunch: false,
+    Dinner: false,
+    "Morning Refreshment": false,
+    "Evening Refreshment": false,
+  });
+
+  const [foodDetails, setFoodDetails] = useState({
+    Breakfast: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+    Lunch: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+    Dinner: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+  });
   // =========================
   // OPTIONS
   // =========================
@@ -609,18 +636,6 @@ const IndividualFoodAndRefreshment = () => {
       mobile: "",
     },
   ]);
-
-  // =========================
-  // FOOD STATES
-  // =========================
-
-  const [vegParticipants, setVegParticipants] = useState("");
-
-  const [vegGuest, setVegGuest] = useState("");
-
-  const [nonVegParticipants, setNonVegParticipants] = useState("");
-
-  const [nonVegGuest, setNonVegGuest] = useState("");
 
   // =========================
   // AUTH
@@ -712,17 +727,31 @@ const IndividualFoodAndRefreshment = () => {
   // =========================
 
   const buildFoodPayload = () => {
-    const participants = {
-      vegCount: Number(vegParticipants) || 0,
+    const selectedFoodList = Object.keys(selectedFoodTypes).filter(
+      (type) => selectedFoodTypes[type]
+    );
 
-      nonVegCount: Number(nonVegParticipants) || 0,
-    };
-
-    const vipGuests = {
-      vegCount: Number(vegGuest) || 0,
-
-      nonVegCount: Number(nonVegGuest) || 0,
-    };
+    const foodTypesPayload = selectedFoodList.map((type) => {
+      // For Breakfast, Lunch, Dinner - include all details
+      if (["Breakfast", "Lunch", "Dinner"].includes(type)) {
+        return {
+          type,
+          participants: {
+            vegCount: Number(foodDetails[type].vegParticipants) || 0,
+            nonVegCount: Number(foodDetails[type].nonVegParticipants) || 0,
+          },
+          vipGuests: {
+            vegCount: Number(foodDetails[type].vegGuest) || 0,
+            nonVegCount: Number(foodDetails[type].nonVegGuest) || 0,
+          },
+        };
+      } else {
+        // For Morning/Evening Refreshment - only type (no details needed)
+        return {
+          type,
+        };
+      }
+    });
 
     return {
       employee: employeeId || "6a0411af4579d3137b255e70",
@@ -733,7 +762,6 @@ const IndividualFoodAndRefreshment = () => {
           ).toISOString()
         : null,
 
-      // CHANGE THIS
       resourcePersonType: resourceType,
 
       numberOfResourcePersons: Number(totalResourcePerson) || 0,
@@ -745,19 +773,7 @@ const IndividualFoodAndRefreshment = () => {
         mobile: staff.mobile,
       })),
 
-      foodTypes: foodType
-        ? [
-            {
-              type: foodType,
-              participants,
-              vipGuests,
-            },
-          ]
-        : [],
-
-      participants,
-
-      vipGuests,
+      foodTypes: foodTypesPayload,
 
       specialRequirements: specialRequirement.trim(),
 
@@ -789,16 +805,27 @@ const IndividualFoodAndRefreshment = () => {
       errors.push("Accompanying staff mobile number is required.");
     }
 
-    if (!foodType) errors.push("Food Type is required.");
+    const selectedFoodList = Object.keys(selectedFoodTypes).filter(
+      (type) => selectedFoodTypes[type]
+    );
 
-    if (!vegParticipants) errors.push("Veg Participants count is required.");
+    if (selectedFoodList.length === 0)
+      errors.push("Select at least one Food Type.");
 
-    if (!nonVegParticipants)
-      errors.push("Non-Veg Participants count is required.");
-
-    if (!vegGuest) errors.push("Veg Guest count is required.");
-
-    if (!nonVegGuest) errors.push("Non-Veg Guest count is required.");
+    // Only validate Breakfast, Lunch, Dinner for details
+    const mealTypes = ["Breakfast", "Lunch", "Dinner"];
+    selectedFoodList.forEach((type) => {
+      if (mealTypes.includes(type)) {
+        if (!foodDetails[type].vegParticipants)
+          errors.push(`${type}: Veg Participants count is required.`);
+        if (!foodDetails[type].nonVegParticipants)
+          errors.push(`${type}: Non-Veg Participants count is required.`);
+        if (!foodDetails[type].vegGuest)
+          errors.push(`${type}: Veg Guest count is required.`);
+        if (!foodDetails[type].nonVegGuest)
+          errors.push(`${type}: Non-Veg Guest count is required.`);
+      }
+    });
 
     setValidationErrors(errors);
 
@@ -909,7 +936,7 @@ const IndividualFoodAndRefreshment = () => {
               onClick={() => setShowResourceDropdown(!showResourceDropdown)}
               className="
     w-full
-    bg-[#1f1f38]
+  
     border
     border-[#3a3a5a]
     rounded-md
@@ -985,7 +1012,7 @@ const IndividualFoodAndRefreshment = () => {
               placeholder="5"
               className="
                   w-full
-                  bg-[#1f1f38]
+                
                   border
                   border-[#3a3a5a]
                   rounded-md
@@ -1010,7 +1037,6 @@ const IndividualFoodAndRefreshment = () => {
               onChange={(e) => handleStaffCount(e.target.value)}
               className="
                   w-full
-                  bg-[#1f1f38]
                   border
                   border-[#3a3a5a]
                   rounded-md
@@ -1070,15 +1096,16 @@ const IndividualFoodAndRefreshment = () => {
                     required
                     className="
                 w-full
-                bg-transparent
+                bg-[#26264a]
                 border
-                border-[#7c3aed]
+                border-[#3a3a5a]
                 rounded-xl
                 px-4
                 py-4
                 text-white
                 outline-none
-                focus:border-[#a855f7]
+                focus:border-[#8b5cf6]
+                focus:ring-0
                 transition-all
                 duration-300
               "
@@ -1111,15 +1138,16 @@ const IndividualFoodAndRefreshment = () => {
                     required
                     className="
                 w-full
-                bg-transparent
+                bg-[#26264a]
                 border
-                border-[#7c3aed]
+                border-[#3a3a5a]
                 rounded-xl
                 px-4
                 py-4
                 text-white
                 outline-none
-                focus:border-[#a855f7]
+                focus:border-[#8b5cf6]
+                focus:ring-0
                 transition-all
                 duration-300
               "
@@ -1128,7 +1156,7 @@ const IndividualFoodAndRefreshment = () => {
               </div>
             </div>
           ))}
-        {/* FOOD TYPE */}
+        {/* FOOD TYPE SELECTION */}
         <div className="relative mb-6">
           <label className="block text-sm mb-2">Food Type *</label>
 
@@ -1136,7 +1164,6 @@ const IndividualFoodAndRefreshment = () => {
             onClick={() => setShowFoodDropdown(!showFoodDropdown)}
             className="
               w-full
-              bg-[#1f1f38]
               border
               border-[#3a3a5a]
               rounded-md
@@ -1146,11 +1173,21 @@ const IndividualFoodAndRefreshment = () => {
               justify-between
               items-center
               cursor-pointer
+             
+              hover:border-[#8b5cf6]
+              transition-all
             "
           >
-            <span className={foodType ? "text-white" : "text-[#8d8da8]"}>
-              {foodType ||
-                "Breakfast / Lunch / Dinner / Morning Refreshment / Evening Refreshment"}
+            <span
+              className={
+                Object.values(selectedFoodTypes).some((v) => v)
+                  ? "text-white"
+                  : "text-[#8d8da8]"
+              }
+            >
+              {Object.keys(selectedFoodTypes)
+                .filter((type) => selectedFoodTypes[type])
+                .join(" / ") || "Select Food Type"}
             </span>
 
             <ChevronDown
@@ -1163,153 +1200,229 @@ const IndividualFoodAndRefreshment = () => {
 
           {showFoodDropdown && (
             <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-              {foodOptions.map((item, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    setFoodType(item);
+              {foodOptions.map((item, index) => {
+                const isSelected = selectedFoodTypes[item];
 
-                    setShowFoodDropdown(false);
-                  }}
-                  className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                >
-                  {item}
-                </div>
-              ))}
+                return (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setSelectedFoodTypes((prev) => ({
+                        ...prev,
+                        [item]: !prev[item],
+                      }));
+                    }}
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      isSelected
+                        ? "bg-[#3b82f6] text-white"
+                        : "hover:bg-[#3b82f6]"
+                    }`}
+                  >
+                    <span>{item}</span>
+
+                    {isSelected && <span>✓</span>}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* FOOD SECTION */}
-        {foodType && (
-          <div
-            className="
-              bg-[#252547]
-              rounded-xl
-              p-5
-              mb-6
-            "
-          >
-            <h2 className="text-[#a855f7] text-xl font-bold mb-5">
-              {foodType}
-            </h2>
+        {/* SEPARATE FOOD SECTIONS - ONLY FOR BREAKFAST, LUNCH, DINNER */}
+        {["Breakfast", "Lunch", "Dinner"].map(
+          (type) =>
+            selectedFoodTypes[type] && (
+              <div
+                key={type}
+                className="
+                  bg-[#282846]
+                  border
+                  border-[#3a3a5a]
+                  rounded-2xl
+                  p-5
+                  mt-5
+                "
+              >
+                <h2 className="text-[#c084fc] text-lg font-semibold mb-4">
+                  {type}
+                </h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* VEG PARTICIPANTS */}
-              <div>
-                <label className="block text-sm mb-2">
-                  No. of veg In Participants Menu*
-                </label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Veg Participants */}
+                  <div>
+                    <label className="block text-sm mb-2">
+                      No. of veg In Participants Menu*
+                    </label>
 
-                <input
-                  type="number"
-                  value={vegParticipants}
-                  onChange={(e) => setVegParticipants(e.target.value)}
-                  placeholder="10"
-                  className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                />
+                    <input
+                      type="number"
+                      value={foodDetails[type].vegParticipants}
+                      onChange={(e) =>
+                        setFoodDetails((prev) => ({
+                          ...prev,
+                          [type]: {
+                            ...prev[type],
+                            vegParticipants: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="10"
+                      className="
+                        w-full
+                        bg-[#282846]
+                        border
+                        border-[#4a4a72]
+                        rounded-md
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-[#8b5cf6]
+                        transition-all
+                      "
+                    />
+                  </div>
+
+                  {/* Veg VIP */}
+                  <div>
+                    <label className="block text-sm mb-2">
+                      No. of veg In Guest/VIP Menu*
+                    </label>
+
+                    <input
+                      type="number"
+                      value={foodDetails[type].vegGuest}
+                      onChange={(e) =>
+                        setFoodDetails((prev) => ({
+                          ...prev,
+                          [type]: {
+                            ...prev[type],
+                            vegGuest: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="10"
+                      className="
+                        w-full
+                        bg-[#282846]
+                        border
+                        border-[#4a4a72]
+                        rounded-md
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-[#8b5cf6]
+                        transition-all
+                      "
+                    />
+                  </div>
+
+                  {/* Non Veg Participants */}
+                  <div>
+                    <label className="block text-sm mb-2">
+                      No. of Non-veg In Participants Menu*
+                    </label>
+
+                    <input
+                      type="number"
+                      value={foodDetails[type].nonVegParticipants}
+                      onChange={(e) =>
+                        setFoodDetails((prev) => ({
+                          ...prev,
+                          [type]: {
+                            ...prev[type],
+                            nonVegParticipants: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="10"
+                      className="
+                        w-full
+                        bg-[#282846]
+                        border
+                        border-[#4a4a72]
+                        rounded-md
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-[#8b5cf6]
+                        transition-all
+                      "
+                    />
+                  </div>
+
+                  {/* Non Veg VIP */}
+                  <div>
+                    <label className="block text-sm mb-2">
+                      No. of Non-veg In Guest/VIP Menu*
+                    </label>
+
+                    <input
+                      type="number"
+                      value={foodDetails[type].nonVegGuest}
+                      onChange={(e) =>
+                        setFoodDetails((prev) => ({
+                          ...prev,
+                          [type]: {
+                            ...prev[type],
+                            nonVegGuest: e.target.value,
+                          },
+                        }))
+                      }
+                      placeholder="10"
+                      className="
+                        w-full
+                        bg-[#282846]
+                        border
+                        border-[#4a4a72]
+                        rounded-md
+                        px-4
+                        py-3
+                        text-white
+                        outline-none
+                        focus:border-[#8b5cf6]
+                        transition-all
+                      "
+                    />
+                  </div>
+                </div>
               </div>
-
-              {/* VEG GUEST */}
-              <div>
-                <label className="block text-sm mb-2">
-                  No. of veg In Guest/VIP Menu*
-                </label>
-
-                <input
-                  type="number"
-                  value={vegGuest}
-                  onChange={(e) => setVegGuest(e.target.value)}
-                  placeholder="10"
-                  className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                />
-              </div>
-
-              {/* NON VEG PARTICIPANTS */}
-              <div>
-                <label className="block text-sm mb-2">
-                  No. of Non-veg In Participants Menu*
-                </label>
-
-                <input
-                  type="number"
-                  value={nonVegParticipants}
-                  onChange={(e) => setNonVegParticipants(e.target.value)}
-                  placeholder="10"
-                  className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                />
-              </div>
-
-              {/* NON VEG GUEST */}
-              <div>
-                <label className="block text-sm mb-2">
-                  No. of Non-veg In Guest/VIP Menu*
-                </label>
-
-                <input
-                  type="number"
-                  value={nonVegGuest}
-                  onChange={(e) => setNonVegGuest(e.target.value)}
-                  placeholder="10"
-                  className="
-                      w-full
-                      bg-[#1f1f38]
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                />
-              </div>
-            </div>
-
-            {/* SPECIAL REQUIREMENTS */}
-            <div className="mt-5">
-              <label className="block text-sm mb-2">Special Requirements</label>
-
-              <textarea
-                rows={4}
-                value={specialRequirement}
-                onChange={(e) => setSpecialRequirement(e.target.value)}
-                placeholder="Enter special requirements"
-                className="w-full bg-[#1f1f38] border border-[#3a3a5a] rounded-md px-4 py-3 text-white outline-none resize-none"
-              />
-            </div>
-          </div>
+            )
         )}
+
+        {/* SPECIAL REQUIREMENT */}
+        <div className="mt-5">
+          <label className="block text-sm mb-2">
+            Special Requirement
+          </label>
+
+          <textarea
+            rows={4}
+            value={specialRequirement}
+            onChange={(e) =>
+              setSpecialRequirement(e.target.value)
+            }
+            placeholder="Enter any special requirements"
+            className="
+              w-full
+           
+              border
+              border-[#3a3a5a]
+              rounded-md
+              px-4
+              py-3
+              outline-none
+              resize-none
+              text-white
+              focus:border-[#3b82f6]
+              focus:ring-0
+              focus:ring-[#3b82f6]
+              transition-all
+            "
+          />
+        </div>
 
         {/* ERRORS */}
         {validationErrors.length > 0 && (
@@ -1331,35 +1444,33 @@ const IndividualFoodAndRefreshment = () => {
       </div>
 
       <div className="flex justify-center md:justify-end mt-8">
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          className="
-              bg-[#8b5cf6]
-              hover:bg-[#7c3aed]
-              disabled:opacity-60
-              disabled:cursor-not-allowed
-              text-white
-              font-semibold
-              text-lg
-              px-12
-              py-4
-              rounded-xl
-              flex
-              items-center
-              gap-3
-              transition-all
-              duration-300
-              shadow-lg
-              shadow-purple-900/40
-            "
-        >
-          {isSubmitting ? "Submitting..." : "Next"}
+  <button
+    type="button"
+    onClick={handleSubmit}
+    disabled={isSubmitting}
+    className="
+      bg-[#8b5cf6]
+      hover:bg-[#7c3aed]
+      disabled:opacity-60
+      disabled:cursor-not-allowed
+      text-white
+      font-medium
+      text-sm
+      px-6
+      py-2.5
+      rounded-md
+      flex
+      items-center
+      gap-2
+      transition-all
+      duration-300
+    "
+  >
+    {isSubmitting ? "Submitting..." : "Next"}
 
-          <ArrowRight size={20} />
-        </button>
-      </div>
+    <ArrowRight size={16} />
+  </button>
+</div>
     </div>
   );
 };

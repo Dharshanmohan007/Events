@@ -971,7 +971,7 @@ function PersonSection({ title, data, onChange }) {
           value={data.specialRequirements}
           onChange={handleFieldChange("specialRequirements")}
           placeholder="Enter special requirements..."
-          className="w-full bg-[#1d1d39]
+          className="w-full 
           border border-[#3b1f72]
           rounded-md px-4 py-3
           text-sm text-gray-300
@@ -1009,7 +1009,7 @@ function InputField({
         onChange={onChange}
         placeholder={placeholder}
         className={`w-full 
-        bg-[#16162a]
+        bg-[]
         border rounded-md px-4 py-3
         text-sm text-gray-300
         placeholder:text-gray-500
