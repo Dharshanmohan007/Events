@@ -33,6 +33,15 @@ const MONTHS = [
   "December",
 ];
 
+const floatingLabelClass =
+  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+
+const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+
+const staffFloatingLabelClass = `${floatingLabelClass} bg-[#232344]`;
+
+const foodSectionFloatingLabelClass = `${floatingLabelClass} bg-[#282846]`;
+
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -309,7 +318,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
   return (
     <div ref={ref} className="relative w-full">
-      <span className="block text-sm mb-2">{label}</span>
+      <span className={cardFloatingLabelClass}>{label}</span>
 
       <button
         type="button"
@@ -928,7 +937,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           {/* RESOURCE PERSON TYPE */}
           {/* RESOURCE PERSON TYPE */}
           <div className="relative">
-            <label className="block text-sm mb-2">
+            <label className={cardFloatingLabelClass}>
               Type of resource Person*
             </label>
 
@@ -1000,8 +1009,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           </div>
 
           {/* TOTAL RESOURCE PERSON */}
-          <div>
-            <label className="block text-sm mb-2">
+          <div className="relative">
+            <label className={cardFloatingLabelClass}>
               Total number of resource Person*
             </label>
 
@@ -1025,8 +1034,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           </div>
 
           {/* INTERNAL ACCOMPANYING COUNT */}
-          <div>
-            <label className="block text-sm mb-2">
+          <div className="relative">
+            <label className={cardFloatingLabelClass}>
               Total number of Internal Accompanying Person*
             </label>
 
@@ -1073,16 +1082,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                 {/* STAFF NAME */}
                 <div className="relative">
                   <label
-                    className="
-                absolute
-                -top-3
-                left-4
-                px-2
-                text-sm
-                text-white
-                bg-[#232344]
-                z-10
-              "
+                    className={staffFloatingLabelClass}
                   >
                     Accompanying Staff Name *
                   </label>
@@ -1115,16 +1115,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                 {/* STAFF MOBILE */}
                 <div className="relative">
                   <label
-                    className="
-                absolute
-                -top-3
-                left-4
-                px-2
-                text-sm
-                text-white
-                bg-[#232344]
-                z-10
-              "
+                    className={staffFloatingLabelClass}
                   >
                     Accompanying Staff Mobile Number *
                   </label>
@@ -1158,7 +1149,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           ))}
         {/* FOOD TYPE SELECTION */}
         <div className="relative mb-6">
-          <label className="block text-sm mb-2">Food Type *</label>
+          <label className={cardFloatingLabelClass}>Food Type *</label>
 
           <div
             onClick={() => setShowFoodDropdown(!showFoodDropdown)}
@@ -1249,8 +1240,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Veg Participants */}
-                  <div>
-                    <label className="block text-sm mb-2">
+                  <div className="relative">
+                    <label className={foodSectionFloatingLabelClass}>
                       No. of veg In Participants Menu*
                     </label>
 
@@ -1284,8 +1275,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                   </div>
 
                   {/* Veg VIP */}
-                  <div>
-                    <label className="block text-sm mb-2">
+                  <div className="relative">
+                    <label className={foodSectionFloatingLabelClass}>
                       No. of veg In Guest/VIP Menu*
                     </label>
 
@@ -1319,8 +1310,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                   </div>
 
                   {/* Non Veg Participants */}
-                  <div>
-                    <label className="block text-sm mb-2">
+                  <div className="relative">
+                    <label className={foodSectionFloatingLabelClass}>
                       No. of Non-veg In Participants Menu*
                     </label>
 
@@ -1354,8 +1345,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                   </div>
 
                   {/* Non Veg VIP */}
-                  <div>
-                    <label className="block text-sm mb-2">
+                  <div className="relative">
+                    <label className={foodSectionFloatingLabelClass}>
                       No. of Non-veg In Guest/VIP Menu*
                     </label>
 
@@ -1393,8 +1384,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
         )}
 
         {/* SPECIAL REQUIREMENT */}
-        <div className="mt-5">
-          <label className="block text-sm mb-2">
+        <div className="relative mt-5">
+          <label className={cardFloatingLabelClass}>
             Special Requirement
           </label>
 

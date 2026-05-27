@@ -38,9 +38,20 @@ const MONTHS = [
   "December",
 ];
 
+const floatingLabelClass =
+  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+
+const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+
 /* ================= DATE PICKER ================= */
 
-function DateTimePicker({ label, value, onChange, placeholder }) {
+function DateTimePicker({
+  label,
+  value,
+  onChange,
+  placeholder,
+  labelBgClass = "bg-[#141428]",
+}) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState("calendar");
   const [displayMonth, setDisplayMonth] = useState(() =>
@@ -120,7 +131,9 @@ function DateTimePicker({ label, value, onChange, placeholder }) {
   return (
     <div ref={ref} className="relative w-full">
       {label && (
-        <label className="text-sm text-white mb-2 block">{label}</label>
+        <label className={`${floatingLabelClass} ${labelBgClass}`}>
+          {label}
+        </label>
       )}
 
       <button
@@ -825,6 +838,7 @@ function PersonSection({ title, data, onChange }) {
           }
           options={["Trophy", "Cash Prize", "Voucher"]}
           placeholder="Select Gift Type"
+          labelBgClass="bg-[#1b1b35]"
         />
 
         <CustomDropdown
@@ -838,6 +852,7 @@ function PersonSection({ title, data, onChange }) {
           }
           options={["Yes", "No"]}
           placeholder="Select Option"
+          labelBgClass="bg-[#1b1b35]"
         />
       </div>
 
@@ -862,6 +877,7 @@ function PersonSection({ title, data, onChange }) {
               }
               options={["Basic", "Elite"]}
               placeholder="Select Trophy Type"
+              labelBgClass="bg-[#1b1b35]"
             />
           </div>
 
@@ -873,6 +889,7 @@ function PersonSection({ title, data, onChange }) {
                   placeholder="2"
                   value={data.basicTrophyQty}
                   onChange={handleFieldChange("basicTrophyQty")}
+                  labelBgClass="bg-[#1b1b35]"
                 />
               </div>
             )}
@@ -885,6 +902,7 @@ function PersonSection({ title, data, onChange }) {
                   placeholder="2"
                   value={data.eliteTrophyQty}
                   onChange={handleFieldChange("eliteTrophyQty")}
+                  labelBgClass="bg-[#1b1b35]"
                 />
               </div>
             )}
@@ -898,6 +916,7 @@ function PersonSection({ title, data, onChange }) {
             placeholder="₹ 5000"
             value={data.cashPrizeAmount}
             onChange={handleFieldChange("cashPrizeAmount")}
+            labelBgClass="bg-[#1b1b35]"
           />
         </div>
       )}
@@ -921,6 +940,7 @@ function PersonSection({ title, data, onChange }) {
             }
             options={["₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"]}
             placeholder="Select Voucher Worth"
+            labelBgClass="bg-[#1b1b35]"
           />
 
           {voucherWorthList.length > 0 && (
@@ -940,6 +960,7 @@ function PersonSection({ title, data, onChange }) {
                       },
                     })
                   }
+                  labelBgClass="bg-[#1b1b35]"
                 />
               ))}
             </div>
@@ -954,14 +975,14 @@ function PersonSection({ title, data, onChange }) {
             placeholder="2"
             value={data.registrationKitQty}
             onChange={handleFieldChange("registrationKitQty")}
+            labelBgClass="bg-[#1b1b35]"
           />
         </div>
       )}
 
-      <div className="w-full">
+      <div className="relative w-full">
         <label
-          className="text-sm text-white
-          mb-2 block"
+          className={cardFloatingLabelClass}
         >
           Special Requirement
         </label>
@@ -993,12 +1014,12 @@ function InputField({
   onChange,
   type = "text",
   error,
+  labelBgClass = "bg-[#141428]",
 }) {
   return (
-    <div className="w-full">
+    <div className="relative w-full">
       <label
-        className="text-sm text-white
-        mb-2 block"
+        className={`${floatingLabelClass} ${labelBgClass}`}
       >
         {label}
       </label>
@@ -1043,6 +1064,7 @@ function CustomDropdown({
   options,
   placeholder,
   multiSelect = false,
+  labelBgClass = "bg-[#141428]",
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -1068,8 +1090,7 @@ function CustomDropdown({
   return (
     <div className="relative w-full">
       <label
-        className="text-sm text-white
-        mb-2 block"
+        className={`${floatingLabelClass} ${labelBgClass}`}
       >
         {label}
       </label>

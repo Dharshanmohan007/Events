@@ -35,6 +35,13 @@
     specialRequirement: "",
   });
 
+  const floatingLabelClass =
+    "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+
+  const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+
+  const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
+
   const TransportDetailsPage = () => {
     const [transportForms, setTransportForms] = useState([
       createTransportForm(),
@@ -552,8 +559,8 @@
               </div>
 
               {/* PICKUP */}
-              <div className="mt-5">
-                <label className="block text-sm mb-2">
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>
                   Pickup Location *
                 </label>
 
@@ -569,7 +576,7 @@
                     py-3
                  
                     focus-within:border-[#3b82f6]
-                    focus-within:ring-1
+                    focus-within:ring-0
                     focus-within:ring-[#3b82f6]
                     transition-all
                   "
@@ -710,8 +717,8 @@
               )}
 
               {/* DROP */}
-              <div className="mt-5">
-                <label className="block text-sm mb-2">
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>
                   Drop Location *
                 </label>
 
@@ -757,8 +764,8 @@
 
               {/* PASSENGERS + VEHICLES */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                <div>
-                  <label className="block text-sm mb-2">
+                <div className="relative">
+                  <label className={formFloatingLabelClass}>
                     Total Number of
                     Passengers *
                   </label>
@@ -793,7 +800,7 @@
 
                 {/* VEHICLE DROPDOWN */}
                 <div className="relative">
-                  <label className="block text-sm mb-2">
+                  <label className={formFloatingLabelClass}>
                     Type of Vehicle Needed *
                   </label>
 
@@ -939,12 +946,16 @@
                       <div
                         key={index}
                         className={
-                          vehicle === "Bus"
-                            ? "md:col-span-2"
-                            : ""
+                          vehicle === "Bus" &&
+                          (
+                            form.selectedVehicles ||
+                            []
+                          ).length === 1
+                            ? "relative md:col-span-2"
+                            : "relative"
                         }
                       >
-                        <label className="block text-sm mb-2">
+                        <label className={formFloatingLabelClass}>
                           {getVehicleLabel(
                             vehicle
                           )}
@@ -1003,8 +1014,8 @@
               )}
 
               {/* STAFF COUNT */}
-              <div className="mt-5">
-                <label className="block text-sm mb-2">
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>
                   Number of Accompanying Staff *
                 </label>
 
@@ -1102,18 +1113,9 @@
                           {/* NAME */}
                           <div className="relative">
                             <label
-                              className="
-                                absolute
-                                -top-2.5
-                                left-4
-                                bg-[#26264a]
-                                px-2
-                                text-sm
-                                text-white
-                                z-10
-                              "
+                              className={staffFloatingLabelClass}
                             >
-                              Accompanying Staff Name
+                              Accompanying Staff Name *
                             </label>
 
                             <input
@@ -1149,16 +1151,7 @@
                           {/* MOBILE */}
                           <div className="relative">
                             <label
-                              className="
-                                absolute
-                                -top-2.5
-                                left-4
-                                bg-[#26264a]
-                                px-2
-                                text-sm
-                                text-white
-                                z-10
-                              "
+                              className={staffFloatingLabelClass}
                             >
                               Accompanying Staff Mobile Number
                             </label>
@@ -1200,8 +1193,8 @@
               )}
 
               {/* SPECIAL REQUIREMENT */}
-              <div className="mt-5">
-                <label className="block text-sm mb-2">
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>
                   Special Requirement
                 </label>
 

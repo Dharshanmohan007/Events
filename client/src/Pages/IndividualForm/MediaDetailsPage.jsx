@@ -11,6 +11,13 @@ import {
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
 
+const floatingLabelClass =
+  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+
+const pageFloatingLabelClass = `${floatingLabelClass} bg-[#141428]`;
+
+const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+
 const MediaDetailsPage = () => {
   // =========================
   // MAIN TYPE DROPDOWN
@@ -406,7 +413,7 @@ const MediaDetailsPage = () => {
 
       {/* TYPE DROPDOWN */}
       <div className="relative mb-8">
-        <label className="block text-sm mb-2">
+        <label className={pageFloatingLabelClass}>
           Type of Design Required *
         </label>
 
@@ -496,8 +503,8 @@ const MediaDetailsPage = () => {
           </h2>
 
           {/* Poster Content */}
-          <div className="mb-6">
-            <label className="block text-sm mb-2">
+          <div className="relative mb-6">
+            <label className={cardFloatingLabelClass}>
               Content for Poster *
             </label>
 
@@ -522,10 +529,10 @@ const MediaDetailsPage = () => {
           </div>
 
           {/* Poster Upload */}
-          <div className="mb-8">
-            <label className="block text-sm mb-3">
+          <div className="relative mb-8">
+            <span className={cardFloatingLabelClass}>
               Reference Poster ( If any )
-            </label>
+            </span>
 
             <label
               className="
@@ -585,7 +592,7 @@ const MediaDetailsPage = () => {
 
           {/* Display Needed */}
           <div className="relative mb-6">
-            <label className="block text-sm mb-2">
+            <label className={cardFloatingLabelClass}>
               Display Needed *
             </label>
 
@@ -653,8 +660,8 @@ const MediaDetailsPage = () => {
 
           {/* SIZE INPUT */}
           {selectedDisplay && (
-            <div className="mb-6">
-              <label className="block text-sm mb-2">
+            <div className="relative mb-6">
+              <label className={cardFloatingLabelClass}>
                 Size for {selectedDisplay} *
               </label>
 
@@ -781,8 +788,8 @@ const MediaDetailsPage = () => {
 </div>
 
           {/* Requirement */}
-          <div>
-            <label className="block text-sm mb-2">
+          <div className="relative">
+            <label className={cardFloatingLabelClass}>
               Special Requirements, If any 
             </label>
 
@@ -821,8 +828,8 @@ const MediaDetailsPage = () => {
           </h2>
 
           {/* Video Content */}
-          <div className="mb-6">
-            <label className="block text-sm mb-2">
+          <div className="relative mb-6">
+            <label className={cardFloatingLabelClass}>
               Content for Video *
             </label>
 
@@ -849,8 +856,8 @@ const MediaDetailsPage = () => {
           </div>
 
           {/* VIDEO DURATION */}
-          <div className="mb-6">
-            <label className="block text-sm mb-2">
+          <div className="relative mb-6">
+            <label className={cardFloatingLabelClass}>
               Video Duration *
             </label>
 
@@ -880,10 +887,10 @@ const MediaDetailsPage = () => {
           
 
           {/* VIDEO UPLOAD */}
-          <div className="mb-8">
-            <label className="block text-sm mb-3">
+          <div className="relative mb-8">
+            <span className={cardFloatingLabelClass}>
               Reference Video ( If any )
-            </label>
+            </span>
 
             <label
               className="
@@ -942,8 +949,8 @@ const MediaDetailsPage = () => {
           </div>
 
           {/* REQUIREMENT */}
-          <div>
-            <label className="block text-sm mb-2">
+          <div className="relative">
+            <label className={cardFloatingLabelClass}>
               Special Requirements *
             </label>
 
