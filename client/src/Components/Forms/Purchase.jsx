@@ -954,7 +954,7 @@ export default function Purchase({
       setApiError("");
       try {
         const payload = buildPurchasePayload(latestDayData);
-        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId || ""}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

@@ -658,11 +658,12 @@ export default function Form() {
     }
     setIsLoading(true);
     try {
+      console.log("api:", import.meta.env.VITE_API_BASE_URL_URL);
       let response;
       if (sectionKey === "event") {
         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
         const method  = eventId ? "PUT" : "POST";
-        const url     = eventId ? `${import.meta.env.VITE_API_BASE}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE}/api/events`;
+        const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -671,14 +672,14 @@ export default function Form() {
       } else if (isFormDataPayload) {
         // ── Media with files: send as multipart, no Content-Type header ───
         // The browser sets Content-Type automatically with the correct boundary.
-        response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventIdRef.current}`, {
+        response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventIdRef.current}`, {
           method: "PUT",
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
           body: sectionValueOrFormData,
         });
       } else {
         const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData);
-        response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId}`, {
+        response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
           body: JSON.stringify(payload),
@@ -711,7 +712,7 @@ export default function Form() {
     setApiError("");
     try {
       const fullPayload = buildFullSubmitPayload(formDataRef.current, selectedRequirements, user);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId}/submit`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/submit`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(fullPayload),

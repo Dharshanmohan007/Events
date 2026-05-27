@@ -199,7 +199,7 @@ function StepEmail({ onNext, mounted }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/forgot-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -278,7 +278,7 @@ function StepOtp({ email, onNext, onBack, mounted }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/verify-otp`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp }),
@@ -306,7 +306,7 @@ function StepOtp({ email, onNext, onBack, mounted }) {
     setApiError("");
     setResendSuccess("");
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/forgot-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -434,7 +434,7 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/reset-password`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp, newPassword: password }),

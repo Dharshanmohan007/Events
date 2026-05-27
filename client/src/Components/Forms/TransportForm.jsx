@@ -456,7 +456,7 @@ export default function TransportForm({
     setCarAvailability((prev) => ({ ...prev, [formIndex]: { checking: true, available: true } }));
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/vehicles/availability?type=Car&pickupDateTime=${pickupDate.toISOString()}&dropDateTime=${dropDate.toISOString()}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/vehicles/availability?type=Car&pickupDateTime=${pickupDate.toISOString()}&dropDateTime=${dropDate.toISOString()}`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
       if (!response.ok) throw new Error("Failed");
@@ -653,7 +653,7 @@ export default function TransportForm({
         },
       };
       console.log("transport payload data :", payload);
-      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(payload),

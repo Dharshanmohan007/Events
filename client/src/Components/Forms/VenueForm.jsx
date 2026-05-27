@@ -878,7 +878,7 @@ export default function VenueForm({
       try {
         const payload  = buildVenuePayload(venueData);
         const id       = eventId || "";
-        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

@@ -503,7 +503,7 @@ export default function AudioForm({
     const fetchVenues = async () => {
       setVenueInfoLoading(true);
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/venues`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/venues`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -587,7 +587,7 @@ export default function AudioForm({
       setApiError("");
       try {
         const payload = buildAudioPayload(latestAudioData, eventDays, venueData, venueInfoMap);
-        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId || ""}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
