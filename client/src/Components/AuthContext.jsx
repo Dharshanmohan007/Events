@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 
-const API_BASE = "https://sece-events.onrender.com";
 
 const AuthContext = createContext(null);
 
@@ -39,7 +38,7 @@ export function AuthProvider({ children }) {
     }
 
     // Verify token is still valid with the backend
-    fetch(`${API_BASE}/api/auth/me`, {
+    fetch(`${import.meta.env.VITE_API_BASE}/api/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(async (r) => {

@@ -6,10 +6,9 @@ import { MoveRight } from 'lucide-react';
 import Logo from "../assets/logo.svg";
 import LoginBackground from "../assets/login_Background.svg";
 
-const API_BASE = "https://sece-events.onrender.com";
 
 async function signupApi(name, email, password) {
-  const res = await fetch(`${API_BASE}/api/auth/register`, {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, password }),

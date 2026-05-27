@@ -3,7 +3,6 @@ import CustomInput from "../CustomInput";
 import { Info } from "lucide-react";
 import VenueInfoPopup from "./VenueInfoPopup"; // ← separated into its own file
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 const VENUES = [
   { venue: "Main Board Room", capacity: 20 },
@@ -879,7 +878,7 @@ export default function VenueForm({
       try {
         const payload  = buildVenuePayload(venueData);
         const id       = eventId || "";
-        const response = await fetch(`${BASE_URL}/api/events/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${id}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

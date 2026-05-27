@@ -5,7 +5,6 @@ import { DayTimeline } from "./VenueForm";
 import VenueInfoPopup from "./VenueInfoPopup";
 import { Info } from "lucide-react";
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 const REQUIREMENTS_OPTIONS = [
   "Chief Guest AV",
@@ -505,7 +504,7 @@ export default function IctsForm({
       setApiError("");
       try {
         const payload = buildIctsPayload(latestIctsData);
-        const response = await fetch(`${BASE_URL}/api/events/${eventId || ""}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

@@ -9,7 +9,6 @@ import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-time picker
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 // ─── Room config ───────────────────────────────────────────────────────────────
 const BASE_ROOM_OPTIONS = [
@@ -790,7 +789,7 @@ export default function AccommodationForm({
       const payload = buildPayload(latest, latestGuests);
       console.log("Accommodation payload:", JSON.stringify(payload, null, 2));
 
-      const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

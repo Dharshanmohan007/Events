@@ -17,10 +17,10 @@
 // import LoginContainerBg from "../assets/login_ConBg.svg";
 
 // // ─── API Config ───────────────────────────────────────────────────────────────
-// const API_BASE = "https://sece-events.onrender.com";
+// const import.meta.env.VITE_API_BASE = "http://localhost:5005";
 
 // async function loginApi(email, password) {
-//   const res = await fetch(`${API_BASE}/api/auth/login`, {
+//   const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/login`, {
 //     method: "POST",
 //     headers: { "Content-Type": "application/json" },
 //     body: JSON.stringify({ email, password }),
@@ -581,10 +581,9 @@ import LoginBackground from "../assets/login_Background.svg";
 import LoginContainerBg from "../assets/login_ConBg.svg";
 
 // ─── API Config ───────────────────────────────────────────────────────────────
-const API_BASE = "https://sece-events.onrender.com";
 
 async function loginApi(email, password) {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, password }),

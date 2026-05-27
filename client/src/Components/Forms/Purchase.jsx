@@ -3,7 +3,6 @@ import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 import { DayTimeline } from "./VenueForm";
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 const REQUIREMENT_OPTIONS        = ["Certificate", "Id Card"];
 const PERSON_OPTIONS             = ["Students", "Guest", "Both"];
@@ -955,7 +954,7 @@ export default function Purchase({
       setApiError("");
       try {
         const payload = buildPurchasePayload(latestDayData);
-        const response = await fetch(`${BASE_URL}/api/events/${eventId || ""}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

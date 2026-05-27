@@ -10,7 +10,6 @@ import { Trash2, Plus, Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 // ─── DatePicker dark theme override (injected once) ──────────────────────────
 const DATE_PICKER_STYLES = `
@@ -528,7 +527,7 @@ export default function FoodAndRefreshments({
     try {
       const payload = buildPayload(latest);
       console.log("food payload:", payload);
-      const response = await fetch(`${BASE_URL}/api/events/${eventId}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

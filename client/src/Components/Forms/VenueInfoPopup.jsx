@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 const audioKeys = [
   { key: "collarMic",        label: "COLLAR MIC" },
@@ -28,7 +27,7 @@ export default function VenueInfoPopup({ venueName, onClose }) {
       setError("");
       setVenueDetail(null);
       try {
-        const res = await fetch(`${BASE_URL}/api/venues`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/venues`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (!res.ok) throw new Error(`Server error: ${res.status}`);

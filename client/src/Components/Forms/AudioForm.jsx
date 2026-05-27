@@ -3,7 +3,6 @@ import CustomInput from "../CustomInput";
 import { DayTimeline } from "./VenueForm";
 import VenueInfoPopup from "./VenueInfoPopup";
 
-const BASE_URL = "https://sece-events.onrender.com";
 
 const AUDIO_KEY_META = [
   { key: "handMic",          label: "Hand Mic" },
@@ -504,7 +503,7 @@ export default function AudioForm({
     const fetchVenues = async () => {
       setVenueInfoLoading(true);
       try {
-        const res = await fetch(`${BASE_URL}/api/venues`, {
+        const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/venues`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
@@ -588,7 +587,7 @@ export default function AudioForm({
       setApiError("");
       try {
         const payload = buildAudioPayload(latestAudioData, eventDays, venueData, venueInfoMap);
-        const response = await fetch(`${BASE_URL}/api/events/${eventId || ""}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
