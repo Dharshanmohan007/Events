@@ -206,11 +206,21 @@ export default function EventOrganizerDetails({
       {/* Department & Organizers count */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <div>
-          <CustomInput
-            label="Name of the Organizing Department / Centre *"
+          <CustomSelect
+            label="Name of the Organizing Department / Centre "
+            required
+            searchable
             value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="Enter department name"
+            onChange={(val) => {
+              // Departments that should be Title Case
+              const titleCaseDepartments = ["Placement", "Library"];
+              // Convert based on department type
+              const formattedValue = titleCaseDepartments.includes(val)
+                ? val.charAt(0).toUpperCase() + val.slice(1).toLowerCase()
+                : val.toUpperCase();
+              setDepartment(formattedValue);
+            }}
+            options={["AIDS","AIML","CSBS","CSE","CYS","IT","CCE","ECE","EEE","MECH","S&H","Placement","CFRD","IQAC","CIR","Library"]}placeholder="Select an option"
           />
           {errors.department && <p className="text-red-400 text-xs mt-1">{errors.department}</p>}
         </div>

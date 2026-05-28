@@ -48,17 +48,38 @@ function validateIctsCard(card, showProctoring) {
   const e = {};
   if (!card.desktopLaptop)         e.desktopLaptop         = "This field is required";
   if (!card.internetFacility)      e.internetFacility      = "This field is required";
-  if (!card.expectedInternetUsers?.trim())
-                                   e.expectedInternetUsers = "This field is required";
-  if (showProctoring && !card.proctorUsers?.trim())
-                                   e.proctorUsers          = "This field is required";
-  if (!card.guestWifi)             e.guestWifi             = "This field is required";
-  if (card.guestWifi === "Yes" && !card.guestWifiExceed5)
-                                   e.guestWifiExceed5      = "This field is required";
-  if (card.guestWifi === "Yes" && card.guestWifiExceed5 === "Yes" && !card.totalGuestCount?.trim())
-                                   e.totalGuestCount       = "This field is required";
+  if (
+    card.expectedInternetUsers === "" ||
+    card.expectedInternetUsers === undefined ||
+    card.expectedInternetUsers === null
+  ) {
+    e.expectedInternetUsers = "This field is required";
+  }
+
+  if (
+    showProctoring &&
+    (
+      card.proctorUsers === "" ||
+      card.proctorUsers === undefined ||
+      card.proctorUsers === null
+    )
+  ) {
+    e.proctorUsers = "This field is required";
+  }
+
+  if (
+    card.guestWifi === "Yes" &&
+    card.guestWifiExceed5 === "Yes" &&
+    (
+      card.totalGuestCount === "" ||
+      card.totalGuestCount === undefined ||
+      card.totalGuestCount === null
+    )
+  ) {
+    e.totalGuestCount = "This field is required";
+  }
   if (!card.requirements || card.requirements.length === 0)
-                                   e.requirements          = "Select at least one requirement";
+    e.requirements = "Select at least one requirement";
   return e;
 }
 
@@ -271,7 +292,13 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
             label="Expected Internet Users *"
             type="number"
             value={data.expectedInternetUsers || ""}
-            onChange={updateInput("expectedInternetUsers")}
+            onChange={(e) =>
+              updateInput("expectedInternetUsers")({
+                target: {
+                  value: Math.max(0, Number(e.target.value)),
+                },
+              })
+            }
             placeholder="e.g. 50"
           />
           {errors.expectedInternetUsers && (
@@ -287,7 +314,13 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
               label="Proctoring Users *"
               type="number"
               value={data.proctorUsers || ""}
-              onChange={updateInput("proctorUsers")}
+              onChange={(e) =>
+                updateInput("proctorUsers")({
+                  target: {
+                    value: Math.max(0, Number(e.target.value)),
+                  },
+                })
+              }
               placeholder="e.g. 30"
             />
             {errors.proctorUsers && (
@@ -591,7 +624,7 @@ export default function IctsForm({
         />
 
         <h2 className="text-white text-lg font-bold">
-          ICTS Details – Day {currentDayIndex + 1}
+          ICTS Details
         </h2>
 
         {/* API error banner */}
