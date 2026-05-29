@@ -1,12 +1,12 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 import {
   ChevronDown,
   CalendarDays,
-  Clock,
   ChevronLeft,
   ChevronRight,
   Plus,
+  Trash2,
   ArrowRight,
 } from "lucide-react";
 
@@ -50,126 +50,6 @@ function getFirstDayOfMonth(year, month) {
   return new Date(year, month, 1).getDay();
 }
 
-function ScrollDrum({ items, value, onChange }) {
-  const containerRef = useRef(null);
-
-  const ITEM_H = 40;
-
-  const isScrollingRef = useRef(false);
-
-  const scrollTimerRef = useRef(null);
-
-  useEffect(() => {
-    const el = containerRef.current;
-
-    if (!el) return;
-
-    el.scrollTop = value * ITEM_H;
-  }, [value]);
-
-  const handleScroll = useCallback(() => {
-    if (isScrollingRef.current) return;
-
-    const el = containerRef.current;
-
-    if (!el) return;
-
-    clearTimeout(scrollTimerRef.current);
-
-    scrollTimerRef.current = setTimeout(() => {
-      const idx = Math.round(el.scrollTop / ITEM_H);
-
-      const clamped = Math.max(0, Math.min(items.length - 1, idx));
-
-      el.scrollTop = clamped * ITEM_H;
-
-      if (clamped !== value) onChange(clamped);
-
-      isScrollingRef.current = false;
-    }, 80);
-  }, [items.length, onChange, value]);
-
-  return (
-    <div className="relative flex flex-col items-center" style={{ width: 56 }}>
-      <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg"
-        style={{
-          height: ITEM_H * 2,
-          background:
-            "linear-gradient(to bottom, #1a1a35 0%, transparent 100%)",
-        }}
-      />
-
-      <div
-        className="absolute left-0 right-0 z-10 pointer-events-none rounded-md border border-purple-500/40 bg-purple-600/10"
-        style={{
-          top: ITEM_H * 2,
-          height: ITEM_H,
-        }}
-      />
-
-      <div
-        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg"
-        style={{
-          height: ITEM_H * 2,
-          background: "linear-gradient(to top, #1a1a35 0%, transparent 100%)",
-        }}
-      />
-
-      <div
-        ref={containerRef}
-        onScroll={handleScroll}
-        style={{
-          height: ITEM_H * 5,
-          overflowY: "scroll",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-        }}
-        className="w-full drum-scroll"
-      >
-        <style>{`
-          .drum-scroll::-webkit-scrollbar {
-            display: none;
-          }
-        `}</style>
-
-        <div
-          style={{
-            height: ITEM_H * 2,
-          }}
-        />
-
-        {items.map((item, i) => (
-          <div
-            key={i}
-            onClick={() => {
-              onChange(i);
-
-              containerRef.current.scrollTop = i * ITEM_H;
-            }}
-            style={{
-              height: ITEM_H,
-            }}
-            className={`flex items-center justify-center text-base font-mono cursor-pointer select-none transition-colors ${
-              i === value
-                ? "text-white font-semibold"
-                : "text-gray-500 hover:text-gray-300"
-            }`}
-          >
-            {item}
-          </div>
-        ))}
-
-        <div
-          style={{
-            height: ITEM_H * 2,
-          }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
 
@@ -189,32 +69,6 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
   const [selectedDate, setSelectedDate] = useState(value || null);
 
-  const HOURS = Array.from({ length: 12 }, (_, i) =>
-    String(i === 0 ? 12 : i).padStart(2, "0"),
-  );
-
-  const MINUTES = Array.from({ length: 60 }, (_, i) =>
-    String(i).padStart(2, "0"),
-  );
-
-  const getHourIdx = (d) => {
-    if (!d) return 0;
-
-    const h = d.getHours() % 12;
-
-    return h === 0 ? 0 : h;
-  };
-
-  const [hourIdx, setHourIdx] = useState(() => getHourIdx(value));
-
-  const [minuteIdx, setMinuteIdx] = useState(() =>
-    value ? value.getMinutes() : 0,
-  );
-
-  const [ampm, setAmpm] = useState(() =>
-    value ? (value.getHours() >= 12 ? "PM" : "AM") : "AM",
-  );
-
   const ref = useRef(null);
 
   useEffect(() => {
@@ -230,7 +84,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   }, []);
 
   const formatDisplay = () => {
-    if (!value) return placeholder || "__/__/____ --:-- --";
+    if (!value) return placeholder || "__/__/____";
 
     const d = value;
 
@@ -240,48 +94,27 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
     const yyyy = d.getFullYear();
 
-    const rawH = d.getHours();
-
-    const h12 = rawH === 0 ? 12 : rawH > 12 ? rawH - 12 : rawH;
-
-    const hh = String(h12).padStart(2, "0");
-
-    const min = String(d.getMinutes()).padStart(2, "0");
-
-    const ap = rawH >= 12 ? "PM" : "AM";
-
-    return `${dd}/${mm}/${yyyy} ${hh}:${min} ${ap}`;
+    return `${dd}/${mm}/${yyyy}`;
   };
-
-  const commitDateTime = useCallback(
-    (date, hIdx, mIdx, ap) => {
-      if (!date) return;
-
-      const d = new Date(date);
-
-      let hours = hIdx % 12;
-
-      if (ap === "PM") hours += 12;
-
-      d.setHours(hours, mIdx, 0, 0);
-
-      onChange(d);
-    },
-    [onChange],
-  );
 
   const handleDayClick = (day) => {
     const newDate = new Date(displayYear, displayMonth, day);
 
-    setSelectedDate(newDate);
-
-    commitDateTime(newDate, hourIdx, minuteIdx, ampm);
-
-    setView("time");
+    selectDate(newDate);
   };
 
-  const handleTimeConfirm = () => {
-    commitDateTime(selectedDate, hourIdx, minuteIdx, ampm);
+  const selectDate = (date) => {
+    const newDate = new Date(date);
+
+    newDate.setHours(0, 0, 0, 0);
+
+    setSelectedDate(newDate);
+
+    setDisplayMonth(newDate.getMonth());
+
+    setDisplayYear(newDate.getFullYear());
+
+    onChange(newDate);
 
     setOpen(false);
 
@@ -331,7 +164,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
           w-full
           
           border
-          border-[#3a3a5a]
+          border-[#383847]
+          food-field-border
           rounded-md
           px-4
           py-3
@@ -347,13 +181,11 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
         <div className="flex gap-2 text-[#b0b0c3]">
           <CalendarDays size={18} />
-
-          <Clock size={18} />
         </div>
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3A3A5A] rounded-xl shadow-2xl w-72 overflow-hidden">
+        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#383847] rounded-xl shadow-2xl w-72 overflow-hidden">
           {/* CALENDAR */}
           {view === "calendar" && (
             <div className="p-3">
@@ -444,14 +276,6 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={() => setView("time")}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 text-xs"
-              >
-                <Clock size={14} />
-                Set Time
-              </button>
             </div>
           )}
 
@@ -507,55 +331,6 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
             </div>
           )}
 
-          {/* TIME */}
-          {view === "time" && (
-            <div className="p-4">
-              <div className="flex items-center justify-center gap-2">
-                <ScrollDrum
-                  items={HOURS}
-                  value={hourIdx}
-                  onChange={(i) => {
-                    setHourIdx(i);
-                  }}
-                />
-
-                <span className="text-white text-2xl font-mono">:</span>
-
-                <ScrollDrum
-                  items={MINUTES}
-                  value={minuteIdx}
-                  onChange={(i) => {
-                    setMinuteIdx(i);
-                  }}
-                />
-
-                <div className="flex flex-col gap-2 ml-2">
-                  {["AM", "PM"].map((ap) => (
-                    <button
-                      key={ap}
-                      type="button"
-                      onClick={() => setAmpm(ap)}
-                      className={`w-12 py-2 rounded-lg text-xs font-semibold ${
-                        ampm === ap
-                          ? "bg-purple-600 text-white"
-                          : "bg-[#2a2a4a] text-gray-400"
-                      }`}
-                    >
-                      {ap}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleTimeConfirm}
-                className="w-full mt-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium"
-              >
-                Confirm
-              </button>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -574,6 +349,8 @@ const IndividualFoodAndRefreshment = () => {
   const [showResourceDropdown, setShowResourceDropdown] = useState(false);
 
   const [showFoodDropdown, setShowFoodDropdown] = useState(false);
+
+  const [formCards, setFormCards] = useState([Date.now()]);
 
   // =========================
   // SELECTED VALUES
@@ -662,6 +439,14 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleAddForm = () => {
+    setFormCards((prev) => [...prev, Date.now()]);
+  };
+
+  const handleDeleteForm = (cardId) => {
+    setFormCards((prev) => prev.filter((id) => id !== cardId));
+  };
+
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
 
@@ -744,7 +529,11 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
       // For Breakfast, Lunch, Dinner - include all details
       if (["Breakfast", "Lunch", "Dinner"].includes(type)) {
         return {
-          type,
+          foodTypes: [
+            {
+              type,
+            },
+          ],
           participants: {
             vegCount: Number(foodDetails[type].vegParticipants) || 0,
             nonVegCount: Number(foodDetails[type].nonVegParticipants) || 0,
@@ -757,7 +546,11 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
       } else {
         // For Morning/Evening Refreshment - only type (no details needed)
         return {
-          type,
+          foodTypes: [
+            {
+              type,
+            },
+          ],
         };
       }
     });
@@ -886,7 +679,21 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
   };
 
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6">
+    <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">
+      <style>{`
+        .individual-food-form .food-field-border {
+          border-color: #383847 !important;
+        }
+
+        .individual-food-form input:focus,
+        .individual-food-form textarea:focus,
+        .individual-food-form button:focus,
+        .individual-food-form .food-select-control:focus {
+          border-color: #3b82f6 !important;
+          box-shadow: none !important;
+          outline: none !important;
+        }
+      `}</style>
       {/* TITLE */}
       <h1 className="text-white text-3xl font-bold mb-6">
         Food and Refreshment
@@ -895,6 +702,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
       {/* HEADER */}
       <div className="flex justify-end mb-6">
         <button
+          type="button"
+          onClick={handleAddForm}
           className="
             bg-[#7c3aed]
             hover:bg-[#6d28d9]
@@ -914,12 +723,31 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
         </button>
       </div>
 
+      {formCards.map((cardId, cardIndex) => (
+      <div key={cardId} className="mb-6">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-white text-xl font-semibold">
+          Food and Refreshment
+        </h2>
+
+        {cardIndex > 0 && (
+          <button
+            type="button"
+            onClick={() => handleDeleteForm(cardId)}
+            aria-label="Delete food and refreshment form"
+            className="flex h-10 w-1 items-center justify-center rounded-full bg-[#ffd6d6] text-[#ff2b2b] hover:bg-[#ffc7c7] focus:border-[#3b82f6]"
+          >
+            <Trash2 size={20} strokeWidth={3} />
+          </button>
+        )}
+      </div>
+
       {/* MAIN CARD */}
       <div
         className="
           bg-[#1b1b35]
           border
-          border-[#2d2d4d]
+          border-[#383847]
           rounded-2xl
           p-5
         "
@@ -942,12 +770,14 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             </label>
 
             <div
+              tabIndex={0}
               onClick={() => setShowResourceDropdown(!showResourceDropdown)}
               className="
+    food-select-control
     w-full
   
     border
-    border-[#3a3a5a]
+    border-[#383847]
     rounded-md
     px-4
     py-3
@@ -976,7 +806,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             </div>
 
             {showResourceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
                 {resourceOptions.map((item, index) => {
                   const isSelected = resourceType.includes(item);
 
@@ -1023,7 +853,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                   w-full
                 
                   border
-                  border-[#3a3a5a]
+                  border-[#383847]
                   rounded-md
                   px-4
                   py-3
@@ -1047,7 +877,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
               className="
                   w-full
                   border
-                  border-[#3a3a5a]
+                  border-[#383847]
                   rounded-md
                   px-4
                   py-3
@@ -1067,7 +897,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
               className="
           bg-[#232344]
           border
-          border-[#2f2f52]
+          border-[#383847]
           rounded-2xl
           p-5
           mb-5
@@ -1096,15 +926,15 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     required
                     className="
                 w-full
-                bg-[#26264a]
+              
                 border
-                border-[#3a3a5a]
+                border-[#383847]
                 rounded-xl
                 px-4
                 py-4
                 text-white
                 outline-none
-                focus:border-[#8b5cf6]
+                focus:border-[#3b82f6]
                 focus:ring-0
                 transition-all
                 duration-300
@@ -1129,15 +959,15 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     required
                     className="
                 w-full
-                bg-[#26264a]
+              
                 border
-                border-[#3a3a5a]
+                border-[#383847]
                 rounded-xl
                 px-4
                 py-4
                 text-white
                 outline-none
-                focus:border-[#8b5cf6]
+                focus:border-[#3b82f6]
                 focus:ring-0
                 transition-all
                 duration-300
@@ -1152,11 +982,13 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           <label className={cardFloatingLabelClass}>Food Type *</label>
 
           <div
+            tabIndex={0}
             onClick={() => setShowFoodDropdown(!showFoodDropdown)}
             className="
+              food-select-control
               w-full
               border
-              border-[#3a3a5a]
+              border-[#383847]
               rounded-md
               px-4
               py-3
@@ -1165,7 +997,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
               items-center
               cursor-pointer
              
-              hover:border-[#8b5cf6]
+              
               transition-all
             "
           >
@@ -1190,7 +1022,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           </div>
 
           {showFoodDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
               {foodOptions.map((item, index) => {
                 const isSelected = selectedFoodTypes[item];
 
@@ -1228,7 +1060,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                 className="
                   bg-[#282846]
                   border
-                  border-[#3a3a5a]
+                  border-[#383847]
                   rounded-2xl
                   p-5
                   mt-5
@@ -1262,13 +1094,13 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                         w-full
                         bg-[#282846]
                         border
-                        border-[#4a4a72]
+                        border-[#383847]
                         rounded-md
                         px-4
                         py-3
                         text-white
                         outline-none
-                        focus:border-[#8b5cf6]
+                        focus:border-[#3b82f6]
                         transition-all
                       "
                     />
@@ -1297,13 +1129,13 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                         w-full
                         bg-[#282846]
                         border
-                        border-[#4a4a72]
+                        border-[#383847]
                         rounded-md
                         px-4
                         py-3
                         text-white
                         outline-none
-                        focus:border-[#8b5cf6]
+                        focus:border-[#3b82f6]
                         transition-all
                       "
                     />
@@ -1332,13 +1164,13 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                         w-full
                         bg-[#282846]
                         border
-                        border-[#4a4a72]
+                        border-[#383847]
                         rounded-md
                         px-4
                         py-3
                         text-white
                         outline-none
-                        focus:border-[#8b5cf6]
+                        focus:border-[#3b82f6]
                         transition-all
                       "
                     />
@@ -1367,13 +1199,13 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                         w-full
                         bg-[#282846]
                         border
-                        border-[#4a4a72]
+                        border-[#383847]
                         rounded-md
                         px-4
                         py-3
                         text-white
                         outline-none
-                        focus:border-[#8b5cf6]
+                        focus:border-[#3b82f6]
                         transition-all
                       "
                     />
@@ -1400,7 +1232,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
               w-full
            
               border
-              border-[#3a3a5a]
+              border-[#383847]
               rounded-md
               px-4
               py-3
@@ -1433,6 +1265,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           </div>
         )}
       </div>
+      </div>
+      ))}
 
       <div className="flex justify-center md:justify-end mt-8">
   <button

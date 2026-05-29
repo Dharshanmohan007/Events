@@ -570,7 +570,7 @@
                     items-center
                     gap-3
                     border
-                    border-[#3a3a5a]
+border-[#22223B]
                     rounded-md
                     px-4
                     py-3
@@ -728,7 +728,7 @@
                     items-center
                     gap-3
                     border
-                    border-[#3a3a5a]
+                    border-[#22223B]
                     rounded-md
                     px-4
                     py-3
@@ -785,7 +785,7 @@
                       w-full
                      
                       border
-                      border-[#3a3a5a]
+                      border-[#22223B]
                       rounded-md
                       px-4
                       py-3
@@ -816,7 +816,7 @@
                       w-full
                      
                       border
-                      border-[#3a3a5a]
+                      border-[#22223B]
                       rounded-md
                       px-4
                       py-3
@@ -842,7 +842,7 @@
                   </div>
 
                   {form.showVehicleDropdown && (
-                    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#22223B] rounded-md overflow-hidden z-50">
                       {vehicleOptions.map(
                         (option, index) => {
                           const isSelected =
@@ -905,19 +905,19 @@
                                   updatedForms
                                 );
                               }}
-                              className={`
-                                px-4
-                                py-3
-                                cursor-pointer
-                                flex
-                                items-center
-                                justify-between
-                                ${
-                                  isSelected
-                                    ? "bg-[#3b82f6]"
-                                    : "hover:bg-[#3b82f6]"
-                                }
-                              `}
+                               className={`
+                                 px-4
+                                 py-3
+                                 cursor-pointer
+                                 flex
+                                 items-center
+                                 justify-between
+                                 ${
+                                   isSelected
+                                     ? "bg-[#3b82f6]"
+                                     : "hover:bg-[#492A6F]"
+                                 }
+                               `}
                             >
                               <span>
                                 {option}
@@ -996,7 +996,7 @@
                             w-full
                          
                             border
-                            border-[#3a3a5a]
+                            border-[#22223B]
                             rounded-md
                             px-4
                             py-3
@@ -1073,7 +1073,7 @@
                     w-full
                    
                     border
-                    border-[#3a3a5a]
+                    border-[#22223B]
                     rounded-md
                     px-4
                     py-3
@@ -1134,7 +1134,7 @@
                                 w-full
                                 bg-[#26264a]
                                 border
-                                border-[#3a3a5a]
+                                border-[#22223B]
                                 rounded-xl
                                 px-4
                                 py-4
@@ -1153,7 +1153,7 @@
                             <label
                               className={staffFloatingLabelClass}
                             >
-                              Accompanying Staff Mobile Number
+                              Accompanying Staff Mobile Number *
                             </label>
 
                             <input
@@ -1215,7 +1215,7 @@
                     w-full
                    
                     border
-                    border-[#3a3a5a]
+                    border-[#22223B]
                     rounded-md
                     px-4
                     py-3
@@ -1289,3 +1289,4 @@
   };
 
   export default TransportDetailsPage;
+

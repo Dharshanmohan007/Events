@@ -239,7 +239,7 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
         type="button"
         onClick={() => { setOpen((p) => !p); setView("calendar"); }}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-[#2F2F47]"
         }`}
       >
         <span className={`text-sm ${value ? "text-gray-300" : "text-gray-500"}`}>
@@ -253,7 +253,7 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3A3A5A] rounded-xl shadow-2xl w-72 overflow-hidden">
+        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#2F2F47] rounded-xl shadow-2xl w-72 overflow-hidden">
 
           {/* ── CALENDAR VIEW ── */}
           {view === "calendar" && (
@@ -308,7 +308,7 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
               </div>
 
               <button type="button" onClick={() => setView("time")}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 hover:text-white hover:border-purple-500 text-xs transition-colors">
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 hover:text-white hover:border-purple-50 text-xs transition-colors">
                 <Clock size={14} /> Set Time
               </button>
             </div>

@@ -140,7 +140,7 @@ function DateTimePicker({
         type="button"
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-          open ? "border-purple-500" : "border-[#3a3a5a]"
+          open ? "border-purple-500" : "border-[#22223B]"
         }`}
       >
         <span
@@ -652,6 +652,7 @@ export default function PurchaseDetails() {
           setValue={(value) => setField("requirement", value)}
           options={["Certificate", "ID card"]}
           placeholder="Select Requirement"
+          optionHoverClass="hover:bg-[#22223B]"
         />
 
        {form.requirement.length > 0 && (
@@ -698,7 +699,7 @@ export default function PurchaseDetails() {
             value={form.persons}
             multiSelect
             setValue={(value) => setField("persons", value)}
-            options={["Students", "Guest"]}
+            options={["Students", "Guest", "Both"]}
             placeholder="Select Required Persons"
           />
 
@@ -993,7 +994,7 @@ function PersonSection({ title, data, onChange }) {
           onChange={handleFieldChange("specialRequirements")}
           placeholder="Enter special requirements..."
           className="w-full 
-          border border-[#3b1f72]
+          border border-[#22223B]
           rounded-md px-4 py-3
           text-sm text-gray-300
           placeholder:text-gray-500
@@ -1031,7 +1032,7 @@ function InputField({
         placeholder={placeholder}
         className={`w-full 
         bg-[]
-        border rounded-md px-4 py-3
+        border  rounded-md px-4 py-3
         text-sm text-gray-300
         placeholder:text-gray-500
         outline-none
@@ -1040,7 +1041,7 @@ function InputField({
         ${
           error
             ? "border-red-500"
-            : "border-[#3a3a5a]"
+            : "border-[#22223B]"
         }`}
       />
 
@@ -1057,6 +1058,10 @@ function InputField({
 
 /* ================= CUSTOM DROPDOWN ================= */
 
+/* ================= CUSTOM DROPDOWN ================= */
+
+/* ================= CUSTOM DROPDOWN ================= */
+
 function CustomDropdown({
   label,
   value,
@@ -1068,17 +1073,30 @@ function CustomDropdown({
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const selectedValues = Array.isArray(value) ? value : value ? [value] : [];
+  const selectedValues = Array.isArray(value)
+    ? value
+    : value
+      ? [value]
+      : [];
 
   const displayText =
-    selectedValues.length > 0 ? selectedValues.join(", ") : placeholder;
+    selectedValues.length > 0
+      ? selectedValues.join(", ")
+      : placeholder;
 
   const handleSelect = (item) => {
     if (multiSelect) {
       if (selectedValues.includes(item)) {
-        setValue(selectedValues.filter((value) => value !== item));
+        setValue(
+          selectedValues.filter(
+            (value) => value !== item,
+          ),
+        );
       } else {
-        setValue([...selectedValues, item]);
+        setValue([
+          ...selectedValues,
+          item,
+        ]);
       }
       return;
     }
@@ -1100,7 +1118,6 @@ function CustomDropdown({
         onClick={() => setIsOpen(!isOpen)}
         className={`
           w-full
-        
           border
           rounded-md
           px-4
@@ -1111,12 +1128,18 @@ function CustomDropdown({
           cursor-pointer
           transition-all
           duration-300
-          ${isOpen ? "border-[#3b82f6]" : "border-[#3a3a5a]"}
+          ${
+            isOpen
+              ? "border-[#492A6F]"
+              : "border-[#22223B]"
+          }
         `}
       >
         <span
           className={`text-sm ${
-            selectedValues.length > 0 ? "text-white" : "text-[#8d8da8]"
+            selectedValues.length > 0
+              ? "text-white"
+              : "text-[#8d8da8]"
           }`}
         >
           {displayText}
@@ -1124,9 +1147,16 @@ function CustomDropdown({
 
         <ChevronDown
           size={18}
-          className={`transition-transform duration-300 text-[#b0b0c3] ${
-            isOpen ? "rotate-180" : "rotate-0"
-          }`}
+          className={`
+            transition-transform
+            duration-300
+            text-[#b0b0c3]
+            ${
+              isOpen
+                ? "rotate-180"
+                : "rotate-0"
+            }
+          `}
         />
       </div>
 
@@ -1138,7 +1168,7 @@ function CustomDropdown({
             z-50
             mt-2
             w-full
-            bg-[#26264a]
+            bg-[#22223B]
             border
             border-[#3a3a5a]
             rounded-md
@@ -1147,30 +1177,53 @@ function CustomDropdown({
           "
         >
           {options.map((item, index) => {
-            const isSelected = selectedValues.includes(item);
+            const isSelected =
+              selectedValues.includes(item);
+
             return (
               <div
                 key={index}
-                onClick={() => handleSelect(item)}
+                onClick={() =>
+                  handleSelect(item)
+                }
                 className={`
-                    px-4
-                    py-4
-                    cursor-pointer
-                    text-base
-                    transition-all
-                    duration-200
-                    flex
-                    items-center
-                    justify-between
-                    ${
-                      isSelected
-                        ? "bg-[#3b82f6] text-white"
-                        : "text-white hover:bg-[#3b82f6]"
-                    }
-                  `}
+                  px-4
+                  py-4
+                  cursor-pointer
+                  text-base
+                  transition-all
+                  duration-200
+                  flex
+                  items-center
+                  justify-between
+                  outline-none
+                  ${
+                    isSelected
+                      ? "bg-[#492A6F] text-white"
+                      : "text-white hover:bg-[#492A6F]"
+                  }
+                  focus:bg-[#492A6F]
+                  focus:text-white
+                `}
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" ||
+                    e.key === " "
+                  ) {
+                    e.preventDefault();
+                    handleSelect(item);
+                  }
+                }}
               >
                 <span>{item}</span>
-                {isSelected && <Check size={18} className="text-white" />}
+
+                {isSelected && (
+                  <Check
+                    size={18}
+                    className="text-white"
+                  />
+                )}
               </div>
             );
           })}
