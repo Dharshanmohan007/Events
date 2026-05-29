@@ -824,8 +824,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                       }}
                       className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                         isSelected
-                          ? "bg-[#3b82f6] text-white"
-                          : "hover:bg-[#3b82f6]"
+                          ? "bg-[#492A6F] text-white"
+                          : "hover:bg-[#492A6F]"
                       }`}
                     >
                       <span>{item}</span>
@@ -1037,8 +1037,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     }}
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       isSelected
-                        ? "bg-[#3b82f6] text-white"
-                        : "hover:bg-[#3b82f6]"
+                        ? "bg-[#492A6F] text-white"
+                        : "hover:bg-[#492A6F]"
                     }`}
                   >
                     <span>{item}</span>
