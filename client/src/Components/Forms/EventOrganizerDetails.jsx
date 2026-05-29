@@ -6,6 +6,7 @@ import OrganizerDetails from "./OrganizerDetails";
 
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+const ALLOWED_FILE_TYPE = "application/pdf";
 
 export default function EventOrganizerDetails({
   doc, setDoc,
@@ -37,25 +38,68 @@ export default function EventOrganizerDetails({
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
+
+    console.log("Selected File:", selectedFile);
+
     if (!selectedFile) return;
-    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      setFileSizeError(`File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB.`);
-      // Reset input so same file can be re-selected after clearing
+
+    // PDF validation
+    if (selectedFile.type !== ALLOWED_FILE_TYPE) {
+      console.log("Invalid File Type:", selectedFile.type);
+
+      setFileSizeError("Only PDF files are allowed.");
       e.target.value = "";
       return;
     }
+
+    // File size validation
+    if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+      console.log("File Too Large:", selectedFile.size);
+
+      setFileSizeError(
+        `File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB.`
+      );
+
+      e.target.value = "";
+      return;
+    }
+
+    console.log("PDF Uploaded Successfully:", selectedFile.name);
+
     setFileSizeError("");
     setFile(selectedFile);
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
+
     const droppedFile = e.dataTransfer.files[0];
+
+    console.log("Dropped File:", droppedFile);
+
     if (!droppedFile) return;
-    if (droppedFile.size > MAX_FILE_SIZE_BYTES) {
-      setFileSizeError(`File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(droppedFile.size / 1024 / 1024).toFixed(2)}MB.`);
+
+    // PDF validation
+    if (droppedFile.type !== ALLOWED_FILE_TYPE) {
+      console.log("Invalid File Type:", droppedFile.type);
+
+      setFileSizeError("Only PDF files are allowed.");
       return;
     }
+
+    // File size validation
+    if (droppedFile.size > MAX_FILE_SIZE_BYTES) {
+      console.log("File Too Large:", droppedFile.size);
+
+      setFileSizeError(
+        `File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(droppedFile.size / 1024 / 1024).toFixed(2)}MB.`
+      );
+
+      return;
+    }
+
+    console.log("PDF Dropped Successfully:", droppedFile.name);
+
     setFileSizeError("");
     setFile(droppedFile);
   };
@@ -142,12 +186,13 @@ export default function EventOrganizerDetails({
               <p className="z-10">
                 Drag and drop files here or{" "}
                 <span className="text-purple-400 underline">choose file</span>
-                <span className="block text-xs text-gray-500 mt-0.5">Max file size: {MAX_FILE_SIZE_MB}MB</span>
+                <span className="block text-xs text-gray-500 mt-0.5">Only PDF files supported • Max file size: {MAX_FILE_SIZE_MB}MB</span>
               </p>
             )}
           </div>
           <input
             type="file"
+            accept=".pdf,application/pdf"
             ref={inputRef}
             onChange={handleFileChange}
             className="hidden"
@@ -226,7 +271,7 @@ export default function EventOrganizerDetails({
         </div>
         <div>
           <CustomInput
-            label="Total Number of Organizer's"
+            label="Total Number of CO - Organizer's"
             type="number"
             value={numOrganizers}
             onChange={handleOrganizersChange}

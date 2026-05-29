@@ -1131,11 +1131,11 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
     if (open && searchRef.current) searchRef.current.focus();
   }, [open]);
 
-  const getSelectedCapacitySum = (selectedVenues) =>
-    selectedVenues.reduce((sum, name) => {
-      const venue = options.find((v) => v.venue === name);
-      return sum + (venue?.capacity || 0);
-    }, 0);
+  // const getSelectedCapacitySum = (selectedVenues) =>
+  //   selectedVenues.reduce((sum, name) => {
+  //     const venue = options.find((v) => v.venue === name);
+  //     return sum + (venue?.capacity || 0);
+  //   }, 0);
 
   const toggle = (venue) => {
     setCapacityError("");
@@ -1143,15 +1143,19 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
       onChange(selected.filter((v) => v !== venue));
     } else {
       if (totalParticipants > 0) {
-        const venueObj      = options.find((v) => v.venue === venue);
+        const venueObj = options.find((v) => v.venue === venue);
         const venueCapacity = venueObj?.capacity || 0;
+
+        // Skip validation for open venues
         if (venueCapacity > 0) {
-          const currentSum = getSelectedCapacitySum(selected);
-          const newSum     = currentSum + venueCapacity;
-          if (newSum > totalParticipants) {
+
+          // If venue capacity is LESS than participants → show error
+          if (venueCapacity < totalParticipants) {
             setCapacityError(
-              `Total venue capacity (${newSum}) exceeds total participants (${totalParticipants}). Cannot add "${venue}".`
+              `"${venue}" capacity is only ${venueCapacity}. 
+              Total participants count is ${totalParticipants}.`
             );
+
             return;
           }
         }
