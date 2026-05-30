@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getRouteForRole } from "../../utils/roleRoutes";
 
 export default function FormSubmitted({ onSubmitAnother }) {
   const navigate = useNavigate();
@@ -11,11 +12,18 @@ export default function FormSubmitted({ onSubmitAnother }) {
   }, []);
 
   const handleSubmitAnother = () => {
-    if (onSubmitAnother) {
-      onSubmitAnother();
-    } else {
-      navigate("/dashboard");
-    }
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    console.log("USER:", user);
+
+    const destination = getRouteForRole(
+      user.role,
+      user.department
+    );
+
+    console.log("DESTINATION:", destination);
+
+    navigate(destination);
   };
 
   return (

@@ -85,10 +85,57 @@ function emptyAccommodation() {
 
 function validateAccommodation(acc) {
   const e = {};
+
+  // Check In / Out
   if (!acc.checkIn) e.checkIn = "Check-in date & time is required";
   if (!acc.checkOut) e.checkOut = "Check-out date & time is required";
-  if (!acc.roomTypes || acc.roomTypes.length === 0)
+
+  // Guest Selection
+  if (!acc.selectedGuestIds || acc.selectedGuestIds.length === 0) {
+    e.selectedGuestIds = "Select at least one guest";
+  }
+
+  // Room Types
+  if (!acc.roomTypes || acc.roomTypes.length === 0) {
     e.roomTypes = "Select at least one room type";
+  }
+
+  // Room Counts
+  (acc.roomTypes || []).forEach((roomType) => {
+    const count = parseInt(acc.roomCounts?.[roomType]);
+
+    if (!count || count <= 0) {
+      if (!e.roomCounts) e.roomCounts = {};
+      e.roomCounts[roomType] = `Enter number of ${roomType} rooms`;
+    }
+  });
+
+  // Dine In Required
+  if (!acc.dine) {
+    e.dine = "Please select Yes or No";
+  }
+
+  // Dine In Validations
+  if (acc.dine === "Yes") {
+    if (!acc.dineTypes || acc.dineTypes.length === 0) {
+      e.dineTypes = "Select at least one dine-in option";
+    }
+
+    if (
+      acc.dineTypes.includes("Hostel") &&
+      (!acc.hostelGuests || parseInt(acc.hostelGuests) <= 0)
+    ) {
+      e.hostelGuests = "Enter number of hostel dine-in guests";
+    }
+
+    if (
+      acc.dineTypes.includes("Amenity") &&
+      (!acc.amenityGuests || parseInt(acc.amenityGuests) <= 0)
+    ) {
+      e.amenityGuests = "Enter number of amenity dine-in guests";
+    }
+  }
+
   return e;
 }
 
@@ -585,6 +632,11 @@ function AccommodationBlock({
             })
           )}
         </div>
+        {errors.selectedGuestIds && (
+          <p className="text-red-400 text-xs mt-1">
+            {errors.selectedGuestIds}
+          </p>
+        )}
 
         {/* Single & Double counts — clamped to min 0 */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
@@ -632,6 +684,11 @@ function AccommodationBlock({
                     type="number"
                     labelBg="#1f1f38"
                   />
+                  {errors.roomCounts?.[roomType] && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {errors.roomCounts[roomType]}
+                    </p>
+                  )}
                   {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
                     <p className="text-yellow-400 text-xs mt-1">
                       Only 1 room available for {roomType}
@@ -660,6 +717,9 @@ function AccommodationBlock({
             options={["Yes", "No"]}
             labelBg="#1f1f38"
           />
+          {errors.dine && (
+            <p className="text-red-400 text-xs mt-1">{errors.dine}</p>
+          )}
         </div>
 
         {acc.dine === "Yes" && (
@@ -672,6 +732,11 @@ function AccommodationBlock({
                 onChange={(types) => onChange({ ...acc, dineTypes: types })}
                 labelBg="#1f1f38"
               />
+              {errors.dineTypes && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.dineTypes}
+                </p>
+              )}
             </div>
 
             <div
@@ -680,22 +745,36 @@ function AccommodationBlock({
               }`}
             >
               {showHostel && (
-                <CustomInput
-                  label="No. of Guests in Hostel Dine-in *"
-                  value={acc.hostelGuests}
-                  onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
-                  type="number"
-                  labelBg="#1f1f38"
-                />
+                <div>
+                  <CustomInput
+                    label="No. of Guests in Hostel Dine-in *"
+                    value={acc.hostelGuests}
+                    onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
+                    type="number"
+                    labelBg="#1f1f38"
+                  />
+                  {errors.hostelGuests && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {errors.hostelGuests}
+                    </p>
+                  )}
+                </div>
               )}
               {showAmenity && (
-                <CustomInput
-                  label="No. of Guests in Amenity Dine-in *"
-                  value={acc.amenityGuests}
-                  onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
-                  type="number"
-                  labelBg="#1f1f38"
-                />
+                <div>
+                  <CustomInput
+                    label="No. of Guests in Amenity Dine-in *"
+                    value={acc.amenityGuests}
+                    onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
+                    type="number"
+                    labelBg="#1f1f38"
+                  />
+                  {errors.amenityGuests && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {errors.amenityGuests}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
           </>

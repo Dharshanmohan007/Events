@@ -478,8 +478,8 @@ function validateGuestCard(data) {
 
 function validateDay(data) {
   const e = {};
-  if (!data.requirementNeeded || data.requirementNeeded.length === 0)
-    e.requirementNeeded = "Select at least one requirement";
+  // if (!data.requirementNeeded || data.requirementNeeded.length === 0)
+  //   e.requirementNeeded = "Select at least one requirement";
   if (data.requirementNeeded?.includes("Id Card") && !data.idCardQty?.trim())
     e.idCardQty = "ID Card quantity is required";
   if (data.requirementNeeded?.includes("Certificate") && !data.certificateQty?.trim())
@@ -1046,7 +1046,7 @@ export default function Purchase({
       {/* Requirement Needed — full width */}
       <div>
         <MultiSelect
-          label="Requirement Needed *"
+          label="Requirement Needed "
           options={REQUIREMENT_OPTIONS}
           selected={current.requirementNeeded || []}
           onChange={(val) => {
