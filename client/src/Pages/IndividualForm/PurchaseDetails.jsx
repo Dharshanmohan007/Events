@@ -140,7 +140,7 @@ function DateTimePicker({
         type="button"
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-          open ? "border-purple-500" : "border-[#22223B]"
+          open ? "border-purple-500" : "border-[#3A3A40]"
         }`}
       >
         <span
@@ -359,11 +359,23 @@ export default function PurchaseDetails() {
       nextErrors.certificateQty = "This field is required.";
     }
 
+    const personValues = Array.isArray(form.persons)
+      ? form.persons
+      : form.persons
+        ? [form.persons]
+        : [];
+
     const neededSections = [];
-    if (form.persons === "Students" || form.persons === "Both") {
+    if (
+      personValues.includes("Students") ||
+      personValues.includes("Both")
+    ) {
       neededSections.push("students");
     }
-    if (form.persons === "Guest" || form.persons === "Both") {
+    if (
+      personValues.includes("Guest") ||
+      personValues.includes("Both")
+    ) {
       neededSections.push("guests");
     }
 
@@ -388,39 +400,46 @@ export default function PurchaseDetails() {
       }
 
       if (data.giftType?.includes("Trophy")) {
-        if (!data.trophyType) {
+        const trophyTypes = Array.isArray(data.trophyType)
+          ? data.trophyType
+          : data.trophyType
+            ? [data.trophyType]
+            : [];
+
+        if (trophyTypes.length === 0) {
           nextErrors[`${prefix}trophyType`] = "This field is required.";
         }
 
-        if (
-          (data.trophyType === "Basic" || data.trophyType === "Both") &&
-          !data.basicTrophyQty?.trim()
-        ) {
+        if (trophyTypes.includes("Basic") && !data.basicTrophyQty?.toString().trim()) {
           nextErrors[`${prefix}basicTrophyQty`] = "This field is required.";
         }
 
-        if (
-          (data.trophyType === "Elite" || data.trophyType === "Both") &&
-          !data.eliteTrophyQty?.trim()
-        ) {
+        if (trophyTypes.includes("Elite") && !data.eliteTrophyQty?.toString().trim()) {
           nextErrors[`${prefix}eliteTrophyQty`] = "This field is required.";
         }
       }
 
-      if (
-        data.giftType?.includes("Cash Prize") &&
-        !data.cashPrizeAmount?.trim()
-      ) {
+      if (data.giftType?.includes("Cash Prize") && !data.cashPrizeAmount?.toString().trim()) {
         nextErrors[`${prefix}cashPrizeAmount`] = "This field is required.";
       }
 
       if (data.giftType?.includes("Voucher")) {
-        if (!data.voucherWorth) {
+        const voucherWorthList = Array.isArray(data.voucherWorth)
+          ? data.voucherWorth
+          : data.voucherWorth
+            ? [data.voucherWorth]
+            : [];
+
+        if (voucherWorthList.length === 0) {
           nextErrors[`${prefix}voucherWorth`] = "This field is required.";
         }
-        if (!data.voucherQty?.trim()) {
-          nextErrors[`${prefix}voucherQty`] = "This field is required.";
-        }
+
+        voucherWorthList.forEach((worth) => {
+          if (!data.voucherQty?.[worth]?.toString().trim()) {
+            nextErrors[`${prefix}voucherQty`] =
+              "Voucher quantity is required for selected worths.";
+          }
+        });
       }
     });
 
@@ -588,6 +607,8 @@ export default function PurchaseDetails() {
     try {
       const payload = buildPayload();
 
+      console.log("[PurchaseDetails] Payload:", payload);
+
       if (!payload.employee) {
         throw new Error("Unable to determine employee id. Please login again.");
       }
@@ -595,6 +616,8 @@ export default function PurchaseDetails() {
       const token = localStorage.getItem("token");
 
       const requestUrl = `${API_BASE}/api/purchase/create`;
+
+      console.log("[PurchaseDetails] Sending POST to:", requestUrl);
 
       const response = await fetch(requestUrl, {
         method: "POST",
@@ -616,9 +639,12 @@ export default function PurchaseDetails() {
 
       try {
         data = await response.json();
-      } catch {
+      } catch (err) {
+        console.warn("[PurchaseDetails] Response parse failed:", err);
         data = null;
       }
+
+      console.log("[PurchaseDetails] Response status:", response.status, "data:", data);
 
       if (!response.ok) {
         throw new Error(
@@ -629,6 +655,7 @@ export default function PurchaseDetails() {
 
       setSuccess(true);
     } catch (error) {
+      console.error("[PurchaseDetails] submit error:", error);
       setApiError(error.message || "Unable to send purchase data.");
     } finally {
       setIsLoading(false);
@@ -713,7 +740,7 @@ export default function PurchaseDetails() {
         </div>
 
         {/* STUDENTS */}
-        {form.persons.includes("Students") && (
+        {(form.persons.includes("Students") || form.persons.includes("Both")) && (
           <PersonSection
             title="Students"
             data={form.students}
@@ -727,7 +754,7 @@ export default function PurchaseDetails() {
         )}
 
         {/* GUEST */}
-        {form.persons.includes("Guest") && (
+        {(form.persons.includes("Guest") || form.persons.includes("Both")) && (
           <PersonSection
             title="Guest"
             data={form.guests}
@@ -891,6 +918,7 @@ function PersonSection({ title, data, onChange }) {
                   value={data.basicTrophyQty}
                   onChange={handleFieldChange("basicTrophyQty")}
                   labelBgClass="bg-[#1b1b35]"
+                  bgClass="bg-[#141428]"
                 />
               </div>
             )}
@@ -970,13 +998,14 @@ function PersonSection({ title, data, onChange }) {
       )}
 
       {data.registrationKitNeeded === "Yes" && (
-        <div className="mb-4">
+        <div className="mb-5 w-full">
           <InputField
             label="Registration Kit Quantity *"
             placeholder="2"
             value={data.registrationKitQty}
             onChange={handleFieldChange("registrationKitQty")}
             labelBgClass="bg-[#1b1b35]"
+            bgClass="bg-[#1b1b35]"
           />
         </div>
       )}
@@ -994,12 +1023,14 @@ function PersonSection({ title, data, onChange }) {
           onChange={handleFieldChange("specialRequirements")}
           placeholder="Enter special requirements..."
           className="w-full 
-          border border-[#22223B]
+          border border-[#3A3A40]
           rounded-md px-4 py-3
           text-sm text-gray-300
           placeholder:text-gray-500
           outline-none resize-none
-          focus:border-[#8b3dff]"
+          focus:border-[#8b3dff]
+          focus:ring-1
+          focus:ring-[#8b3dff]/30"
         />
       </div>
     </div>
@@ -1016,12 +1047,11 @@ function InputField({
   type = "text",
   error,
   labelBgClass = "bg-[#141428]",
+  bgClass = "bg-[]",
 }) {
   return (
     <div className="relative w-full">
-      <label
-        className={`${floatingLabelClass} ${labelBgClass}`}
-      >
+      <label className={`${floatingLabelClass} ${labelBgClass}`}>
         {label}
       </label>
 
@@ -1030,18 +1060,21 @@ function InputField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
-        className={`w-full 
-        bg-[]
-        border  rounded-md px-4 py-3
+        className={`w-full
+        ${bgClass}
+        border
+        rounded-md px-4 py-3
         text-sm text-gray-300
         placeholder:text-gray-500
         outline-none
         transition-all duration-300
         focus:border-[#8b3dff]
+        focus:ring-1
+        focus:ring-[#8b3dff]/30
         ${
           error
             ? "border-red-500"
-            : "border-[#22223B]"
+            : "border-[#3A3A40]"
         }`}
       />
 
@@ -1115,7 +1148,14 @@ function CustomDropdown({
 
       {/* DROPDOWN HEADER */}
       <div
+        tabIndex={0}
         onClick={() => setIsOpen(!isOpen)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsOpen((prev) => !prev);
+          }
+        }}
         className={`
           w-full
           border
@@ -1128,10 +1168,14 @@ function CustomDropdown({
           cursor-pointer
           transition-all
           duration-300
+          outline-none
+          focus:border-[#8b3dff]
+          focus:ring-1
+          focus:ring-[#8b3dff]/30
           ${
             isOpen
               ? "border-[#492A6F]"
-              : "border-[#22223B]"
+              : "border-[#3A3A40]"
           }
         `}
       >
@@ -1188,7 +1232,7 @@ function CustomDropdown({
                 }
                 className={`
                   px-4
-                  py-4
+                  py-3
                   cursor-pointer
                   text-base
                   transition-all

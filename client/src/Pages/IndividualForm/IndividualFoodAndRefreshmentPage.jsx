@@ -735,7 +735,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             type="button"
             onClick={() => handleDeleteForm(cardId)}
             aria-label="Delete food and refreshment form"
-            className="flex h-10 w-1 items-center justify-center rounded-full bg-[#ffd6d6] text-[#ff2b2b] hover:bg-[#ffc7c7] focus:border-[#3b82f6]"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffd6d6] text-[#ff2b2b] hover:bg-[#ffc7c7] transition-colors duration-200 focus:border-[#3b82f6]"
           >
             <Trash2 size={20} strokeWidth={3} />
           </button>
@@ -825,7 +825,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                       className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                         isSelected
                           ? "bg-[#492A6F] text-white"
-                          : "hover:bg-[#492A6F]"
+                          : "text-white hover:bg-[#492A6F] hover:text-white"
                       }`}
                     >
                       <span>{item}</span>
@@ -1038,7 +1038,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       isSelected
                         ? "bg-[#492A6F] text-white"
-                        : "hover:bg-[#492A6F]"
+                        : "text-white hover:bg-[#492A6F] hover:text-white"
                     }`}
                   >
                     <span>{item}</span>

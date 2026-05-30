@@ -7,6 +7,7 @@ import {
   X,
   CalendarDays,
   ArrowRight,
+  Check,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
@@ -52,8 +53,8 @@ const MediaDetailsPage = () => {
     setShowPosterPriorityDropdown,
   ] = useState(false);
 
-  const [selectedDisplay, setSelectedDisplay] =
-    useState("");
+  const [selectedDisplays, setSelectedDisplays] =
+    useState([]);
 
   const displayOptions = [
     "Flex",
@@ -65,6 +66,14 @@ const MediaDetailsPage = () => {
     "Momento card",
     "Glass Sticker",
   ];
+
+  const toggleDisplaySelection = (item) => {
+    setSelectedDisplays((prev) =>
+      prev.includes(item)
+        ? prev.filter((d) => d !== item)
+        : [...prev, item]
+    );
+  };
 
   const priorityOptions = [
     "High",
@@ -238,16 +247,19 @@ const MediaDetailsPage = () => {
       if (!posterContent.trim()) {
         errors.push("Content for Poster is required.");
       }
-      if (!selectedDisplay) {
+      if (!selectedDisplays.length) {
         errors.push("Display Needed is required.");
       }
-      if (selectedDisplay) {
-        if (selectedDisplay === "Glass Sticker") {
+      if (selectedDisplays.length) {
+        if (selectedDisplays.includes("Glass Sticker")) {
           if (!glassStickerSize.trim()) {
             errors.push("Size for Glass Sticker is required.");
           }
-        } else if (!displaySize.trim()) {
-          errors.push(`Size for ${selectedDisplay} is required.`);
+        }
+        if (selectedDisplays.includes("Flex")) {
+          if (!displaySize.trim()) {
+            errors.push("Size for Flex is required.");
+          }
         }
       }
       if (!posterDeliveryDate) {
@@ -300,11 +312,20 @@ const MediaDetailsPage = () => {
     formData.append("poster[priority]", posterPriority);
     formData.append("poster[specialRequirements]", posterRequirement);
     formData.append("poster[deliveryDate]", posterDeliveryDate);
-    if (selectedDisplay) {
-      formData.append("poster[displayNeeded][]", selectedDisplay);
-      const sizeValue = selectedDisplay === "Glass Sticker" ? glassStickerSize : displaySize;
-      formData.append("poster[sizes][0][type]", selectedDisplay);
-      formData.append("poster[sizes][0][value]", sizeValue);
+    if (selectedDisplays.length) {
+      selectedDisplays.forEach((d) => formData.append("poster[displayNeeded][]", d));
+
+      let sizeIndex = 0;
+      if (selectedDisplays.includes("Flex")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Flex");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, displaySize);
+        sizeIndex++;
+      }
+      if (selectedDisplays.includes("Glass Sticker")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Glass Sticker");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, glassStickerSize);
+        sizeIndex++;
+      }
     }
     if (posterFile) formData.append("referencePosterFiles", posterFile);
     // if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
@@ -439,22 +460,9 @@ const MediaDetailsPage = () => {
         >
           <div className="flex flex-wrap gap-2">
             {selectedTypes.length > 0 ? (
-              selectedTypes.map((type) => (
-                <span
-                  key={type}
-                  className="bg-[#8b5cf6] text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
-                >
-                  {type}
-                  <X
-                    size={14}
-                    className="cursor-pointer hover:opacity-70"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleTypeSelection(type);
-                    }}
-                  />
-                </span>
-              ))
+              <span className="text-white text-sm">
+                {selectedTypes.join(", ")}
+              </span>
             ) : (
               <span className="text-[#8d8da8]">
                 Select Types
@@ -468,25 +476,21 @@ const MediaDetailsPage = () => {
         {showTypeDropdown && (
           <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
             {typeOptions.map(
-              (item, index) => (
-                <div
-                  key={index}
-                  onClick={() => {
-                    toggleTypeSelection(item);
-                  }}
-                  className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer flex items-center gap-3"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedTypes.includes(
-                      item
-                    )}
-                    onChange={() => {}}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                  <span>{item}</span>
-                </div>
-              )
+              (item, index) => {
+                const isSelected = selectedTypes.includes(item);
+                return (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      toggleTypeSelection(item);
+                    }}
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between gap-3 transition-colors duration-200 ${isSelected ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                  >
+                    <span>{item}</span>
+                    {isSelected && <Check size={16} className="text-white" />}
+                  </div>
+                );
+              }
             )}
           </div>
         )}
@@ -618,13 +622,14 @@ const MediaDetailsPage = () => {
             >
               <span
                 className={
-                  selectedDisplay
+                  selectedDisplays.length
                     ? "text-white"
                     : "text-[#8d8da8]"
                 }
               >
-                {selectedDisplay ||
-                  "Select Display"}
+                {selectedDisplays.length
+                  ? selectedDisplays.join(", ")
+                  : "Select Display"}
               </span>
 
               <ChevronDown size={18} />
@@ -633,74 +638,83 @@ const MediaDetailsPage = () => {
             {showDisplayDropdown && (
               <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
                 {displayOptions.map(
-                  (item, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setSelectedDisplay(
-                          item
-                        );
-
-                        setDisplaySize("");
-                        setGlassStickerSize("");
-
-                        setShowDisplayDropdown(
-                          false
-                        );
-                      }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
-                    >
-                      {item}
-                    </div>
-                  )
+                  (item, index) => {
+                    const isSelected = selectedDisplays.includes(item);
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          toggleDisplaySelection(item);
+                          // clear size inputs when deselecting an option
+                          if (isSelected) {
+                            setDisplaySize("");
+                            setGlassStickerSize("");
+                          }
+                        }}
+                        className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200 ${isSelected ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                      >
+                        <span>{item}</span>
+                        {isSelected && <Check size={16} className="text-white" />}
+                      </div>
+                    );
+                  }
                 )}
               </div>
             )}
           </div>
 
           {/* SIZE INPUT */}
-          {selectedDisplay && (
-            <div className="relative mb-6">
-              <label className={cardFloatingLabelClass}>
-                Size for {selectedDisplay} *
-              </label>
+          {(selectedDisplays.includes("Flex") || selectedDisplays.includes("Glass Sticker")) && (
+            <div className="mb-6 space-y-4">
+              {selectedDisplays.includes("Flex") && (
+                <div className="relative">
+                  <label className={cardFloatingLabelClass}>
+                    Size for Flex *
+                  </label>
 
-              <input
-                type="text"
-                value={
-                  selectedDisplay ===
-                  "Glass Sticker"
-                    ? glassStickerSize
-                    : displaySize
-                }
-                onChange={(e) => {
-                  if (
-                    selectedDisplay ===
-                    "Glass Sticker"
-                  ) {
-                    setGlassStickerSize(
-                      e.target.value
-                    );
-                  } else {
-                    setDisplaySize(
-                      e.target.value
-                    );
-                  }
-                }}
-                placeholder={`Enter ${selectedDisplay} Size`}
-                className="
-                  w-full
-                 
+                  <input
+                    type="text"
+                    value={displaySize}
+                    onChange={(e) => setDisplaySize(e.target.value)}
+                    placeholder={`Enter Flex Size`}
+                    className="
+                      w-full
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
+              )}
 
-                  border
-                  border-[#3a3a5a]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
-              />
+              {selectedDisplays.includes("Glass Sticker") && (
+                <div className="relative">
+                  <label className={cardFloatingLabelClass}>
+                    Size for Glass Sticker *
+                  </label>
+
+                  <input
+                    type="text"
+                    value={glassStickerSize}
+                    onChange={(e) => setGlassStickerSize(e.target.value)}
+                    placeholder={`Enter Glass Sticker Size`}
+                    className="
+                      w-full
+                      border
+                      border-[#3a3a5a]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -724,6 +738,7 @@ const MediaDetailsPage = () => {
         )
       }
       placeholder="Select Delivery Date"
+      showTime={false}
     />
   </div>
 
@@ -776,7 +791,7 @@ const MediaDetailsPage = () => {
                 false
               );
             }}
-            className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+            className={`px-4 py-3 cursor-pointer transition-colors duration-200 ${posterPriority === item ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
           >
             {item}
           </div>
@@ -844,7 +859,7 @@ const MediaDetailsPage = () => {
               placeholder="Enter video content"
               className="
                 w-full
-                bg-[#1f1f38]
+              
                 border
                 border-[#3a3a5a]
                 rounded-md
@@ -872,7 +887,7 @@ const MediaDetailsPage = () => {
               placeholder="Enter video duration"
               className="
                 w-full
-                bg-[#1f1f38]
+             
                 border
                 border-[#3a3a5a]
                 rounded-md
@@ -965,7 +980,7 @@ const MediaDetailsPage = () => {
               placeholder="Enter requirements"
               className="
                 w-full
-                bg-[#1f1f38]
+               
                 border
                 border-[#3a3a5a]
                 rounded-md

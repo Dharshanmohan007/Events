@@ -119,7 +119,7 @@ function ScrollDrum({ items, value, onChange }) {
 }
 
 // ─── Main Picker ──────────────────────────────────────────────────────────────
-export default function CustomDateTimePicker({ label, value, onChange, placeholder }) {
+export default function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("calendar");
   const [displayMonth, setDisplayMonth] = useState(() =>
@@ -172,11 +172,12 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
   }, [value]);
 
   const formatDisplay = () => {
-    if (!value) return placeholder || "__/__/____  --:-- --";
+    if (!value) return placeholder || (showTime ? "__/__/____  --:-- --" : "__/__/____");
     const d = value;
     const dd = String(d.getDate()).padStart(2, "0");
     const mm = String(d.getMonth() + 1).padStart(2, "0");
     const yyyy = d.getFullYear();
+    if (!showTime) return `${dd}/${mm}/${yyyy}`;
     const rawH = d.getHours();
     const h12 = rawH === 0 ? 12 : rawH > 12 ? rawH - 12 : rawH;
     const hh = String(h12).padStart(2, "0");
@@ -202,7 +203,12 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
     const newDate = new Date(displayYear, displayMonth, day);
     setSelectedDate(newDate);
     commitDateTime(newDate, hourIdx, minuteIdx, ampm);
-    setView("time");
+    if (showTime) {
+      setView("time");
+    } else {
+      setOpen(false);
+      setView("calendar");
+    }
   };
 
   const handleTimeConfirm = () => {
@@ -247,7 +253,7 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
         </span>
         <div className="flex gap-2 text-gray-400 flex-shrink-0">
           <CalendarDays size={18} />
-          <Clock size={18} />
+          {showTime && <Clock size={18} />}
         </div>
       </button>
 
@@ -307,10 +313,12 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
                 })}
               </div>
 
-              <button type="button" onClick={() => setView("time")}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 hover:text-white hover:border-purple-50 text-xs transition-colors">
-                <Clock size={14} /> Set Time
-              </button>
+              {showTime && (
+                <button type="button" onClick={() => setView("time")}
+                  className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 hover:text-white hover:border-purple-50 text-xs transition-colors">
+                  <Clock size={14} /> Set Time
+                </button>
+              )}
             </div>
           )}
 
