@@ -50,6 +50,7 @@ function DateTimePicker({
   value,
   onChange,
   placeholder,
+  error,
   labelBgClass = "bg-[#141428]",
 }) {
   const [open, setOpen] = useState(false);
@@ -140,7 +141,11 @@ function DateTimePicker({
         type="button"
         onClick={() => setOpen(!open)}
         className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
-          open ? "border-purple-500" : "border-[#3A3A40]"
+          error
+            ? "border-red-500"
+            : open
+              ? "border-purple-500"
+              : "border-[#3A3A40]"
         }`}
       >
         <span
@@ -150,6 +155,8 @@ function DateTimePicker({
         </span>
         <CalendarDays size={18} className="text-gray-400" />
       </button>
+
+      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
 
       {open && (
         <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3a3a5a] rounded-xl shadow-2xl w-72 overflow-hidden">
@@ -348,6 +355,10 @@ export default function PurchaseDetails() {
   const validateForm = () => {
     const nextErrors = {};
 
+    if (!form.requirement.length) {
+      nextErrors.requirement = "This field is required.";
+    }
+
     if (form.requirement.includes("ID card") && !form.idCardQty?.trim()) {
       nextErrors.idCardQty = "This field is required.";
     }
@@ -364,6 +375,14 @@ export default function PurchaseDetails() {
       : form.persons
         ? [form.persons]
         : [];
+
+    if (personValues.length === 0) {
+      nextErrors.persons = "This field is required.";
+    }
+
+    if (!form.deliveryDate) {
+      nextErrors.deliveryDate = "This field is required.";
+    }
 
     const neededSections = [];
     if (
@@ -383,7 +402,13 @@ export default function PurchaseDetails() {
       const data = form[section];
       const prefix = `${section}.`;
 
-      if (!data.giftType) {
+      const giftTypes = Array.isArray(data.giftType)
+        ? data.giftType
+        : data.giftType
+          ? [data.giftType]
+          : [];
+
+      if (giftTypes.length === 0) {
         nextErrors[`${prefix}giftType`] = "This field is required.";
       }
 
@@ -399,7 +424,7 @@ export default function PurchaseDetails() {
         nextErrors[`${prefix}registrationKitQty`] = "This field is required.";
       }
 
-      if (data.giftType?.includes("Trophy")) {
+      if (giftTypes.includes("Trophy")) {
         const trophyTypes = Array.isArray(data.trophyType)
           ? data.trophyType
           : data.trophyType
@@ -419,11 +444,11 @@ export default function PurchaseDetails() {
         }
       }
 
-      if (data.giftType?.includes("Cash Prize") && !data.cashPrizeAmount?.toString().trim()) {
+      if (giftTypes.includes("Cash Prize") && !data.cashPrizeAmount?.toString().trim()) {
         nextErrors[`${prefix}cashPrizeAmount`] = "This field is required.";
       }
 
-      if (data.giftType?.includes("Voucher")) {
+      if (giftTypes.includes("Voucher")) {
         const voucherWorthList = Array.isArray(data.voucherWorth)
           ? data.voucherWorth
           : data.voucherWorth
@@ -541,14 +566,20 @@ export default function PurchaseDetails() {
       });
     }
 
+    const personValues = Array.isArray(form.persons)
+      ? form.persons
+      : form.persons
+        ? [form.persons]
+        : [];
+
     const requiredFor = [];
 
-    if (form.persons.includes("Students")) {
+    if (personValues.includes("Students") || personValues.includes("Both")) {
       requiredFor.push("Students");
     }
 
-    if (form.persons.includes("Guest")) {
-      requiredFor.push("Guests");
+    if (personValues.includes("Guest") || personValues.includes("Both")) {
+      requiredFor.push("Guest");
     }
 
     return {
@@ -679,6 +710,7 @@ export default function PurchaseDetails() {
           setValue={(value) => setField("requirement", value)}
           options={["Certificate", "ID card"]}
           placeholder="Select Requirement"
+          error={errors.requirement}
           optionHoverClass="hover:bg-[#22223B]"
         />
 
@@ -724,10 +756,10 @@ export default function PurchaseDetails() {
           <CustomDropdown
             label="Select Required Persons*"
             value={form.persons}
-            multiSelect
             setValue={(value) => setField("persons", value)}
             options={["Students", "Guest", "Both"]}
             placeholder="Select Required Persons"
+            error={errors.persons}
           />
 
           {/* DELIVERY DATE */}
@@ -736,6 +768,7 @@ export default function PurchaseDetails() {
             value={form.deliveryDate}
             onChange={(val) => setField("deliveryDate", val)}
             placeholder="Select Date"
+            error={errors.deliveryDate}
           />
         </div>
 
@@ -744,6 +777,7 @@ export default function PurchaseDetails() {
           <PersonSection
             title="Students"
             data={form.students}
+            errors={errors}
             onChange={(updated) =>
               setForm((prev) => ({
                 ...prev,
@@ -758,6 +792,7 @@ export default function PurchaseDetails() {
           <PersonSection
             title="Guest"
             data={form.guests}
+            errors={errors}
             onChange={(updated) =>
               setForm((prev) => ({
                 ...prev,
@@ -815,7 +850,10 @@ export default function PurchaseDetails() {
 
 /* ================= PERSON SECTION ================= */
 
-function PersonSection({ title, data, onChange }) {
+function PersonSection({ title, data, errors = {}, onChange }) {
+  const sectionKey = title === "Students" ? "students" : "guests";
+  const getError = (field) => errors[`${sectionKey}.${field}`];
+
   const handleFieldChange = (field) => (e) => {
     onChange({
       ...data,
@@ -867,6 +905,7 @@ function PersonSection({ title, data, onChange }) {
           options={["Trophy", "Cash Prize", "Voucher"]}
           placeholder="Select Gift Type"
           labelBgClass="bg-[#1b1b35]"
+          error={getError("giftType")}
         />
 
         <CustomDropdown
@@ -881,6 +920,7 @@ function PersonSection({ title, data, onChange }) {
           options={["Yes", "No"]}
           placeholder="Select Option"
           labelBgClass="bg-[#1b1b35]"
+          error={getError("registrationKitNeeded")}
         />
       </div>
 
@@ -906,6 +946,7 @@ function PersonSection({ title, data, onChange }) {
               options={["Basic", "Elite"]}
               placeholder="Select Trophy Type"
               labelBgClass="bg-[#1b1b35]"
+              error={getError("trophyType")}
             />
           </div>
 
@@ -918,7 +959,8 @@ function PersonSection({ title, data, onChange }) {
                   value={data.basicTrophyQty}
                   onChange={handleFieldChange("basicTrophyQty")}
                   labelBgClass="bg-[#1b1b35]"
-                  bgClass="bg-[#141428]"
+                  bgClass="bg-[#1b1b35]"
+                  error={getError("basicTrophyQty")}
                 />
               </div>
             )}
@@ -932,6 +974,7 @@ function PersonSection({ title, data, onChange }) {
                   value={data.eliteTrophyQty}
                   onChange={handleFieldChange("eliteTrophyQty")}
                   labelBgClass="bg-[#1b1b35]"
+                  error={getError("eliteTrophyQty")}
                 />
               </div>
             )}
@@ -946,6 +989,7 @@ function PersonSection({ title, data, onChange }) {
             value={data.cashPrizeAmount}
             onChange={handleFieldChange("cashPrizeAmount")}
             labelBgClass="bg-[#1b1b35]"
+            error={getError("cashPrizeAmount")}
           />
         </div>
       )}
@@ -970,6 +1014,7 @@ function PersonSection({ title, data, onChange }) {
             options={["₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"]}
             placeholder="Select Voucher Worth"
             labelBgClass="bg-[#1b1b35]"
+            error={getError("voucherWorth")}
           />
 
           {voucherWorthList.length > 0 && (
@@ -990,6 +1035,7 @@ function PersonSection({ title, data, onChange }) {
                     })
                   }
                   labelBgClass="bg-[#1b1b35]"
+                  error={getError("voucherQty")}
                 />
               ))}
             </div>
@@ -1006,6 +1052,7 @@ function PersonSection({ title, data, onChange }) {
             onChange={handleFieldChange("registrationKitQty")}
             labelBgClass="bg-[#1b1b35]"
             bgClass="bg-[#1b1b35]"
+            error={getError("registrationKitQty")}
           />
         </div>
       )}
@@ -1101,6 +1148,7 @@ function CustomDropdown({
   setValue,
   options,
   placeholder,
+  error,
   multiSelect = false,
   labelBgClass = "bg-[#141428]",
 }) {
@@ -1175,7 +1223,9 @@ function CustomDropdown({
           ${
             isOpen
               ? "border-[#492A6F]"
-              : "border-[#3A3A40]"
+              : error
+                ? "border-red-500"
+                : "border-[#3A3A40]"
           }
         `}
       >
@@ -1203,6 +1253,8 @@ function CustomDropdown({
           `}
         />
       </div>
+
+      {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
 
       {/* DROPDOWN OPTIONS */}
       {isOpen && (

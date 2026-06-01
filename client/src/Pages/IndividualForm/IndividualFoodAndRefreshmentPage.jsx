@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from "react";
 import {
   ChevronDown,
   CalendarDays,
+  Clock,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -50,6 +51,50 @@ function getFirstDayOfMonth(year, month) {
   return new Date(year, month, 1).getDay();
 }
 
+const createFoodFormCard = () => ({
+  id: Date.now() + Math.random(),
+  showResourceDropdown: false,
+  showFoodDropdown: false,
+  resourceType: [],
+  selectedFoodTypes: {
+    Breakfast: false,
+    Lunch: false,
+    Dinner: false,
+    "Morning Refreshment": false,
+    "Evening Refreshment": false,
+  },
+  foodDetails: {
+    Breakfast: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+    Lunch: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+    Dinner: {
+      vegParticipants: "",
+      nonVegParticipants: "",
+      vegGuest: "",
+      nonVegGuest: "",
+    },
+  },
+  selectDate: null,
+  totalResourcePerson: "",
+  internalAccompanyingCount: "1",
+  accompanyingStaffs: [
+    {
+      name: "",
+      mobile: "",
+    },
+  ],
+  specialRequirement: "",
+});
+
 function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   const [open, setOpen] = useState(false);
 
@@ -69,7 +114,42 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
   const [selectedDate, setSelectedDate] = useState(value || null);
 
+  const [selectedTime, setSelectedTime] = useState(() => {
+    if (!value) return "";
+
+    const hours = String(value.getHours()).padStart(2, "0");
+
+    const minutes = String(value.getMinutes()).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
+  });
+
+  const [timeHour, setTimeHour] = useState(() => {
+    if (!value) return "";
+
+    const hour = value.getHours();
+
+    const displayHour = hour % 12 || 12;
+
+    return String(displayHour).padStart(2, "0");
+  });
+
+  const [timeMinute, setTimeMinute] = useState(() => {
+    if (!value) return "";
+
+    return String(value.getMinutes()).padStart(2, "0");
+  });
+
+  const [timePeriod, setTimePeriod] = useState(() =>
+    value && value.getHours() >= 12 ? "PM" : "AM",
+  );
+
   const ref = useRef(null);
+
+  const wheelDeltaRef = useRef({
+    hour: 0,
+    minute: 0,
+  });
 
   useEffect(() => {
     const handler = (e) => {
@@ -84,7 +164,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   }, []);
 
   const formatDisplay = () => {
-    if (!value) return placeholder || "__/__/____";
+    if (!value) return placeholder || "__/__/____ --:--";
 
     const d = value;
 
@@ -94,19 +174,25 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
     const yyyy = d.getFullYear();
 
-    return `${dd}/${mm}/${yyyy}`;
+    const hours = String(d.getHours()).padStart(2, "0");
+
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+
+    return `${dd}/${mm}/${yyyy} ${hours}:${minutes}`;
   };
 
   const handleDayClick = (day) => {
     const newDate = new Date(displayYear, displayMonth, day);
 
-    selectDate(newDate);
+    selectDate(newDate, selectedTime);
   };
 
-  const selectDate = (date) => {
+  const selectDate = (date, time = selectedTime) => {
     const newDate = new Date(date);
 
-    newDate.setHours(0, 0, 0, 0);
+    const [hours = "00", minutes = "00"] = time.split(":");
+
+    newDate.setHours(Number(hours), Number(minutes), 0, 0);
 
     setSelectedDate(newDate);
 
@@ -115,6 +201,114 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
     setDisplayYear(newDate.getFullYear());
 
     onChange(newDate);
+  };
+
+  const handleTimeChange = (time) => {
+    setSelectedTime(time);
+
+    if (!selectedDate) return;
+
+    selectDate(selectedDate, time);
+  };
+
+  const updateTimeFromParts = (hour, minute, period) => {
+    if (!hour || !minute) return;
+
+    let parsedHour = Number(hour);
+
+    if (period === "PM" && parsedHour !== 12) {
+      parsedHour += 12;
+    }
+
+    if (period === "AM" && parsedHour === 12) {
+      parsedHour = 0;
+    }
+
+    const nextTime = `${String(parsedHour).padStart(2, "0")}:${minute}`;
+
+    handleTimeChange(nextTime);
+  };
+
+  const handleTimePartChange = (field, value) => {
+    const nextHour = field === "hour" ? value : timeHour;
+
+    const nextMinute = field === "minute" ? value : timeMinute;
+
+    const nextPeriod = field === "period" ? value : timePeriod;
+
+    setTimeHour(nextHour);
+
+    setTimeMinute(nextMinute);
+
+    setTimePeriod(nextPeriod);
+
+    updateTimeFromParts(nextHour, nextMinute, nextPeriod);
+  };
+
+  const openTimePicker = () => {
+    if (!timeHour) setTimeHour("12");
+
+    if (!timeMinute) setTimeMinute("00");
+
+    setView("time");
+  };
+
+  const getVisibleHour = () => {
+    const current = Number(timeHour || "12");
+
+    return [-2, -1, 0, 1, 2].map((offset) => {
+      const value = ((current - 1 + offset + 12) % 12) + 1;
+
+      return String(value).padStart(2, "0");
+    });
+  };
+
+  const getVisibleMinute = () => {
+    const current = Number(timeMinute || "00");
+
+    return [-2, -1, 0, 1, 2].map((offset) => {
+      const value = (current + offset + 60) % 60;
+
+      return String(value).padStart(2, "0");
+    });
+  };
+
+  const shiftTimeValue = (field, direction) => {
+    if (field === "hour") {
+      const current = Number(timeHour || "12");
+
+      const nextHour = String(
+        ((current - 1 + direction + 12) % 12) + 1,
+      ).padStart(2, "0");
+
+      handleTimePartChange("hour", nextHour);
+
+      return;
+    }
+
+    const current = Number(timeMinute || "00");
+
+    const nextMinute = String((current + direction + 60) % 60).padStart(2, "0");
+
+    handleTimePartChange("minute", nextMinute);
+  };
+
+  const handleTimeWheel = (field, event) => {
+    event.preventDefault();
+
+    wheelDeltaRef.current[field] += event.deltaY;
+
+    if (Math.abs(wheelDeltaRef.current[field]) < 120) return;
+
+    shiftTimeValue(field, wheelDeltaRef.current[field] > 0 ? 1 : -1);
+
+    wheelDeltaRef.current[field] = 0;
+  };
+
+  const closePicker = () => {
+    if (selectedDate) {
+      selectDate(selectedDate, selectedTime);
+    }
 
     setOpen(false);
 
@@ -181,6 +375,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
         <div className="flex gap-2 text-[#b0b0c3]">
           <CalendarDays size={18} />
+          <Clock size={18} />
         </div>
       </button>
 
@@ -276,6 +471,126 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
                 })}
               </div>
 
+              <button
+                type="button"
+                onClick={openTimePicker}
+                className="
+                  mt-4
+                  w-full
+                  border
+                  border-[#383847]
+                  rounded-lg
+                  px-4
+                  py-3
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  text-[#c7c7d9]
+                  hover:border-[#3b82f6]
+                  hover:text-white
+                  transition-all
+                "
+              >
+                <Clock size={17} />
+                Set Time
+              </button>
+
+            </div>
+          )}
+
+          {/* TIME */}
+          {view === "time" && (
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-5">
+                <button
+                  type="button"
+                  onClick={() => setView("calendar")}
+                  className="text-sm text-[#c084fc] hover:text-white"
+                >
+                  ← Date
+                </button>
+
+                <div className="flex items-center gap-2 text-base font-semibold text-white">
+                  <Clock size={16} />
+                  Select Time
+                </div>
+
+                <div className="w-12" />
+              </div>
+
+              <div className="flex items-center justify-center gap-3">
+                <div
+                  onWheel={(e) => handleTimeWheel("hour", e)}
+                  className="flex w-20 flex-col items-center gap-2"
+                >
+                  {getVisibleHour().map((hour, index) => (
+                    <button
+                      key={`${hour}-${index}`}
+                      type="button"
+                      onClick={() => handleTimePartChange("hour", hour)}
+                      className={`h-10 w-[70px] rounded-lg font-mono text-lg transition-all ${
+                        index === 2
+                          ? "border border-[#8b3dff] bg-[#3a225e] text-white"
+                          : "text-[#595977]"
+                      }`}
+                    >
+                      {hour}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="text-2xl font-bold text-white">:</span>
+
+                <div
+                  onWheel={(e) => handleTimeWheel("minute", e)}
+                  className="flex w-20 flex-col items-center gap-2"
+                >
+                  {getVisibleMinute().map((minute, index) => (
+                    <button
+                      key={`${minute}-${index}`}
+                      type="button"
+                      onClick={() => handleTimePartChange("minute", minute)}
+                      className={`h-10 w-[70px] rounded-lg font-mono text-lg transition-all ${
+                        index === 2
+                          ? "border border-[#8b3dff] bg-[#3a225e] text-white"
+                          : "text-[#595977]"
+                      }`}
+                    >
+                      {minute}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {["AM", "PM"].map((period) => (
+                    <button
+                      key={period}
+                      type="button"
+                      onClick={() => handleTimePartChange("period", period)}
+                      className={`h-10 w-[60px] rounded-lg text-sm font-bold transition-all ${
+                        timePeriod === period
+                          ? "bg-[#9d16ff] text-white"
+                          : "bg-[#2b2b49] text-[#9b9bb3]"
+                      }`}
+                    >
+                      {period}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <p className="mt-3 text-center text-xs text-[#8d8da8]">
+                Scroll to pick hour &amp; minute
+              </p>
+
+              <button
+                type="button"
+                onClick={closePicker}
+                className="mt-4 w-full rounded-md bg-[#a914ff] px-4 py-3 text-base font-semibold text-white hover:bg-[#b72cff]"
+              >
+                Confirm
+              </button>
             </div>
           )}
 
@@ -346,47 +661,13 @@ const IndividualFoodAndRefreshment = () => {
   // DROPDOWNS
   // =========================
 
-  const [showResourceDropdown, setShowResourceDropdown] = useState(false);
-
-  const [showFoodDropdown, setShowFoodDropdown] = useState(false);
-
-  const [formCards, setFormCards] = useState([Date.now()]);
+  const [formCards, setFormCards] = useState(() => [createFoodFormCard()]);
 
   // =========================
   // SELECTED VALUES
   // =========================
 
   // CHANGE THIS
-  const [resourceType, setResourceType] = useState([]); // MULTISELECT ARRAY
-
-const [selectedFoodTypes, setSelectedFoodTypes] = useState({
-    Breakfast: false,
-    Lunch: false,
-    Dinner: false,
-    "Morning Refreshment": false,
-    "Evening Refreshment": false,
-  });
-
-  const [foodDetails, setFoodDetails] = useState({
-    Breakfast: {
-      vegParticipants: "",
-      nonVegParticipants: "",
-      vegGuest: "",
-      nonVegGuest: "",
-    },
-    Lunch: {
-      vegParticipants: "",
-      nonVegParticipants: "",
-      vegGuest: "",
-      nonVegGuest: "",
-    },
-    Dinner: {
-      vegParticipants: "",
-      nonVegParticipants: "",
-      vegGuest: "",
-      nonVegGuest: "",
-    },
-  });
   // =========================
   // OPTIONS
   // =========================
@@ -405,24 +686,6 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
   // INPUT STATES
   // =========================
 
-  const [selectDate, setSelectDate] = useState(null);
-
-  const [totalResourcePerson, setTotalResourcePerson] = useState("");
-
-  const [internalAccompanyingCount, setInternalAccompanyingCount] =
-    useState("1");
-
-  // =========================
-  // DEFAULT ONE STAFF INPUT
-  // =========================
-
-  const [accompanyingStaffs, setAccompanyingStaffs] = useState([
-    {
-      name: "",
-      mobile: "",
-    },
-  ]);
-
   // =========================
   // AUTH
   // =========================
@@ -431,20 +694,32 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
   const [token, setToken] = useState("");
 
-  const [specialRequirement, setSpecialRequirement] = useState("");
-
   const [validationErrors, setValidationErrors] = useState([]);
 
   const [submitMessage, setSubmitMessage] = useState("");
 
+  const [submitResponses, setSubmitResponses] = useState([]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const updateFormCard = (cardId, updater) => {
+    setFormCards((prev) =>
+      prev.map((card) =>
+        card.id === cardId
+          ? typeof updater === "function"
+            ? updater(card)
+            : { ...card, ...updater }
+          : card,
+      ),
+    );
+  };
+
   const handleAddForm = () => {
-    setFormCards((prev) => [...prev, Date.now()]);
+    setFormCards((prev) => [...prev, createFoodFormCard()]);
   };
 
   const handleDeleteForm = (cardId) => {
-    setFormCards((prev) => prev.filter((id) => id !== cardId));
+    setFormCards((prev) => prev.filter((card) => card.id !== cardId));
   };
 
   useEffect(() => {
@@ -469,47 +744,60 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
   // HANDLE STAFF COUNT
   // =========================
 
-  const handleStaffCount = (value) => {
-    setInternalAccompanyingCount(value);
-
+  const handleStaffCount = (cardId, value) => {
     const count = Number(value);
 
-    if (value === "" || !Number.isInteger(count) || count < 1) {
-      if (accompanyingStaffs.length === 0) {
-        setAccompanyingStaffs([
-          {
-            name: "",
-            mobile: "",
-          },
-        ]);
+    updateFormCard(cardId, (card) => {
+      if (value === "" || !Number.isInteger(count) || count < 1) {
+        return {
+          ...card,
+          internalAccompanyingCount: value,
+          accompanyingStaffs:
+            card.accompanyingStaffs.length === 0
+              ? [
+                  {
+                    name: "",
+                    mobile: "",
+                  },
+                ]
+              : card.accompanyingStaffs,
+        };
       }
 
-      return;
-    }
-
-    const updatedStaffs = Array.from(
-      {
-        length: count,
-      },
-      (_, index) => ({
-        name: accompanyingStaffs[index]?.name || "",
-        mobile: accompanyingStaffs[index]?.mobile || "",
-      }),
-    );
-
-    setAccompanyingStaffs(updatedStaffs);
+      return {
+        ...card,
+        internalAccompanyingCount: value,
+        accompanyingStaffs: Array.from(
+          {
+            length: count,
+          },
+          (_, index) => ({
+            name: card.accompanyingStaffs[index]?.name || "",
+            mobile: card.accompanyingStaffs[index]?.mobile || "",
+          }),
+        ),
+      };
+    });
   };
 
   // =========================
   // HANDLE STAFF INPUT
   // =========================
 
-  const handleStaffChange = (index, field, value) => {
-    const updated = [...accompanyingStaffs];
+  const handleStaffChange = (cardId, index, field, value) => {
+    updateFormCard(cardId, (card) => {
+      const updated = [...card.accompanyingStaffs];
 
-    updated[index][field] = value;
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
 
-    setAccompanyingStaffs(updated);
+      return {
+        ...card,
+        accompanyingStaffs: updated,
+      };
+    });
   };
 
   // =========================
@@ -520,9 +808,9 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
   // BUILD PAYLOAD
   // =========================
 
-  const buildFoodPayload = () => {
-    const selectedFoodList = Object.keys(selectedFoodTypes).filter(
-      (type) => selectedFoodTypes[type]
+  const buildFoodPayload = (card) => {
+    const selectedFoodList = Object.keys(card.selectedFoodTypes).filter(
+      (type) => card.selectedFoodTypes[type]
     );
 
     const foodTypesPayload = selectedFoodList.map((type) => {
@@ -535,12 +823,12 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             },
           ],
           participants: {
-            vegCount: Number(foodDetails[type].vegParticipants) || 0,
-            nonVegCount: Number(foodDetails[type].nonVegParticipants) || 0,
+            vegCount: Number(card.foodDetails[type].vegParticipants) || 0,
+            nonVegCount: Number(card.foodDetails[type].nonVegParticipants) || 0,
           },
           vipGuests: {
-            vegCount: Number(foodDetails[type].vegGuest) || 0,
-            nonVegCount: Number(foodDetails[type].nonVegGuest) || 0,
+            vegCount: Number(card.foodDetails[type].vegGuest) || 0,
+            nonVegCount: Number(card.foodDetails[type].nonVegGuest) || 0,
           },
         };
       } else {
@@ -558,26 +846,26 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
     return {
       employee: employeeId || "6a0411af4579d3137b255e70",
 
-      date: selectDate
+      date: card.selectDate
         ? new Date(
-            selectDate.getTime() - selectDate.getTimezoneOffset() * 60000,
+            card.selectDate.getTime() - card.selectDate.getTimezoneOffset() * 60000,
           ).toISOString()
         : null,
 
-      resourcePersonType: resourceType,
+      resourcePersonType: card.resourceType,
 
-      numberOfResourcePersons: Number(totalResourcePerson) || 0,
+      numberOfResourcePersons: Number(card.totalResourcePerson) || 0,
 
-      numberOfInternalAccompanyingStaff: Number(internalAccompanyingCount) || 0,
+      numberOfInternalAccompanyingStaff: Number(card.internalAccompanyingCount) || 0,
 
-      accompanyingStaff: accompanyingStaffs.map((staff) => ({
+      accompanyingStaff: card.accompanyingStaffs.map((staff) => ({
         name: staff.name.trim(),
         mobile: staff.mobile,
       })),
 
       foodTypes: foodTypesPayload,
 
-      specialRequirements: specialRequirement.trim(),
+      specialRequirements: card.specialRequirement.trim(),
 
       status: "Pending",
     };
@@ -590,87 +878,118 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
   const handleSubmit = async () => {
     const errors = [];
 
-    if (!selectDate) errors.push("Select Date is required.");
+    formCards.forEach((card, cardIndex) => {
+      const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
 
-    if (!resourceType) errors.push("Resource Person Type is required.");
+      if (!card.selectDate) errors.push(`${formLabel}Select Date is required.`);
 
-    if (!totalResourcePerson) errors.push("Total Resource Person is required.");
+      if (!card.resourceType.length)
+        errors.push(`${formLabel}Resource Person Type is required.`);
 
-    if (!internalAccompanyingCount || Number(internalAccompanyingCount) < 1)
-      errors.push("Internal Accompanying Person count is required.");
+      if (!card.totalResourcePerson)
+        errors.push(`${formLabel}Total Resource Person is required.`);
 
-    if (accompanyingStaffs.some((staff) => !staff.name.trim())) {
-      errors.push("Accompanying staff name is required.");
-    }
+      if (
+        !card.internalAccompanyingCount ||
+        Number(card.internalAccompanyingCount) < 1
+      )
+        errors.push(
+          `${formLabel}Internal Accompanying Person count is required.`,
+        );
 
-    if (accompanyingStaffs.some((staff) => !staff.mobile)) {
-      errors.push("Accompanying staff mobile number is required.");
-    }
-
-    const selectedFoodList = Object.keys(selectedFoodTypes).filter(
-      (type) => selectedFoodTypes[type]
-    );
-
-    if (selectedFoodList.length === 0)
-      errors.push("Select at least one Food Type.");
-
-    // Only validate Breakfast, Lunch, Dinner for details
-    const mealTypes = ["Breakfast", "Lunch", "Dinner"];
-    selectedFoodList.forEach((type) => {
-      if (mealTypes.includes(type)) {
-        if (!foodDetails[type].vegParticipants)
-          errors.push(`${type}: Veg Participants count is required.`);
-        if (!foodDetails[type].nonVegParticipants)
-          errors.push(`${type}: Non-Veg Participants count is required.`);
-        if (!foodDetails[type].vegGuest)
-          errors.push(`${type}: Veg Guest count is required.`);
-        if (!foodDetails[type].nonVegGuest)
-          errors.push(`${type}: Non-Veg Guest count is required.`);
+      if (card.accompanyingStaffs.some((staff) => !staff.name.trim())) {
+        errors.push(`${formLabel}Accompanying staff name is required.`);
       }
+
+      if (card.accompanyingStaffs.some((staff) => !staff.mobile)) {
+        errors.push(`${formLabel}Accompanying staff mobile number is required.`);
+      }
+
+      const selectedFoodList = Object.keys(card.selectedFoodTypes).filter(
+        (type) => card.selectedFoodTypes[type]
+      );
+
+      if (selectedFoodList.length === 0)
+        errors.push(`${formLabel}Select at least one Food Type.`);
+
+      const mealTypes = ["Breakfast", "Lunch", "Dinner"];
+      selectedFoodList.forEach((type) => {
+        if (mealTypes.includes(type)) {
+          if (!card.foodDetails[type].vegParticipants)
+            errors.push(`${formLabel}${type}: Veg Participants count is required.`);
+          if (!card.foodDetails[type].nonVegParticipants)
+            errors.push(`${formLabel}${type}: Non-Veg Participants count is required.`);
+          if (!card.foodDetails[type].vegGuest)
+            errors.push(`${formLabel}${type}: Veg Guest count is required.`);
+          if (!card.foodDetails[type].nonVegGuest)
+            errors.push(`${formLabel}${type}: Non-Veg Guest count is required.`);
+        }
+      });
     });
 
     setValidationErrors(errors);
 
     setSubmitMessage("");
 
+    setSubmitResponses([]);
+
     if (errors.length) return;
 
     setIsSubmitting(true);
 
     try {
-      const payload = buildFoodPayload();
+      const createdResponses = [];
 
-      console.log("Food submit payload:", payload);
+      for (const [index, card] of formCards.entries()) {
+        const payload = buildFoodPayload(card);
 
-      const response = await fetch(`${API_BASE}/api/foods`, {
-        method: "POST",
+        console.log(`Food submit payload ${index + 1}:`, payload);
 
-        headers: {
-          "Content-Type": "application/json",
+        const response = await fetch(`${API_BASE}/api/foods`, {
+          method: "POST",
 
-          ...(token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : {}),
-        },
+          headers: {
+            "Content-Type": "application/json",
 
-        body: JSON.stringify(payload),
-      });
+            ...(token
+              ? {
+                  Authorization: `Bearer ${token}`,
+                }
+              : {}),
+          },
 
-      const data = await response.json();
+          body: JSON.stringify(payload),
+        });
 
-      console.log("Food submit response:", response.status, data);
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(
-          data?.message || `Food submission failed: ${response.status}`,
-        );
+        console.log(`Food submit response ${index + 1}:`, response.status, data);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.message ||
+              `Food submission failed for form ${index + 1}: ${response.status}`,
+          );
+        }
+
+        createdResponses.push({
+          formNumber: index + 1,
+          payload,
+          response: data,
+        });
       }
+
+      console.log("All food submit responses:", createdResponses);
 
       setValidationErrors([]);
 
-      setSubmitMessage("Food request submitted successfully.");
+      setSubmitResponses(createdResponses);
+
+      setSubmitMessage(
+        `${createdResponses.length} food request${
+          createdResponses.length > 1 ? "s" : ""
+        } submitted successfully.`,
+      );
     } catch (error) {
       setValidationErrors([error.message || "Unable to send food data."]);
     } finally {
@@ -696,7 +1015,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
       `}</style>
       {/* TITLE */}
       <h1 className="text-white text-3xl font-bold mb-6">
-        Food and Refreshment
+        Food and Refreshment Form
       </h1>
 
       {/* HEADER */}
@@ -723,17 +1042,17 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
         </button>
       </div>
 
-      {formCards.map((cardId, cardIndex) => (
-      <div key={cardId} className="mb-6">
+      {formCards.map((card, cardIndex) => (
+      <div key={card.id} className="mb-6">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-white text-xl font-semibold">
-          Food and Refreshment
+          
         </h2>
 
         {cardIndex > 0 && (
           <button
             type="button"
-            onClick={() => handleDeleteForm(cardId)}
+            onClick={() => handleDeleteForm(card.id)}
             aria-label="Delete food and refreshment form"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffd6d6] text-[#ff2b2b] hover:bg-[#ffc7c7] transition-colors duration-200 focus:border-[#3b82f6]"
           >
@@ -757,8 +1076,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           {/* DATE */}
           <CustomDateTimePicker
             label="Select Date*"
-            value={selectDate}
-            onChange={setSelectDate}
+            value={card.selectDate}
+            onChange={(date) => updateFormCard(card.id, { selectDate: date })}
             placeholder="Select Date & Time"
           />
 
@@ -771,7 +1090,11 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
             <div
               tabIndex={0}
-              onClick={() => setShowResourceDropdown(!showResourceDropdown)}
+              onClick={() =>
+                updateFormCard(card.id, {
+                  showResourceDropdown: !card.showResourceDropdown,
+                })
+              }
               className="
     food-select-control
     w-full
@@ -789,38 +1112,36 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             >
               <span
                 className={
-                  resourceType.length > 0 ? "text-white" : "text-[#8d8da8]"
+                  card.resourceType.length > 0 ? "text-white" : "text-[#8d8da8]"
                 }
               >
-                {resourceType.length > 0
-                  ? resourceType.join(", ")
+                {card.resourceType.length > 0
+                  ? card.resourceType.join(", ")
                   : "VIP / Trainer / Placement"}
               </span>
 
               <ChevronDown
                 size={18}
                 className={`transition-transform duration-300 ${
-                  showResourceDropdown ? "rotate-180" : "rotate-0"
+                  card.showResourceDropdown ? "rotate-180" : "rotate-0"
                 }`}
               />
             </div>
 
-            {showResourceDropdown && (
+            {card.showResourceDropdown && (
               <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
                 {resourceOptions.map((item, index) => {
-                  const isSelected = resourceType.includes(item);
+                  const isSelected = card.resourceType.includes(item);
 
                   return (
                     <div
                       key={index}
                       onClick={() => {
-                        if (isSelected) {
-                          setResourceType(
-                            resourceType.filter((type) => type !== item),
-                          );
-                        } else {
-                          setResourceType([...resourceType, item]);
-                        }
+                        updateFormCard(card.id, {
+                          resourceType: isSelected
+                            ? card.resourceType.filter((type) => type !== item)
+                            : [...card.resourceType, item],
+                        });
                       }}
                       className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                         isSelected
@@ -846,8 +1167,12 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
             <input
               type="number"
-              value={totalResourcePerson}
-              onChange={(e) => setTotalResourcePerson(e.target.value)}
+              value={card.totalResourcePerson}
+              onChange={(e) =>
+                updateFormCard(card.id, {
+                  totalResourcePerson: e.target.value,
+                })
+              }
               placeholder="5"
               className="
                   w-full
@@ -872,8 +1197,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
             <input
               type="number"
               min="1"
-              value={internalAccompanyingCount}
-              onChange={(e) => handleStaffCount(e.target.value)}
+              value={card.internalAccompanyingCount}
+              onChange={(e) => handleStaffCount(card.id, e.target.value)}
               className="
                   w-full
                   border
@@ -890,8 +1215,8 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
         {/* DYNAMIC STAFF INPUTS */}
         {/* DYNAMIC STAFF INPUTS */}
-        {Number(internalAccompanyingCount) > 0 &&
-          accompanyingStaffs.map((staff, index) => (
+        {Number(card.internalAccompanyingCount) > 0 &&
+          card.accompanyingStaffs.map((staff, index) => (
             <div
               key={index}
               className="
@@ -921,7 +1246,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     type="text"
                     value={staff.name}
                     onChange={(e) =>
-                      handleStaffChange(index, "name", e.target.value)
+                      handleStaffChange(card.id, index, "name", e.target.value)
                     }
                     required
                     className="
@@ -954,7 +1279,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
                     type="text"
                     value={staff.mobile}
                     onChange={(e) =>
-                      handleStaffChange(index, "mobile", e.target.value)
+                      handleStaffChange(card.id, index, "mobile", e.target.value)
                     }
                     required
                     className="
@@ -983,7 +1308,11 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
           <div
             tabIndex={0}
-            onClick={() => setShowFoodDropdown(!showFoodDropdown)}
+            onClick={() =>
+              updateFormCard(card.id, {
+                showFoodDropdown: !card.showFoodDropdown,
+              })
+            }
             className="
               food-select-control
               w-full
@@ -1003,37 +1332,39 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
           >
             <span
               className={
-                Object.values(selectedFoodTypes).some((v) => v)
+                Object.values(card.selectedFoodTypes).some((v) => v)
                   ? "text-white"
                   : "text-[#8d8da8]"
               }
             >
-              {Object.keys(selectedFoodTypes)
-                .filter((type) => selectedFoodTypes[type])
+              {Object.keys(card.selectedFoodTypes)
+                .filter((type) => card.selectedFoodTypes[type])
                 .join(" / ") || "Select Food Type"}
             </span>
 
             <ChevronDown
-              size={18}
-              className={`transition-transform duration-300 ${
-                showFoodDropdown ? "rotate-180" : "rotate-0"
+                size={18}
+                className={`transition-transform duration-300 ${
+                card.showFoodDropdown ? "rotate-180" : "rotate-0"
               }`}
             />
           </div>
 
-          {showFoodDropdown && (
+          {card.showFoodDropdown && (
             <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
               {foodOptions.map((item, index) => {
-                const isSelected = selectedFoodTypes[item];
+                const isSelected = card.selectedFoodTypes[item];
 
                 return (
                   <div
                     key={index}
                     onClick={() => {
-                      setSelectedFoodTypes((prev) => ({
-                        ...prev,
-                        [item]: !prev[item],
-                      }));
+                      updateFormCard(card.id, {
+                        selectedFoodTypes: {
+                          ...card.selectedFoodTypes,
+                          [item]: !card.selectedFoodTypes[item],
+                        },
+                      });
                     }}
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       isSelected
@@ -1054,7 +1385,7 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
         {/* SEPARATE FOOD SECTIONS - ONLY FOR BREAKFAST, LUNCH, DINNER */}
         {["Breakfast", "Lunch", "Dinner"].map(
           (type) =>
-            selectedFoodTypes[type] && (
+            card.selectedFoodTypes[type] && (
               <div
                 key={type}
                 className="
@@ -1079,15 +1410,17 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
                     <input
                       type="number"
-                      value={foodDetails[type].vegParticipants}
+                      value={card.foodDetails[type].vegParticipants}
                       onChange={(e) =>
-                        setFoodDetails((prev) => ({
-                          ...prev,
+                        updateFormCard(card.id, {
+                          foodDetails: {
+                            ...card.foodDetails,
                           [type]: {
-                            ...prev[type],
+                              ...card.foodDetails[type],
                             vegParticipants: e.target.value,
                           },
-                        }))
+                          },
+                        })
                       }
                       placeholder="10"
                       className="
@@ -1114,15 +1447,17 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
                     <input
                       type="number"
-                      value={foodDetails[type].vegGuest}
+                      value={card.foodDetails[type].vegGuest}
                       onChange={(e) =>
-                        setFoodDetails((prev) => ({
-                          ...prev,
+                        updateFormCard(card.id, {
+                          foodDetails: {
+                            ...card.foodDetails,
                           [type]: {
-                            ...prev[type],
+                              ...card.foodDetails[type],
                             vegGuest: e.target.value,
                           },
-                        }))
+                          },
+                        })
                       }
                       placeholder="10"
                       className="
@@ -1149,15 +1484,17 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
                     <input
                       type="number"
-                      value={foodDetails[type].nonVegParticipants}
+                      value={card.foodDetails[type].nonVegParticipants}
                       onChange={(e) =>
-                        setFoodDetails((prev) => ({
-                          ...prev,
+                        updateFormCard(card.id, {
+                          foodDetails: {
+                            ...card.foodDetails,
                           [type]: {
-                            ...prev[type],
+                              ...card.foodDetails[type],
                             nonVegParticipants: e.target.value,
                           },
-                        }))
+                          },
+                        })
                       }
                       placeholder="10"
                       className="
@@ -1184,15 +1521,17 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
                     <input
                       type="number"
-                      value={foodDetails[type].nonVegGuest}
+                      value={card.foodDetails[type].nonVegGuest}
                       onChange={(e) =>
-                        setFoodDetails((prev) => ({
-                          ...prev,
+                        updateFormCard(card.id, {
+                          foodDetails: {
+                            ...card.foodDetails,
                           [type]: {
-                            ...prev[type],
+                              ...card.foodDetails[type],
                             nonVegGuest: e.target.value,
                           },
-                        }))
+                          },
+                        })
                       }
                       placeholder="10"
                       className="
@@ -1223,9 +1562,11 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
 
           <textarea
             rows={4}
-            value={specialRequirement}
+            value={card.specialRequirement}
             onChange={(e) =>
-              setSpecialRequirement(e.target.value)
+              updateFormCard(card.id, {
+                specialRequirement: e.target.value,
+              })
             }
             placeholder="Enter any special requirements"
             className="
@@ -1262,6 +1603,16 @@ const [selectedFoodTypes, setSelectedFoodTypes] = useState({
         {submitMessage && (
           <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
             {submitMessage}
+            {submitResponses.length > 0 && (
+              <div className="mt-3 space-y-1">
+                {submitResponses.map((item) => (
+                  <div key={item.formNumber}>
+                    Form {item.formNumber}:{" "}
+                    {item.response?.data?._id || "Created"}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

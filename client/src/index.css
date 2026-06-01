@@ -96,3 +96,28 @@ input::-webkit-inner-spin-button {
 .react-datepicker__input-container input {
   width: 100%;
 }
+
+input:focus,
+textarea:focus,
+select:focus,
+button:focus,
+.react-datepicker__input-container input:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+  outline: none !important;
+  border-color: #4C2978 !important;
+  box-shadow: 0 0 0 1px rgba(76, 41, 120, 0.35) !important;
+  caret-color: #4C2978 !important;
+}
+
+.media-details-page input:focus,
+.media-details-page textarea:focus,
+.media-details-page select:focus {
+  outline: none !important;
+  border-color: #4C2978 !important;
+  box-shadow: 0 0 0 1px rgba(76, 41, 120, 0.45) !important;
+}

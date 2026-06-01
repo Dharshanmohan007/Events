@@ -145,7 +145,7 @@ const FoodAndRefreshment = () => {
 
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6">
-      <h1 className="text-white text-3xl">Food and Refreshment</h1>
+      <h1 className="text-white text-3xl"></h1>
       {/* HEADER */}
       <div className="flex justify-end mb-6">
         <button

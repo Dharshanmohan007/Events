@@ -61,7 +61,7 @@ const MediaDetailsPage = () => {
     "A type Standee",
     "Website Banner",
     "TV Display",
-    "ID card",
+    "Id card",
     "Plug card",
     "Momento card",
     "Glass Sticker",
@@ -103,14 +103,15 @@ const MediaDetailsPage = () => {
   // =========================
   const [posterFile, setPosterFile] =
     useState(null);
+  const [certificateFile, setCertificateFile] =
+    useState(null);
 
   // =========================
   // POSTER INPUTS
   // =========================
-  const [posterContent, setPosterContent] =
-    useState("");
-  console.log("poster content  : ", posterContent);
-
+  const [posterContent, setPosterContent] = useState("");
+const [certificateContent, setCertificateContent] = useState("");
+const [trophyContent, setTrophyContent] = useState("");
 
   const [displaySize, setDisplaySize] =
     useState("");
@@ -159,18 +160,18 @@ const MediaDetailsPage = () => {
   ] = useState(false);
 
   const [selectedPreEvent, setSelectedPreEvent] =
-    useState("");
+    useState([]);
 
   const [selectedCoverage, setSelectedCoverage] =
-    useState("");
+    useState([]);
 
   const [selectedPostEvent, setSelectedPostEvent] =
-    useState("");
+    useState([]);
 
   const [
     selectedSpecialVideo,
     setSelectedSpecialVideo,
-  ] = useState("");
+  ] = useState([]);
 
   const preEventOptions = [
     "Coming Soon Video",
@@ -194,14 +195,19 @@ const MediaDetailsPage = () => {
     "Testimonials",
   ];
 
+  const toggleVideoSelection = (item, setSelected) => {
+    setSelected((prev) =>
+      prev.includes(item)
+        ? prev.filter((value) => value !== item)
+        : [...prev, item]
+    );
+  };
+
   const [videoContent, setVideoContent] =
     useState("");
 
   const [videoFile, setVideoFile] =
     useState(null);
-
-  const [videoDuration, setVideoDuration] =
-    useState("");
 
   const [
     videoDeliveryDate,
@@ -224,9 +230,9 @@ const MediaDetailsPage = () => {
       setPosterFile(null);
     }
 
-    // if (type === "certificate") {
-    //   setCertificateFile(null);
-    // }
+    if (type === "certificate") {
+      setCertificateFile(null);
+    }
 
     // if (type === "trophy") {
     //   setTrophyFile(null);
@@ -286,8 +292,17 @@ const MediaDetailsPage = () => {
       if (!videoContent.trim()) {
         errors.push("Content for Video is required.");
       }
-      if (!videoDuration.trim()) {
-        errors.push("Video Duration is required.");
+      if (!selectedPreEvent.length) {
+        errors.push("Pre-Event Videos Needed is required.");
+      }
+      if (!selectedCoverage.length) {
+        errors.push("Event Coverage Needed is required.");
+      }
+      if (!selectedPostEvent.length) {
+        errors.push("Post-Event Videos Needed is required.");
+      }
+      if (!selectedSpecialVideo.length) {
+        errors.push("Special Videos Needed is required.");
       }
       if (!videoDeliveryDate) {
         errors.push("Video Delivery Date is required.");
@@ -328,26 +343,68 @@ const MediaDetailsPage = () => {
       }
     }
     if (posterFile) formData.append("referencePosterFiles", posterFile);
-    // if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
     // if (trophyFile) formData.append("referenceFiles", trophyFile);
     return formData;
   };
 
-  const buildVideoFormData = () => {
-    const formData = new FormData();
-    formData.append("employee", "6a0411af4579d3137b255e71");
-    formData.append("dayIndex", "1");
-    formData.append("status", "Pending");
+  const appendPosterFormData = (formData) => {
+    formData.append("typeOfMedia[]", "Poster");
+    formData.append("poster[posterContent]", posterContent);
+    formData.append("poster[certificateContent]", certificateContent);
+    formData.append("poster[trophyContent]", trophyContent);
+    formData.append("poster[priority]", posterPriority);
+    formData.append("poster[specialRequirements]", posterRequirement);
+    formData.append("poster[deliveryDate]", posterDeliveryDate);
+    if (selectedDisplays.length) {
+      selectedDisplays.forEach((d) => formData.append("poster[displayNeeded][]", d));
+
+      let sizeIndex = 0;
+      if (selectedDisplays.includes("Flex")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Flex");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, displaySize);
+        sizeIndex++;
+      }
+      if (selectedDisplays.includes("Glass Sticker")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Glass Sticker");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, glassStickerSize);
+        sizeIndex++;
+      }
+    }
+    if (posterFile) formData.append("referencePosterFiles", posterFile);
+    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+  };
+
+  const appendVideoFormData = (formData) => {
     formData.append("typeOfMedia[]", "Video");
     formData.append("video[videoContent]", videoContent);
-    formData.append("video[duration]", videoDuration);
-   
+    selectedPreEvent.forEach((item) => formData.append("video[preEventVideos][]", item));
+    selectedCoverage.forEach((item) => formData.append("video[eventCoverage][]", item));
+    selectedPostEvent.forEach((item) => formData.append("video[postEventVideos][]", item));
+    selectedSpecialVideo.forEach((item) => formData.append("video[specialVideos][]", item));
+    formData.append("video[deliveryDate]", videoDeliveryDate);
     formData.append("video[priority]", videoPriority);
     formData.append("video[specialRequirements]", videoRequirement);
 
     if (videoFile) {
       formData.append("referenceFiles", videoFile);
     }
+  };
+
+  const buildMediaFormData = () => {
+    const formData = new FormData();
+    formData.append("employee", "6a0411af4579d3137b255e71");
+    formData.append("dayIndex", "1");
+    formData.append("status", "Pending");
+
+    if (selectedTypes.includes("Poster")) {
+      appendPosterFormData(formData);
+    }
+
+    if (selectedTypes.includes("Video")) {
+      appendVideoFormData(formData);
+    }
+
     return formData;
   };
 
@@ -372,51 +429,91 @@ const MediaDetailsPage = () => {
 
     console.log("no errors");
 
-    // Submit Poster if selected
-    if (selectedTypes.includes("Poster")) {
-      setIsSubmitting(true);
-      setSubmitSuccess(false);
-      try {
-        const response = await fetch(`${API_BASE}/api/individual-media/create`, {
-          method: "POST",
-          body: buildPosterFormData(),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Poster submission failed.");
-        }
-        setSubmitSuccess(true);
-      } catch (error) {
-        setValidationErrors([error.message || "Unable to send poster data."]);
-      } finally {
-        setIsSubmitting(false);
+    setIsSubmitting(true);
+    setSubmitSuccess(false);
+    try {
+      const response = await fetch(`${API_BASE}/api/individual-media/create`, {
+        method: "POST",
+        body: buildMediaFormData(),
+      });
+      const data = await response.json();
+      console.log("Media submit response:", data);
+      if (!response.ok) {
+        throw new Error(data.message || "Media submission failed.");
       }
-    }
-
-    // Submit Video if selected
-    if (selectedTypes.includes("Video")) {
-      setIsSubmitting(true);
-      setSubmitSuccess(false);
-      try {
-        const response = await fetch(`${API_BASE}/api/individual-media/create`, {
-          method: "POST",
-          body: buildVideoFormData(),
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.message || "Video submission failed.");
-        }
-        setSubmitSuccess(true);
-      } catch (error) {
-        setValidationErrors([error.message || "Unable to send video data."]);
-      } finally {
-        setIsSubmitting(false);
-      }
+      setSubmitSuccess(true);
+    } catch (error) {
+      setValidationErrors([error.message || "Unable to send media data."]);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const renderVideoDropdown = ({
+    label,
+    placeholder,
+    options,
+    selected,
+    setSelected,
+    isOpen,
+    setIsOpen,
+  }) => (
+    <div className="relative mb-6">
+      <label className={cardFloatingLabelClass}>
+        {label}
+      </label>
+
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="
+          w-full
+          border
+          border-[#2F2F3E]
+          rounded-md
+          px-4
+          py-3
+          flex
+          justify-between
+          items-center
+          cursor-pointer
+          gap-3
+        "
+      >
+        <span
+          className={
+            selected.length
+              ? "text-white"
+              : "text-[#8d8da8]"
+          }
+        >
+          {selected.length ? selected.join(" / ") : placeholder}
+        </span>
+
+        <ChevronDown size={18} />
+      </div>
+
+      {isOpen && (
+        <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+          {options.map((item, index) => {
+            const isSelected = selected.includes(item);
+            return (
+              <div
+                key={index}
+                onClick={() => toggleVideoSelection(item, setSelected)}
+                className={`px-4 py-3 cursor-pointer flex items-center justify-between gap-3 transition-colors duration-200 ${isSelected ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+              >
+                <span>{item}</span>
+                {isSelected && <Check size={16} className="text-white" />}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6">
+    <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
       {/* TITLE */}
       <h1 className="text-3xl font-bold mb-6">
         Media Details Form
@@ -431,7 +528,7 @@ const MediaDetailsPage = () => {
           </ul>
         </div>
       )}
-
+ 
       {/* TYPE DROPDOWN */}
       <div className="relative mb-8">
         <label className={pageFloatingLabelClass}>
@@ -447,7 +544,7 @@ const MediaDetailsPage = () => {
           className="
             w-full
             border
-            border-[#2d2d4d]
+            border-[#2F2F3E]
             rounded-md
             px-4
             py-3
@@ -501,7 +598,7 @@ const MediaDetailsPage = () => {
       {/* ===================================================== */}
 
       {selectedTypes.includes("Poster") && (
-        <div className="bg-[#1b1b35] border border-[#2d2d4d] rounded-2xl p-6">
+        <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
             Poster
           </h2>
@@ -514,16 +611,15 @@ const MediaDetailsPage = () => {
 
             <textarea
               rows={4}
-              value={posterContent}
-              onChange={(e) =>
-                setPosterContent(e.target.value)
-              }
+
+             value={posterContent}
+onChange={(e) => setPosterContent(e.target.value)}
               placeholder="reason"
               className="
                 w-full
              
                 border
-                border-[#3a3a5a]
+                border-[#2F2F3E]
                 rounded-md
                 p-4
                 text-white
@@ -542,7 +638,7 @@ const MediaDetailsPage = () => {
               className="
                 border-2
                 border-dashed
-                border-[#4b4b6b]
+                border-[#2F2F3E]
                 rounded-lg
                 p-8
                 flex
@@ -594,6 +690,97 @@ const MediaDetailsPage = () => {
             )}
           </div>
 
+           <div className="relative mb-6">
+            <label className={cardFloatingLabelClass}>
+              Content for Certificate *
+            </label>
+
+           <textarea
+  rows={4}
+  value={certificateContent}
+  onChange={(e) => setCertificateContent(e.target.value)}
+  placeholder="reason"
+  className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
+/>
+          </div>
+
+           <div className="relative mb-8">
+            <span className={cardFloatingLabelClass}>
+              Reference Certificate ( If any )
+            </span>
+
+            <label
+              className="
+                border-2
+                border-dashed
+                border-[#2F2F3E]
+                rounded-lg
+                p-8
+                flex
+                flex-col
+                justify-center
+                items-center
+                gap-3
+                cursor-pointer
+              "
+            >
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) =>
+                  setCertificateFile(
+                    e.target.files[0]
+                  )
+                  
+                }
+              />
+
+              <Upload size={24} />
+
+              <span className="text-sm text-center">
+                Drag and drop the files here or{" "}
+                <span className="text-[#8b5cf6] underline">
+                  choose file
+                </span>
+              </span>
+            </label>
+
+            {certificateFile && (
+              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <FileText size={18} />
+
+                  <span className="text-sm">
+                    {certificateFile.name}
+                  </span>
+                </div>
+
+                <button
+                  onClick={() =>
+                    removeFile("certificate")
+                  }
+                >
+                  <X className="text-red-500" />
+                </button>
+              </div>
+            )}
+          </div>
+
+           <div className="relative mb-6">
+            <label className={cardFloatingLabelClass}>
+              Content for Trophy *
+            </label>
+
+            <textarea
+  rows={4}
+  value={trophyContent}
+  onChange={(e) => setTrophyContent(e.target.value)}
+  placeholder="reason"
+  className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
+/>
+          </div>
+
+
           {/* Display Needed */}
           <div className="relative mb-6">
             <label className={cardFloatingLabelClass}>
@@ -610,7 +797,7 @@ const MediaDetailsPage = () => {
                 w-full
                
                 border
-                border-[#3a3a5a]
+                border-[#2F2F3E]
                 rounded-md
                 px-4
                 py-3
@@ -680,7 +867,7 @@ const MediaDetailsPage = () => {
                     className="
                       w-full
                       border
-                      border-[#3a3a5a]
+                      border-[#2F2F3E]
                       rounded-md
                       px-4
                       py-3
@@ -759,7 +946,7 @@ const MediaDetailsPage = () => {
       w-full
       bg-transparent
       border
-      border-[#3A3A5A]
+      border-[#2F2F3E]
       rounded-lg
       px-4
       py-[13px]
@@ -821,7 +1008,7 @@ const MediaDetailsPage = () => {
                 w-full
                
                 border
-                border-[#3a3a5a]
+                border-[#2F2F3E]
                 rounded-md
                 p-4
                 text-white
@@ -842,26 +1029,24 @@ const MediaDetailsPage = () => {
             Video
           </h2>
 
-          {/* Video Content */}
           <div className="relative mb-6">
             <label className={cardFloatingLabelClass}>
               Content for Video *
             </label>
 
             <textarea
-              rows={5}
+              rows={4}
               value={videoContent}
               onChange={(e) =>
                 setVideoContent(
                   e.target.value
                 )
               }
-              placeholder="Enter video content"
+              placeholder="reason"
               className="
                 w-full
-              
                 border
-                border-[#3a3a5a]
+                border-[#2F2F3E]
                 rounded-md
                 p-4
                 text-white
@@ -870,41 +1055,49 @@ const MediaDetailsPage = () => {
             />
           </div>
 
-          {/* VIDEO DURATION */}
-          <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Video Duration *
-            </label>
+          {renderVideoDropdown({
+            label: "Pre-Event Videos Needed*",
+            placeholder: "Coming soon video / Promotional Video / Invitation Video",
+            options: preEventOptions,
+            selected: selectedPreEvent,
+            setSelected: setSelectedPreEvent,
+            isOpen: showPreEvent,
+            setIsOpen: setShowPreEvent,
+          })}
 
-            <input
-              type="text"
-              value={videoDuration}
-              onChange={(e) =>
-                setVideoDuration(
-                  e.target.value
-                )
-              }
-              placeholder="Enter video duration"
-              className="
-                w-full
-             
-                border
-                border-[#3a3a5a]
-                rounded-md
-                px-4
-                py-3
-                text-white
-                outline-none
-              "
-            />
-          </div>
+          {renderVideoDropdown({
+            label: "Event Coverage Needed*",
+            placeholder: "Full coverage / Highlights / Voice over",
+            options: coverageOptions,
+            selected: selectedCoverage,
+            setSelected: setSelectedCoverage,
+            isOpen: showCoverage,
+            setIsOpen: setShowCoverage,
+          })}
 
-          
+          {renderVideoDropdown({
+            label: "Post-Event Videos Needed*",
+            placeholder: "Event Glimpse / Post Event Video",
+            options: postEventOptions,
+            selected: selectedPostEvent,
+            setSelected: setSelectedPostEvent,
+            isOpen: showPostEvent,
+            setIsOpen: setShowPostEvent,
+          })}
 
-          {/* VIDEO UPLOAD */}
+          {renderVideoDropdown({
+            label: "Special Videos Needed*",
+            placeholder: "Chief Guest Event / Testimonials",
+            options: specialVideoOptions,
+            selected: selectedSpecialVideo,
+            setSelected: setSelectedSpecialVideo,
+            isOpen: showSpecialVideo,
+            setIsOpen: setShowSpecialVideo,
+          })}
+
           <div className="relative mb-8">
             <span className={cardFloatingLabelClass}>
-              Reference Video ( If any )
+              Reference Video( If any )
             </span>
 
             <label
@@ -914,8 +1107,8 @@ const MediaDetailsPage = () => {
                 border-[#4b4b6b]
                 rounded-lg
                 p-8
+                min-h-[54px]
                 flex
-                flex-col
                 justify-center
                 items-center
                 gap-3
@@ -932,7 +1125,7 @@ const MediaDetailsPage = () => {
                 }
               />
 
-              <Upload size={24} />
+              <Upload size={20} />
 
               <span className="text-sm text-center">
                 Drag and drop the files here or{" "}
@@ -943,7 +1136,7 @@ const MediaDetailsPage = () => {
             </label>
 
             {videoFile && (
-              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
+              <div className="mt-4 bg-[#141428] border border-[#2F2F3E] rounded-md px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <FileText size={18} />
 
@@ -963,10 +1156,83 @@ const MediaDetailsPage = () => {
             )}
           </div>
 
-          {/* REQUIREMENT */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
+            <div className="w-full">
+              <CustomDateTimePicker
+                label="Delivery Date *"
+                value={
+                  videoDeliveryDate
+                    ? new Date(videoDeliveryDate)
+                    : null
+                }
+                onChange={(date) =>
+                  setVideoDeliveryDate(
+                    date.toISOString()
+                  )
+                }
+                placeholder="__/__/____"
+                showTime={false}
+              />
+            </div>
+
+            <div className="relative w-full pt-[1px]">
+              <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+                Priority *
+              </label>
+
+              <div
+                onClick={() =>
+                  setShowVideoPriorityDropdown(
+                    !showVideoPriorityDropdown
+                  )
+                }
+                className="
+                  w-full
+                  bg-transparent
+                  border
+                  border-[#2F2F3E]
+                  rounded-lg
+                  px-4
+                  py-[13px]
+                  flex
+                  justify-between
+                  items-center
+                  cursor-pointer
+                  text-white
+                "
+              >
+                <span>{videoPriority}</span>
+
+                <ChevronDown
+                  size={18}
+                  className="text-gray-400"
+                />
+              </div>
+
+              {showVideoPriorityDropdown && (
+                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                  {priorityOptions.map(
+                    (item, index) => (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setVideoPriority(item);
+                          setShowVideoPriorityDropdown(false);
+                        }}
+                        className={`px-4 py-3 cursor-pointer transition-colors duration-200 ${videoPriority === item ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                      >
+                        {item}
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div className="relative">
             <label className={cardFloatingLabelClass}>
-              Special Requirements *
+              Special Requirements, If any*
             </label>
 
             <textarea
@@ -977,12 +1243,11 @@ const MediaDetailsPage = () => {
                   e.target.value
                 )
               }
-              placeholder="Enter requirements"
+              placeholder="reason"
               className="
                 w-full
-               
                 border
-                border-[#3a3a5a]
+                border-[#2F2F3E]
                 rounded-md
                 p-4
                 text-white
