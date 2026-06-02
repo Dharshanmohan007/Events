@@ -119,7 +119,7 @@ function ScrollDrum({ items, value, onChange }) {
 }
 
 // ─── Main Picker ──────────────────────────────────────────────────────────────
-export default function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
+export default function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true, labelBgClass = "bg-[#1f1f3a]" }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("calendar");
   const [displayMonth, setDisplayMonth] = useState(() =>
@@ -235,7 +235,7 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
     <div ref={ref} className="relative w-full">
       {/* Floating label */}
       {label && (
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none bg-[#1f1f3a]">
+        <span className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${labelBgClass}`}>
           {label}
         </span>
       )}
@@ -244,8 +244,8 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
       <button
         type="button"
         onClick={() => { setOpen((p) => !p); setView("calendar"); }}
-        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
-          open ? "border-purple-500" : "border-[#2F2F47]"
+        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors focus:border-[#3b82f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b82f6]/30 ${
+          open ? "border-[#3b82f6]" : "border-[#2F2F47]"
         }`}
       >
         <span className={`text-sm ${value ? "text-gray-300" : "text-gray-500"}`}>

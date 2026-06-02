@@ -438,7 +438,18 @@
     };
 
     return (
-      <div className="min-h-screen bg-[#141428] text-white p-5">
+      <div className="transport-form min-h-screen bg-[#141428] text-white p-5">
+        <style>{`
+          .transport-form input:focus,
+          .transport-form textarea:focus,
+          .transport-form button:focus,
+          .transport-form .transport-select-control:focus {
+            border-color: #3b82f6 !important;
+            box-shadow: none !important;
+            outline: none !important;
+          }
+        `}</style>
+
         <h1 className="text-3xl font-bold mb-6">
           Transport Details Form
         </h1>
@@ -542,6 +553,7 @@
                     )
                   }
                   placeholder="Select pickup date & time"
+                  labelBgClass="bg-[#1b1b35]"
                 />
 
                 <CustomDateTimePicker
@@ -555,6 +567,7 @@
                     )
                   }
                   placeholder="Select drop date & time"
+                  labelBgClass="bg-[#1b1b35]"
                 />
               </div>
 
@@ -570,7 +583,7 @@
                     items-center
                     gap-3
                     border
-border-[#22223B]
+                    border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
@@ -685,7 +698,7 @@ border-[#22223B]
                               text-white
                               w-full
                               border
-                              border-transparent
+                              border-[#2F2F47]
                               rounded-md
                               px-2
                               py-2
@@ -728,7 +741,7 @@ border-[#22223B]
                     items-center
                     gap-3
                     border
-                    border-[#22223B]
+                    border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
@@ -785,15 +798,16 @@ border-[#22223B]
                       w-full
                      
                       border
-                      border-[#22223B]
+                      border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
                       outline-none
-                      focus:border-[#3b82f6]
-                      focus:ring-0
-                      focus:ring-[#3b82f6]
-                      transition-all
+                      focus-within:border-[#3b82f6]
+                    focus-within:ring-0
+                    focus-within:ring-[#3b82f6]
+                    transition-all
+                    
                     "
                   />
                 </div>
@@ -804,7 +818,8 @@ border-[#22223B]
                     Type of Vehicle Needed *
                   </label>
 
-                  <div
+                  <button
+                    type="button"
                     onClick={() =>
                       updateFormField(
                         formIndex,
@@ -813,10 +828,11 @@ border-[#22223B]
                       )
                     }
                     className="
+                      transport-select-control
                       w-full
                      
                       border
-                      border-[#22223B]
+                      border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
@@ -824,7 +840,10 @@ border-[#22223B]
                       justify-between
                       items-center
                       cursor-pointer
-                      focus-within:border-[#3b82f6]
+                      focus:border-[#3b82f6]
+                      focus-visible:outline-none
+                      focus-visible:ring-2
+                      focus-visible:ring-[#3b82f6]/20
                       hover:border-[#3b82f6]
                       transition-all
                     "
@@ -839,10 +858,10 @@ border-[#22223B]
                     </span>
 
                     <ChevronDown size={18} />
-                  </div>
+                  </button>
 
                   {form.showVehicleDropdown && (
-                    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#22223B] rounded-md overflow-hidden z-50">
+                    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
                       {vehicleOptions.map(
                         (option, index) => {
                           const isSelected =
@@ -905,7 +924,7 @@ border-[#22223B]
                                   updatedForms
                                 );
                               }}
-                               className={`
+                                className={`
                                  px-4
                                  py-3
                                  cursor-pointer
@@ -914,7 +933,7 @@ border-[#22223B]
                                  justify-between
                                  ${
                                    isSelected
-                                     ? "bg-[#3b82f6]"
+                                     ? "bg-[#492A6F] text-white"
                                      : "hover:bg-[#492A6F]"
                                  }
                                `}
@@ -942,15 +961,18 @@ border-[#22223B]
                   {(
                     form.selectedVehicles || []
                   ).map(
-                    (vehicle, index) => (
+                    (vehicle, index) => {
+                      const vehicleCount =
+                        (form.selectedVehicles || []).length;
+                      const isFullWidth =
+                        vehicleCount === 1 ||
+                        (vehicleCount === 3 && index === 2);
+
+                      return (
                       <div
                         key={index}
                         className={
-                          vehicle === "Bus" &&
-                          (
-                            form.selectedVehicles ||
-                            []
-                          ).length === 1
+                          isFullWidth
                             ? "relative md:col-span-2"
                             : "relative"
                         }
@@ -996,7 +1018,7 @@ border-[#22223B]
                             w-full
                          
                             border
-                            border-[#22223B]
+                            border-[#2F2F47]
                             rounded-md
                             px-4
                             py-3
@@ -1008,7 +1030,8 @@ border-[#22223B]
                           "
                         />
                       </div>
-                    )
+                    );
+                    }
                   )}
                 </div>
               )}
@@ -1073,7 +1096,7 @@ border-[#22223B]
                     w-full
                    
                     border
-                    border-[#22223B]
+                    border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
@@ -1134,7 +1157,7 @@ border-[#22223B]
                                 w-full
                                 bg-[#26264a]
                                 border
-                                border-[#22223B]
+                                border-[#2F2F47]
                                 rounded-xl
                                 px-4
                                 py-4
@@ -1172,7 +1195,7 @@ border-[#22223B]
                                 w-full
                                 bg-[#26264a]
                                 border
-                                border-[#3a3a5a]
+                                border-[#2F2F47]
                                 rounded-xl
                                 px-4
                                 py-4
@@ -1215,7 +1238,7 @@ border-[#22223B]
                     w-full
                    
                     border
-                    border-[#22223B]
+                    border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3

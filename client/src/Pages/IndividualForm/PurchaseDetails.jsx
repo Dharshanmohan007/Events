@@ -1093,7 +1093,7 @@ function InputField({
   onChange,
   type = "text",
   error,
-  labelBgClass = "bg-[#141428]",
+  labelBgClass = "bg-[1414281b1b35]",
   bgClass = "bg-[]",
 }) {
   return (
