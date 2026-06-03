@@ -250,8 +250,53 @@
     };
 
     // =========================
-    // PAYLOAD
+    // HELPERS
     // =========================
+      // Convert UTC ISO string back to local date for display
+      const convertUTCToLocal = (utcString) => {
+        if (!utcString) return null;
+        const date = new Date(utcString);
+        return date; // new Date() automatically interprets as local when used with getHours(), etc.
+      };
+
+      // Format date/time in Indian Standard Time (IST / Asia/Kolkata)
+      const formatInIST = (date) => {
+        if (!date) return "N/A";
+        try {
+          return new Intl.DateTimeFormat("en-IN", {
+            timeZone: "Asia/Kolkata",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true,
+          }).format(date);
+        } catch (e) {
+          return date.toLocaleString();
+        }
+      };
+
+      // Format a Date into ISO-like string that preserves local timezone offset
+      const formatDateWithOffset = (date) => {
+        if (!date) return null;
+        const pad = (n) => String(n).padStart(2, "0");
+        const y = date.getFullYear();
+        const mo = pad(date.getMonth() + 1);
+        const d = pad(date.getDate());
+        const hh = pad(date.getHours());
+        const mm = pad(date.getMinutes());
+        const ss = pad(date.getSeconds());
+        const offsetMin = -date.getTimezoneOffset();
+        const sign = offsetMin >= 0 ? "+" : "-";
+        const absOff = Math.abs(offsetMin);
+        const offH = pad(Math.floor(absOff / 60));
+        const offM = pad(absOff % 60);
+
+        return `${y}-${mo}-${d}T${hh}:${mm}:${ss}${sign}${offH}:${offM}`;
+      };
+
     const buildTransportPayload = (
       form
     ) => {
@@ -262,12 +307,20 @@
 
         pickupDateTime:
           form.pickupDateTime
-            ? form.pickupDateTime.toISOString()
+            ? new Date(
+                form.pickupDateTime.getTime() -
+                  form.pickupDateTime.getTimezoneOffset() *
+                    60000
+              ).toISOString()
             : null,
 
         dropDateTime:
           form.dropDateTime
-            ? form.dropDateTime.toISOString()
+            ? new Date(
+                form.dropDateTime.getTime() -
+                  form.dropDateTime.getTimezoneOffset() *
+                    60000
+              ).toISOString()
             : null,
 
         pickupLocation:
@@ -407,7 +460,21 @@
           const payload =
             buildTransportPayload(form);
 
-          await fetch(
+          // Log payload to verify timezone handling
+          console.log(
+            "📤 Transport Payload Sent:",
+            JSON.stringify(payload, null, 2)
+          );
+          console.log(
+            "✅ Pickup sent as:",
+            payload.pickupDateTime
+          );
+          console.log(
+            "✅ Drop sent as:",
+            payload.dropDateTime
+          );
+
+          const response = await fetch(
             `${API_BASE}/api/transports`,
             {
               method: "POST",
@@ -420,6 +487,41 @@
               },
               body: JSON.stringify(payload),
             }
+          );
+
+          const responseData =
+            await response.json();
+
+          // Log response with IST formatting
+          console.log(
+            "📥 Response received:",
+            responseData.data
+          );
+          console.log(
+            "⏰ Pickup stored as (UTC):",
+            responseData.data?.pickupDateTime
+          );
+          const pickupIST = responseData.data?.pickupDateTime
+            ? formatInIST(
+                new Date(
+                  responseData.data.pickupDateTime
+                )
+              )
+            : "N/A";
+          console.log(
+            "🇮🇳 Pickup displayed as (IST):",
+            pickupIST
+          );
+          const dropIST = responseData.data?.dropDateTime
+            ? formatInIST(
+                new Date(
+                  responseData.data.dropDateTime
+                )
+              )
+            : "N/A";
+          console.log(
+            "🇮🇳 Drop displayed as (IST):",
+            dropIST
           );
         }
 
@@ -671,7 +773,7 @@
                           justify-between
                         "
                       >
-                        <div className="flex items-center gap-3 w-full">
+                        <div className="flex  items-center gap-3 w-full">
                           <GripVertical
                             size={18}
                             className="text-[#8d8da8]"

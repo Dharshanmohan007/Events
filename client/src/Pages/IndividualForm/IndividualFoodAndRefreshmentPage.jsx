@@ -95,7 +95,7 @@ const createFoodFormCard = () => ({
   specialRequirement: "",
 });
 
-function CustomDateTimePicker({ label, value, onChange, placeholder }) {
+function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
   const [open, setOpen] = useState(false);
 
   const [view, setView] = useState("calendar");
@@ -164,7 +164,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   }, []);
 
   const formatDisplay = () => {
-    if (!value) return placeholder || "__/__/____ --:--";
+    if (!value) return placeholder || (showTime ? "__/__/____ --:--" : "__/__/____");
 
     const d = value;
 
@@ -173,6 +173,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
     const mm = String(d.getMonth() + 1).padStart(2, "0");
 
     const yyyy = d.getFullYear();
+
+    if (!showTime) return `${dd}/${mm}/${yyyy}`;
 
     const hours = String(d.getHours()).padStart(2, "0");
 
@@ -184,7 +186,16 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
   const handleDayClick = (day) => {
     const newDate = new Date(displayYear, displayMonth, day);
 
-    selectDate(newDate, selectedTime);
+    if (showTime) {
+      selectDate(newDate, selectedTime);
+    } else {
+      setSelectedDate(newDate);
+      setDisplayMonth(newDate.getMonth());
+      setDisplayYear(newDate.getFullYear());
+      onChange(newDate);
+      setOpen(false);
+      setView("calendar");
+    }
   };
 
   const selectDate = (date, time = selectedTime) => {
@@ -375,7 +386,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
 
         <div className="flex gap-2 text-[#b0b0c3]">
           <CalendarDays size={18} />
-          <Clock size={18} />
+          {showTime && <Clock size={18} />}
         </div>
       </button>
 
@@ -471,30 +482,32 @@ function CustomDateTimePicker({ label, value, onChange, placeholder }) {
                 })}
               </div>
 
-              <button
-                type="button"
-                onClick={openTimePicker}
-                className="
-                  mt-4
-                  w-full
-                  border
-                  border-[#383847]
-                  rounded-lg
-                  px-4
-                  py-3
-                  flex
-                  items-center
-                  justify-center
-                  gap-2
-                  text-[#c7c7d9]
-                  hover:border-[#3b82f6]
-                  hover:text-white
-                  transition-all
-                "
-              >
-                <Clock size={17} />
-                Set Time
-              </button>
+              {showTime && (
+                <button
+                  type="button"
+                  onClick={openTimePicker}
+                  className="
+                    mt-4
+                    w-full
+                    border
+                    border-[#383847]
+                    rounded-lg
+                    px-4
+                    py-3
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    text-[#c7c7d9]
+                    hover:border-[#3b82f6]
+                    hover:text-white
+                    transition-all
+                  "
+                >
+                  <Clock size={17} />
+                  Set Time
+                </button>
+              )}
 
             </div>
           )}
@@ -1078,7 +1091,8 @@ const IndividualFoodAndRefreshment = () => {
             label="Select Date*"
             value={card.selectDate}
             onChange={(date) => updateFormCard(card.id, { selectDate: date })}
-            placeholder="Select Date & Time"
+            placeholder="Select Date"
+            showTime={false}
           />
 
           {/* RESOURCE PERSON TYPE */}
