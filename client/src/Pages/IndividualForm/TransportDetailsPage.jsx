@@ -235,7 +235,7 @@
       vehicleType
     ) => {
       switch (vehicleType) {
-        case "Car":
+        case "Car": 
           return "Enter number of cars";
 
         case "Bus":

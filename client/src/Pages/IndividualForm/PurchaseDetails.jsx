@@ -510,7 +510,7 @@ export default function PurchaseDetails() {
     }
 
     /* CASH PRIZE */
-    if (section.giftType?.includes("Cash Prize")) {
+    if (section.giftType?.includes("cashPrize")) {
       giftItems.push({
         giftType: "Cash Prize",
         cashPrizeAmount: parseInt(section.cashPrizeAmount) || 0,
@@ -518,7 +518,7 @@ export default function PurchaseDetails() {
     }
 
     /* VOUCHER */
-    if (section.giftType?.includes("Voucher")) {
+    if (section.giftType?.includes("voucherWorth")) {
       const worths = Array.isArray(section.voucherWorth)
         ? section.voucherWorth
         : section.voucherWorth
@@ -532,7 +532,7 @@ export default function PurchaseDetails() {
 
       if (vouchers.length) {
         giftItems.push({
-          giftType: "Voucher",
+          giftType: "voucherWorth",
           voucher: vouchers,
         });
       }
