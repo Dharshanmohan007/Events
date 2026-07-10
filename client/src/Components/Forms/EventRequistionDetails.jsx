@@ -59,6 +59,8 @@ function validateDay(day = {}, idx) {
 
 function validateOrganizerSection(state) {
   const e = {};
+  if (!state.principalApprovalDocument)
+  e.principalApprovalDocument = "Principal Approval Form is required";
   if (!state.doc) e.doc = "This field is required";
   if (state.doc === "Yes" && !state.file)
     e.file = "Please upload the previous event documentation";
@@ -128,6 +130,9 @@ export default function EventRequisitionDetails({
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
   const [department, setDepartment] = useState(initialEventRequisition.department || "");
+  const [principalApprovalDocument, setprincipalApprovalDocument] = useState(
+    initialEventRequisition.principalApprovalDocument || null
+  );
   const [file, setFile] = useState(initialEventRequisition.file || null);
   const [reason, setReason] = useState(initialEventRequisition.reason || "");
   const [numOrganizers, setNumOrganizers] = useState(initialEventRequisition.numOrganizers || "");
@@ -147,7 +152,7 @@ export default function EventRequisitionDetails({
   useEffect(() => {
     if (!setEventRequisition) return;
     const next = {
-      doc, finance, budget, department, file, reason,
+      doc, finance, budget, department,principalApprovalDocument, file, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
     };
@@ -155,13 +160,20 @@ export default function EventRequisitionDetails({
       doc, finance, budget, department, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
+      principalApprovalDocument: principalApprovalDocument
+        ? {
+            name: principalApprovalDocument.name,
+            size: principalApprovalDocument.size,
+            type: principalApprovalDocument.type,
+          }
+        : null,
       file: file ? { name: file.name, size: file.size, type: file.type } : null,
     });
     if (comparable !== lastSynced.current) {
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance, budget, department, file, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance, budget, department, file,principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
@@ -178,7 +190,7 @@ export default function EventRequisitionDetails({
     const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = validateOrganizerSection({
-      doc, file, reason, budget, finance, department, numOrganizers, organizers,
+      principalApprovalDocument,doc, file, reason, budget, finance, department, numOrganizers, organizers,
     });
     const eErr = validateEventDetails(eventData, eventDaysLocal);
     const rErr = validateRequirements(currentRequirements);
@@ -213,6 +225,8 @@ export default function EventRequisitionDetails({
   return (
     <div className='w-full flex flex-col'>
       <EventOrganizerDetails
+      principalApprovalDocument={principalApprovalDocument}
+      setprincipalApprovalDocument={setprincipalApprovalDocument}
         doc={doc} setDoc={setDoc}
         finance={finance} setFinance={setFinance}
         budget={budget} setBudget={setBudget}

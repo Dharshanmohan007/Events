@@ -200,6 +200,12 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
+  if (eventRequisition.principalApprovalDocument) {
+      fd.append(
+          "principalApprovalDocument",
+          eventRequisition.principalApprovalDocument
+      );
+  }
   return fd;
 };
 
@@ -540,7 +546,7 @@ export default function Form() {
   const [eventId, setEventId] = useState("");
   const [formData, setFormData] = useState({
     event: {
-      doc: "", finance: "", budget: "", department: "", file: null,
+      doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
       reason: "", numOrganizers: "", organizers: [],
       eventData: {}, eventDays: [], requirements: [],
     },
