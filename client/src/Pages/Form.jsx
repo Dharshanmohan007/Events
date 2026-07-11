@@ -200,6 +200,12 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
+  if (eventRequisition.principalApprovalDocument) {
+      fd.append(
+          "principalApprovalDocument",
+          eventRequisition.principalApprovalDocument
+      );
+  }
   return fd;
 };
 
@@ -540,7 +546,7 @@ export default function Form() {
   const [eventId, setEventId] = useState("");
   const [formData, setFormData] = useState({
     event: {
-      doc: "", finance: "", budget: "", department: "", file: null,
+      doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
       reason: "", numOrganizers: "", organizers: [],
       eventData: {}, eventDays: [], requirements: [],
     },
@@ -869,12 +875,12 @@ export default function Form() {
   if (!CurrentComponent) return null;
 
   return (
-    <div className="flex h-screen bg-[#16162A]">
-      <div className="w-[325px] flex-shrink-0">
+    <div className="flex h-screen bg-[#16162A] overflow-hidden">
+      <div className="hidden md:block w-[325px] flex-shrink-">
         <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps} />
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden ">
-        <div className="px-6 pt-4 pb-3 border-[#2A2A45] ">
+      <div className="w-full flex-1 flex flex-col overflow-hidden ">
+        <div className="px-4 sm:px-6 pt-4 pb-3 border-[#2A2A45] ">
           <h1 className="text-white text-xl font-bold playfair">{steps[currentStep]?.label}</h1>
           <div className="flex flex-row  gap-5 ">
             <div className="w-full h-1.5 bg-gray-700 rounded mt-3">
@@ -889,7 +895,7 @@ export default function Form() {
           )}
         </div>
 
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar px-6 py-4">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto no-scrollbar px-4 sm:px-6 py-4">
           <CurrentComponent
             nextStep={advanceStep}
             prevStep={goBackStep}
@@ -904,7 +910,7 @@ export default function Form() {
           />
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="px-4 sm:px-6 pb-6">
           <div className="flex justify-between gap-4">
             <button
               onClick={handleBack}

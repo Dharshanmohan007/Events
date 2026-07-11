@@ -9,14 +9,14 @@ export default function OrganizerDetails({ dayIndex, data = {}, errors = {}, onC
   return (
     <div className='rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-6'>
       <h2 className='text-purple-400 text-sm font-semibold tracking-wide'>
-        Organizer {dayIndex}
+        Co - Organizer {dayIndex}
       </h2>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <CustomInput
             labelBg="#1E1E35"
-            label="Organizing Co-Ordinator Name *"
+            label="Name *"
             value={data.name || ""}
             onChange={handle("name")}
             placeholder="Enter coordinator name"
