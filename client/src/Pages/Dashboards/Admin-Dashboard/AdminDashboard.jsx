@@ -86,96 +86,39 @@ const statCardData = [
     },
 ];
 
-const upcomingEvents = [
-    {
-        eventName: 'Tech Conference 2026',
-        eventType: 'Conference',
-        eventDate: '15-03-2026',
-        department: 'IT',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Workshop on AI Ethics',
-        eventType: 'Workshop',
-        eventDate: '18-03-2026',
-        department: 'Research',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Annual Sports Meet',
-        eventType: 'Sports',
-        eventDate: '22-03-2026',
-        department: 'Sports',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Cultural Fest',
-        eventType: 'Festival',
-        eventDate: '28-03-2026',
-        department: 'Cultural',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Science Exhibition',
-        eventType: 'Exhibition',
-        eventDate: '05-04-2026',
-        department: 'Science',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Alumni Meet',
-        eventType: 'Meeting',
-        eventDate: '10-04-2026',
-        department: 'Alumni Relations',
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
-
-const departmentData = [
-    { name: 'IT', value: 30, color: '#74b9ff' },
-    { name: 'Research', value: 25, color: '#159283' },
-    { name: 'Sports', value: 20, color: '#68df85' },
-    { name: 'Cultural', value: 15, color: '#4169e1' },
-    { name: 'Science', value: 10, color: '#a29bfe' },
-]
-
 const AdminDashboard = () => {
     return (
         <>
-                <div className='main-body-container px-6'>
-                    {/* heading */}
-                    <div className="heading mt-2">
-                        <h1 className='text-white text-lg font-medium'>Admin Dashboard Overview</h1>
-                        <h1 className='text-[#FFFFFF80] text-sm'>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</h1>
-                    </div>
+            <div className='main-body-container px-6'>
+                {/* heading */}
+                <div className="heading mt-2">
+                    <h1 className='text-white text-lg font-medium'>Admin Dashboard Overview</h1>
+                    <h1 className='text-[#FFFFFF80] text-sm'>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</h1>
+                </div>
 
-                    {/* stat cards  */}
-                    <AdminStatcard data={statCardData} />
+                {/* stat cards  */}
+                <AdminStatcard data={statCardData} />
 
-                    {/* table */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
-                        <AdminUpcomingEventsTable
-                            events={upcomingEvents}
-                            viewAllLink="/dashboard-admin/AdminEventsRequests"
-                            title="Upcoming Events"
-                        />
-
-                    </div>
-
-                    {/* bar chart  and pie chart*/}
-
-                    <div className="chart-container mt-4 flex gap-2">
-                        <AdminBarChart />
-                        {/* charts  */}
-                        <AdminDepartmentPieChart
-                            data={departmentData}
-                            title="Events By Department"
-                        />
-                    </div>
-
+                {/* table */}
+                <div className="main-container mt-4 max-h-[calc(100vh-270px)] w-full flex gap-3">
+                    {/* table  */}
+                    <AdminUpcomingEventsTable
+                        viewAllLink="/dashboard-admin/AdminEventsRequests"
+                        title="Upcoming Events"
+                    />
 
                 </div>
+
+                {/* bar chart  and pie chart*/}
+
+                <div className="chart-container mt-4 flex gap-2">
+                    <AdminBarChart />
+                    {/* charts  */}
+                    <AdminDepartmentPieChart title="Events By Department" />
+                </div>
+
+
+            </div>
         </>
     )
 }
