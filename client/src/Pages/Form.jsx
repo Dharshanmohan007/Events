@@ -152,6 +152,8 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       previousEventReason: eventRequisition.doc === "No" ? eventRequisition.reason : "",
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
+      advanceAmount: Number(eventRequisition.advanceAmount) || 0,
+      purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
@@ -516,6 +518,8 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
+      advanceAmount: Number(formData.event.advanceAmount) || 0,
+      purposeOfAdvance: formData.event.purposeOfAdvance || "",
       organizingDepartment: formData.event.department,
       organizerCount: parseInt(formData.event.numOrganizers) || 0,
       organizers: (formData.event.organizers || []).map((o) => ({
