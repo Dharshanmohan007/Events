@@ -1,6 +1,5 @@
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { showErrorToast, showSuccessToast } from "./Components/CustomToast";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 
@@ -26,7 +25,6 @@ import PurchaseDashboard from "./Pages/Dashboards/Purchase-Dashboard/PurchaseDas
 import SignUp from "./Pages/SignUp";
 import ForgetPassword from "./Components/ForgetPassword";
 
-// Auth Context
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import { useEffect } from "react";
@@ -40,13 +38,9 @@ import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualF
 
 // ─── Route Wrapper for Login Redirect ────────────────────────────────────────
 function PublicRoute({ children }) {
-  const { user, loading } = useAuth();
-  // Wait for auth check before deciding
-  if (loading) return null;
-  return user ? <Navigate to="/forms" replace /> : children;
+  return children;
 }
 
-// ─── App Routes ─────────────────────────────────────────────────────────────
 function AppRoutes() {
   return (
     <Routes>
@@ -135,7 +129,6 @@ function AppRoutes() {
   );
 }
 
-// ─── Main App Wrapper ───────────────────────────────────────────────────────
 function App() {
   return (
     <AuthProvider>

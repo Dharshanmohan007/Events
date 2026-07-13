@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import cylinder from '../../../assets/cylinder.svg'
 import cylinderTop from '../../../assets/cylinder-top.svg'
-import cylinderBottom from '../../../assets/cylinder-bottom.svg'
 
-const AdminBarChart = ({ data = [
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
+
+const fallbackData = [
   {
     "count": 2,
     "department": "AIDS"
@@ -64,21 +65,41 @@ const AdminBarChart = ({ data = [
     "count": 3,
     "department": "Placement"
   }
-] }) => {
-   const chartData = data
+]
 
-const maxCount =
-  chartData.length > 0
-    ? Math.max(...chartData.map(item => item.count))
-    : 0
+const AdminBarChart = ({ data = fallbackData }) => {
+    const [chartData, setChartData] = useState(data)
 
-    // useEffect(() => {
-    //     if (data && data.length > 0) {
-    //         setChartData(data)
-    //         const max = Math.max(...data.map(item => item.count))
-    //         setMaxCount(max)
-    //     }
-    // }, [data])
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+
+        fetch(`${API_BASE_URL}/api/dashboard/department-wise-faculty`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch department-wise faculty data')
+                }
+                return response.json()
+            })
+            .then((responseData) => {
+                if (isMounted && Array.isArray(responseData.data)) {
+                    setChartData(responseData.data)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const maxCount = chartData.length > 0
+        ? Math.max(...chartData.map((item) => item.count))
+        : 0
 
     // Calculate bar height as percentage of max count
     const getBarHeight = (count) => {

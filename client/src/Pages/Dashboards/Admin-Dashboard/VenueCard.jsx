@@ -1,11 +1,19 @@
 import { Pencil, Trash2, MapPin, Info } from "lucide-react";
 import infoIcon from '../../../assets/info.svg'
-export default function VenueCard({ venues = [] }) {
+export default function VenueCard({ venues = [], onEdit, onDelete }) {
+    if (venues.length === 0) {
+        return (
+            <div className="mt-4 rounded-xl border border-gray-700 bg-[#171F31] px-6 py-10 text-center text-sm text-[#8b93a7]">
+                No venues available
+            </div>
+        )
+    }
+
     return (
         <div className="grid grid-cols-3 gap-4 mt-4 max-h-[calc(100vh-240px)] overflow-auto table-custom-scrollbar pr-2">
             {venues.map((venue, index) => (
                 <div
-                    key={index}
+                    key={venue.id || index}
                     className="bg-[#171F31] hover:bg-[#121724a1] transition-all duration-300 rounded-xl p-4 border border-gray-700"
                 >
                     {/* Header */}
@@ -24,11 +32,19 @@ export default function VenueCard({ venues = [] }) {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#32354a] transition-colors">
-                                <Pencil size={14} />
+                            <button
+                                type="button"
+                                onClick={() => onEdit?.(venue)}
+                                className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#32354a] transition-colors"
+                            >
+                                <Pencil size={14} className="text-[#059669]" />
                             </button>
-                            <button className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-[#32354a] transition-colors">
-                                <Trash2 size={14} />
+                            <button
+                                type="button"
+                                onClick={() => onDelete?.(venue)}
+                                className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-[#32354a] transition-colors"
+                            >
+                                <Trash2 size={14} className="text-[#FF0063]" />
                             </button>
                         </div>
                     </div>

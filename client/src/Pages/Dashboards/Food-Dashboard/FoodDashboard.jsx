@@ -1,8 +1,9 @@
 import React from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
 import FoodRequestTable from './FoodRequestTable'
-import FoodDepartmentPieChart from './FoodDepartmentPieChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const foodRequests = [
     {
@@ -122,14 +123,13 @@ const FoodDashboard = () => {
                     <FoodStatcard />
 
                     {/* table and charts    */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
+                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         <FoodRequestTable requests={foodRequests} viewAllLink="/food-requests" />
+                    </div>
 
-                        {/* charts  */}
-                        <FoodDepartmentPieChart
-                            data={departmentData}
-                        />
+                    <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
+                        <FeedbackRatings feedbackLink="/dashboard-food/feedback" />
+                        <DepartmentRequestChart data={departmentData} title="Catering Request By Department" />
                     </div>
                 </div>
 

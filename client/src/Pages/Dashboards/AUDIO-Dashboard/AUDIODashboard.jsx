@@ -1,8 +1,9 @@
 import React from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
-import DepartmentPieChart from '../../../Components/DepartmentPieChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 // AUDIO Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
@@ -115,7 +116,7 @@ const AUDIODashboard = () => {
     console.log("AUDIO Dashboard rendered") // Debug log to check rendering 
     return (
         <>
-            <section className='bg-[#0b1326] poppins h-screen'>
+            <section className='bg-[#0b1326] poppins h-screen overflow-auto table-custom-scrollbar'>
                 {/* header  */}
                 <DashboardHeader basePath="/dashboard-audio" />
 
@@ -131,18 +132,17 @@ const AUDIODashboard = () => {
                     <StatCard data={statCardData} />
 
                     {/* table and charts   */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
+                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         <UpcomingEventsTable
                             events={upcomingEvents}
                             viewAllLink="/dashboard-audio/events"
                             title="Upcoming Events"
                         />
-                        {/* charts  */}
-                        <DepartmentPieChart
-                            data={departmentData}
-                            title="Events By Department"
-                        />
+                    </div>
+
+                    <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
+                        <FeedbackRatings feedbackLink="/dashboard-audio/feedback" />
+                        <DepartmentRequestChart data={departmentData} title="Audio Request By Department" />
                     </div>
 
                 </div>

@@ -1,8 +1,9 @@
 import React from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import MediaStatcard from './MediaStatcard'
 import MediaRequestTable from './MediaRequestTable'
-import MediaDepartmentPieChart from './MediaDepartmentPieChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const mediaRequests = [
     {
@@ -122,14 +123,13 @@ const MediaDashboard = () => {
                     <MediaStatcard />
 
                     {/* table and charts    */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
+                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         <MediaRequestTable requests={mediaRequests} viewAllLink="/media-requests" />
+                    </div>
 
-                        {/* charts  */}
-                        <MediaDepartmentPieChart
-                            data={departmentData}
-                        />
+                    <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
+                        <FeedbackRatings feedbackLink="/dashboard-media/feedback" />
+                        <DepartmentRequestChart data={departmentData} title="Event Media Request By Department" />
                     </div>
                 </div>
 

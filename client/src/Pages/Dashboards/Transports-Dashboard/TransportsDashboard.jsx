@@ -2,7 +2,8 @@ import React from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import TransportStatcard from './TransportStatcard'
 import TransportsRequestTable from './TransportsRequestTable'
-import DepartmentPieChart from '../../../Components/DepartmentPieChart'
+import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
+import FeedbackRatings from '../../../Components/FeedbackRatings'
 const transportRequests = [
     {
         eventName: 'Welcome Freshers',
@@ -130,7 +131,7 @@ const TransportsDashboard = () => {
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
-                <div className='header-container sticky top-0'>
+                <div className='header-container sticky top-0 z-10'>
                     <DashboardHeader basePath="/dashboard-transports" />
                 </div>
 
@@ -147,14 +148,13 @@ const TransportsDashboard = () => {
                     <TransportStatcard />
 
                     {/* table and charts    */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full flex gap-3">
-                        {/* table  */}
+                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         <TransportsRequestTable requests={transportRequests} viewAllLink="/transport-requests" />
+                    </div>
 
-                        {/* charts  */}
-                        <DepartmentPieChart
-                            data={departmentData}
-                        />
+                    <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
+                        <FeedbackRatings feedbackLink="/dashboard-transports/feedback" />
+                        <DepartmentRequestChart data={departmentData} title="Transport Request By Department" />
                     </div>
                 </div>
 
