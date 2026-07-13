@@ -1,49 +1,17 @@
-import React, { useState } from 'react'
-import CustomSelect from "../CustomSelect";
-import CustomInput from "../CustomInput";
-import EventDates from './EventDates';
+  import React, { useEffect, useState } from "react";
+  import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 
-export default function EventDetails({ setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
-  const daysData = eventData.eventDays || [];
-  const numDays = daysData.length > 0 ? daysData.length.toString() : "";
+  import {
+    Plus,
+    MapPin,
+    GripVertical,
+    X,
+    ChevronDown,
+    ArrowRight,
+  } from "lucide-react";
 
-  const handleDaysChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
-      const count = parseInt(val) || 0;
-      // Preserve existing days data — only add new empty days or trim from the end
-      const existing = eventData.eventDays || [];
-      let newDays;
-      if (count > existing.length) {
-        // Adding more days: keep all existing, append new empty ones
-        const extra = Array.from({ length: count - existing.length }, () => ({
-          date: "",
-          startTime: "",
-          endTime: "",
-          numGuests: "1",
-          guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
-        }));
-        newDays = [...existing, ...extra];
-      } else {
-        // Reducing days: trim from the END only
-        newDays = existing.slice(0, count);
-      }
-      setEventDays(newDays);
-      setEventData((prev) => ({ ...prev, eventDays: newDays }));
-      if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
-    }
-  };
-
-  const handle = (field) => (e) => {
-    const value = e.target.value;
-    setEventData((prev) => ({ ...prev, [field]: value }));
-    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
-
-  const handleSelect = (field) => (val) => {
-    setEventData((prev) => ({ ...prev, [field]: val }));
-    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
+  import { jwtDecode } from "jwt-decode";
+  import { API_BASE } from "../../utils/apiConfig";
 
   // logos is multi-select → value is an array
   const handleLogosChange = (val) => {
@@ -190,22 +158,7 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
           {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
         </div>
       </div>
+    );
+  };
 
-      {/* Day Cards */}
-      {daysData.map((day, i) => (
-        <EventDates
-          key={i}
-          dayIndex={i + 1}
-          dayData={day}
-          errors={(errors.days && errors.days[i]) || {}}
-          updateDay={(updatedDay) => {
-            const updated = [...daysData];
-            updated[i] = updatedDay;
-            setEventDays(updated);
-            setEventData((prev) => ({ ...prev, eventDays: updated }));
-          }}
-        />
-      ))}
-    </div>
-  );
-}
+  export default TransportDetailsPage;
