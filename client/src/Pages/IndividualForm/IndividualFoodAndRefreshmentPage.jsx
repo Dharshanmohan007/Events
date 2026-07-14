@@ -1028,7 +1028,7 @@ const IndividualFoodAndRefreshment = () => {
       `}</style>
       {/* TITLE */}
       <h1 className="text-white text-3xl font-bold mb-6">
-        Food and Refreshment Form
+        Food And Refreshment Form
       </h1>
 
       {/* HEADER */}

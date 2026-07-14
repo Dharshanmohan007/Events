@@ -1,17 +1,73 @@
-  import React, { useEffect, useState } from "react";
-  import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
+import React, { useState,useEffect  } from 'react'
+import CustomSelect from "../CustomSelect";
+import CustomInput from "../CustomInput";
+import EventDates from './EventDates';
+import { getEventTypes } from "../../services/events/getEventTypes";
 
-  import {
-    Plus,
-    MapPin,
-    GripVertical,
-    X,
-    ChevronDown,
-    ArrowRight,
-  } from "lucide-react";
+export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
+  const daysData = eventData.eventDays || [];
+  const numDays = daysData.length > 0 ? daysData.length.toString() : "";
+  const [eventTypeOptions, setEventTypeOptions] = useState([]);
 
-  import { jwtDecode } from "jwt-decode";
-  import { API_BASE } from "../../utils/apiConfig";
+  useEffect(() => {
+    const fetchEventTypes = async () => {
+      try {
+        const response = await getEventTypes();
+
+        console.log("API Response:", response);
+
+        if (response.success) {
+          const types = response.data.map(item => item.eventType);
+
+          console.log("Types:", types);
+
+          setEventTypeOptions([...types, "Other"]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchEventTypes();
+  }, []);
+
+  const handleDaysChange = (e) => {
+    const val = e.target.value;
+    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
+      const count = parseInt(val) || 0;
+      // Preserve existing days data — only add new empty days or trim from the end
+      const existing = eventData.eventDays || [];
+      let newDays;
+      if (count > existing.length) {
+        // Adding more days: keep all existing, append new empty ones
+        const extra = Array.from({ length: count - existing.length }, () => ({
+          date: "",
+          startTime: "",
+          endTime: "",
+          numGuests: "1",
+          guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
+        }));
+        newDays = [...existing, ...extra];
+      } else {
+        // Reducing days: trim from the END only
+        newDays = existing.slice(0, count);
+      }
+      setEventDays(newDays);
+      setEventData((prev) => ({ ...prev, eventDays: newDays }));
+      if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
+    }
+  };
+
+  const handle = (field) => (e) => {
+    const value = e.target.value;
+    setEventData((prev) => ({ ...prev, [field]: value }));
+    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleSelect = (field) => (val) => {
+    setEventData((prev) => ({ ...prev, [field]: val }));
+    if (setErrors) setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
 
   // logos is multi-select → value is an array
   const handleLogosChange = (val) => {
@@ -29,7 +85,20 @@
 
   const dayCount = parseInt(numDays) > 0 ? parseInt(numDays) : 0;
 
+  const audienceValue = Array.isArray(eventData?.audience)
+  ? eventData.audience
+  : eventData?.audience
+  ? [eventData.audience]
+  : [];
+
   return (
+    <div
+            className={`${
+                disabled
+                    ? "opacity-50 pointer-events-none select-none"
+                    : ""
+            }`}
+        >
     <div className='px-1 py-6 rounded-xl'>
       <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
@@ -65,7 +134,7 @@
             searchable
             value={eventData?.eventType || ""}
             onChange={handleSelect("eventType")}
-            options={["Guest Lecture", "Workshop","Seminar", "FDP", "POP", "Conference", "VAC", "IOC", "Training", "Orientation","Project Expo","Placement","Outreach","Hackathon","Contest", "Other"]}
+            options={eventTypeOptions}
             placeholder="Select event type"
           />
           {errors.eventType && <p className="text-red-400 text-xs mt-1">{errors.eventType}</p>}
@@ -146,19 +215,52 @@
           />
           {errors.numDays && <p className="text-red-400 text-xs mt-1">{errors.numDays}</p>}
         </div>
-        <div>
-          <CustomSelect
-            label="Target Audience"
-            required
-            value={eventData?.audience || ""}
-            onChange={handleSelect("audience")}
-            options={["Students", "Faculty", "Both"]}
-            placeholder="Select target audience"
-          />
-          {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
-        </div>
-      </div>
-    );
-  };
+        <CustomSelect
+          label="Target Audience"
+          required
+          multi
+          searchable
+          value={audienceValue}
+          onChange={(val) => {
+            setEventData((prev) => ({
+              ...prev,
+              audience: val,
+            }));
 
-  export default TransportDetailsPage;
+            if (setErrors) {
+              setErrors((prev) => ({
+                ...prev,
+                audience: "",
+              }));
+            }
+          }}
+          options={[
+            "Internal Students",
+            "Internal Faculty",
+            "External Students",
+            "External Faculty",
+            "Industry Person",
+          ]}
+          placeholder="Select target audience"
+        />
+      </div>
+
+      {/* Day Cards */}
+      {daysData.map((day, i) => (
+        <EventDates
+          key={i}
+          dayIndex={i + 1}
+          dayData={day}
+          errors={(errors.days && errors.days[i]) || {}}
+          updateDay={(updatedDay) => {
+            const updated = [...daysData];
+            updated[i] = updatedDay;
+            setEventDays(updated);
+            setEventData((prev) => ({ ...prev, eventDays: updated }));
+          }}
+        />
+      ))}
+      </div>
+    </div>
+  );
+}

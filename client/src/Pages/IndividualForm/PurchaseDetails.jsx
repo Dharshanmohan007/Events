@@ -699,7 +699,7 @@ export default function PurchaseDetails() {
       bg-[#141428]
       p-6 text-white"
     >
-      <h1 className="text-white text-3xl font-bold mb-6">Purchase Details</h1>
+      <h1 className="text-white text-3xl font-bold mb-6">Purchase Form</h1>
 
       <div className="w-full space-y-5 mt-4">
         {/* REQUIREMENT */}
@@ -756,6 +756,7 @@ export default function PurchaseDetails() {
           <CustomDropdown
             label="Select Required Persons*"
             value={form.persons}
+            multiSelect
             setValue={(value) => setField("persons", value)}
             options={["Students", "Guest", "Both"]}
             placeholder="Select Required Persons"
