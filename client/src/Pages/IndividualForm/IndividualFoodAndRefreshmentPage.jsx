@@ -712,6 +712,7 @@ const IndividualFoodAndRefreshment = () => {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const [submitResponses, setSubmitResponses] = useState([]);
+  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -1633,9 +1634,9 @@ const IndividualFoodAndRefreshment = () => {
       </div>
       ))}
 
-      <div className="flex justify-center md:justify-end mt-8">
-  <button
-    type="button"
+        <div className="flex justify-center md:justify-end mt-8">
+    <button
+      type="button"
     onClick={handleSubmit}
     disabled={isSubmitting}
     className="
