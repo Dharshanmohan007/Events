@@ -11,6 +11,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 
 import { API_BASE } from "../../utils/apiConfig";
@@ -695,9 +696,80 @@ const IndividualFoodAndRefreshment = () => {
     "Evening Refreshment",
   ];
 
+  const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
+  const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
+
   // =========================
   // INPUT STATES
   // =========================
+
+  const principalInputRef = useRef(null);
+  const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
+
+  const handlePrincipalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      e.target.value = "";
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(selectedFile);
+  };
+
+  const handlePrincipalDrop = (e) => {
+    e.preventDefault();
+
+    const droppedFile = e.dataTransfer.files[0];
+
+    if (!droppedFile) return;
+
+    if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+    }
+
+    if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(droppedFile);
+  };
+
+  const handlePrincipalRemove = (e) => {
+    e.stopPropagation();
+    setPrincipalApprovalDocument(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) {
+      principalInputRef.current.value = "";
+    }
+  };
+
+  const openPrincipalFilePicker = () => {
+    if (principalInputRef.current) {
+      principalInputRef.current.click();
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
 
   // =========================
   // AUTH
@@ -859,7 +931,7 @@ const IndividualFoodAndRefreshment = () => {
 
     return {
       employee: employeeId || "6a0411af4579d3137b255e70",
-
+      principalApprovalFormName: principalApprovalDocument?.name || null,
       date: card.selectDate
         ? new Date(
             card.selectDate.getTime() - card.selectDate.getTimezoneOffset() * 60000,
@@ -891,6 +963,10 @@ const IndividualFoodAndRefreshment = () => {
 
   const handleSubmit = async () => {
     const errors = [];
+
+    if (!principalApprovalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     formCards.forEach((card, cardIndex) => {
       const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
@@ -1031,6 +1107,116 @@ const IndividualFoodAndRefreshment = () => {
       <h1 className="text-white text-3xl font-bold mb-6">
         Food And Refreshment Form
       </h1>
+
+      <div className="mb-6">
+        <label className="block mb-2 text-sm text-white">
+          Principal Approval Form (without uploading this document you cannot proceed further) *
+        </label>
+
+        <div
+          onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
+          onDrop={handlePrincipalDrop}
+          onDragOver={handleDragOver}
+          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="10"
+              ry="10"
+              fill="none"
+              stroke={
+                principalFileError ? "#f87171" : "#3A3A5A"
+              }
+              strokeWidth="2"
+              strokeDasharray="10 4"
+            />
+          </svg>
+
+          <img
+            src={UploadIcon}
+            alt="upload"
+            className="w-7 h-8 opacity-80 z-10 flex-shrink-0"
+          />
+
+          {principalApprovalDocument ? (
+            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+
+                <span className="text-purple-300 text-sm font-medium">
+                  {principalApprovalDocument.name}
+                </span>
+
+                <span className="text-gray-400 text-xs">
+                  ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePrincipalRemove}
+                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="z-10">
+              Drag and drop files here or <span className="text-purple-400 underline">choose file</span>
+
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Only PDF files supported • Max file size: 1MB
+              </span>
+            </p>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          ref={principalInputRef}
+          onChange={handlePrincipalFileChange}
+          className="hidden"
+        />
+
+        {principalFileError && (
+          <p className="text-red-400 text-xs mt-1">
+            {principalFileError}
+          </p>
+        )}
+      </div>
 
       {/* HEADER */}
       <div className="flex justify-end mb-6">
@@ -1637,9 +1823,9 @@ const IndividualFoodAndRefreshment = () => {
         <div className="flex justify-center md:justify-end mt-8">
     <button
       type="button"
-    onClick={handleSubmit}
-    disabled={isSubmitting}
-    className="
+      onClick={handleSubmit}
+      disabled={!principalApprovalDocument || isSubmitting}
+      className="
       bg-[#8b5cf6]
       hover:bg-[#7c3aed]
       disabled:opacity-60
@@ -1656,12 +1842,12 @@ const IndividualFoodAndRefreshment = () => {
       transition-all
       duration-300
     "
-  >
-    {isSubmitting ? "Submitting..." : "Next"}
+    >
+      {isSubmitting ? "Submitting..." : "Next"}
 
-    <ArrowRight size={16} />
-  </button>
-</div>
+      <ArrowRight size={16} />
+    </button>
+  </div>
     </div>
   );
 };
