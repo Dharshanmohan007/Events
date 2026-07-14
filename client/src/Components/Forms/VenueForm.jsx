@@ -154,12 +154,33 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
         : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
 
   const filteredOptions = (() => {
-    const q               = search.toLowerCase().trim();
-    const selectedOptions = options.filter((o) => selected.includes(o.venue));
-    const unselected      = options.filter((o) => !selected.includes(o.venue));
-    const combined        = [...selectedOptions, ...unselected];
+    const q = search.toLowerCase().trim();
+
+    const selectedOptions = options.filter((o) =>
+      selected.includes(o.venue)
+    );
+    const unselected = options.filter((o) =>
+      !selected.includes(o.venue)
+    );
+
+    const combined = [...selectedOptions, ...unselected];
+
     if (!q) return combined;
-    return combined.filter((o) => o.venue.toLowerCase().includes(q));
+
+    return combined.filter((o) => {
+      const venueName = o.venue.toLowerCase();
+
+      // Show "Open" when capacity is 0
+      const capacityText =
+        o.capacity === 0
+          ? "open"
+          : String(o.capacity).toLowerCase();
+
+      return (
+        venueName.includes(q) ||
+        capacityText.includes(q)
+      );
+    });
   })();
 
   return (
@@ -928,16 +949,31 @@ export default function VenueForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (!registerChildNavigation) return;
-    registerChildNavigation({ next: handleNext, prev: handleBack, isLoading: false });
-    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
-  }, [registerChildNavigation, handleNext, handleBack]);
+  const isOnLastDay = currentDayIndex === Math.max(eventDays.length - 1, 0);
+  const nextDayLabel = isOnLastDay ? "Save & Next" : `Day ${currentDayIndex + 2} →`;
 
   useEffect(() => {
     if (!registerChildNavigation) return;
-    registerChildNavigation({ next: handleNext, prev: handleBack, isLoading });
-  }, [isLoading, registerChildNavigation, handleNext, handleBack]);
+    registerChildNavigation({
+      next: handleNext,
+      prev: handleBack,
+      isLoading: false,
+      isOnLastDay,
+      nextDayLabel,
+    });
+    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
+  }, [registerChildNavigation, handleNext, handleBack, isOnLastDay, nextDayLabel]);
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    registerChildNavigation({
+      next: handleNext,
+      prev: handleBack,
+      isLoading,
+      isOnLastDay,
+      nextDayLabel,
+    });
+  }, [isLoading, registerChildNavigation, handleNext, handleBack, isOnLastDay, nextDayLabel]);
 
   const selectedVenueObjects = (currentDay.selectedVenues || [])
     .map((name) => venuesList.find((v) => v.venue === name))

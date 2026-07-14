@@ -203,7 +203,7 @@ export default function EventOrganizerDetails({
       {/* Principal Approval Form Upload */}
       <div className="mb-7">
         <label className="block mb-1 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot proceed further) *
+          Principal Approval Form
         </label>
 
         <div
@@ -321,13 +321,13 @@ export default function EventOrganizerDetails({
           </p>
         )}
       </div>
-      <div
+      {/* <div
         className={`${
           !principalApprovalDocument
             ? "opacity-50 pointer-events-none select-none"
             : ""
         }`}
-      >
+      > */}
       {/* Completion of previous Event documentation */}
       <div className="mb-6">
         <CustomSelect
@@ -525,22 +525,26 @@ export default function EventOrganizerDetails({
             }}
             options={
               [
-                "Artificial Intelligence and Data Science",
-                "Artificial Intelligence and Machine Learning",
-                "Computer Science and Business Systems",
-                "Computer Science Engineering",
-                "Cybersecurity",
-                "Information Technology",
-                "Computer and Communication Engineering",
-                "Electronics and Communication Engineering",
-                "Electrical and Electronics Engineering",
-                "Mechanical Engineering",
-                "Science and Humanities",
-                "Training and Placement Cell",
-                "Centre for Research and Development",
-                "Internal Quality Assurance Cell",
-                "Centre for Industry Relations",
-                "Central Library"
+                "AIDS",
+                "AIML",
+                "CSBS",
+                "CSE",
+                "CYS",
+                "IT",
+                "CCE",
+                "ECE",
+                "EEE",
+                "MECH",
+                "S&H",
+                "PHY",
+                "CHEM",
+                "MATH",
+                "ENG",
+                "Placement",
+                "CFRD",
+                "IQAC",
+                "IR",
+                "Library",
               ]}
             placeholder="Select an option"
           />
@@ -577,6 +581,6 @@ export default function EventOrganizerDetails({
         </div>
       )}
     </div>
-    </div>
+    // </div>
   );
 }

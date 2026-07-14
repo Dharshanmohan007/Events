@@ -99,12 +99,14 @@ const validateEventRequisition = (data) => {
   if (!data.department?.trim()) errors.department = "Department name is required";
   if (!data.numOrganizers || parseInt(data.numOrganizers) < 1)
     errors.numOrganizers = "At least 1 organizer is required";
+  const toStr = (v) => (v === null || v === undefined ? "" : String(v));
   const organizerErrors = (data.organizers || []).map((org) => {
     const err = {};
     if (!org.name?.trim()) err.name = "Name is required";
     if (!org.department) err.department = "Department is required";
-    if (!org.mobile?.trim()) err.mobile = "Mobile number is required";
-    else if (!/^[6-9]\d{9}$/.test(org.mobile.trim())) err.mobile = "Enter a valid 10-digit Indian mobile number";
+    const mobile = toStr(org.mobile).trim();
+    if (!mobile) err.mobile = "Mobile number is required";
+    else if (!/^[6-9]\d{9}$/.test(mobile)) err.mobile = "Enter a valid 10-digit Indian mobile number";
     if (!org.designation?.trim()) err.designation = "Designation is required";
     if (!org.empId?.trim()) err.empId = "Employee ID is required";
     return err;
@@ -190,13 +192,15 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       })),
     },
     requirementDetails: {
-      venueRequired: eventRequisition.requirements.includes("venue"),
-      audioRequired: eventRequisition.requirements.includes("audio"),
-      ictsRequired: eventRequisition.requirements.includes("icts"),
-      transportRequired: eventRequisition.requirements.includes("transport"),
-      accommodationRequired: eventRequisition.requirements.includes("accommodation"),
-      mediaRequired: eventRequisition.requirements.includes("media"),
-    },
+    venueRequired: eventRequisition.requirements?.venue === "Yes",
+    audioRequired: eventRequisition.requirements?.audio === "Yes",
+    ictsRequired: eventRequisition.requirements?.icts === "Yes",
+    transportRequired: eventRequisition.requirements?.transport === "Yes",
+    refreshmentRequired: eventRequisition.requirements?.foodandrefreshments === "Yes",
+    accommodationRequired: eventRequisition.requirements?.accommodation === "Yes",
+    purchaseRequired: eventRequisition.requirements?.purchase === "Yes",
+    mediaRequired: eventRequisition.requirements?.media === "Yes",
+  },
   };
   fd.append("requestDetails", JSON.stringify(requestDetails));
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
@@ -588,8 +592,19 @@ export default function Form() {
     purchase:            { label: "Purchase Details",              component: Purchase },
     media:               { label: "Media Requirement Details",     component: MediaForm },
   };
+  console.log("selectedRequirements:", selectedRequirements);
+  console.log("type:", typeof selectedRequirements);
+  console.log("isArray:", Array.isArray(selectedRequirements));
+  const requirementKeys = Array.isArray(selectedRequirements)
+    ? selectedRequirements
+    : Object.entries(selectedRequirements || {})
+        .filter(([, value]) => value === "Yes")
+        .map(([key]) => key);
 
-  const dynamicSteps = selectedRequirements.map((key) => ({ key, ...requirementMap[key] }));
+  const dynamicSteps = requirementKeys.map((key) => ({
+    key,
+    ...requirementMap[key],
+  }));
   const steps = [...baseSteps, ...dynamicSteps];
   const CurrentComponent = steps[currentStep]?.component;
   const currentStepKey   = steps[currentStep]?.key;

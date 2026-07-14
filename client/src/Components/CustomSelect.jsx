@@ -8,6 +8,7 @@ export default function CustomSelect({
   required,
   labelBg = "#16162A",
   borderColor = "#3A3A5A",
+  readOnly = false,
   placeholder = "",
   multi = false,       // true → multi-select with search (used by logos)
   searchable = false,  // true → single-select with search
@@ -61,8 +62,16 @@ export default function CustomSelect({
         </span>
 
         <div
-          onClick={() => setOpen(!open)}
-          className="w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between cursor-pointer transition-colors duration-200"
+          onClick={() => {
+            if (!readOnly) {
+              setOpen(!open);
+            }
+          }}
+          className={`w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
+              readOnly
+                ? "cursor-not-allowed opacity-70"
+                : "cursor-pointer"
+            }`}
           style={{
             borderWidth: "1px",
             borderStyle: "solid",
@@ -107,6 +116,8 @@ export default function CustomSelect({
                   <div
                     key={i}
                     onClick={() => {
+                      if (readOnly) return;
+
                       onChange(opt);
                       setOpen(false);
                       setSearch("");
@@ -154,8 +165,16 @@ export default function CustomSelect({
       </span>
 
       <div
-        onClick={() => setOpen(!open)}
-        className="w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between cursor-pointer transition-colors duration-200 min-h-[47px]"
+        onClick={() => {
+          if (!readOnly) {
+            setOpen(!open);
+          }
+        }}
+        className={`w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
+          readOnly
+            ? "cursor-not-allowed opacity-70"
+            : "cursor-pointer"
+        }`}
         style={{
           borderWidth: "1px",
           borderStyle: "solid",
@@ -198,7 +217,11 @@ export default function CustomSelect({
                 return (
                   <div
                     key={i}
-                    onClick={() => toggleOption(opt)}
+                    onClick={() => {
+                      if (!readOnly) {
+                        toggleOption(opt);
+                      }
+                    }}
                     className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                       isSelected
                         ? "bg-purple-600/20 text-white"

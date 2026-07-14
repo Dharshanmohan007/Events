@@ -48,8 +48,8 @@ function emptyDayData() {
 function validatePoster(data, showCertificate = false) {
   const e = {};
   if (!data.contentPoster?.trim())  e.contentPoster = "Content for poster is required";
-  if (showCertificate && !data.contentCertificate?.trim())
-    e.contentCertificate = "Content for certificate is required";
+  // if (showCertificate && !data.contentCertificate?.trim())
+  //   e.contentCertificate = "Content for certificate is required";
   if (!data.contentTrophy?.trim())  e.contentTrophy = "Content for trophy is required";
   if (!data.displayNeeded || data.displayNeeded.length === 0)
     e.displayNeeded = "Select at least one display option";
@@ -451,12 +451,12 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
       />
 
       {/* ── Certificate fields — shown when purchase form has Certificate selected ── */}
-      {showCertificate && (
+      {/* {showCertificate && ( */}
         <>
           <div>
             <div className="relative w-full">
               <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-                Content for Certificate *
+                Content for Certificate 
               </span>
               <textarea
                 value={data.contentCertificate || ""}
@@ -479,7 +479,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
             sizeErrorPrefix="Certificate: "
           />
         </>
-      )}
+      {/* )} */}
 
       {/* Content for Trophy */}
       <div>
@@ -513,7 +513,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         <div className="flex gap-4">
           {showFlex && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Flex *" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Flex in pixels*" type='text'
                 value={data.sizeForFlex || ""} onChange={updateSizeInput("sizeForFlex")} placeholder="e.g. 4 * 6" />
               <ErrorMsg msg={errors.sizeForFlex} />
             </div>
@@ -699,7 +699,7 @@ export default function MediaForm({
   const currentErrors   = errors[currentDayIndex] || {};
   const showPoster      = currentDay.designType === "Poster" || currentDay.designType === "Both";
   const showVideo       = currentDay.designType === "Video"  || currentDay.designType === "Both";
-  const showCertificate = hasCertificateForDay(currentDayIndex);
+  const showCertificate = true;
 
   const updateDay = (patch) => {
     setMediaData((prev) => {

@@ -14,6 +14,8 @@ const REQUIREMENTS_OPTIONS = [
   "Webcam",
 ];
 
+const EQUIPMENT_OPTIONS = ["Desktop", "Laptop"];
+
 const INTERNET_FACILITY_OPTIONS = ["LAN", "Wi-Fi", "Both", "Not Required"];
 
 // ── Department detection ──────────────────────────────────────────────────────
@@ -46,7 +48,8 @@ const isPlacementDept = () => getDepartmentFromStorage() === "placement";
 
 function validateIctsCard(card, showProctoring) {
   const e = {};
-  if (!card.desktopLaptop)         e.desktopLaptop         = "This field is required";
+  if (!card.equipmentRequired || card.equipmentRequired.length === 0)
+    e.equipmentRequired = "Select at least one equipment";
   if (!card.internetFacility)      e.internetFacility      = "This field is required";
   if (
     card.expectedInternetUsers === "" ||
@@ -80,6 +83,8 @@ function validateIctsCard(card, showProctoring) {
   }
   if (!card.requirements || card.requirements.length === 0)
     e.requirements = "Select at least one requirement";
+  // NOTE: desktopCount / laptopCount are intentionally NOT validated here —
+  // they're optional numeric fields, clamped to >= 0 at input time.
   return e;
 }
 
@@ -99,10 +104,20 @@ function buildIctsPayload(ictsData) {
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      const desktopLaptop = (card.equipmentRequired || []).map((type) => ({
+        type,
+        count:
+          type === "Desktop"
+            ? parseInt(card.desktopCount) || 0
+            : type === "Laptop"
+            ? parseInt(card.laptopCount) || 0
+            : 0,
+      }));
+
       ictses.push({
         dayIndex,
         venueName,
-        desktopLaptop:         card.desktopLaptop === "Yes",
+        desktopLaptop,
         internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
         proctoringUsers:       parseInt(card.proctorUsers) || 0,
@@ -118,9 +133,19 @@ function buildIctsPayload(ictsData) {
   return { ictses };
 }
 
-// ── RequirementsSelect ────────────────────────────────────────────────────────
+// ── MultiSelect (generic) ─────────────────────────────────────────────────────
+// Used both for "Requirements" and "Equipment Required" — same interaction
+// pattern, just different option lists / labels.
 
-function RequirementsSelect({ label, selected, onChange, error, labelBg = "#1E1E35" }) {
+function RequirementsSelect({
+  label,
+  selected,
+  onChange,
+  error,
+  labelBg = "#1E1E35",
+  options = REQUIREMENTS_OPTIONS,
+  placeholder = "Select requirements...",
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -164,7 +189,7 @@ function RequirementsSelect({ label, selected, onChange, error, labelBg = "#1E1E
               selected.length ? "text-white" : "text-gray-500"
             }`}
           >
-            {displayText || "Select requirements..."}
+            {displayText || placeholder}
           </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -186,7 +211,7 @@ function RequirementsSelect({ label, selected, onChange, error, labelBg = "#1E1E
 
         {open && (
           <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
-            {REQUIREMENTS_OPTIONS.map((item, i) => {
+            {options.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
                 <div
@@ -233,6 +258,10 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
   const showGuestWifiExceed  = data.guestWifi === "Yes";
   const showTotalGuestCount  = data.guestWifi === "Yes" && data.guestWifiExceed5 === "Yes";
 
+  const equipmentRequired = data.equipmentRequired || [];
+  const showDesktopCount  = equipmentRequired.includes("Desktop");
+  const showLaptopCount   = equipmentRequired.includes("Laptop");
+
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       {/* ── Card header ── */}
@@ -254,20 +283,23 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         </div>
       </div>
 
-      {/* ── Row 1: Desktop/Laptop · Internet Facility ── */}
+      {/* ── Row 1: Equipment Required · Internet Facility ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <CustomSelect
-            labelBg="#1E1E35"
-            label="Desktop / Laptop *"
-            value={data.desktopLaptop || ""}
-            onChange={update("desktopLaptop")}
-            options={["Yes", "No"]}
-            placeholder="Select an option"
+          <RequirementsSelect
+            label="Equipment Required *"
+            options={EQUIPMENT_OPTIONS}
+            placeholder="Select equipment..."
+            selected={equipmentRequired}
+            onChange={(val) => {
+              // Clear the count for any equipment that just got de-selected
+              const patch = { equipmentRequired: val };
+              if (!val.includes("Desktop")) patch.desktopCount = "";
+              if (!val.includes("Laptop"))  patch.laptopCount  = "";
+              onChange({ ...data, ...patch });
+            }}
+            error={errors.equipmentRequired}
           />
-          {errors.desktopLaptop && (
-            <p className="text-red-400 text-xs mt-1">{errors.desktopLaptop}</p>
-          )}
         </div>
         <div>
           <CustomSelect
@@ -283,6 +315,49 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           )}
         </div>
       </div>
+
+      {/* ── Row 1b: Desktop Count · Laptop Count (conditional on Equipment Required) ──
+           Not required fields — no validation, just clamped to >= 0. ── */}
+      {(showDesktopCount || showLaptopCount) && (
+        <div
+          className={`grid gap-4 ${
+            showDesktopCount && showLaptopCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+          }`}
+        >
+          {showDesktopCount && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Desktop Count"
+                type="number"
+                value={data.desktopCount || ""}
+                onChange={(e) =>
+                  updateInput("desktopCount")({
+                    target: { value: Math.max(0, Number(e.target.value)) },
+                  })
+                }
+                placeholder="e.g. 10"
+              />
+            </div>
+          )}
+          {showLaptopCount && (
+            <div>
+              <CustomInput
+                labelBg="#1E1E35"
+                label="Laptop Count"
+                type="number"
+                value={data.laptopCount || ""}
+                onChange={(e) =>
+                  updateInput("laptopCount")({
+                    target: { value: Math.max(0, Number(e.target.value)) },
+                  })
+                }
+                placeholder="e.g. 5"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Row 2: Expected Internet Users (full-width if no proctoring, half if proctoring) ── */}
       <div className={`grid gap-4 ${showProctoring ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
@@ -572,11 +647,19 @@ export default function IctsForm({
   const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
   navRef.current = { next: handleNext, prev: handleBack, isLoading };
 
+  const nextDayLabel = isLastDay ? "Save & Next" : `Day ${currentDayIndex + 2} →`;
+
   useEffect(() => {
     if (!registerChildNavigation) return;
     const stableNext = (...args) => navRef.current.next(...args);
     const stablePrev = (...args) => navRef.current.prev(...args);
-    registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
+    registerChildNavigation({
+      next: stableNext,
+      prev: stablePrev,
+      isLoading: false,
+      isOnLastDay: isLastDay,
+      nextDayLabel,
+    });
     return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registerChildNavigation]);
@@ -587,8 +670,10 @@ export default function IctsForm({
       next: (...args) => navRef.current.next(...args),
       prev: (...args) => navRef.current.prev(...args),
       isLoading,
+      isOnLastDay: isLastDay,
+      nextDayLabel,
     });
-  }, [isLoading, registerChildNavigation]);
+  }, [isLoading, registerChildNavigation, isLastDay, nextDayLabel]);
 
   const currentDayErrors = errors[currentDayIndex] || {};
 
