@@ -12,6 +12,7 @@ import MediaForm from "../Components/Forms/MediaForm";
 import AudioForm from "../Components/Forms/AudioForm";
 import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
+import EventPreviewPage from "./EventPreviewPage";
 
 
 // ── Empty factories ───────────────────────────────────────────────────────────
@@ -569,6 +570,7 @@ export default function Form() {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -891,6 +893,19 @@ export default function Form() {
     );
   }
 
+  if (showPreview) {
+    return (
+      <EventPreviewPage
+        formData={formData}
+        selectedRequirements={selectedRequirements}
+        onBack={() => setShowPreview(false)}
+        onSubmit={submitEvent}
+        isLoading={isLoading}
+        eventId={eventId}
+      />
+    );
+  }
+
   if (!CurrentComponent) return null;
 
   return (
@@ -946,21 +961,21 @@ export default function Form() {
             ─────────────────────────────────────────────────────────────── */}
             {showSubmit ? (
               <button
-                onClick={submitEvent}
-                disabled={!eventId || isLoading || childNav.isLoading}
-                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => setShowPreview(true)}
+                  disabled={!eventId || isLoading || childNav.isLoading}
+                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading || childNav.isLoading ? "Submitting..." : "Submit"}
+                  Preview
               </button>
-            ) : (
+          ) : (
               <button
-                onClick={handleSaveAndContinue}
-                disabled={isLoading || childNav.isLoading}
-                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleSaveAndContinue}
+                  disabled={isLoading || childNav.isLoading}
+                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {forwardLabel()}
+                  {forwardLabel()}
               </button>
-            )}
+          )}
           </div>
         </div>
       </div>
