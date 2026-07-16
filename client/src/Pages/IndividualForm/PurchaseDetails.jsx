@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 
+import UploadIcon from "../../assets/upload.svg";
 import { useAuth } from "../../Components/AuthContext";
 import { API_BASE } from "../../utils/apiConfig";
 
@@ -284,6 +285,72 @@ function DateTimePicker({
 export default function PurchaseDetails() {
   const { user } = useAuth();
   const [employeeId, setEmployeeId] = useState("");
+  const principalInputRef = useRef(null);
+  const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
+
+  const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
+  const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
+
+  const handlePrincipalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(`File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`);
+      e.target.value = "";
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(selectedFile);
+  };
+
+  const handlePrincipalDrop = (e) => {
+    e.preventDefault();
+
+    const droppedFile = e.dataTransfer.files[0];
+
+    if (!droppedFile) return;
+
+    if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+    }
+
+    if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(`File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`);
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(droppedFile);
+  };
+
+  const handlePrincipalRemove = (e) => {
+    e.stopPropagation();
+    setPrincipalApprovalDocument(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) {
+      principalInputRef.current.value = "";
+    }
+  };
+
+  const openPrincipalFilePicker = () => {
+    if (principalInputRef.current) {
+      principalInputRef.current.click();
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -354,6 +421,10 @@ export default function PurchaseDetails() {
 
   const validateForm = () => {
     const nextErrors = {};
+
+    // if (!principalApprovalDocument) {
+    //   nextErrors.principalApprovalDocument = "Principal Approval Form is required.";
+    // }
 
     if (!form.requirement.length) {
       nextErrors.requirement = "This field is required.";
@@ -586,6 +657,8 @@ export default function PurchaseDetails() {
       employee:
         user?.id || user?._id || employeeId || "6a0411af4579d3137b255e71",
 
+      principalApprovalFormName: principalApprovalDocument?.name || null,
+
       purchases: [
         {
           dayIndex: 1,
@@ -699,11 +772,128 @@ export default function PurchaseDetails() {
       bg-[#141428]
       p-6 text-white"
     >
+      <style>{`
+        .purchase-upload-dropzone {
+          border: 1px dashed #3A3A5A;
+          background: transparent;
+          border-radius: 10px;
+          min-height: 90px;
+        }
+      `}</style>
+
       <h1 className="text-white text-3xl font-bold mb-6">Purchase Form</h1>
 
       <div className="w-full space-y-5 mt-4">
+        <div className="mb-2">
+          <label className="block mb-2 text-sm text-white">
+            Principal Approval Form (without uploading this document you cannot proceed further)
+          </label>
+
+          <div
+            onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
+            onDrop={handlePrincipalDrop}
+            onDragOver={handleDragOver}
+            className={`purchase-upload-dropzone relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+              !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+            }`}
+          >
+            <svg className="absolute inset-0 w-full h-full pointer-events-none">
+              <rect
+                x="1"
+                y="1"
+                width="calc(100% - 2px)"
+                height="calc(100% - 2px)"
+                rx="10"
+                ry="10"
+                fill="none"
+                stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+                strokeWidth="2"
+                strokeDasharray="10 4"
+              />
+            </svg>
+
+            <img
+              src={UploadIcon}
+              alt="upload"
+              className="w-7 h-8 opacity-80 z-10 shrink-0"
+            />
+
+            {principalApprovalDocument ? (
+              <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+                <div className="flex items-center gap-2">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#a855f7"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+
+                  <span className="text-purple-300 text-sm font-medium">
+                    {principalApprovalDocument.name}
+                  </span>
+
+                  <span className="text-gray-400 text-xs">
+                    ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handlePrincipalRemove}
+                  className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <p className="z-10">
+                Drag and drop files here or <span className="text-purple-400 underline">choose file</span>
+                <span className="block text-xs text-gray-500 mt-0.5">
+                  Only PDF files supported • Max file size: 1MB
+                </span>
+              </p>
+            )}
+          </div>
+
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            ref={principalInputRef}
+            onChange={handlePrincipalFileChange}
+            className="hidden"
+          />
+
+          {principalFileError && (
+            <p className="text-red-400 text-xs mt-1">{principalFileError}</p>
+          )}
+
+          {errors.principalApprovalDocument && (
+            <p className="text-red-400 text-xs mt-1">{errors.principalApprovalDocument}</p>
+          )}
+        </div>
         {/* REQUIREMENT */}
         <CustomDropdown
+      
           label="Requirement Needed"
           value={form.requirement}
           multiSelect
@@ -712,6 +902,8 @@ export default function PurchaseDetails() {
           placeholder="Select Requirement"
           error={errors.requirement}
           optionHoverClass="hover:bg-[#22223B]"
+          borderClass="border-[1px]"
+         
         />
 
        {form.requirement.length > 0 && (
@@ -830,10 +1022,13 @@ export default function PurchaseDetails() {
         {/* BUTTON */}
         <div className="flex justify-end">
           <button
-            onClick={handleSubmit}
-            disabled={isLoading}
+             type="button"
+              onClick={handleSubmit}
+              disabled={isLoading}
             className="bg-[#8b3dff]
             hover:bg-[#9a52ff]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
             transition-all duration-300
             text-white font-semibold
             px-10 py-3 rounded-lg

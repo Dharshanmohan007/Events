@@ -964,9 +964,9 @@ const IndividualFoodAndRefreshment = () => {
   const handleSubmit = async () => {
     const errors = [];
 
-    if (!principalApprovalDocument) {
-      errors.push("Principal Approval Form is required.");
-    }
+    // if (!principalApprovalDocument) {
+    //   errors.push("Principal Approval Form is required.");
+    // }
 
     formCards.forEach((card, cardIndex) => {
       const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
@@ -1110,7 +1110,7 @@ const IndividualFoodAndRefreshment = () => {
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot proceed further) *
+          Principal Approval Form (without uploading this document you cannot proceed further) 
         </label>
 
         <div
@@ -1824,7 +1824,7 @@ const IndividualFoodAndRefreshment = () => {
     <button
       type="button"
       onClick={handleSubmit}
-      disabled={!principalApprovalDocument || isSubmitting}
+     disabled={isSubmitting}
       className="
       bg-[#8b5cf6]
       hover:bg-[#7c3aed]
@@ -1843,7 +1843,7 @@ const IndividualFoodAndRefreshment = () => {
       duration-300
     "
     >
-      {isSubmitting ? "Submitting..." : "Next"}
+      {isSubmitting ? "Submitting..." : "Submit"}
 
       <ArrowRight size={16} />
     </button>
