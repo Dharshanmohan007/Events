@@ -105,8 +105,6 @@ function PreviewHeader() {
         </h2>
         <p className="text-xs text-gray-400 mt-1 max-w-xl">
           Lorem ipsum is simply dummy text of the printing and typesetting
-          industry. Lorem Ipsum has been the industry's standard dummy text
-          ever since the 1500s.
         </p>
       </div>
       {/* <span className="flex items-center gap-1.5 bg-teal-500/15 text-teal-400 text-xs font-medium px-3 py-1.5 rounded-full flex-shrink-0">
@@ -156,7 +154,7 @@ export default function TransportPreview({ transportData = [] }) {
   ];
 
   return (
-    <div>
+    <div className="flex flex-col gap-6 bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
       <PreviewHeader />
 
       {/* ── Day / entry tabs — mirrors the Venue & ICTS preview tab pattern ── */}

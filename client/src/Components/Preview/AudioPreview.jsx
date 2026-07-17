@@ -16,7 +16,7 @@ function getLabel(key) {
 
 function ClipboardIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24"
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24"
       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="6" y="4" width="12" height="17" rx="2" />
       <path d="M9 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" />
@@ -28,7 +28,7 @@ function ClipboardIcon() {
 
 function DocIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400" viewBox="0 0 24 24"
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white" viewBox="0 0 24 24"
       fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
       <polyline points="14 2 14 8 20 8" />
@@ -100,7 +100,7 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
       {/* Day Tabs */}
       {dayCount > 1 && (
         <div className="flex flex-wrap gap-2">
@@ -150,7 +150,7 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
           {/* Header */}
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-purple-400 text-lg font-bold">
+              <h2 className="text-purple-400 text-lg font-bold playfair">
                 Audio Details{venuesForDay.length > 1 ? ` — ${selectedVenue}` : ""}
               </h2>
               <p className="text-gray-500 text-sm mt-1 max-w-2xl">
@@ -172,7 +172,7 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
           {/* Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* Object Requirement */}
-            <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-5">
+            <div className="rounded-xl border border-[#3A3A5A] bg-[#FFFFFF0D] p-5">
               <div className="flex items-center gap-2 mb-4">
                 <ClipboardIcon />
                 <h3 className="text-white text-sm font-semibold">Object Requirement</h3>
@@ -197,9 +197,9 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
             </div>
 
             {/* Special Requirement */}
-            <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-5">
+            <div className="rounded-xl border border-[#3A3A5A] bg-[#FFFFFF0D]  p-5">
               <div className="flex items-center gap-2 mb-4">
-                <DocIcon />
+                <DocIcon className="text-white" />
                 <h3 className="text-white text-sm font-semibold">Special Requirement</h3>
               </div>
               <p className="text-gray-400 text-sm leading-relaxed whitespace-pre-wrap">

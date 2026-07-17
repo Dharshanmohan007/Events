@@ -1,4 +1,4 @@
-import React from "react";
+import React,{useState} from "react";
 import {
     Calendar,
     Clock,
@@ -30,7 +30,7 @@ import {
     } = eventRequisition;
 
     const firstDay = eventDays[0] || {};
-
+    const [selectedDay, setSelectedDay] = useState(0);
     const formatDate = (date) => {
         if (!date) return "-";
 
@@ -45,7 +45,7 @@ import {
         <div className="bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
         {/* Header */}
         <div className="mb-6">
-            <h2 className="text-xl font-semibold text-purple-400">
+            <h2 className="text-xl font-semibold text-purple-400 playfair">
             Event Requisition Details
             </h2>
 
@@ -60,7 +60,7 @@ import {
 
         <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mb-6">
             <div className="grid md:grid-cols-4 gap-5">
-            <div className="border-r border-[#363D57] pr-4">
+            <div className="border-r border-[#8e93a6] pr-4">
                 <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
                 <FileText size={14} />
                 Event Name
@@ -69,7 +69,7 @@ import {
                 <p className="mt-2 font-semibold">{eventData.eventName || "-"}</p>
             </div>
 
-            <div className="border-r border-[#363D57] pr-4">
+            <div className="border-r border-[#8e93a6] pr-4">
                 <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
                 <Calendar size={14} />
                 Event Date
@@ -78,7 +78,7 @@ import {
                 <p className="mt-2 font-semibold">{formatDate(firstDay.date)}</p>
             </div>
 
-            <div className="border-r border-[#363D57] pr-4">
+            <div className="border-r border-[#8e93a6] pr-4">
                 <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
                 <Clock size={14} />
                 Event Start Time
@@ -105,7 +105,7 @@ import {
         <div className="space-y-4 mb-6">
             <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4">
             <div className="grid md:grid-cols-2 gap-5">
-                <div className="flex justify-between">
+                <div className="flex justify-between border-r border-[#8e93a6] pr-4">
                 <span className="text-gray-400 text-sm">
                     Completion of Previous Event Documentation
                 </span>
@@ -120,15 +120,21 @@ import {
                 </div>
 
                 <div>
-                {doc === "Yes" ? (
-                    <div className="flex items-center gap-2 text-green-400">
-                    <FileText size={18} />
+                    {doc === "Yes" ? (
+                        <div className="flex items-center gap-2 text-green-400">
+                        <FileText size={18} />
 
-                    <span className="truncate">{file?.name || "-"}</span>
-                    </div>
-                ) : (
-                    <span className="text-gray-300">{reason || "-"}</span>
-                )}
+                        <button
+                            type="button"
+                            onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+                            className="truncate text-blue-400 hover:underline"
+                        >
+                            {file?.name || "-"}
+                        </button>
+                        </div>
+                    ) : (
+                        <span className="text-gray-300">{reason || "-"}</span>
+                    )}
                 </div>
             </div>
             </div>
@@ -143,10 +149,10 @@ import {
 
             <div className="space-y-4">
             {organizers.map((org, index) => (
-                <div key={index} className="border border-[#343C59] rounded-lg p-4">
+                <div key={index} className="border border-[#343C59] rounded-lg p-4 bg-[#FFFFFF0D]">
                 <div className="grid md:grid-cols-4 gap-5">
-                    <div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+                    <div className="border-r border-[#8e93a6] pr-4">
+                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase ">
                         <User size={14} />
                         Organizer Name
                     </div>
@@ -154,7 +160,7 @@ import {
                     <p className="mt-2">{org.name || "-"}</p>
                     </div>
 
-                    <div>
+                    <div className="border-r border-[#8e93a6] pr-4">
                     <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
                         <BadgeCheck size={14} />
                         Employee ID
@@ -163,7 +169,7 @@ import {
                     <p className="mt-2">{org.empId || "-"}</p>
                     </div>
 
-                    <div>
+                    <div className="border-r border-[#8e93a6] pr-4">
                     <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
                         <Phone size={14} />
                         Mobile Number
@@ -185,181 +191,185 @@ import {
             ))}
             </div>
         </div>
-
         {/* ==========================================================
                                 EVENT DETAILS
             ========================================================== */}
 
         <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+            <h3 className="font-semibold text-lg mb-5">Event Details</h3>
+
+            <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
+                <PreviewRow title="Finance Required" value={finance} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow
+                    title="Type of Event"
+                    value={
+                    eventData.eventType === "Other"
+                        ? eventData.eventTypeOther
+                        : eventData.eventType
+                    }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow title="Budget Approved" value={budget} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow
+                    title="Professional Society"
+                    value={
+                    eventData.society === "Other"
+                        ? eventData.societyOther
+                        : eventData.society
+                    }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow title="Department" value={department} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow title="IIC Required" value={eventData.iic} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow
+                    title="Target Audience"
+                    value={
+                    Array.isArray(eventData.audience)
+                        ? eventData.audience.join(", ")
+                        : eventData.audience
+                    }
+                />
+                <PreviewRow
+                    title="Poster Logos"
+                    value={
+                    Array.isArray(eventData.logos)
+                        ? eventData.logos.join(", ")
+                        : eventData.logos
+                    }
+                />
+                {finance === "Yes" && (
+                    <>
+                    <PreviewRow
+                        title="Advance Amount"
+                        value={advanceAmount ? `₹ ${advanceAmount}` : "-"}
+                    />
+
+                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} />
+                    </>
+                )}
+            </div>
+        </div>
+
+        {/* ==========================================================
+                                EVENT SHEDULE & GUEST DETIAILS
+            ========================================================== */}
+
+            <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
             <h3 className="font-semibold text-lg mb-5">Event Schedule</h3>
 
             {eventDays.length === 0 ? (
-            <p className="text-gray-400">No Event Days Added</p>
+                <p className="text-gray-400">No Event Days Added</p>
             ) : (
-            <div className="space-y-6">
-                {eventDays.map((day, index) => (
-                <div
-                    key={index}
-                    className="border border-[#343C59] rounded-xl p-5"
-                >
-                    {/* Day Heading */}
-
-                    <div className="flex items-center justify-between mb-5">
-                    <h4 className="font-semibold text-purple-400">
+                <>
+                {/* Tabs */}
+                {eventDays.length > 1 && (
+                <div className="flex border-b border-[#343C59] mb-6">
+                    {eventDays.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setSelectedDay(index)}
+                        className={`px-5 py-3 text-[15px] font-semibold transition-colors duration-200 cursor-pointer
+                        ${
+                            selectedDay === index
+                            ? "text-[#8B5CF6] border-b-[3px] border-[#8B5CF6]"
+                            : "text-[#E5E7EB] border-b-[3px] border-transparent hover:text-white"
+                        }`}
+                    >
                         Day {index + 1}
-                    </h4>
+                    </button>
+                    ))}
+                </div>
+                )}
 
-                    <span className="text-sm text-gray-400">
-                        {formatDate(day.date)}
-                    </span>
-                    </div>
+                {(() => {
+                    const day = eventDays[selectedDay];
 
-                    {/* Date & Time */}
+                    return (
+                    <div className="space-y-6">
+                        {/* Date & Time */}
+                        <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+                            <div className="grid md:grid-cols-3 gap-5">
+                                <PreviewInfo
+                                    icon={Calendar}
+                                    title="Event Date"
+                                    value={formatDate(day.date)}
+                                />
 
-                    <div className="grid md:grid-cols-3 gap-5 mb-6">
-                    <PreviewRow title="Event Date" value={formatDate(day.date)} />
+                                <PreviewInfo
+                                    icon={Clock}
+                                    title="Start Time"
+                                    value={day.startTime}
+                                />
 
-                    <PreviewRow title="Start Time" value={day.startTime} />
-
-                    <PreviewRow title="End Time" value={day.endTime} />
-                    </div>
-
-                    {/* Guest Count */}
-
-                    <div className="mb-5">
-                    <PreviewRow
-                        title="Number of Chief Guests"
-                        value={day.numGuests}
-                    />
-                    </div>
-
-                    {/* Guests */}
-
-                    {day.guests?.length > 0 && (
-                    <div className="space-y-4">
-                        {day.guests.map((guest, guestIndex) => (
-                        <div
-                            key={guestIndex}
-                            className="bg-[#181D30] border border-[#343C59] rounded-lg p-4"
-                        >
-                            <h5 className="text-sm font-semibold text-purple-300 mb-4">
-                            Chief Guest {guestIndex + 1}
-                            </h5>
-
-                            <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase">
-                                Name
-                                </p>
-
-                                <p className="mt-1">{guest.name || "-"}</p>
-                            </div>
-
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase">
-                                Designation
-                                </p>
-
-                                <p className="mt-1">{guest.designation || "-"}</p>
-                            </div>
-
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase">
-                                Organization
-                                </p>
-
-                                <p className="mt-1">{guest.organization || "-"}</p>
-                            </div>
-
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase">
-                                Mobile Number
-                                </p>
-
-                                <p className="mt-1">{guest.mobile || "-"}</p>
-                            </div>
-
-                            <div>
-                                <p className="text-xs text-gray-400 uppercase">
-                                Gender
-                                </p>
-
-                                <p className="mt-1">{guest.gender || "-"}</p>
-                            </div>
+                                <PreviewInfo
+                                    icon={Clock}
+                                    title="End Time"
+                                    value={day.endTime}
+                                    isLast
+                                />
                             </div>
                         </div>
-                        ))}
+
+                        {/* Guest Count */}
+                        {/* <PreviewRow
+                        title="Number of Chief Guests"
+                        value={day.numGuests}
+                        /> */}
+
+                        {/* Guests */}
+                        {day.guests?.length > 0 && (
+                        <div className="space-y-4 ">
+                            {day.guests.map((guest, guestIndex) => (
+                            <div
+                                key={guestIndex}
+                                className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-4"
+                            >
+                                <h5 className="text-sm font-semibold text-purple-300 mb-4">
+                                Chief Guest {guestIndex + 1}
+                                </h5>
+
+                                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-5">
+                                    <PreviewInfo
+                                        icon={User}
+                                        title="Name"
+                                        value={guest.name}
+                                    />
+
+                                    <PreviewInfo
+                                        icon={BadgeCheck}
+                                        title="Designation"
+                                        value={guest.designation}
+                                    />
+
+                                    <PreviewInfo
+                                        icon={Building2}
+                                        title="Organization"
+                                        value={guest.organization}
+                                    />
+
+                                    <PreviewInfo
+                                        icon={Phone}
+                                        title="Mobile Number"
+                                        value={guest.mobile}
+                                    />
+
+                                    <PreviewInfo
+                                        icon={User}
+                                        title="Gender"
+                                        value={guest.gender}
+                                        isLast
+                                    />
+                                </div>
+                            </div>
+                            ))}
+                        </div>
+                        )}
                     </div>
-                    )}
-                </div>
-                ))}
-            </div>
-            )}
-        </div>
-        {/* ==========================================================
-                                EVENT INFORMATION
-            ========================================================== */}
-
-        <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
-            <h3 className="font-semibold text-lg mb-5">Event Information</h3>
-
-            <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
-            <PreviewRow title="Finance Required" value={finance} />
-
-            <PreviewRow title="Budget Approved" value={budget} />
-
-            <PreviewRow title="Department" value={department} />
-
-            <PreviewRow title="IIC Required" value={eventData.iic} />
-
-            <PreviewRow
-                title="Type of Event"
-                value={
-                eventData.eventType === "Other"
-                    ? eventData.eventTypeOther
-                    : eventData.eventType
-                }
-            />
-
-            <PreviewRow
-                title="Professional Society"
-                value={
-                eventData.society === "Other"
-                    ? eventData.societyOther
-                    : eventData.society
-                }
-            />
-
-            <PreviewRow
-                title="Target Audience"
-                value={
-                Array.isArray(eventData.audience)
-                    ? eventData.audience.join(", ")
-                    : eventData.audience
-                }
-            />
-
-            <PreviewRow
-                title="Poster Logos"
-                value={
-                Array.isArray(eventData.logos)
-                    ? eventData.logos.join(", ")
-                    : eventData.logos
-                }
-            />
-
-            {finance === "Yes" && (
-                <>
-                <PreviewRow
-                    title="Advance Amount"
-                    value={advanceAmount ? `₹ ${advanceAmount}` : "-"}
-                />
-
-                <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} />
+                    );
+                })()}
                 </>
             )}
             </div>
-        </div>
 
         {/* ==========================================================
                                 EVENT REQUIREMENTS
@@ -369,25 +379,28 @@ import {
             <h3 className="font-semibold text-lg mb-5">Event Requirements</h3>
 
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
-            <PreviewRow title="Venue Required" value={requirements.venue} />
+            <PreviewRow title="Venue Required" value={requirements.venue} className="border-b border-[#363D57] pb-3"/>
 
-            <PreviewRow title="ICTS Required" value={requirements.icts} />
+            <PreviewRow title="ICTS Required" value={requirements.icts} className="border-b border-[#363D57] pb-3"/>
 
-            <PreviewRow title="Audio Required" value={requirements.audio} />
+            <PreviewRow title="Audio Required" value={requirements.audio} className="border-b border-[#363D57] pb-3"/>
 
             <PreviewRow
                 title="Transport Required"
                 value={requirements.transport}
+                className="border-b border-[#363D57] pb-3"
             />
 
             <PreviewRow
                 title="Food & Refreshments"
                 value={requirements.foodandrefreshments}
+                className="border-b border-[#363D57] pb-3"
             />
 
             <PreviewRow
                 title="Accommodation"
                 value={requirements.accommodation}
+                className="border-b border-[#363D57] pb-3"
             />
 
             <PreviewRow title="Purchase" value={requirements.purchase} />
@@ -399,9 +412,9 @@ import {
     );
     }
 
-    function PreviewRow({ title, value }) {
+    function PreviewRow({ title, value, className="" }) {
         return (
-            <div className="flex justify-between border-b border-[#343C59] pb-2">
+            <div className={`flex justify-between ${className}`}>
                 <span className="text-gray-400">
                     {title}
                 </span>
@@ -417,6 +430,21 @@ import {
                 >
                     {value || "-"}
                 </span>
+            </div>
+        );
+    }
+
+    function PreviewInfo({ icon: Icon, title, value, isLast = false }) {
+        return (
+            <div className={`${!isLast ? "border-r border-[#8e93a6] pr-4" : ""}`}>
+                <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+                    <Icon size={14} />
+                    {title}
+                </div>
+
+                <p className="mt-2 font-medium text-white">
+                    {value || "-"}
+                </p>
             </div>
         );
     }

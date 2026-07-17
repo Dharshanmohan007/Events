@@ -148,7 +148,7 @@ const validateEventRequisition = (data) => {
 
 const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
   const fd = new FormData();
-  fd.append("organizerId", user?._id ?? "");
+  fd.append("organizerId", user?.facultyId ?? "");
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
