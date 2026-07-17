@@ -1031,25 +1031,70 @@ const IndividualFoodAndRefreshment = () => {
       const createdResponses = [];
 
       for (const [index, card] of formCards.entries()) {
-        const payload = buildFoodPayload(card);
+       const payload = buildFoodPayload(card);
 
-        console.log(`Food submit payload ${index + 1}:`, payload);
+const formData = new FormData();
 
-        const response = await fetch(`${API_BASE}/api/foods`, {
-          method: "POST",
+formData.append("employee", payload.employee);
 
-          headers: {
-            "Content-Type": "application/json",
+formData.append("date", payload.date);
 
-            ...(token
-              ? {
-                  Authorization: `Bearer ${token}`,
-                }
-              : {}),
-          },
+formData.append(
+  "resourcePersonType",
+  JSON.stringify(payload.resourcePersonType)
+);
 
-          body: JSON.stringify(payload),
-        });
+formData.append(
+  "numberOfResourcePersons",
+  payload.numberOfResourcePersons
+);
+
+formData.append(
+  "numberOfInternalAccompanyingStaff",
+  payload.numberOfInternalAccompanyingStaff
+);
+
+formData.append(
+  "accompanyingStaff",
+  JSON.stringify(payload.accompanyingStaff)
+);
+
+formData.append(
+  "foodTypes",
+  JSON.stringify(payload.foodTypes)
+);
+
+formData.append(
+  "specialRequirements",
+  payload.specialRequirements
+);
+
+formData.append(
+  "status",
+  payload.status
+);
+
+if (principalApprovalDocument) {
+  formData.append(
+    "principalApprovalForm",
+    principalApprovalDocument
+  );
+}
+
+const response = await fetch(`${API_BASE}/api/foods`, {
+  method: "POST",
+
+  headers: {
+    ...(token
+      ? {
+          Authorization: `Bearer ${token}`,
+        }
+      : {}),
+  },
+
+  body: formData,
+});
+      
 
         const data = await response.json();
 

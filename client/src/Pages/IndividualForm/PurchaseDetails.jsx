@@ -699,72 +699,170 @@ export default function PurchaseDetails() {
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
-    setApiError("");
-    setSuccess(false);
-    setIsLoading(true);
+  setApiError("");
+  setSuccess(false);
+  setIsLoading(true);
 
-    if (!validateForm()) {
-      setIsLoading(false);
-      return;
+  if (!validateForm()) {
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const payload = buildPayload();
+
+    if (!payload.employee) {
+      throw new Error("Unable to determine employee id. Please login again.");
     }
+
+    const token = localStorage.getItem("token");
+
+    // ===========================
+    // Create FormData
+    // ===========================
+    const formData = new FormData();
+
+    // Employee
+    formData.append("employee", payload.employee);
+
+    // Principal approval PDF
+    if (principalApprovalDocument) {
+      formData.append(
+        "principalApprovalForm",
+        principalApprovalDocument,
+        principalApprovalDocument.name
+      );
+    }
+
+    // Purchases
+    formData.append(
+      "purchases",
+      JSON.stringify(payload.purchases)
+    );
+
+    // ===========================
+    // Debug FormData
+    // ===========================
+    console.log("===== FORM DATA =====");
+
+    for (const pair of formData.entries()) {
+      console.log(pair[0], pair[1]);
+    }
+
+    console.log("=====================");
+
+    const requestUrl = `${API_BASE}/api/purchase/create`;
+
+    const response = await fetch(requestUrl, {
+      method: "POST",
+
+      headers: {
+        ...(token
+          ? {
+              Authorization: `Bearer ${token}`,
+            }
+          : {}),
+      },
+
+      // DO NOT JSON.stringify
+      // DO NOT add Content-Type
+      body: formData,
+    });
+
+    let data;
 
     try {
-      const payload = buildPayload();
-
-      console.log("[PurchaseDetails] Payload:", payload);
-
-      if (!payload.employee) {
-        throw new Error("Unable to determine employee id. Please login again.");
-      }
-
-      const token = localStorage.getItem("token");
-
-      const requestUrl = `${API_BASE}/api/purchase/create`;
-
-      console.log("[PurchaseDetails] Sending POST to:", requestUrl);
-
-      const response = await fetch(requestUrl, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-
-          ...(token
-            ? {
-                Authorization: `Bearer ${token}`,
-              }
-            : {}),
-        },
-
-        body: JSON.stringify(payload),
-      });
-
-      let data;
-
-      try {
-        data = await response.json();
-      } catch (err) {
-        console.warn("[PurchaseDetails] Response parse failed:", err);
-        data = null;
-      }
-
-      console.log("[PurchaseDetails] Response status:", response.status, "data:", data);
-
-      if (!response.ok) {
-        throw new Error(
-          (data && data.message) ||
-            `Purchase submission failed with status ${response.status}`,
-        );
-      }
-
-      setSuccess(true);
-    } catch (error) {
-      console.error("[PurchaseDetails] submit error:", error);
-      setApiError(error.message || "Unable to send purchase data.");
-    } finally {
-      setIsLoading(false);
+      data = await response.json();
+    } catch (err) {
+      console.warn(err);
+      data = null;
     }
-  };
+
+    console.log("Response :", data);
+
+    if (!response.ok) {
+      throw new Error(
+        data?.message ||
+          `Purchase submission failed (${response.status})`
+      );
+    }
+
+    setSuccess(true);
+  } catch (error) {
+    console.error(error);
+    setApiError(error.message || "Unable to send purchase data.");
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  // const handleSubmit = async () => {
+  //   setApiError("");
+  //   setSuccess(false);
+  //   setIsLoading(true);
+
+  //   if (!validateForm()) {
+  //     setIsLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     const payload = buildPayload();
+
+  //     console.log("[PurchaseDetails] Payload:", payload);
+
+  //     if (!payload.employee) {
+  //       throw new Error("Unable to determine employee id. Please login again.");
+  //     }
+
+  //     const token = localStorage.getItem("token");
+
+  //     const requestUrl = `${API_BASE}/api/purchase/create`;
+
+  //     console.log("[PurchaseDetails] Sending POST to:", requestUrl);
+
+  //     const response = await fetch(requestUrl, {
+  //       method: "POST",
+
+  //       headers: {
+  //         "Content-Type": "application/json",
+
+  //         ...(token
+  //           ? {
+  //               Authorization: `Bearer ${token}`,
+  //             }
+  //           : {}),
+  //       },
+
+  //       body: JSON.stringify(payload),
+  //     });
+
+  //     let data;
+
+  //     try {
+  //       data = await response.json();
+  //     } catch (err) {
+  //       console.warn("[PurchaseDetails] Response parse failed:", err);
+  //       data = null;
+  //     }
+
+  //     console.log("[PurchaseDetails] Response status:", response.status, "data:", data);
+
+  //     if (!response.ok) {
+  //       throw new Error(
+  //         (data && data.message) ||
+  //           `Purchase submission failed with status ${response.status}`,
+  //       );
+  //     }
+
+  //     setSuccess(true);
+  //   } catch (error) {
+  //     console.error("[PurchaseDetails] submit error:", error);
+  //     setApiError(error.message || "Unable to send purchase data.");
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <div
@@ -777,7 +875,7 @@ export default function PurchaseDetails() {
           border: 1px dashed #3A3A5A;
           background: transparent;
           border-radius: 10px;
-          min-height: 90px;
+          min-height: 90px;git push -u origin 
         }
       `}</style>
 

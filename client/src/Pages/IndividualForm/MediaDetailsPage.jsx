@@ -420,9 +420,12 @@ const [trophyContent, setTrophyContent] = useState("");
 
   const appendPosterFormData = (formData) => {
     formData.append("typeOfMedia[]", "Poster");
-    if (principalApprovalDocument) {
-      formData.append("principalApprovalFormName", principalApprovalDocument.name);
-    }
+   if (principalApprovalDocument) {
+  formData.append(
+    "principalApprovalForm",
+    principalApprovalDocument
+  );
+}
     formData.append("poster[posterContent]", posterContent);
     formData.append("poster[certificateContent]", certificateContent);
     formData.append("poster[trophyContent]", trophyContent);
