@@ -180,29 +180,52 @@ export default function TransportPreview({ transportData = [] }) {
       <div className="space-y-4">
         {/* Row 1: Pickup / Drop date & time */}
         <Card>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <InfoBlock
-              icon={Calendar}
-              label="Pickup Date"
-              value={formatDate(form.pickupDate)}
-            />
-            <InfoBlock
-              icon={Clock}
-              label="Pickup Time"
-              value={formatTime(form.pickupDate)}
-            />
-            <InfoBlock
-              icon={Calendar}
-              label="Drop Date"
-              value={formatDate(form.dropDate)}
-            />
-            <InfoBlock
-              icon={Clock}
-              label="Drop Time"
-              value={formatTime(form.dropDate)}
-            />
-          </div>
-        </Card>
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    {/* Pickup Card */}
+    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
+      <div className="flex items-center">
+
+        <InfoBlock
+          icon={Calendar}
+          label="Pickup Date"
+          value={formatDate(form.pickupDate)}
+        />
+
+        <div className="mx-6 h-14 w-px bg-[#454D67]" />
+
+        <InfoBlock
+          icon={Clock}
+          label="Pickup Time"
+          value={formatTime(form.pickupDate)}
+        />
+
+      </div>
+    </div>
+
+    {/* Drop Card */}
+    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
+      <div className="flex items-center">
+
+        <InfoBlock
+          icon={Calendar}
+          label="Drop Date"
+          value={formatDate(form.dropDate)}
+        />
+
+        <div className="mx-6 h-14 w-px bg-[#454D67]" />
+
+        <InfoBlock
+          icon={Clock}
+          label="Drop Time"
+          value={formatTime(form.dropDate)}
+        />
+
+      </div>
+    </div>
+
+  </div>
+</Card>
 
         {/* Row 2: Location flow — Pickup → Checkpoint(s) → Drop */}
         <Card>

@@ -26,11 +26,8 @@ const INTERNET_FACILITY_OPTIONS = ["LAN", "Wi-Fi", "Both", "Not Required"];
 
 function getDepartmentFromStorage() {
   try {
-    // Try a dedicated "department" key first
     const dept = localStorage.getItem("department");
     if (dept) return dept.toLowerCase().trim();
-
-    // Fall back to a "user" JSON blob
     const raw = localStorage.getItem("user");
     if (raw) {
       const user = JSON.parse(raw);
@@ -50,7 +47,7 @@ function validateIctsCard(card, showProctoring) {
   const e = {};
   if (!card.equipmentRequired || card.equipmentRequired.length === 0)
     e.equipmentRequired = "Select at least one equipment";
-  if (!card.internetFacility)      e.internetFacility      = "This field is required";
+  if (!card.internetFacility) e.internetFacility = "This field is required";
   if (
     card.expectedInternetUsers === "" ||
     card.expectedInternetUsers === undefined ||
@@ -58,33 +55,22 @@ function validateIctsCard(card, showProctoring) {
   ) {
     e.expectedInternetUsers = "This field is required";
   }
-
   if (
     showProctoring &&
-    (
-      card.proctorUsers === "" ||
-      card.proctorUsers === undefined ||
-      card.proctorUsers === null
-    )
+    (card.proctorUsers === "" || card.proctorUsers === undefined || card.proctorUsers === null)
   ) {
     e.proctorUsers = "This field is required";
   }
-
   if (
     card.guestWifi === "Yes" &&
     card.guestWifiExceed5 === "Yes" &&
-    (
-      card.totalGuestCount === "" ||
-      card.totalGuestCount === undefined ||
-      card.totalGuestCount === null
-    )
+    (card.totalGuestCount === "" || card.totalGuestCount === undefined || card.totalGuestCount === null)
   ) {
     e.totalGuestCount = "This field is required";
   }
   if (!card.requirements || card.requirements.length === 0)
     e.requirements = "Select at least one requirement";
-  // NOTE: desktopCount / laptopCount are intentionally NOT validated here —
-  // they're optional numeric fields, clamped to >= 0 at input time.
+  // desktopCount / laptopCount are optional — not validated here.
   return e;
 }
 
@@ -99,7 +85,7 @@ function validateDay(dayIndex, venues, latestIctsData, showProctoring) {
   return dayErrors;
 }
 
-function buildIctsPayload(ictsData) {
+const buildIctsPayload = (ictsData) => {
   const ictses = [];
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
@@ -131,7 +117,7 @@ function buildIctsPayload(ictsData) {
     });
   });
   return { ictses };
-}
+};
 
 // ── MultiSelect (generic) ─────────────────────────────────────────────────────
 // Used both for "Requirements" and "Equipment Required" — same interaction

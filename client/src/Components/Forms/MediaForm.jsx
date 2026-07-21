@@ -91,55 +91,85 @@ function validateDay(data, showCertificate = false) {
 export function buildMediaFormData(mediaData) {
   const fd = new FormData();
 
-  const jsonSafe = mediaData.map((day, i) => {
-    const posterFiles      = [];
-    const certFiles        = [];
-    const videoFiles       = [];
+  const mediaRequirements = mediaData.map((day, dayIndex) => {
+    const typeOfMedia = [];
+    if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
+    if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
+    // ── Reference poster files ──
+    const referencePosterFiles = [];
     (day.poster?.referencePoster || []).forEach((f, fi) => {
-      if (f instanceof File) posterFiles.push(`day_${i}_referencePoster_${fi}`);
+      if (f instanceof File) {
+        const key = `day_${dayIndex}_referencePoster_${fi}`;
+        referencePosterFiles.push(key);
+        fd.append(key, f);
+      }
     });
+
+    // ── Reference certificate files ──
+    const referenceCertificateFiles = [];
     (day.poster?.referenceCertificate || []).forEach((f, fi) => {
-      if (f instanceof File) certFiles.push(`day_${i}_referenceCertificate_${fi}`);
+      if (f instanceof File) {
+        const key = `day_${dayIndex}_referenceCertificate_${fi}`;
+        referenceCertificateFiles.push(key);
+        fd.append(key, f);
+      }
     });
+
+    // ── Reference video files ──
+    const referenceFiles = [];
     (day.video?.referenceVideo || []).forEach((f, fi) => {
-      if (f instanceof File) videoFiles.push(`day_${i}_referenceVideo_${fi}`);
+      if (f instanceof File) {
+        const key = `day_${dayIndex}_referenceVideo_${fi}`;
+        referenceFiles.push(key);
+        fd.append(key, f);
+      }
     });
+
+    // ── Sizes: ONLY Flex / Glass Sticker actually have a size input.
+    //    Every other display type has no size field in the UI, so we
+    //    must not push a bogus {value: ""} entry for them — that's what
+    //    was causing the schema cast issues on save.
+    const sizes = [];
+    if (day.poster?.displayNeeded?.includes("Flex") && day.poster?.sizeForFlex?.trim()) {
+      sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
+    }
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && day.poster?.sizeForGlass?.trim()) {
+      sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
+    }
 
     return {
-      ...day,
-      poster: day.poster
-        ? {
-            ...day.poster,
-            referencePoster:           null,
-            referenceCertificate:      null,
-            referencePosterFiles:      posterFiles,
-            referenceCertificateFiles: certFiles,
-          }
-        : day.poster,
-      video: day.video
-        ? {
-            ...day.video,
-            referenceVideo: null,
-            referenceFiles: videoFiles,
-          }
-        : day.video,
+      dayIndex,
+      typeOfMedia,
+      poster: {
+        posterContent: day.poster?.contentPoster || "",
+        referencePosterFiles,
+        certificateContent: day.poster?.contentCertificate || "",
+        referenceCertificateFiles,
+        trophyContent: day.poster?.contentTrophy || "",
+        displayNeeded: day.poster?.displayNeeded || [],
+        sizes,
+        deliveryDate: day.poster?.deliveryDate ? new Date(day.poster.deliveryDate).toISOString() : "",
+        priority: day.poster?.priority || "",
+        specialRequirements: day.poster?.specialReq || "",
+      },
+      video: {
+        videoContent: day.video?.contentVideo || "",
+        preEventVideos: day.video?.preEvent || [],
+        eventCoverage: day.video?.eventCoverage || [],
+        postEventVideos: day.video?.postEvent || [],
+        specialVideos: day.video?.specialVideos || [],
+        referenceFiles,
+        deliveryDate: day.video?.deliveryDate ? new Date(day.video.deliveryDate).toISOString() : "",
+        priority: day.video?.priority || "",
+        specialRequirements: day.video?.specialReq || "",
+      },
     };
   });
 
-  fd.append("mediaData", JSON.stringify(jsonSafe));
-
-  mediaData.forEach((day, i) => {
-    (day.poster?.referencePoster || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referencePoster_${fi}`, f);
-    });
-    (day.poster?.referenceCertificate || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referenceCertificate_${fi}`, f);
-    });
-    (day.video?.referenceVideo || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referenceVideo_${fi}`, f);
-    });
-  });
+  // Same top-level shape your backend already understands
+  // (matches what buildMediaPayload in Form.jsx used to send).
+  fd.append("mediaData", JSON.stringify({ mediaRequirementDetails: { mediaRequirements } }));
 
   return fd;
 }

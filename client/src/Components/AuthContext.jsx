@@ -6,6 +6,8 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
+  console.log("auth user : ",user);
+  
   const [loading, setLoading] = useState(true);
   const verifiedRef           = useRef(false);
 
@@ -40,7 +42,7 @@ export function AuthProvider({ children }) {
       // Always sync role + department from token (source of truth)
       const role       = decoded.role       || cached.role;
       const department = decoded.department || cached.department;
-      setUser({ ...cached, role, department });
+      setUser({ ...cached, role, department,facultyId: decoded.facultyId });
     } catch {
       logout();
       setLoading(false);

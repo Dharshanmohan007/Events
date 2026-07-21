@@ -16,40 +16,96 @@ const ErrorMsg = ({ msg }) =>
 
 // ── Empty day factory ─────────────────────────────────────────────────────────
 
-function emptyPurchaseDay() {
-  return {
-    requirementNeeded: [],
-    idCardQty: "",
-    certificateQty: "",
-    selectedPersons: "",
-    studentData: {
-      giftType: [],
-      registrationKitNeeded: "",
-      trophyType: [],
-      basicTrophyQty: "",
-      eliteTrophyQty: "",
-      cashPrizeAmount: "",
-      voucherWorth: [],
-      voucherWorthQty: {},
-      registrationKitQty: "",
-      specialRequirements: "",
-    },
-    guestData: {
-      giftType: [],
-      registrationKitNeeded: "",
-      trophyType: [],
-      basicTrophyQty: "",
-      eliteTrophyQty: "",
-      glassCupQty: "",
-      voucherWorth: [],
-      voucherWorthQty: {},
-      registrationKitQty: "",
-      specialRequirements: "",
-    },
-  };
-}
+const emptyPurchaseDay = () => ({
+  requirementNeeded: [],
+  idCardQty: "",
+  certificateQty: "",
+  selectedPersons: "",
+  studentData: {
+    giftType: [], registrationKitNeeded: "", trophyType: [],
+    basicTrophyQty: "", eliteTrophyQty: "", cashPrizeAmount: "",
+    voucherWorth: [], voucherWorthQty: {}, registrationKitQty: "", specialRequirements: "",
+  },
+  guestData: {
+    giftType: [], registrationKitNeeded: "", trophyType: [],
+    basicTrophyQty: "", eliteTrophyQty: "", glassCupQty: "",
+    voucherWorth: [], voucherWorthQty: {}, registrationKitQty: "", specialRequirements: "",
+  },
+});
 
 // ── Payload builder ───────────────────────────────────────────────────────────
+
+function buildStudentGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, cashPrizeAmount: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Cash Prize")) {
+    giftItems.push({
+      giftType: "Cash Prize",
+      trophy: [],
+      cashPrizeAmount: parseInt(personData.cashPrizeAmount) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], cashPrizeAmount: 0, voucher });
+  }
+
+  return giftItems;
+}
+
+function buildGuestGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, glassCupQty: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Glass Cup")) {
+    giftItems.push({
+      giftType: "Glass Cup",
+      trophy: [],
+      glassCupQty: parseInt(personData.glassCupQty) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], glassCupQty: 0, voucher });
+  }
+
+  return giftItems;
+}
 
 function buildPurchasePayload(dayData) {
   const purchases = dayData.map((day, dayIndex) => {
@@ -63,76 +119,22 @@ function buildPurchasePayload(dayData) {
     if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
     if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
 
-    const buildStudentData = (personData = {}) => {
-      const giftItems = [];
-      if (personData.giftType?.includes("Trophy")) {
-        giftItems.push({
-          type: "Trophy",
-          trophyTypes: personData.trophyType || [],
-          basicQty: parseInt(personData.basicTrophyQty) || 0,
-          eliteQty: parseInt(personData.eliteTrophyQty) || 0,
-        });
-      }
-      if (personData.giftType?.includes("Cash Prize"))
-        giftItems.push({ type: "Cash Prize", amount: parseInt(personData.cashPrizeAmount) || 0 });
-      if (personData.giftType?.includes("Voucher")) {
-        const selectedWorths = Array.isArray(personData.voucherWorth) ? personData.voucherWorth : (personData.voucherWorth ? [personData.voucherWorth] : []);
-        const worthQty = personData.voucherWorthQty || {};
-        giftItems.push({
-          type: "Voucher",
-          worth: selectedWorths,
-          worthQuantities: selectedWorths.map((w) => ({
-            worth: w,
-            qty: parseInt(worthQty[w]) || 0,
-          })),
-        });
-      }
-      return {
-        registrationKitNeeded: personData.registrationKitNeeded === "Yes",
-        registrationKitQty: parseInt(personData.registrationKitQty) || 0,
-        specialRequirements: personData.specialRequirements || "",
-        giftItems,
-      };
-    };
-
-    const buildGuestData = (personData = {}) => {
-      const giftItems = [];
-      if (personData.giftType?.includes("Trophy")) {
-        giftItems.push({
-          type: "Trophy",
-          trophyTypes: personData.trophyType || [],
-          basicQty: parseInt(personData.basicTrophyQty) || 0,
-          eliteQty: parseInt(personData.eliteTrophyQty) || 0,
-        });
-      }
-      if (personData.giftType?.includes("Glass Cup"))
-        giftItems.push({ type: "Glass Cup", qty: parseInt(personData.glassCupQty) || 0 });
-      if (personData.giftType?.includes("Voucher")) {
-        const selectedWorths = Array.isArray(personData.voucherWorth) ? personData.voucherWorth : (personData.voucherWorth ? [personData.voucherWorth] : []);
-        const worthQty = personData.voucherWorthQty || {};
-        giftItems.push({
-          type: "Voucher",
-          worth: selectedWorths,
-          worthQuantities: selectedWorths.map((w) => ({
-            worth: w,
-            qty: parseInt(worthQty[w]) || 0,
-          })),
-        });
-      }
-      return {
-        registrationKitNeeded: personData.registrationKitNeeded === "Yes",
-        registrationKitQty: parseInt(personData.registrationKitQty) || 0,
-        specialRequirements: personData.specialRequirements || "",
-        giftItems,
-      };
-    };
-
     return {
       dayIndex,
       requirementNeeded,
       requiredFor,
-      students: buildStudentData(day.studentData),
-      guests:   buildGuestData(day.guestData),
+      students: {
+        giftItems: buildStudentGiftItems(day.studentData),
+        registrationKitNeeded: day.studentData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.studentData?.registrationKitQty) || 0,
+        specialRequirements: day.studentData?.specialRequirements || "",
+      },
+      guests: {
+        giftItems: buildGuestGiftItems(day.guestData),
+        registrationKitNeeded: day.guestData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.guestData?.registrationKitQty) || 0,
+        specialRequirements: day.guestData?.specialRequirements || "",
+      },
     };
   });
 

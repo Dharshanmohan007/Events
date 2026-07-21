@@ -147,6 +147,8 @@ const validateEventRequisition = (data) => {
 };
 
 const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
+  console.log("user log :",user);
+  
   const fd = new FormData();
   fd.append("organizerId", user?.facultyId ?? "");
   const requestDetails = {
@@ -260,7 +262,24 @@ const buildVenuePayload = (venueData) => {
   return { venues };
 };
 
+function getIctsDepartmentFromStorage() {
+  try {
+    const dept = localStorage.getItem("department");
+    if (dept) return dept.toLowerCase().trim();
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      const user = JSON.parse(raw);
+      return (user?.department || "").toLowerCase().trim();
+    }
+  } catch {
+    // ignore
+  }
+  return "";
+}
+const isIctsPlacementDept = () => getIctsDepartmentFromStorage() === "placement";
+
 const validateIctsData = (ictsData, venueData) => {
+  const showProctoring = isIctsPlacementDept();
   const errors = {};
   Object.entries(ictsData).forEach(([dayIndex, venues]) => {
     const dayErrors = {};
@@ -268,14 +287,34 @@ const validateIctsData = (ictsData, venueData) => {
     selectedVenues.forEach((venueName) => {
       const card = venues?.[venueName] || {};
       const cardErrors = {};
-      if (!card.desktopLaptop) cardErrors.desktopLaptop = "This field is required";
-      if (!card.internetFacility) cardErrors.internetFacility = "This field is required";
-      if (!card.expectedInternetUsers?.trim()) cardErrors.expectedInternetUsers = "This field is required";
-      if (!card.proctorUsers?.trim()) cardErrors.proctorUsers = "This field is required";
-      if (!card.guestWifi) cardErrors.guestWifi = "This field is required";
-      if (card.guestWifi === "Yes" && !card.guestWifiExceed5) cardErrors.guestWifiExceed5 = "This field is required";
-      if (!card.totalGuestCount?.trim()) cardErrors.totalGuestCount = "This field is required";
-      if (!card.requirements || card.requirements.length === 0) cardErrors.requirements = "Select at least one requirement";
+
+      if (!card.equipmentRequired || card.equipmentRequired.length === 0)
+        cardErrors.equipmentRequired = "Select at least one equipment";
+      if (!card.internetFacility)
+        cardErrors.internetFacility = "This field is required";
+      if (
+        card.expectedInternetUsers === "" ||
+        card.expectedInternetUsers === undefined ||
+        card.expectedInternetUsers === null
+      ) {
+        cardErrors.expectedInternetUsers = "This field is required";
+      }
+      if (
+        showProctoring &&
+        (card.proctorUsers === "" || card.proctorUsers === undefined || card.proctorUsers === null)
+      ) {
+        cardErrors.proctorUsers = "This field is required";
+      }
+      if (
+        card.guestWifi === "Yes" &&
+        card.guestWifiExceed5 === "Yes" &&
+        (card.totalGuestCount === "" || card.totalGuestCount === undefined || card.totalGuestCount === null)
+      ) {
+        cardErrors.totalGuestCount = "This field is required";
+      }
+      if (!card.requirements || card.requirements.length === 0)
+        cardErrors.requirements = "Select at least one requirement";
+
       if (Object.keys(cardErrors).length > 0) dayErrors[venueName] = cardErrors;
     });
     if (Object.keys(dayErrors).length > 0) errors[dayIndex] = dayErrors;
@@ -288,18 +327,29 @@ const buildIctsPayload = (ictsData) => {
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      const desktopLaptop = (card.equipmentRequired || []).map((type) => ({
+        type,
+        count:
+          type === "Desktop"
+            ? parseInt(card.desktopCount) || 0
+            : type === "Laptop"
+            ? parseInt(card.laptopCount) || 0
+            : 0,
+      }));
+
       ictses.push({
-        dayIndex, venueName,
-        desktopLaptop: card.desktopLaptop === "Yes",
-        internetFacility: card.internetFacility || "",
+        dayIndex,
+        venueName,
+        desktopLaptop,
+        internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
-        proctoringUsers: parseInt(card.proctorUsers) || 0,
-        guestWifiNeeded: card.guestWifi === "Yes",
-        guestWifiExceed5: card.guestWifiExceed5 === "Yes",
-        totalGuestCount: parseInt(card.totalGuestCount) || 0,
-        requirements: card.requirements || [],
-        otherRequirements: card.others || "",
-        specialRequirements: card.specialRequirements || "",
+        proctoringUsers:       parseInt(card.proctorUsers) || 0,
+        guestWifiNeeded:       card.guestWifi === "Yes",
+        guestWifiExceed5:      card.guestWifiExceed5 === "Yes",
+        totalGuestCount:       parseInt(card.totalGuestCount) || 0,
+        requirements:          card.requirements || [],
+        otherRequirements:     card.others || "",
+        specialRequirements:   card.specialRequirements || "",
       });
     });
   });
@@ -343,23 +393,109 @@ const validatePurchaseData = (purchaseData) => {
   return {};
 };
 
+function buildStudentGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, cashPrizeAmount: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Cash Prize")) {
+    giftItems.push({
+      giftType: "Cash Prize",
+      trophy: [],
+      cashPrizeAmount: parseInt(personData.cashPrizeAmount) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], cashPrizeAmount: 0, voucher });
+  }
+
+  return giftItems;
+}
+
+function buildGuestGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, glassCupQty: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Glass Cup")) {
+    giftItems.push({
+      giftType: "Glass Cup",
+      trophy: [],
+      glassCupQty: parseInt(personData.glassCupQty) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], glassCupQty: 0, voucher });
+  }
+
+  return giftItems;
+}
+
 const buildPurchasePayload = (purchaseData) => {
   const purchases = purchaseData.map((day, dayIndex) => {
     const requirementNeeded = [];
-    if (day.requirementNeeded?.includes("Id Card")) requirementNeeded.push({ type: "Id Card", hardCount: parseInt(day.idCardQty) || 0, softCount: 0 });
-    if (day.requirementNeeded?.includes("Certificate")) requirementNeeded.push({ type: "Certificate", hardCount: parseInt(day.certificateQty) || 0, softCount: 0 });
+    if (day.requirementNeeded?.includes("Id Card"))
+      requirementNeeded.push({ type: "Id Card", hardCount: parseInt(day.idCardQty) || 0, softCount: 0 });
+    if (day.requirementNeeded?.includes("Certificate"))
+      requirementNeeded.push({ type: "Certificate", hardCount: parseInt(day.certificateQty) || 0, softCount: 0 });
+
     const requiredFor = [];
     if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
-    if (day.selectedPersons === "Guest" || day.selectedPersons === "Both") requiredFor.push("Guest");
-    const buildPersonData = (personData = {}) => {
-      const giftItems = [];
-      if (personData.giftType?.includes("Trophy")) giftItems.push({ type: "Trophy", trophyTypes: personData.trophyType || [], basicQty: parseInt(personData.basicTrophyQty) || 0, eliteQty: parseInt(personData.eliteTrophyQty) || 0 });
-      if (personData.giftType?.includes("Cash Prize")) giftItems.push({ type: "Cash Prize", amount: parseInt(personData.cashPrizeAmount) || 0 });
-      if (personData.giftType?.includes("Voucher")) giftItems.push({ type: "Voucher", worth: personData.voucherWorth || "" });
-      return { registrationKitNeeded: personData.registrationKitNeeded === "Yes", registrationKitQty: parseInt(personData.registrationKitQty) || 0, specialRequirements: personData.specialRequirements || "", giftItems };
+    if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
+
+    return {
+      dayIndex,
+      requirementNeeded,
+      requiredFor,
+      students: {
+        giftItems: buildStudentGiftItems(day.studentData),
+        registrationKitNeeded: day.studentData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.studentData?.registrationKitQty) || 0,
+        specialRequirements: day.studentData?.specialRequirements || "",
+      },
+      guests: {
+        giftItems: buildGuestGiftItems(day.guestData),
+        registrationKitNeeded: day.guestData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.guestData?.registrationKitQty) || 0,
+        specialRequirements: day.guestData?.specialRequirements || "",
+      },
     };
-    return { dayIndex, requirementNeeded, requiredFor, students: buildPersonData(day.studentData), guests: buildPersonData(day.guestData) };
   });
+
   return { purchases };
 };
 
@@ -401,20 +537,25 @@ const buildMediaPayload = (mediaData) => {
     const typeOfMedia = [];
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
+
+    // Only Flex / Glass Sticker actually carry a size value.
     const sizes = [];
-    (day.poster?.displayNeeded || []).forEach((type) => {
-      if (type === "Flex") {
-        if (day.poster?.sizeForFlex?.trim()) sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
-      } else if (type === "Glass Sticker") {
-        if (day.poster?.sizeForGlass?.trim()) sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
-      } else {
-        sizes.push({ type, value: "" });
-      }
-    });
+    if (day.poster?.displayNeeded?.includes("Flex") && day.poster?.sizeForFlex?.trim()) {
+      sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
+    }
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && day.poster?.sizeForGlass?.trim()) {
+      sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
+    }
+
     return {
       dayIndex, typeOfMedia,
       poster: {
         posterContent:             day.poster?.contentPoster       || "",
+        // NOTE: this JSON-only path can never carry File objects.
+        // Real file uploads must go through buildMediaFormData (multipart).
+        // Leaving these empty here is correct FOR THIS PATH — the fix is
+        // to stop this path from overwriting already-saved file refs
+        // (see submitEvent fix below).
         referencePosterFiles:      [],
         certificateContent:        day.poster?.contentCertificate  || "",
         referenceCertificateFiles: [],
@@ -483,7 +624,63 @@ const validateAccommodationData = (accommodationData) => {
   return errors;
 };
 
-const buildPayloadForSection = (sectionKey, data) => {
+// in Form.jsx, near the other buildXPayload helpers
+
+const flattenGuestsForAccommodation = (eventDays = []) => {
+  const seen = new Set();
+  const result = [];
+  eventDays.forEach((day, dayIdx) => {
+    (day.guests || []).forEach((g, gIdx) => {
+      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "").replace(/\s+/g, "").toLowerCase()}`;
+      if (!seen.has(guestId)) {
+        seen.add(guestId);
+        result.push({ ...g, guestId });
+      }
+    });
+  });
+  return result;
+};
+
+const buildAccommodationPayload = (accommodationState, eventDays) => {
+  const allGuests = flattenGuestsForAccommodation(eventDays);
+  const accommodations = (accommodationState?.accommodations || []).map((acc) => {
+    const selectedGuests = allGuests.filter((g) =>
+      (acc.selectedGuestIds || []).includes(g.guestId)
+    );
+
+    const roomOccupancy = [];
+    if (parseInt(acc.singleRooms) > 0) roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
+    if (parseInt(acc.doubleRooms) > 0) roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
+
+    const roomCategory = (acc.roomTypes || []).map((rt) => ({
+      type: rt,
+      count: parseInt(acc.roomCounts?.[rt]) || 0,
+    }));
+
+    const dineInCounts = [];
+    if (acc.dine === "Yes") {
+      if (acc.dineTypes?.includes("Hostel") && parseInt(acc.hostelGuests) > 0)
+        dineInCounts.push({ type: "Hostel", count: parseInt(acc.hostelGuests) });
+      if (acc.dineTypes?.includes("Amenity") && parseInt(acc.amenityGuests) > 0)
+        dineInCounts.push({ type: "Amenity", count: parseInt(acc.amenityGuests) });
+    }
+
+    return {
+      checkInDateTime: acc.checkIn ? new Date(acc.checkIn).toISOString() : "",
+      checkOutDateTime: acc.checkOut ? new Date(acc.checkOut).toISOString() : "",
+      guests: selectedGuests.map((g) => ({
+        name: g.name || "", mobile: parseInt(g.mobile) || 0, gender: g.gender || "",
+      })),
+      roomOccupancy, roomCategory,
+      dineInRequired: acc.dine === "Yes",
+      dineInCounts,
+      specialRequirements: acc.special || "",
+    };
+  });
+  return { accommodations };
+};
+
+const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
     case "icts":                return { ictsDetails: buildIctsPayload(data) };
@@ -492,7 +689,7 @@ const buildPayloadForSection = (sectionKey, data) => {
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
     case "foodandrefreshments": return { foodDetails: data };
-    case "accommodation":       return { accommodationDetails: data };
+    case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
   }
 };
@@ -540,7 +737,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     audioDetails:        formData.audio,
     transportDetails:    formData.transport,
     foodDetails:         formData.foodandrefreshments,
-    accommodationDetails: formData.accommodation,
+    accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
 };
 
@@ -705,7 +902,7 @@ export default function Form() {
           body: sectionValueOrFormData,
         });
       } else {
-        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData);
+        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays);
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
