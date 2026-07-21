@@ -419,7 +419,8 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const appendPosterFormData = (formData) => {
-    formData.append("typeOfMedia[]", "Poster");
+    // The media API stores these enum values in lowercase.
+    formData.append("typeOfMedia[]", "poster");
    if (principalApprovalDocument) {
   formData.append(
     "principalApprovalForm",
@@ -452,7 +453,7 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const appendVideoFormData = (formData) => {
-    formData.append("typeOfMedia[]", "Video");
+    formData.append("typeOfMedia[]", "video");
     if (principalApprovalDocument) {
       formData.append("principalApprovalFormName", principalApprovalDocument.name);
     }
@@ -595,7 +596,7 @@ const [trophyContent, setTrophyContent] = useState("");
     <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
       {/* TITLE */}
       <h1 className="text-3xl font-bold mb-6">
-        Media  Form
+        Media Form
       </h1>
 
       {validationErrors.length > 0 && (

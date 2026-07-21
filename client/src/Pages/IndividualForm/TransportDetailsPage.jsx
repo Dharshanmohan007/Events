@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
+import FormSubmitted from "./FormSubmitted";
 
 import UploadIcon from "../../assets/upload.svg";
 
@@ -52,6 +53,7 @@ const TransportDetailsPage = () => {
   const [validationErrors, setValidationErrors] = useState([]);
   const [submitMessage, setSubmitMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
   const MAX_PRINCIPAL_FILE_SIZE_BYTES =
@@ -455,6 +457,7 @@ const TransportDetailsPage = () => {
     if (errors.length) return;
 
     setIsSubmitting(true);
+    setSubmitSuccess(true);
 
     try {
       for (const form of transportForms) {
@@ -477,33 +480,61 @@ const TransportDetailsPage = () => {
           body: payload,
         });
 
-        const responseData = await response.json();
+        // The API should return JSON, but Express sends an HTML error page for
+        // unhandled server errors. Read the body first so that the useful error
+        // is not hidden behind a `response.json()` parsing error.
+        const responseText = await response.text();
+        let responseData;
+
+        try {
+          responseData = responseText ? JSON.parse(responseText) : null;
+        } catch {
+          responseData = null;
+        }
+
+        if (!response.ok) {
+          const serverMessage =
+            responseData?.message ||
+            responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
+            `Transport submission failed (HTTP ${response.status}).`;
+
+          console.error("Transport API error:", {
+            status: response.status,
+            response: responseData || responseText,
+          });
+          throw new Error(serverMessage);
+        }
 
         // Log response with IST formatting
-        console.log("📥 Response received:", responseData.data);
+        console.log("📥 Response received:", responseData?.data);
         console.log(
           "⏰ Pickup stored as (UTC):",
-          responseData.data?.pickupDateTime,
+          responseData?.data?.pickupDateTime,
         );
-        const pickupIST = responseData.data?.pickupDateTime
+        const pickupIST = responseData?.data?.pickupDateTime
           ? formatInIST(new Date(responseData.data.pickupDateTime))
           : "N/A";
         console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
-        const dropIST = responseData.data?.dropDateTime
+        const dropIST = responseData?.data?.dropDateTime
           ? formatInIST(new Date(responseData.data.dropDateTime))
           : "N/A";
         console.log("🇮🇳 Drop displayed as (IST):", dropIST);
       }
 
-      setSubmitMessage("All transport forms submitted successfully.");
-
       setValidationErrors([]);
     } catch (error) {
-      setValidationErrors(["Unable to submit transport forms."]);
+      console.error("Transport submission failed:", error);
+      setValidationErrors([
+        error.message || "Unable to submit transport forms.",
+      ]);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (submitSuccess) {
+    return <FormSubmitted />;
+  }
 
   return (
     <div className="transport-form min-h-screen bg-[#141428] text-white p-5">

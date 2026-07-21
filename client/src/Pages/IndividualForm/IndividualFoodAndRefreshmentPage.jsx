@@ -15,6 +15,7 @@ import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 
 import { API_BASE } from "../../utils/apiConfig";
+import FormSubmitted from "../IndividualForm/FormSubmitted";
 
 // ======================================================
 // CUSTOM DATE TIME PICKER
@@ -783,9 +784,6 @@ const IndividualFoodAndRefreshment = () => {
 
   const [submitMessage, setSubmitMessage] = useState("");
 
-  const [submitResponses, setSubmitResponses] = useState([]);
-  
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateFormCard = (cardId, updater) => {
@@ -824,6 +822,10 @@ const IndividualFoodAndRefreshment = () => {
         console.error("Failed to decode token:", error);
       }
     }
+      if (submitSuccess) {
+        return <FormSubmitted />;
+      }
+    
   }, []);
 
   // =========================
@@ -1021,14 +1023,12 @@ const IndividualFoodAndRefreshment = () => {
 
     setSubmitMessage("");
 
-    setSubmitResponses([]);
-
     if (errors.length) return;
 
     setIsSubmitting(true);
 
     try {
-      const createdResponses = [];
+      let submittedCount = 0;
 
       for (const [index, card] of formCards.entries()) {
        const payload = buildFoodPayload(card);
@@ -1107,22 +1107,14 @@ const response = await fetch(`${API_BASE}/api/foods`, {
           );
         }
 
-        createdResponses.push({
-          formNumber: index + 1,
-          payload,
-          response: data,
-        });
+        submittedCount += 1;
       }
-
-      console.log("All food submit responses:", createdResponses);
 
       setValidationErrors([]);
 
-      setSubmitResponses(createdResponses);
-
       setSubmitMessage(
-        `${createdResponses.length} food request${
-          createdResponses.length > 1 ? "s" : ""
+        `${submittedCount} food request${
+          submittedCount > 1 ? "s" : ""
         } submitted successfully.`,
       );
     } catch (error) {
@@ -1849,16 +1841,6 @@ const response = await fetch(`${API_BASE}/api/foods`, {
         {submitMessage && (
           <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
             {submitMessage}
-            {submitResponses.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {submitResponses.map((item) => (
-                  <div key={item.formNumber}>
-                    Form {item.formNumber}:{" "}
-                    {item.response?.data?._id || "Created"}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
