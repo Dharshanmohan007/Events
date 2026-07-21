@@ -785,7 +785,7 @@ const IndividualFoodAndRefreshment = () => {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const [submitSuccess, setSubmitSuccess] = useState(false);
   const updateFormCard = (cardId, updater) => {
     setFormCards((prev) =>
       prev.map((card) =>
@@ -806,27 +806,23 @@ const IndividualFoodAndRefreshment = () => {
     setFormCards((prev) => prev.filter((card) => card.id !== cardId));
   };
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+useEffect(() => {
+  const storedToken = localStorage.getItem("token");
 
-    if (storedToken) {
-      setToken(storedToken);
+  if (storedToken) {
+    setToken(storedToken);
 
-      try {
-        const decoded = jwtDecode(storedToken);
+    try {
+      const decoded = jwtDecode(storedToken);
 
-        if (decoded?.id) {
-          setEmployeeId(decoded.id);
-        }
-      } catch (error) {
-        console.error("Failed to decode token:", error);
+      if (decoded?.id) {
+        setEmployeeId(decoded.id);
       }
+    } catch (error) {
+      console.error("Failed to decode token:", error);
     }
-      if (submitSuccess) {
-        return <FormSubmitted />;
-      }
-    
-  }, []);
+  }
+}, []);
 
   // =========================
   // HANDLE STAFF COUNT
@@ -1117,6 +1113,8 @@ const response = await fetch(`${API_BASE}/api/foods`, {
           submittedCount > 1 ? "s" : ""
         } submitted successfully.`,
       );
+
+setSubmitSuccess(true);
     } catch (error) {
       setValidationErrors([error.message || "Unable to send food data."]);
     } finally {
@@ -1124,6 +1122,10 @@ const response = await fetch(`${API_BASE}/api/foods`, {
     }
   };
 
+
+  if (submitSuccess) {
+  return <FormSubmitted />;
+}
   return (
     <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">
       <style>{`
