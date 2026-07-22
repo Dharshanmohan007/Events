@@ -13,6 +13,7 @@ import AudioForm from "../Components/Forms/AudioForm";
 import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
 import EventPreviewPage from "./EventPreviewPage";
+import { jwtDecode } from "jwt-decode";
 
 
 // ── Empty factories ───────────────────────────────────────────────────────────
@@ -147,10 +148,13 @@ const validateEventRequisition = (data) => {
 };
 
 const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
+let token = localStorage.getItem("token");
+let decodedToken = jwtDecode(token);
+
   console.log("user log :",user);
   
   const fd = new FormData();
-  fd.append("organizerId", user?.facultyId ?? "");
+  fd.append("organizerId", decodedToken?.facultyId);
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
@@ -888,6 +892,7 @@ export default function Form() {
         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
+        console.log("saveSection: event payload:", payload);
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
