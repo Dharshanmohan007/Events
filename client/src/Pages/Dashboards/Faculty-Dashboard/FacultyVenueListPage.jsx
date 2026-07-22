@@ -1,26 +1,142 @@
-import React from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { ListFilter, MapPin, Search } from 'lucide-react'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import infoIcon from '../../../assets/info.svg'
 
-const venues = Array.from({ length: 12 }, () => ({
-    name: 'Main Board Room',
-    location: 'AI&DS Block , First Floor',
-    capacity: '80 Seats',
-    withProctoring: '80 Seats',
-    withoutProctoring: '80 Seats',
-    collarMic: '80 Seats',
-    handMic: '80 Seats',
-    handSpeaker: '80 Seats',
-    podiumWithMic: '80 Seats',
-}))
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const formatCount = (value, suffix = '') => `${Number(value) || 0}${suffix}`
+
+const formatLocation = (block, floor) => [block, floor].filter(Boolean).join(' , ') || '-'
+
+const normalizeVenue = (venue) => ({
+    id: venue._id,
+    name: venue.venue || '-',
+    location: formatLocation(venue.block, venue.floor),
+    block: venue.block || '',
+    floor: venue.floor || '',
+    capacity: formatCount(venue.capacity, ' Seats'),
+    withProctoring: formatCount(venue.seating?.withProctoring, ' Seats'),
+    withoutProctoring: formatCount(venue.seating?.withoutProctoring, ' Seats'),
+    collarMic: formatCount(venue.audio?.collarMic),
+    handMic: formatCount(venue.audio?.handMic),
+    handSpeaker: formatCount(venue.audio?.handSpeaker),
+    podiumWithMic: formatCount(venue.audio?.podiumWithMic),
+})
+
+const SelectFilter = ({ value, onChange, options, label }) => {
+    const [open, setOpen] = useState(false)
+    const dropdownRef = useRef(null)
+    const selectedLabel = value === 'all' ? label : value
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpen(false)
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    return (
+        <div ref={dropdownRef} className="relative">
+            <button
+                type="button"
+                onClick={() => setOpen((current) => !current)}
+                className={`flex items-center gap-2 rounded-md border bg-[#171f31] px-4 py-2.5 text-xs text-white transition ${
+                    open ? 'border-[#8B5CF6]' : 'border-[#343b4a] hover:border-[#8B5CF6]'
+                }`}
+            >
+                <ListFilter size={13} className="text-[#8b93a4]" />
+                {selectedLabel}
+            </button>
+
+            {open && (                    <div className="absolute right-0 z-30 mt-2 min-w-full overflow-hidden rounded-lg border border-[#343b4a] bg-[#171F31] shadow-xl">
+                    <div className="max-h-[300px] overflow-y-auto table-custom-scrollbar py-1">
+                        <button
+                            type="button"
+                            onClick={() => { onChange('all'); setOpen(false) }}
+                            className={`block w-full px-3 py-2 text-left text-sm hover:bg-[#232A3C] ${
+                                value === 'all' ? 'text-[#853FF9]' : 'text-gray-300'
+                            }`}
+                        >
+                            {label}
+                        </button>
+                        {options.map((option) => (
+                            <button
+                                key={option}
+                                type="button"
+                                onClick={() => { onChange(option); setOpen(false) }}
+                                className={`block w-full px-3 py-2 text-left text-sm hover:bg-[#232A3C] ${
+                                    value === option ? 'text-[#853FF9]' : 'text-gray-300'
+                                }`}
+                            >
+                                {option}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    )
+}
 
 const FacultyVenueListPage = () => {
+    const [venues, setVenues] = useState([])
+    const [searchQuery, setSearchQuery] = useState('')
+    const [floorFilter, setFloorFilter] = useState('all')
+    const [blockFilter, setBlockFilter] = useState('all')
+    const [venueFilter, setVenueFilter] = useState('all')
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+
+        fetch(`${API_BASE_URL}/api/venues`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((response) => {
+                if (!response.ok) throw new Error('Failed to fetch venues')
+                return response.json()
+            })
+            .then((responseData) => {
+                if (isMounted) {
+                    setVenues((Array.isArray(responseData) ? responseData : []).map(normalizeVenue))
+                }
+            })
+            .catch((error) => {
+                if (isMounted) console.warn(error.message)
+            })
+
+        return () => { isMounted = false }
+    }, [])
+
+    const filterOptions = useMemo(() => ({
+        floors: [...new Set(venues.map((venue) => venue.floor).filter(Boolean))],
+        blocks: [...new Set(venues.map((venue) => venue.block).filter(Boolean))],
+        venueNames: [...new Set(venues.map((venue) => venue.name).filter(Boolean))],
+    }), [venues])
+
+    const filteredVenues = venues.filter((venue) => {
+        const query = searchQuery.toLowerCase()
+        const matchesSearch = [venue.name, venue.location, venue.block, venue.floor]
+            .join(' ')
+            .toLowerCase()
+            .includes(query)
+        const matchesFloor = floorFilter === 'all' || venue.floor === floorFilter
+        const matchesBlock = blockFilter === 'all' || venue.block === blockFilter
+        const matchesVenue = venueFilter === 'all' || venue.name === venueFilter
+
+        return matchesSearch && matchesFloor && matchesBlock && matchesVenue
+    })
+
     return (
         <section className="min-h-screen bg-[#0b1326] poppins">
             <FacultyDahsboardHeader />
 
-            <main className="px-6 pb-8">
+            <main className="px-6 pb-8 ">
                 <div className="mt-4">
                     <h1 className="text-[22px] font-medium text-white">Venue List</h1>
                     <p className="mt- text-sm text-[#FFFFFF80]">
@@ -28,9 +144,9 @@ const FacultyVenueListPage = () => {
                     </p>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between gap-5">
+                <div className="mt-6 flex items-center justify-between gap-5 ">
                     <h2 className="text-lg font-medium text-white">
-                        Total Venue <span className="text-[#853FF9]">(47)</span>
+                        Total Venue <span className="text-[#853FF9]">({filteredVenues.length})</span>
                     </h2>
 
                     <div className="flex flex-wrap items-center justify-end gap-3">
@@ -38,24 +154,26 @@ const FacultyVenueListPage = () => {
                             <Search size={16} className="text-[#8b93a4]" />
                             <input
                                 type="text"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Search by venues"
                                 className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]"
                             />
                         </div>
 
-                        {['Floor', 'Block', 'Venue'].map((filter) => (
-                            <button
-                                key={filter}
-                                className="flex items-center gap-2 rounded-md border border-[#343b4a] bg-[#171f31] px-4 py-2.5 text-xs text-white transition hover:border-[#8B5CF6]"
-                            >
-                                <ListFilter size={13} className="text-[#8b93a4]" />
-                                {filter}
-                            </button>
-                        ))}
+                        <SelectFilter value={floorFilter} onChange={setFloorFilter} options={filterOptions.floors} label="Floor" />
+                        <SelectFilter value={blockFilter} onChange={setBlockFilter} options={filterOptions.blocks} label="Block" />
+                        <SelectFilter value={venueFilter} onChange={setVenueFilter} options={filterOptions.venueNames} label="Venue" />
                     </div>
                 </div>
 
-                <FacultyVenueCards venues={venues} />
+                {filteredVenues.length === 0 ? (
+                    <div className="mt-6 rounded-xl border border-gray-700 bg-[#171F31] px-6 py-10 text-center text-sm text-[#8b93a7]">
+                        No venues available
+                    </div>
+                ) : (
+                    <FacultyVenueCards venues={filteredVenues} />
+                )}
             </main>
         </section>
     )
@@ -63,10 +181,10 @@ const FacultyVenueListPage = () => {
 
 const FacultyVenueCards = ({ venues = [] }) => {
     return (
-        <div className="mt-6 grid max-h-[calc(100vh-260px)] grid-cols-1 gap-5 overflow-auto pr-2 table-custom-scrollbar lg:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-6 grid  max-h-[calc(100vh-260px)] grid-cols-1 gap-5 overflow-auto table-custom-scrollbar pr-2 lg:grid-cols-2 xl:grid-cols-3">
             {venues.map((venue, index) => (
                 <article
-                    key={`${venue.name}-${index}`}
+                    key={venue.id || index}
                     className="rounded-lg border border-[#2b3548] bg-[#171f31] p-4 transition hover:border-[#3b465b] hover:bg-[#141b2b]"
                 >
                     <div className="mb-4">

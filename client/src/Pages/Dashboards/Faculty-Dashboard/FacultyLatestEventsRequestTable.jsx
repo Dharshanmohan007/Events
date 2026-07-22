@@ -1,14 +1,10 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, ExternalLink, ListFilter } from 'lucide-react'
+import { jwtDecode } from 'jwt-decode'
+import CustomDatePicker from '../../../Components/CustomDatePicker'
 
-const events = Array.from({ length: 9 }, (_, index) => ({
-    id: index + 1,
-    eventName: 'Welcome Freshers',
-    eventType: 'Seminar',
-    eventDate: '15-03-2026',
-    status: index === 1 ? 'Pending Approval' : 'Approved',
-}))
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const Status = ({ status }) => {
     const isApproved = status === 'Approved'
@@ -22,15 +18,169 @@ const Status = ({ status }) => {
 }
 
 const FacultyLatestEventsRequestTable = () => {
+    const [events, setEvents] = useState([])
+    const [filteredEvents, setFilteredEvents] = useState([])
+    const [showFilters, setShowFilters] = useState(false)
+    const [eventTypes, setEventTypes] = useState([])
+
+    const [statusFilter, setStatusFilter] = useState('')
+    const [eventTypeFilter, setEventTypeFilter] = useState('')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
+
+    const filterRef = useRef(null)
+
+    useEffect(() => {
+        const fetchEvents = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                if (!token) return
+
+                const decoded = jwtDecode(token)
+                const facultyId = decoded.facultyId
+
+                const res = await fetch(
+                    `${API_BASE_URL}/api/table/faculty-dashboard-table?facultyId=${facultyId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                )
+
+                const data = await res.json()
+                if (data.success) {
+                    setEvents(data.data)
+                    setFilteredEvents(data.data)
+                    const types = [...new Set(data.data.map(e => e.eventType))]
+                    setEventTypes(types)
+                }
+            } catch (err) {
+                console.error('Failed to fetch events:', err)
+            }
+        }
+
+        fetchEvents()
+    }, [])
+
+    useEffect(() => {
+        let result = [...events]
+
+        if (statusFilter) {
+            result = result.filter(e => e.eventStatus === statusFilter)
+        }
+
+        if (eventTypeFilter) {
+            result = result.filter(e => e.eventType === eventTypeFilter)
+        }
+
+        if (dateFrom) {
+            const from = new Date(dateFrom)
+            result = result.filter(e => new Date(e.eventDates[0]) >= from)
+        }
+
+        if (dateTo) {
+            const to = new Date(dateTo)
+            result = result.filter(e => new Date(e.eventDates[0]) <= to)
+        }
+
+        setFilteredEvents(result)
+    }, [statusFilter, eventTypeFilter, dateFrom, dateTo, events])
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (filterRef.current && !filterRef.current.contains(e.target)) {
+                setShowFilters(false)
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [])
+
+    const clearFilters = () => {
+        setStatusFilter('')
+        setEventTypeFilter('')
+        setDateFrom('')
+        setDateTo('')
+    }
+
+    const hasActiveFilters = statusFilter || eventTypeFilter || dateFrom || dateTo
+
     return (
         <section className="rounded-lg border border-[#263044] bg-[#151d2d]">
             <div className="flex items-center justify-between px-4 py-4">
                 <h2 className="text-sm font-semibold text-white">Latest Events Request</h2>
                 <div className="flex items-center gap-4">
-                    <button className="flex items-center gap-1.5 rounded-md bg-[#222b3d] px-3 py-2 text-[10px] text-white">
-                        <ListFilter size={12} />
-                        Filters
-                    </button>
+                    <div className="relative" ref={filterRef}>
+                        <button
+                            onClick={() => setShowFilters(!showFilters)}
+                            className={`flex items-center gap-1.5 rounded-md px-3 py-2 text-[10px] text-white cursor-pointer transition ${showFilters || hasActiveFilters ? 'bg-[#853FF9]' : 'bg-[#222b3d]'}`}
+                        >
+                            <ListFilter size={12} />
+                            Filters
+                            {hasActiveFilters && (
+                                <span className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#F20768] text-[8px] font-bold">
+                                    {[statusFilter, eventTypeFilter, dateFrom, dateTo].filter(Boolean).length}
+                                </span>
+                            )}
+                        </button>
+
+                        {showFilters && (
+                            <div className="absolute right-0 top-full z-20 mt-2 w-64 rounded-lg border border-[#283247] bg-[#151d2e] p-4 shadow-xl">
+                                <div className="mb-3 flex items-center justify-between">
+                                    <h4 className="text-xs font-semibold text-white">Filters</h4>
+                                    {hasActiveFilters && (
+                                        <button onClick={clearFilters} className="text-[10px] text-[#F20768] cursor-pointer hover:underline">
+                                            Clear all
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="mb-1 block text-[10px] text-[#FFFFFF80]">Status</label>
+                                    <select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        className="w-full rounded-md border border-[#283247] bg-[#1b2435] px-2 py-1.5 text-[11px] text-white outline-none focus:border-[#853FF9]"
+                                    >
+                                        <option value="">All</option>
+                                        <option value="Submitted">Submitted</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Pending">Pending</option>
+                                    </select>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="mb-1 block text-[10px] text-[#FFFFFF80]">Event Type</label>
+                                    <select
+                                        value={eventTypeFilter}
+                                        onChange={(e) => setEventTypeFilter(e.target.value)}
+                                        className="w-full rounded-md border border-[#283247] bg-[#1b2435] px-2 py-1.5 text-[11px] text-white outline-none focus:border-[#853FF9]"
+                                    >
+                                        <option value="">All</option>
+                                        {eventTypes.map(type => (
+                                            <option key={type} value={type}>{type}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div className="mb-3">
+                                    <label className="mb-1 block text-[10px] text-[#FFFFFF80]">Date From</label>
+                                    <CustomDatePicker
+                                        value={dateFrom}
+                                        onChange={setDateFrom}
+                                        placeholder="From date"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-[10px] text-[#FFFFFF80]">Date To</label>
+                                    <CustomDatePicker
+                                        value={dateTo}
+                                        onChange={setDateTo}
+                                        placeholder="To date"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <Link to="/dashboard-faculty/events" className="flex items-center gap-1.5 text-xs font-semibold text-[#8B5CF6]">
                         View All
                         <ArrowRight size={13} />
@@ -50,19 +200,28 @@ const FacultyLatestEventsRequestTable = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {events.map((event) => (
-                            <tr key={event.id} className="border-b border-[#222b3d] last:border-b-0">
+                        {filteredEvents.map((event) => (
+                            <tr key={event.eventId} className="border-b border-[#222b3d] last:border-b-0">
                                 <td className="px-4 py-3 text-[12px] font-medium text-white">{event.eventName}</td>
                                 <td className="px-4 py-3 text-[12px] text-white">{event.eventType}</td>
-                                <td className="px-4 py-3 text-[12px] text-white">{event.eventDate}</td>
-                                <td className="px-4 py-3"><Status status={event.status} /></td>
+                                <td className="px-4 py-3 text-[12px] text-white">
+                                    {new Date(event.eventDates[0]).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                                </td>
+                                <td className="px-4 py-3"><Status status={event.eventStatus} /></td>
                                 <td className="px-4 py-3">
-                                    <Link to={`/dashboard-faculty/events/detailView/${event.id}`} className="inline-flex text-[#FFFFFF80] transition hover:text-white" title="Open event">
+                                    <Link to={`/dashboard-faculty/events/detailView/${event.eventId}`} className="inline-flex text-[#FFFFFF80] transition hover:text-white" title="Open event">
                                         <ExternalLink size={14} />
                                     </Link>
                                 </td>
                             </tr>
                         ))}
+                        {filteredEvents.length === 0 && (
+                            <tr>
+                                <td colSpan={5} className="px-4 py-6 text-center text-[12px] text-[#FFFFFF66]">
+                                    No events found.
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

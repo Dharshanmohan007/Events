@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import StatCard from '../../../Components/StatCard'
@@ -8,6 +8,8 @@ import circleTick from '../../../assets/circle-tick.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
 import tick from '../../../assets/tick.svg'
 import VenueHeader from './VenueHeader'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const statCardData = [
     {
@@ -44,79 +46,6 @@ const statCardData = [
     },
 ]
 
-const upcomingEvents = [
-    {
-        eventName: 'National Conference 2026',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'National Conference 2026',
-        eventType: 'Seminar',
-        eventDate: '15-03-2026',
-        department: 'CSE',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Faculty Meet',
-        eventType: 'Meeting',
-        eventDate: '18-03-2026',
-        department: 'AIML',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Faculty Meet',
-        eventType: 'Meeting',
-        eventDate: '18-03-2026',
-        department: 'AIML',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Workshop on IoT',
-        eventType: 'Workshop',
-        eventDate: '22-03-2026',
-        department: 'EEE',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Workshop on IoT',
-        eventType: 'Workshop',
-        eventDate: '22-03-2026',
-        department: 'EEE',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'International Symposium',
-        eventType: 'Seminar',
-        eventDate: '28-03-2026',
-        department: 'IT',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'International Symposium',
-        eventType: 'Seminar',
-        eventDate: '28-03-2026',
-        department: 'IT',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Alumni Meet',
-        eventType: 'Event',
-        eventDate: '05-04-2026',
-        department: 'ME',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Alumni Meet',
-        eventType: 'Event',
-        eventDate: '05-04-2026',
-        department: 'ME',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-]
-
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
     { name: 'AIML', value: 55, color: '#159283' },
@@ -124,7 +53,41 @@ const departmentData = [
     { name: 'VLSI', value: 8, color: '#4169e1' },
 ]
 
+const transformVenueData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        eventType: item.eventType || '-',
+        department: item.organizingDepartment || '-',
+        venue: item.venues || [],
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
+
 const VenueDashboard = () => {
+    const [events, setEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=venue`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                })
+                const json = await res.json()
+                if (json.data && Array.isArray(json.data)) {
+                    setEvents(transformVenueData(json.data))
+                }
+            } catch (err) {
+                console.error('Failed to fetch venue dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <section className="bg-[#0b1326] poppins h-screen overflow-auto table-custom-scrollbar">
             <VenueHeader />
@@ -140,10 +103,18 @@ const VenueDashboard = () => {
                 <StatCard data={statCardData} />
 
                 <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                    <UpcomingEventsTable
-                        events={upcomingEvents}
-                        viewAllLink="/dashboard-venue/requests"
-                    />
+                    {loading ? (
+                        <div className="flex h-full items-center justify-center">
+                            <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                        </div>
+                    ) : (
+                        <UpcomingEventsTable
+                            events={events}
+                            viewAllLink="/dashboard-venue/requests"
+                            module="venue"
+                            detailViewPath="/dashboard-venue/events/detailView"
+                        />
+                    )}
                 </div>
 
                 <div className="mt-8 grid grid-cols-12 gap-3 pb-5">

@@ -1,96 +1,59 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
-import FoodRequestTable from './FoodRequestTable'
+import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 
-const foodRequests = [
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const individualRequests = [
     {
-        eventName: 'Annual Tech Fest 2026',
+        requiredDate: '15-03-2026',
+        organizerName: 'Surya Chandran',
         department: 'CSE',
-        type: 'Lunch & Snacks',
-        expectedCount: 150,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Annual Tech Fest 2026',
-        department: 'CSE',
-        type: 'Breakfast',
-        expectedCount: 80,
+        organizerPhone: '9080884370',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Cultural Night',
+        requiredDate: '18-03-2026',
+        organizerName: 'Priya Sharma',
         department: 'ECE',
-        type: 'Dinner',
-        expectedCount: 200,
+        organizerPhone: '9876543210',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Cultural Night',
-        department: 'ECE',
-        type: 'Snacks',
-        expectedCount: 100,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Workshop on AI',
+        requiredDate: '22-03-2026',
+        organizerName: 'Arun Kumar',
         department: 'AIML',
-        type: 'Lunch',
-        expectedCount: 60,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Workshop on AI',
-        department: 'AIML',
-        type: 'Breakfast',
-        expectedCount: 40,
+        organizerPhone: '8765432109',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Sports Meet',
+        requiredDate: '25-03-2026',
+        organizerName: 'Meena Rajan',
         department: 'ME',
-        type: 'Lunch & Snacks',
-        expectedCount: 250,
+        organizerPhone: '7654321098',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Sports Meet',
-        department: 'ME',
-        type: 'Dinner',
-        expectedCount: 180,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Hackathon 2026',
+        requiredDate: '28-03-2026',
+        organizerName: 'Rajesh Kumar',
         department: 'IT',
-        type: '24/7 Catering',
-        expectedCount: 120,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Hackathon 2026',
-        department: 'IT',
-        type: 'Snacks',
-        expectedCount: 80,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        type: 'Lunch',
-        expectedCount: 90,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        type: 'Breakfast',
-        expectedCount: 50,
+        organizerPhone: '6543210987',
         acknowledgeStatus: 'Acknowledged',
     },
 ]
+
+const transformFoodData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        eventType: item.eventType || '-',
+        department: item.organizingDepartment || '-',
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
 
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
@@ -103,6 +66,29 @@ const departmentData = [
 ]
 
 const FoodDashboard = () => {
+    const [events, setEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=food`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                })
+                const json = await res.json()
+                if (json.data && Array.isArray(json.data)) {
+                    setEvents(transformFoodData(json.data))
+                }
+            } catch (err) {
+                console.error('Failed to fetch food dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
@@ -124,7 +110,20 @@ const FoodDashboard = () => {
 
                     {/* table and charts    */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <FoodRequestTable requests={foodRequests} viewAllLink="/food-requests" />
+                        {loading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                            </div>
+                        ) : (
+                            <UpcomingEventsTable
+                                events={events}
+                                viewAllLink="/food-requests"
+                                title="Upcoming Food & Catering Requests"
+                                module="food"
+                                individualEvents={individualRequests}
+                                detailViewPath="/dashboard-food/events/detailView"
+                            />
+                        )}
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">

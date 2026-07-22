@@ -1,12 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FileText } from 'lucide-react'
 
-const objectRequirements = [
-  ['Hand Mic', '2'],
-  ['Collar Mic', '1'],
-  ['Expected Internet Users', '20'],
-  ['Total Number of Guest WIFI Count', '20'],
-]
+const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
+const EMPTY_AUDIOS = []
 
 const RequirementCard = ({ title, children }) => (
   <section className="rounded-lg border border-[#374155] bg-[#232A3B] p-5">
@@ -29,21 +25,46 @@ const KeyValueList = ({ items }) => (
   </div>
 )
 
-const FacultyAudioDetailsPanel = () => {
-  return (
-    <div className="grid grid-cols-2 gap-5">
-      <RequirementCard title="Object Requirement">
-        <KeyValueList items={objectRequirements} />
-      </RequirementCard>
+const FacultyAudioDetailsPanel = ({ audioDetails, eventSchedule = [] }) => {
+  const [activeDay, setActiveDay] = useState(0)
+  const audios = audioDetails?.audios ?? EMPTY_AUDIOS
+  const dayCount = Math.max(eventSchedule.length, ...audios.map((audio) => Number(audio.dayIndex) + 1), 1)
+  const selectedDay = Math.min(activeDay, dayCount - 1)
+  const dayAudios = audios.filter((audio) => Number(audio.dayIndex) === selectedDay)
 
-      <RequirementCard title="Special Requirement">
-        <p className="text-sm font-medium leading-7 text-[#E6E2F0]">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-          Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-          Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-        </p>
-      </RequirementCard>
+  if (!audioDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No audio details are available.</p>
+
+  return (
+    <div className="space-y-5">
+      {dayCount > 1 && (
+        <nav className="flex border-b border-[#374155]" aria-label="Audio event days">
+          {Array.from({ length: dayCount }, (_, index) => (
+            <button key={index} type="button" onClick={() => setActiveDay(index)} className={`border-b-2 px-5 py-2 text-[10px] font-medium transition ${selectedDay === index ? 'border-[#8B3DFF] text-[#9F68FF]' : 'border-transparent text-[#CBC3D7]/75 hover:text-white'}`}>Day {index + 1}</button>
+          ))}
+        </nav>
+      )}
+
+      {dayAudios.map((audio, index) => (
+        <section key={`${audio.venueName}-${index}`} className="rounded-lg border border-[#374155] bg-[#232A3C] p-5">
+          <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(audio.venueName)}</h3>
+          <div className="mt-5 grid grid-cols-2 gap-5">
+            <RequirementCard title="Audio Requirements">
+              <KeyValueList items={(audio.audioItems || []).map((item) => [item.type || 'Requirement', displayValue(item.quantity)])} />
+            </RequirementCard>
+
+            <div className="space-y-5">
+              <RequirementCard title="Other Requirements">
+                <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(audio.otherRequirements)}</p>
+              </RequirementCard>
+              <RequirementCard title="Special Requirements">
+                <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(audio.specialRequirements)}</p>
+              </RequirementCard>
+            </div>
+          </div>
+        </section>
+      ))}
+
+      {!dayAudios.length && <p className="py-8 text-center text-sm text-[#CBC3D7]/65">No audio requirements were submitted for Day {selectedDay + 1}.</p>}
     </div>
   )
 }

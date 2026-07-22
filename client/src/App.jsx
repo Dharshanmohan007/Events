@@ -6,13 +6,16 @@ import { ToastContainer } from "react-toastify";
 import EventsForm from './Pages/EventsForm'
 import ICTCSDashboard from './Pages/Dashboards/ICTC-Dashboard/ICTCSDashboard'
 import AUDIODashboard from './Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard'
+import AudioEventsDetailViewPage from './Pages/Dashboards/AUDIO-Dashboard/AudioEventsDetailViewPage'
 import AudioReportsPage from './Pages/Dashboards/AUDIO-Dashboard/AudioReportsPage'
 import Login from './Pages/Login'
 import Events from './Pages/Dashboards/ICTC-Dashboard/Events'
 import Reports from './Pages/Dashboards/ICTC-Dashboard/Reports'
 import IctcEventDetailsPage from './Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage'
+import IctcsEventsDetailViewPage from './Pages/Dashboards/ICTC-Dashboard/IctcsEventsDetailViewPage'
 import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
 import TransportsReportsPage from './Pages/Dashboards/Transports-Dashboard/TransportsReportsPage'
+import TransportEventsDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportEventsDetailViewPage'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
@@ -28,11 +31,15 @@ import AdminManagementPage from './Pages/Dashboards/Admin-Dashboard/AdminManagem
 import FacultyManagementPage from './Pages/Dashboards/Admin-Dashboard/FacultyManagementPage'
 import AdminReportsPage from './Pages/Dashboards/Admin-Dashboard/AdminReportsPage'
 import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/AccommodationDashboard'
+import AccommodationEventsDetailViewPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationEventsDetailViewPage'
 import AccommodationReportsPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationReportsPage'
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
+import FoodEventsDetailViewPage from './Pages/Dashboards/Food-Dashboard/FoodEventsDetailViewPage'
 import FoodReportsPage from './Pages/Dashboards/Food-Dashboard/FoodReportsPage'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
+import PurchaseEventsDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseEventsDetailViewPage'
 import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
+import VenueEventsDetailViewPage from './Pages/Dashboards/Venue-Dashboard/VenueEventsDetailViewPage'
 import VenueReportsPage from './Pages/Dashboards/Venue-Dashboard/VenueReportsPage'
 import ForgetPassword from './Components/ForgetPassword'
 import EventDetailsPage from "./Pages/Dashboards/Admin-Dashboard/EventDetailsPage"
@@ -66,12 +73,15 @@ function AppRoutes() {
       <Route path="/dashboard-ictcs" element={<ProtectedRoute><ICTCSDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-ictcs/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
       <Route path="/dashboard-ictcs/events/:eventId" element={<ProtectedRoute><IctcEventDetailsPage /></ProtectedRoute>} />
+      <Route path="/dashboard-ictcs/events/detailView/:eventId" element={<ProtectedRoute><IctcsEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-ictcs/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
 
       <Route path="/dashboard-audio" element={<ProtectedRoute><AUDIODashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-audio/events/detailView/:eventId" element={<ProtectedRoute><AudioEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-audio/reports" element={<ProtectedRoute><AudioReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-transports" element={<ProtectedRoute><TransportsDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-transports/events/detailView/:eventId" element={<ProtectedRoute><TransportEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-transports/reports" element={<ProtectedRoute><TransportsReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
@@ -99,15 +109,19 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-accommodation" element={<ProtectedRoute><AccommodationDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-accommodation/events/detailView/:eventId" element={<ProtectedRoute><AccommodationEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/reports" element={<ProtectedRoute><AccommodationReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-venue" element={<ProtectedRoute><VenueDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-venue/events/detailView/:eventId" element={<ProtectedRoute><VenueEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-venue/reports" element={<ProtectedRoute><VenueReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-food" element={<ProtectedRoute><FoodDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-food/events/detailView/:eventId" element={<ProtectedRoute><FoodEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/reports" element={<ProtectedRoute><FoodReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

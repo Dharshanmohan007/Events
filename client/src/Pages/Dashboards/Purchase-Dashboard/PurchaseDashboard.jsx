@@ -1,96 +1,59 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import PurchaseStatcard from './PurchaseStatcard'
-import PurchaseRequestTable from './PurchaseRequestTable'
+import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 
-const purchaseRequests = [
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const individualRequests = [
     {
-        eventName: 'Annual Tech Fest 2026',
+        requiredDate: '15-03-2026',
+        organizerName: 'Surya Chandran',
         department: 'CSE',
-        category: 'Electronics',
-        estimatedCost: '₹50,000',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Annual Tech Fest 2026',
-        department: 'CSE',
-        category: 'Stationery',
-        estimatedCost: '₹15,000',
+        organizerPhone: '9080884370',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Cultural Night',
+        requiredDate: '18-03-2026',
+        organizerName: 'Kavya R',
         department: 'ECE',
-        category: 'Electronics',
-        estimatedCost: '₹75,000',
+        organizerPhone: '9876543210',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Cultural Night',
-        department: 'ECE',
-        category: 'Furniture',
-        estimatedCost: '₹30,000',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Workshop on AI',
+        requiredDate: '22-03-2026',
+        organizerName: 'Vikram S',
         department: 'AIML',
-        category: 'Lab Equipment',
-        estimatedCost: '₹1,20,000',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Workshop on AI',
-        department: 'AIML',
-        category: 'Electronics',
-        estimatedCost: '₹45,000',
+        organizerPhone: '8765432109',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Sports Meet',
+        requiredDate: '25-03-2026',
+        organizerName: 'Nandini Reddy',
         department: 'ME',
-        category: 'Furniture',
-        estimatedCost: '₹60,000',
+        organizerPhone: '7654321098',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Sports Meet',
-        department: 'ME',
-        category: 'Stationery',
-        estimatedCost: '₹10,000',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Hackathon 2026',
+        requiredDate: '28-03-2026',
+        organizerName: 'Arun Prasad',
         department: 'IT',
-        category: 'Electronics',
-        estimatedCost: '₹85,000',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Hackathon 2026',
-        department: 'IT',
-        category: 'Lab Equipment',
-        estimatedCost: '₹95,000',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        category: 'Lab Equipment',
-        estimatedCost: '₹1,50,000',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        category: 'Electronics',
-        estimatedCost: '₹70,000',
+        organizerPhone: '6543210987',
         acknowledgeStatus: 'Acknowledged',
     },
 ]
+
+const transformPurchaseData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        eventType: item.eventType || '-',
+        department: item.organizingDepartment || '-',
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
 
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
@@ -103,6 +66,29 @@ const departmentData = [
 ]
 
 const PurchaseDashboard = () => {
+    const [events, setEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=purchase`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                })
+                const json = await res.json()
+                if (json.data && Array.isArray(json.data)) {
+                    setEvents(transformPurchaseData(json.data))
+                }
+            } catch (err) {
+                console.error('Failed to fetch purchase dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
@@ -121,7 +107,20 @@ const PurchaseDashboard = () => {
                     <PurchaseStatcard />
                     {/* table and charts    */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <PurchaseRequestTable requests={purchaseRequests} viewAllLink="/purchase-requests" />
+                        {loading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                            </div>
+                        ) : (
+                            <UpcomingEventsTable
+                                events={events}
+                                viewAllLink="/purchase-requests"
+                                title="Upcoming Purchase Requests"
+                                module="purchase"
+                                individualEvents={individualRequests}
+                                detailViewPath="/dashboard-purchase/events/detailView"
+                            />
+                        )}
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
