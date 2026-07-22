@@ -36,6 +36,10 @@ const createTransportForm = () => ({
   staffDetails: [],
 
   specialRequirement: "",
+  financeRequired: false,
+  advanceAmount: "",
+  advancePurpose: "",
+  showFinanceDropdown: false,
 });
 
 const floatingLabelClass =
@@ -404,6 +408,10 @@ const TransportDetailsPage = () => {
 
     formData.append("specialRequirements", form.specialRequirement);
 
+    formData.append("financeRequested", form.financeRequired || false);
+    formData.append("advanceAmount", form.financeRequired ? Number(form.advanceAmount) || 0 : 0);
+    formData.append("advancePurpose", form.financeRequired ? form.advancePurpose || "" : "");
+
     formData.append("status", "Pending");
 
     return formData;
@@ -449,6 +457,17 @@ const TransportDetailsPage = () => {
           errors.push(`Form ${index + 1}: ${vehicle} count required`);
         }
       });
+
+      // Finance validation
+      if (form.financeRequired) {
+        if (!form.advanceAmount) {
+          errors.push(`Form ${index + 1}: Advance amount is required.`);
+        }
+
+        if (!form.advancePurpose || !form.advancePurpose.trim()) {
+          errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+      }
     });
 
     setValidationErrors(errors);
@@ -1267,6 +1286,112 @@ const TransportDetailsPage = () => {
                 </div>
               ))}
             </div>
+          )}
+
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Finance Required *</label>
+
+            <button
+              type="button"
+              onClick={() =>
+                updateFormField(formIndex, "showFinanceDropdown", !form.showFinanceDropdown)
+              }
+              className="
+                transport-select-control
+                w-full
+                border
+                border-[#2F2F47]
+                rounded-md
+                px-4
+                py-3
+                flex
+                justify-between
+                items-center
+                cursor-pointer
+                focus:border-[#3b82f6]
+                transition-all
+              "
+            >
+              <span className={form.financeRequired ? "text-white" : "text-[#8d8da8]"}>
+                {form.financeRequired ? "Yes" : "No"}
+              </span>
+
+              <ChevronDown size={18} />
+            </button>
+
+            {form.showFinanceDropdown && (
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+                {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
+                  <div
+                    key={opt.label}
+                    onClick={() =>
+                      updateFormField(formIndex, "showFinanceDropdown", false) ||
+                      updateFormField(formIndex, "financeRequired", opt.value) ||
+                      (opt.value === false
+                        ? updateFormField(formIndex, "advanceAmount", "") || updateFormField(formIndex, "advancePurpose", "")
+                        : null)
+                    }
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      form.financeRequired === opt.value
+                        ? "bg-[#492A6F] text-white"
+                        : "text-white hover:bg-[#492A6F] hover:text-white"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+
+                    {form.financeRequired === opt.value && <span>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {form.financeRequired && (
+            <>
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>
+                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
+                </label>
+
+                <input
+                  type="number"
+                  value={form.advanceAmount}
+                  onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                  placeholder="0"
+                  className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+              </div>
+
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>Purpose of Advance</label>
+
+                <input
+                  type="text"
+                  value={form.advancePurpose}
+                  onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
+                  placeholder="Purpose"
+                  className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+              </div>
+            </>
           )}
 
           {/* SPECIAL REQUIREMENT */}

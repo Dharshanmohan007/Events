@@ -95,6 +95,10 @@ const createFoodFormCard = () => ({
     },
   ],
   specialRequirement: "",
+  financeRequired: false,
+  advanceAmount: "",
+  advancePurpose: "",
+  showFinanceDropdown: false,
 });
 
 function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
@@ -951,6 +955,10 @@ useEffect(() => {
 
       specialRequirements: card.specialRequirement.trim(),
 
+      financeRequested: !!card.financeRequired,
+      advanceAmount: card.financeRequired ? Number(card.advanceAmount) || 0 : 0,
+      advancePurpose: card.financeRequired ? card.advancePurpose.trim() : "",
+
       status: "Pending",
     };
   };
@@ -1013,6 +1021,17 @@ useEffect(() => {
             errors.push(`${formLabel}${type}: Non-Veg Guest count is required.`);
         }
       });
+
+      // Finance validation
+      if (card.financeRequired) {
+        if (!card.advanceAmount) {
+          errors.push(`${formLabel}Advance amount is required.`);
+        }
+
+        if (!card.advancePurpose || !card.advancePurpose.trim()) {
+          errors.push(`${formLabel}Advance purpose is required.`);
+        }
+      }
     });
 
     setValidationErrors(errors);
@@ -1069,6 +1088,10 @@ formData.append(
   "status",
   payload.status
 );
+
+formData.append("financeRequested", payload.financeRequested);
+formData.append("advanceAmount", payload.advanceAmount);
+formData.append("advancePurpose", payload.advancePurpose);
 
 if (principalApprovalDocument) {
   formData.append(
@@ -1451,6 +1474,128 @@ setSubmitSuccess(true);
                 "
             />
           </div>
+
+          <div className="relative">
+            <label className={cardFloatingLabelClass}>Finance Required *</label>
+
+            <div
+              tabIndex={0}
+              onClick={() =>
+                updateFormCard(card.id, {
+                  showFinanceDropdown: !card.showFinanceDropdown,
+                })
+              }
+              className="
+                food-select-control
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                flex
+                justify-between
+                items-center
+                cursor-pointer
+              "
+            >
+              <span className={card.financeRequired ? "text-white" : "text-[#8d8da8]"}>
+                {card.financeRequired ? "Yes" : "No"}
+              </span>
+
+              <ChevronDown
+                size={18}
+                className={`transition-transform duration-300 ${
+                  card.showFinanceDropdown ? "rotate-180" : "rotate-0"
+                }`}
+              />
+            </div>
+
+            {card.showFinanceDropdown && (
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+                {[
+                  { label: "Yes", value: true },
+                  { label: "No", value: false },
+                ].map((opt) => (
+                  <div
+                    key={opt.label}
+                    onClick={() =>
+                      updateFormCard(card.id, {
+                        financeRequired: opt.value,
+                        showFinanceDropdown: false,
+                        ...(opt.value === false
+                          ? { advanceAmount: "", advancePurpose: "" }
+                          : {}),
+                      })
+                    }
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      card.financeRequired === opt.value
+                        ? "bg-[#492A6F] text-white"
+                        : "text-white hover:bg-[#492A6F] hover:text-white"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+
+                    {card.financeRequired === opt.value && <span>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {card.financeRequired && (
+            <>
+              <div className="relative">
+                <label className={cardFloatingLabelClass}>
+                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
+                </label>
+
+                <input
+                  type="number"
+                  value={card.advanceAmount}
+                  onChange={(e) =>
+                    updateFormCard(card.id, { advanceAmount: e.target.value })
+                  }
+                  placeholder="0"
+                  className="
+                  w-full
+                  border
+                  border-[#383847]
+                  rounded-md
+                  px-4
+                  py-3
+                  text-white
+                  outline-none
+                "
+                />
+              </div>
+
+              <div className="relative">
+                <label className={cardFloatingLabelClass}>
+                  Purpose of Advance
+                </label>
+
+                <input
+                  type="text"
+                  value={card.advancePurpose}
+                  onChange={(e) =>
+                    updateFormCard(card.id, { advancePurpose: e.target.value })
+                  }
+                  placeholder="Purpose"
+                  className="
+                  w-full
+                  border
+                  border-[#383847]
+                  rounded-md
+                  px-4
+                  py-3
+                  text-white
+                  outline-none
+                "
+                />
+              </div>
+            </>
+          )}
         </div>
 
         {/* DYNAMIC STAFF INPUTS */}
@@ -1543,7 +1688,7 @@ setSubmitSuccess(true);
             </div>
           ))}
         {/* FOOD TYPE SELECTION */}
-        <div className="relative mb-6">
+        <div className="relative mb-6 mt-4">
           <label className={cardFloatingLabelClass}>Food Type *</label>
 
           <div

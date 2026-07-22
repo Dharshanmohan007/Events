@@ -387,6 +387,9 @@ export default function PurchaseDetails() {
 
     students: emptyPerson,
     guests: emptyPerson,
+    financeRequired: false,
+    advanceAmount: "",
+    advancePurpose: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -538,6 +541,17 @@ export default function PurchaseDetails() {
         });
       }
     });
+
+    // Finance validation
+    if (form.financeRequired) {
+      if (!form.advanceAmount || !form.advanceAmount.toString().trim()) {
+        nextErrors.advanceAmount = "This field is required.";
+      }
+
+      if (!form.advancePurpose || !form.advancePurpose.trim()) {
+        nextErrors.advancePurpose = "This field is required.";
+      }
+    }
 
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
@@ -691,6 +705,9 @@ export default function PurchaseDetails() {
 
             specialRequirements: form.guests.specialRequirements || "",
           },
+          financeRequested: !!form.financeRequired,
+          advanceAmount: form.financeRequired ? Number(form.advanceAmount) || 0 : 0,
+          advancePurpose: form.financeRequired ? form.advancePurpose || "" : "",
         },
       ],
     };
@@ -1061,7 +1078,38 @@ export default function PurchaseDetails() {
             placeholder="Select Date"
             error={errors.deliveryDate}
           />
+
+          {/* FINANCE REQUIRED */}
+          <CustomDropdown
+            label="Finance Required *"
+            value={form.financeRequired ? "Yes" : "No"}
+            setValue={(val) => setField("financeRequired", val === "Yes")}
+            options={["Yes", "No"]}
+            placeholder="Select an option"
+            error={errors.financeRequired}
+          />
         </div>
+
+        {form.financeRequired && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <InputField
+              label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."
+              placeholder="0"
+              value={form.advanceAmount}
+              onChange={(e) => setField("advanceAmount", e.target.value)}
+              type="number"
+              error={errors.advanceAmount}
+            />
+
+            <InputField
+              label="Purpose of Advance"
+              placeholder="Purpose"
+              value={form.advancePurpose}
+              onChange={(e) => setField("advancePurpose", e.target.value)}
+              error={errors.advancePurpose}
+            />
+          </div>
+        )}
 
         {/* STUDENTS */}
         {(form.persons.includes("Students") || form.persons.includes("Both")) && (
