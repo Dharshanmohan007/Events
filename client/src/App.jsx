@@ -48,6 +48,11 @@ import FacultyVenueListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyVe
 import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyfeedbackPage"
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
+import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
+import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
+import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
+import PurchaseDetails from "./Pages/IndividualForm/PurchaseDetails";
+
 
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
@@ -100,7 +105,14 @@ function AppRoutes() {
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+
+
       </Route>
+
+       <Route path="/transports" element={<TransportDetailsPage />} />
+      <Route path="/media" element={<MediaDetailsPage />} />
+      <Route path="/IndividualFoodAndRefreshment" element={<IndividualFoodAndRefreshmentPage />} />
+      <Route path="/purchase" element={<PurchaseDetails />} />
 
       <Route path="/dashboard-faculty" element={<ProtectedRoute><FacultyDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events" element={<ProtectedRoute><FacultyEventsListPage /></ProtectedRoute>} />

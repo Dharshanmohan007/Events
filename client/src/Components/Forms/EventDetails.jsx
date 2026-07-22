@@ -1,11 +1,35 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect  } from 'react'
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
+import { getEventTypes } from "../../services/events/getEventTypes";
 
-export default function EventDetails({ setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
+export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
   const daysData = eventData.eventDays || [];
   const numDays = daysData.length > 0 ? daysData.length.toString() : "";
+  const [eventTypeOptions, setEventTypeOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchEventTypes = async () => {
+      try {
+        const response = await getEventTypes();
+
+        console.log("API Response:", response);
+
+        if (response.success) {
+          const types = response.data.map(item => item.eventType);
+
+          console.log("Types:", types);
+
+          setEventTypeOptions([...types, "Other"]);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchEventTypes();
+  }, []);
 
   const handleDaysChange = (e) => {
     const val = e.target.value;
@@ -61,7 +85,20 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
 
   const dayCount = parseInt(numDays) > 0 ? parseInt(numDays) : 0;
 
+  const audienceValue = Array.isArray(eventData?.audience)
+  ? eventData.audience
+  : eventData?.audience
+  ? [eventData.audience]
+  : [];
+
   return (
+    <div
+            className={`${
+                disabled
+                    ? "opacity-50 pointer-events-none select-none"
+                    : ""
+            }`}
+        >
     <div className='px-1 py-6 rounded-xl'>
       <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
@@ -97,7 +134,7 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
             searchable
             value={eventData?.eventType || ""}
             onChange={handleSelect("eventType")}
-            options={["Guest Lecture", "Workshop","Seminar", "FDP", "POP", "Conference", "VAC", "IOC", "Training", "Orientation","Project Expo","Placement","Outreach","Hackathon","Contest", "Other"]}
+            options={eventTypeOptions}
             placeholder="Select event type"
           />
           {errors.eventType && <p className="text-red-400 text-xs mt-1">{errors.eventType}</p>}
@@ -178,17 +215,34 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
           />
           {errors.numDays && <p className="text-red-400 text-xs mt-1">{errors.numDays}</p>}
         </div>
-        <div>
-          <CustomSelect
-            label="Target Audience"
-            required
-            value={eventData?.audience || ""}
-            onChange={handleSelect("audience")}
-            options={["Students", "Faculty", "Both"]}
-            placeholder="Select target audience"
-          />
-          {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
-        </div>
+        <CustomSelect
+          label="Target Audience"
+          required
+          multi
+          searchable
+          value={audienceValue}
+          onChange={(val) => {
+            setEventData((prev) => ({
+              ...prev,
+              audience: val,
+            }));
+
+            if (setErrors) {
+              setErrors((prev) => ({
+                ...prev,
+                audience: "",
+              }));
+            }
+          }}
+          options={[
+            "Internal Students",
+            "Internal Faculty",
+            "External Students",
+            "External Faculty",
+            "Industry Person",
+          ]}
+          placeholder="Select target audience"
+        />
       </div>
 
       {/* Day Cards */}
@@ -206,6 +260,7 @@ export default function EventDetails({ setEventDays, errors = {}, eventData = {}
           }}
         />
       ))}
+      </div>
     </div>
   );
 }
