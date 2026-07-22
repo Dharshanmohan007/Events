@@ -1,120 +1,46 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import TransportStatcard from './TransportStatcard'
-import TransportsRequestTable from './TransportsRequestTable'
+import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
-const transportRequests = [
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const individualRequests = [
     {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
         requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
+        organizerName: 'Surya Chandran',
         department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
+        organizerPhone: '9080884370',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
+        requiredDate: '16-03-2026',
+        organizerName: 'Vikram Raj',
+        department: 'ECE',
+        organizerPhone: '9876543210',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
+        requiredDate: '22-03-2026',
+        organizerName: 'Ananya Devi',
+        department: 'AIML',
+        organizerPhone: '8765432109',
         acknowledgeStatus: 'Acknowledged',
     },
     {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
+        requiredDate: '25-03-2026',
+        organizerName: 'Karthik Rajan',
+        department: 'ME',
+        organizerPhone: '7654321098',
         acknowledgeStatus: 'Pending Acknowledge',
     },
     {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 10,
-        requiredDate: '15-03-2026',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Welcome Freshers',
-        department: 'CSE',
-        members: 4,
-        requiredDate: '15-03-2026',
+        requiredDate: '28-03-2026',
+        organizerName: 'Deepika Patel',
+        department: 'IT',
+        organizerPhone: '6543210987',
         acknowledgeStatus: 'Acknowledged',
     },
 ]
@@ -126,7 +52,39 @@ const departmentData = [
     { name: 'VLSI', value: 8, color: '#4169e1' },
 ]
 
+const transformTransportData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        department: item.organizingDepartment || '-',
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
+
 const TransportsDashboard = () => {
+    const [events, setEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=transport`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                })
+                const json = await res.json()
+                if (json.data && Array.isArray(json.data)) {
+                    setEvents(transformTransportData(json.data))
+                }
+            } catch (err) {
+                console.error('Failed to fetch transport dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
@@ -149,7 +107,20 @@ const TransportsDashboard = () => {
 
                     {/* table and charts    */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <TransportsRequestTable requests={transportRequests} viewAllLink="/transport-requests" />
+                        {loading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                            </div>
+                        ) : (
+                            <UpcomingEventsTable
+                                events={events}
+                                viewAllLink="/transport-requests"
+                                title="Upcoming Event Transport Request"
+                                module="transport"
+                                individualEvents={individualRequests}
+                                detailViewPath="/dashboard-transports/events/detailView"
+                            />
+                        )}
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
