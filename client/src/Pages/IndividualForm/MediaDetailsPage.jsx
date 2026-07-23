@@ -134,9 +134,10 @@ const [trophyContent, setTrophyContent] = useState("");
     posterRequirement,
     setPosterRequirement,
   ] = useState("");
-  const [posterFinanceRequired, setPosterFinanceRequired] = useState(false);
+  const [posterFinanceRequired, setPosterFinanceRequired] = useState("No");
   const [posterAdvanceAmount, setPosterAdvanceAmount] = useState("");
   const [posterAdvancePurpose, setPosterAdvancePurpose] = useState("");
+  const [showPosterFinanceDropdown, setShowPosterFinanceDropdown] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -295,9 +296,30 @@ const [trophyContent, setTrophyContent] = useState("");
     videoRequirement,
     setVideoRequirement,
   ] = useState("");
-  const [videoFinanceRequired, setVideoFinanceRequired] = useState(false);
+  const [videoFinanceRequired, setVideoFinanceRequired] = useState("No");
   const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
   const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
+  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+
+  // =========================
+  // FILE VALIDATION
+  // =========================
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+  const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+
+  const validateFileType = (file) => {
+    if (!file) return { valid: true };
+    
+    // Check MIME type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return { 
+        valid: false, 
+        error: `Invalid file type. Only ${ALLOWED_EXTENSIONS.join(", ")} are allowed.` 
+      };
+    }
+    
+    return { valid: true };
+  };
 
   // =========================
   // REMOVE FILE
@@ -352,9 +374,9 @@ const [trophyContent, setTrophyContent] = useState("");
         errors.push("Priority is required.");
       }
       if (!posterRequirement.trim()) {
-        errors.push("Special Requirements is required.");
+        errors.push("Special Requirements is required."); 
       }
-      if (posterFinanceRequired) {
+      if (posterFinanceRequired === "Yes") {
         if (!posterAdvanceAmount || !posterAdvanceAmount.toString().trim()) {
           errors.push("Poster: Advance amount is required.");
         }
@@ -398,7 +420,7 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!videoRequirement.trim()) {
         errors.push("Special Requirements is required.");
       }
-      if (videoFinanceRequired) {
+      if (videoFinanceRequired === "Yes") {
         if (!videoAdvanceAmount || !videoAdvanceAmount.toString().trim()) {
           errors.push("Video: Advance amount is required.");
         }
@@ -476,10 +498,6 @@ const [trophyContent, setTrophyContent] = useState("");
     }
     if (posterFile) formData.append("referencePosterFiles", posterFile);
     if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
-    // poster finance
-    formData.append("poster[financeRequested]", posterFinanceRequired ? "true" : "false");
-    formData.append("poster[advanceAmount]", posterFinanceRequired ? (posterAdvanceAmount || "0") : "0");
-    formData.append("poster[advancePurpose]", posterFinanceRequired ? (posterAdvancePurpose || "") : "");
   };
 
   const appendVideoFormData = (formData) => {
@@ -499,25 +517,79 @@ const [trophyContent, setTrophyContent] = useState("");
     if (videoFile) {
       formData.append("referenceFiles", videoFile);
     }
-    // video finance
-    formData.append("video[financeRequested]", videoFinanceRequired ? "true" : "false");
-    formData.append("video[advanceAmount]", videoFinanceRequired ? (videoAdvanceAmount || "0") : "0");
-    formData.append("video[advancePurpose]", videoFinanceRequired ? (videoAdvancePurpose || "") : "");
   };
 
   const buildMediaFormData = () => {
     const formData = new FormData();
-    formData.append("employee", "6a0411af4579d3137b255e71");
+    
+    // Root level fields
+    formData.append("employee", id || "6a0411af4579d3137b255e71");
     formData.append("dayIndex", "1");
     formData.append("status", "Pending");
-
+    
+    // Finance fields at root level (only if needed)
+    const hasFinance = (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") || 
+                       (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
+    if (hasFinance) {
+      formData.append("financeRequired", "Yes");
+      const posterAmount = posterFinanceRequired === "Yes" ? posterAdvanceAmount : 0;
+      const videoAmount = videoFinanceRequired === "Yes" ? videoAdvanceAmount : 0;
+      formData.append("advanceAmount", posterAmount || videoAmount || "0");
+      const posterPurpose = posterFinanceRequired === "Yes" ? posterAdvancePurpose : "";
+      const videoPurpose = videoFinanceRequired === "Yes" ? videoAdvancePurpose : "";
+      formData.append("advancePurpose", posterPurpose || videoPurpose || "");
+    }
+    
+    // typeOfMedia with CAPITALIZED names - append each type separately
+    selectedTypes.forEach((type) => formData.append("typeOfMedia[]", type));
+    
+    // Append poster fields separately (not as JSON object)
     if (selectedTypes.includes("Poster")) {
-      appendPosterFormData(formData);
+      formData.append("poster[posterContent]", posterContent);
+      formData.append("poster[certificateContent]", certificateContent);
+      formData.append("poster[trophyContent]", trophyContent);
+      formData.append("poster[priority]", posterPriority);
+      formData.append("poster[specialRequirements]", posterRequirement);
+      formData.append("poster[deliveryDate]", posterDeliveryDate);
+      
+      // Append display options
+      selectedDisplays.forEach((d) => formData.append("poster[displayNeeded][]", d));
+      
+      // Append sizes separately
+      let sizeIndex = 0;
+      if (selectedDisplays.includes("Flex")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Flex");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, displaySize);
+        sizeIndex++;
+      }
+      if (selectedDisplays.includes("Glass Sticker")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Glass Sticker");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, glassStickerSize);
+        sizeIndex++;
+      }
     }
-
+    
+    // Append video fields separately (not as JSON object)
     if (selectedTypes.includes("Video")) {
-      appendVideoFormData(formData);
+      formData.append("video[videoContent]", videoContent);
+      formData.append("video[deliveryDate]", videoDeliveryDate);
+      formData.append("video[priority]", videoPriority);
+      formData.append("video[specialRequirements]", videoRequirement);
+      
+      // Append video selection options
+      selectedPreEvent.forEach((item) => formData.append("video[preEventVideos][]", item));
+      selectedCoverage.forEach((item) => formData.append("video[eventCoverage][]", item));
+      selectedPostEvent.forEach((item) => formData.append("video[postEventVideos][]", item));
+      selectedSpecialVideo.forEach((item) => formData.append("video[specialVideos][]", item));
     }
+    
+    // Files
+    if (principalApprovalDocument) {
+      formData.append("principalApprovalForm", principalApprovalDocument);
+    }
+    if (posterFile) formData.append("referencePosterFiles", posterFile);
+    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+    if (videoFile) formData.append("referenceFiles", videoFile);
 
     return formData;
   };
@@ -546,8 +618,14 @@ const [trophyContent, setTrophyContent] = useState("");
     setIsSubmitting(true);
     setSubmitSuccess(false);
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE}/api/individual-media/create`, {
         method: "POST",
+          headers: {
+            ...(token && {
+              Authorization: `Bearer ${token}`,
+            }),
+          },
         body: buildMediaFormData(),
       });
       const data = await response.json();
@@ -869,12 +947,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setPosterFile(
-                    e.target.files[0]
-                  )
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setPosterFile(file);
+                }}
               />
 
               <Upload size={24} />
@@ -944,13 +1028,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setCertificateFile(
-                    e.target.files[0]
-                  )
-                  
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setCertificateFile(file);
+                }}
               />
 
               <Upload size={24} />
@@ -1217,8 +1306,8 @@ onChange={(e) => setPosterContent(e.target.value)}
                 onClick={() => setShowPosterFinanceDropdown(!showPosterFinanceDropdown)}
                 className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
               >
-                <span className={posterFinanceRequired ? "text-white" : "text-[#8d8da8]"}>
-                  {posterFinanceRequired ? "Yes" : "No"}
+                <span className={posterFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                  {posterFinanceRequired === "Yes" ? "Yes" : "No"}
                 </span>
 
                 <ChevronDown size={18} className="text-gray-400" />
@@ -1226,13 +1315,13 @@ onChange={(e) => setPosterContent(e.target.value)}
 
               {showPosterFinanceDropdown && (
                 <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
+                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
                     <div
                       key={opt.label}
                       onClick={() => {
                         setPosterFinanceRequired(opt.value);
                         setShowPosterFinanceDropdown(false);
-                        if (!opt.value) {
+                        if (opt.value === "No") {
                           setPosterAdvanceAmount("");
                           setPosterAdvancePurpose("");
                         }
@@ -1247,7 +1336,7 @@ onChange={(e) => setPosterContent(e.target.value)}
               )}
             </div>
 
-            {posterFinanceRequired && (
+            {posterFinanceRequired === "Yes" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
                 <div className="relative w-full">
                   <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
@@ -1400,12 +1489,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setVideoFile(
-                    e.target.files[0]
-                  )
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setVideoFile(file);
+                }}
               />
 
               <Upload size={20} />
@@ -1521,8 +1616,8 @@ onChange={(e) => setPosterContent(e.target.value)}
                 onClick={() => setShowVideoFinanceDropdown(!showVideoFinanceDropdown)}
                 className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
               >
-                <span className={videoFinanceRequired ? "text-white" : "text-[#8d8da8]"}>
-                  {videoFinanceRequired ? "Yes" : "No"}
+                <span className={videoFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                  {videoFinanceRequired === "Yes" ? "Yes" : "No"}
                 </span>
 
                 <ChevronDown size={18} className="text-gray-400" />
@@ -1530,13 +1625,13 @@ onChange={(e) => setPosterContent(e.target.value)}
 
               {showVideoFinanceDropdown && (
                 <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
+                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
                     <div
                       key={opt.label}
                       onClick={() => {
                         setVideoFinanceRequired(opt.value);
                         setShowVideoFinanceDropdown(false);
-                        if (!opt.value) {
+                        if (opt.value === "No") {
                           setVideoAdvanceAmount("");
                           setVideoAdvancePurpose("");
                         }
@@ -1551,7 +1646,7 @@ onChange={(e) => setPosterContent(e.target.value)}
               )}
             </div>
 
-            {videoFinanceRequired && (
+            {videoFinanceRequired === "Yes" && (
               <>
                 <div className="relative w-full">
                   <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>

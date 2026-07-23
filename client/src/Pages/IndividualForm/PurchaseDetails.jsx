@@ -387,7 +387,7 @@ export default function PurchaseDetails() {
 
     students: emptyPerson,
     guests: emptyPerson,
-    financeRequired: false,
+    financeRequired: "No",
     advanceAmount: "",
     advancePurpose: "",
   });
@@ -543,7 +543,7 @@ export default function PurchaseDetails() {
     });
 
     // Finance validation
-    if (form.financeRequired) {
+    if (form.financeRequired === "Yes") {
       if (!form.advanceAmount || !form.advanceAmount.toString().trim()) {
         nextErrors.advanceAmount = "This field is required.";
       }
@@ -673,6 +673,10 @@ export default function PurchaseDetails() {
 
       principalApprovalFormName: principalApprovalDocument?.name || null,
 
+      financeRequired: form.financeRequired,
+      advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
+      advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose || "" : "",
+
       purchases: [
         {
           dayIndex: 1,
@@ -705,9 +709,6 @@ export default function PurchaseDetails() {
 
             specialRequirements: form.guests.specialRequirements || "",
           },
-          financeRequested: !!form.financeRequired,
-          advanceAmount: form.financeRequired ? Number(form.advanceAmount) || 0 : 0,
-          advancePurpose: form.financeRequired ? form.advancePurpose || "" : "",
         },
       ],
     };
@@ -742,7 +743,18 @@ export default function PurchaseDetails() {
     // Employee
     formData.append("employee", payload.employee);
 
-    // Principal approval PDF
+    // Finance fields (MUST be before purchases)
+    formData.append("financeRequired", payload.financeRequired);
+    formData.append("advanceAmount", payload.advanceAmount);
+    formData.append("advancePurpose", payload.advancePurpose);
+
+    // Purchases
+    formData.append(
+      "purchases",
+      JSON.stringify(payload.purchases)
+    );
+
+    // Principal approval PDF (MUST be last)
     if (principalApprovalDocument) {
       formData.append(
         "principalApprovalForm",
@@ -750,12 +762,6 @@ export default function PurchaseDetails() {
         principalApprovalDocument.name
       );
     }
-
-    // Purchases
-    formData.append(
-      "purchases",
-      JSON.stringify(payload.purchases)
-    );
 
     // ===========================
     // Debug FormData
@@ -1082,15 +1088,15 @@ export default function PurchaseDetails() {
           {/* FINANCE REQUIRED */}
           <CustomDropdown
             label="Finance Required *"
-            value={form.financeRequired ? "Yes" : "No"}
-            setValue={(val) => setField("financeRequired", val === "Yes")}
+            value={form.financeRequired}
+            setValue={(val) => setField("financeRequired", val)}
             options={["Yes", "No"]}
             placeholder="Select an option"
             error={errors.financeRequired}
           />
         </div>
 
-        {form.financeRequired && (
+        {form.financeRequired === "Yes" && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <InputField
               label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."

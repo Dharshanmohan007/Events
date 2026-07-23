@@ -36,7 +36,7 @@ const createTransportForm = () => ({
   staffDetails: [],
 
   specialRequirement: "",
-  financeRequired: false,
+  financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
   showFinanceDropdown: false,
@@ -408,9 +408,9 @@ const TransportDetailsPage = () => {
 
     formData.append("specialRequirements", form.specialRequirement);
 
-    formData.append("financeRequested", form.financeRequired || false);
-    formData.append("advanceAmount", form.financeRequired ? Number(form.advanceAmount) || 0 : 0);
-    formData.append("advancePurpose", form.financeRequired ? form.advancePurpose || "" : "");
+    formData.append("financeRequired", form.financeRequired);
+    formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
+    formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
 
     formData.append("status", "Pending");
 
@@ -459,7 +459,7 @@ const TransportDetailsPage = () => {
       });
 
       // Finance validation
-      if (form.financeRequired) {
+      if (form.financeRequired === "Yes") {
         if (!form.advanceAmount) {
           errors.push(`Form ${index + 1}: Advance amount is required.`);
         }
@@ -1312,8 +1312,8 @@ const TransportDetailsPage = () => {
                 transition-all
               "
             >
-              <span className={form.financeRequired ? "text-white" : "text-[#8d8da8]"}>
-                {form.financeRequired ? "Yes" : "No"}
+              <span className={form.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                {form.financeRequired}
               </span>
 
               <ChevronDown size={18} />
@@ -1321,13 +1321,13 @@ const TransportDetailsPage = () => {
 
             {form.showFinanceDropdown && (
               <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
-                {[{ label: "Yes", value: true }, { label: "No", value: false }].map((opt) => (
+                {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
                   <div
                     key={opt.label}
                     onClick={() =>
                       updateFormField(formIndex, "showFinanceDropdown", false) ||
                       updateFormField(formIndex, "financeRequired", opt.value) ||
-                      (opt.value === false
+                      (opt.value === "No"
                         ? updateFormField(formIndex, "advanceAmount", "") || updateFormField(formIndex, "advancePurpose", "")
                         : null)
                     }
@@ -1346,7 +1346,7 @@ const TransportDetailsPage = () => {
             )}
           </div>
 
-          {form.financeRequired && (
+          {form.financeRequired === "Yes" && (
             <>
               <div className="relative mt-5">
                 <label className={formFloatingLabelClass}>

@@ -95,7 +95,7 @@ const createFoodFormCard = () => ({
     },
   ],
   specialRequirement: "",
-  financeRequired: false,
+  financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
   showFinanceDropdown: false,
@@ -955,9 +955,11 @@ useEffect(() => {
 
       specialRequirements: card.specialRequirement.trim(),
 
-      financeRequested: !!card.financeRequired,
-      advanceAmount: card.financeRequired ? Number(card.advanceAmount) || 0 : 0,
-      advancePurpose: card.financeRequired ? card.advancePurpose.trim() : "",
+      financeRequested: card.financeRequired,
+      ...(card.financeRequired === "Yes" && {
+        advanceAmount: Number(card.advanceAmount) || 0,
+        advancePurpose: card.advancePurpose.trim(),
+      }),
 
       status: "Pending",
     };
@@ -1023,7 +1025,7 @@ useEffect(() => {
       });
 
       // Finance validation
-      if (card.financeRequired) {
+      if (card.financeRequired === "Yes") {
         if (!card.advanceAmount) {
           errors.push(`${formLabel}Advance amount is required.`);
         }
@@ -1090,8 +1092,14 @@ formData.append(
 );
 
 formData.append("financeRequested", payload.financeRequested);
-formData.append("advanceAmount", payload.advanceAmount);
-formData.append("advancePurpose", payload.advancePurpose);
+
+if (payload.advanceAmount !== undefined) {
+  formData.append("advanceAmount", payload.advanceAmount);
+}
+
+if (payload.advancePurpose !== undefined) {
+  formData.append("advancePurpose", payload.advancePurpose);
+}
 
 if (principalApprovalDocument) {
   formData.append(
@@ -1474,129 +1482,131 @@ setSubmitSuccess(true);
                 "
             />
           </div>
+        </div>
 
-          <div className="relative">
-            <label className={cardFloatingLabelClass}>Finance Required *</label>
+        {/* FINANCE REQUIRED - 100% WIDTH */}
+        <div className="relative w-full mb-4">
+          <label className={cardFloatingLabelClass}>Finance Required *</label>
 
-            <div
-              tabIndex={0}
-              onClick={() =>
-                updateFormCard(card.id, {
-                  showFinanceDropdown: !card.showFinanceDropdown,
-                })
-              }
-              className="
-                food-select-control
+          <div
+            tabIndex={0}
+            onClick={() =>
+              updateFormCard(card.id, {
+                showFinanceDropdown: !card.showFinanceDropdown,
+              })
+            }
+            className="
+              food-select-control
+              w-full
+              border
+              border-[#383847]
+              rounded-md
+              px-4
+              py-3
+              flex
+              justify-between
+              items-center
+              cursor-pointer
+            "
+          >
+            <span className={card.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              {card.financeRequired}
+            </span>
+
+            <ChevronDown
+              size={18}
+              className={`transition-transform duration-300 ${
+                card.showFinanceDropdown ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </div>
+
+          {card.showFinanceDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+              {[
+                { label: "Yes", value: "Yes" },
+                { label: "No", value: "No" },
+              ].map((opt) => (
+                <div
+                  key={opt.label}
+                  onClick={() =>
+                    updateFormCard(card.id, {
+                      financeRequired: opt.value,
+                      showFinanceDropdown: false,
+                      ...(opt.value === "No"
+                        ? { advanceAmount: "", advancePurpose: "" }
+                        : {}),
+                    })
+                  }
+                  className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                    card.financeRequired === opt.value
+                      ? "bg-[#492A6F] text-white"
+                      : "text-white hover:bg-[#492A6F] hover:text-white"
+                  }`}
+                >
+                  <span>{opt.label}</span>
+
+                  {card.financeRequired === opt.value && <span>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ADVANCE FIELDS - 50%-50% LAYOUT ONLY WHEN YES */}
+        {card.financeRequired === "Yes" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <div className="relative">
+              <label className={cardFloatingLabelClass}>
+                I require Cash / In bank / Travel Advance /Online Payment of Rs.
+              </label>
+
+              <input
+                type="number"
+                value={card.advanceAmount}
+                onChange={(e) =>
+                  updateFormCard(card.id, { advanceAmount: e.target.value })
+                }
+                placeholder="0"
+                className="
                 w-full
                 border
                 border-[#383847]
                 rounded-md
                 px-4
                 py-3
-                flex
-                justify-between
-                items-center
-                cursor-pointer
+                text-white
+                outline-none
               "
-            >
-              <span className={card.financeRequired ? "text-white" : "text-[#8d8da8]"}>
-                {card.financeRequired ? "Yes" : "No"}
-              </span>
-
-              <ChevronDown
-                size={18}
-                className={`transition-transform duration-300 ${
-                  card.showFinanceDropdown ? "rotate-180" : "rotate-0"
-                }`}
               />
             </div>
 
-            {card.showFinanceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
-                {[
-                  { label: "Yes", value: true },
-                  { label: "No", value: false },
-                ].map((opt) => (
-                  <div
-                    key={opt.label}
-                    onClick={() =>
-                      updateFormCard(card.id, {
-                        financeRequired: opt.value,
-                        showFinanceDropdown: false,
-                        ...(opt.value === false
-                          ? { advanceAmount: "", advancePurpose: "" }
-                          : {}),
-                      })
-                    }
-                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
-                      card.financeRequired === opt.value
-                        ? "bg-[#492A6F] text-white"
-                        : "text-white hover:bg-[#492A6F] hover:text-white"
-                    }`}
-                  >
-                    <span>{opt.label}</span>
+            <div className="relative">
+              <label className={cardFloatingLabelClass}>
+                Purpose of Advance
+              </label>
 
-                    {card.financeRequired === opt.value && <span>✓</span>}
-                  </div>
-                ))}
-              </div>
-            )}
+              <input
+                type="text"
+                value={card.advancePurpose}
+                onChange={(e) =>
+                  updateFormCard(card.id, { advancePurpose: e.target.value })
+                }
+                placeholder="Purpose"
+                className="
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-white
+                outline-none
+              "
+              />
+            </div>
           </div>
-
-          {card.financeRequired && (
-            <>
-              <div className="relative">
-                <label className={cardFloatingLabelClass}>
-                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
-                </label>
-
-                <input
-                  type="number"
-                  value={card.advanceAmount}
-                  onChange={(e) =>
-                    updateFormCard(card.id, { advanceAmount: e.target.value })
-                  }
-                  placeholder="0"
-                  className="
-                  w-full
-                  border
-                  border-[#383847]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
-                />
-              </div>
-
-              <div className="relative">
-                <label className={cardFloatingLabelClass}>
-                  Purpose of Advance
-                </label>
-
-                <input
-                  type="text"
-                  value={card.advancePurpose}
-                  onChange={(e) =>
-                    updateFormCard(card.id, { advancePurpose: e.target.value })
-                  }
-                  placeholder="Purpose"
-                  className="
-                  w-full
-                  border
-                  border-[#383847]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
-                />
-              </div>
-            </>
-          )}
-        </div>
+        )}
 
         {/* DYNAMIC STAFF INPUTS */}
         {/* DYNAMIC STAFF INPUTS */}
