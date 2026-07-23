@@ -96,46 +96,33 @@ export function buildMediaFormData(mediaData) {
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    // ── Reference poster files ──
-    const referencePosterFiles = [];
-    (day.poster?.referencePoster || []).forEach((f, fi) => {
-      if (f instanceof File) {
-        const key = `day_${dayIndex}_referencePoster_${fi}`;
-        referencePosterFiles.push(key);
-        fd.append(key, f);
-      }
-    });
+    // ── helper: append files, return matching metadata (key + original name) ──
+    const appendFiles = (files = [], keyPrefix) => {
+      const meta = [];
+      files.forEach((f, fi) => {
+        if (f instanceof File) {
+          const key = `${keyPrefix}_${fi}`;
+          fd.append(key, f);
+          meta.push({ key, originalName: f.name, mimeType: f.type, size: f.size });
+        }
+      });
+      return meta;
+    };
 
-    // ── Reference certificate files ──
-    const referenceCertificateFiles = [];
-    (day.poster?.referenceCertificate || []).forEach((f, fi) => {
-      if (f instanceof File) {
-        const key = `day_${dayIndex}_referenceCertificate_${fi}`;
-        referenceCertificateFiles.push(key);
-        fd.append(key, f);
-      }
-    });
+    const referencePosterFiles      = appendFiles(day.poster?.referencePoster,      `day_${dayIndex}_referencePoster`);
+    const referenceCertificateFiles = appendFiles(day.poster?.referenceCertificate, `day_${dayIndex}_referenceCertificate`);
+    const referenceFiles            = appendFiles(day.video?.referenceVideo,        `day_${dayIndex}_referenceVideo`);
 
-    // ── Reference video files ──
-    const referenceFiles = [];
-    (day.video?.referenceVideo || []).forEach((f, fi) => {
-      if (f instanceof File) {
-        const key = `day_${dayIndex}_referenceVideo_${fi}`;
-        referenceFiles.push(key);
-        fd.append(key, f);
-      }
-    });
-
-    // ── Sizes: ONLY Flex / Glass Sticker actually have a size input.
-    //    Every other display type has no size field in the UI, so we
-    //    must not push a bogus {value: ""} entry for them — that's what
-    //    was causing the schema cast issues on save.
+    // ── Sizes: ONLY Flex / Glass Sticker carry a size value.
+    //    Trim and normalize so nothing but a clean string reaches the backend.
     const sizes = [];
-    if (day.poster?.displayNeeded?.includes("Flex") && day.poster?.sizeForFlex?.trim()) {
-      sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
+    const flexVal  = day.poster?.sizeForFlex?.trim();
+    const glassVal = day.poster?.sizeForGlass?.trim();
+    if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
+      sizes.push({ type: "Flex", value: flexVal });
     }
-    if (day.poster?.displayNeeded?.includes("Glass Sticker") && day.poster?.sizeForGlass?.trim()) {
-      sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && glassVal) {
+      sizes.push({ type: "Glass Sticker", value: glassVal });
     }
 
     return {
@@ -167,10 +154,7 @@ export function buildMediaFormData(mediaData) {
     };
   });
 
-  // Same top-level shape your backend already understands
-  // (matches what buildMediaPayload in Form.jsx used to send).
   fd.append("mediaData", JSON.stringify({ mediaRequirementDetails: { mediaRequirements } }));
-
   return fd;
 }
 

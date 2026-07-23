@@ -14,6 +14,8 @@ import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
 import EventPreviewPage from "./EventPreviewPage";
 import { jwtDecode } from "jwt-decode";
+import generateAdvanceReceiptPdf from "../utils/generateAdvanceReceiptPdf";
+import { getFacultyById } from "../services/events/facultyService";
 
 
 // ── Empty factories ───────────────────────────────────────────────────────────
@@ -542,24 +544,25 @@ const buildMediaPayload = (mediaData) => {
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    // Only Flex / Glass Sticker actually carry a size value.
+    // Only Flex / Glass Sticker carry a size value — same rule as buildMediaFormData.
     const sizes = [];
-    if (day.poster?.displayNeeded?.includes("Flex") && day.poster?.sizeForFlex?.trim()) {
-      sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
+    const flexVal  = day.poster?.sizeForFlex?.trim();
+    const glassVal = day.poster?.sizeForGlass?.trim();
+    if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
+      sizes.push({ type: "Flex", value: flexVal });
     }
-    if (day.poster?.displayNeeded?.includes("Glass Sticker") && day.poster?.sizeForGlass?.trim()) {
-      sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && glassVal) {
+      sizes.push({ type: "Glass Sticker", value: glassVal });
     }
 
     return {
       dayIndex, typeOfMedia,
       poster: {
         posterContent:             day.poster?.contentPoster       || "",
-        // NOTE: this JSON-only path can never carry File objects.
-        // Real file uploads must go through buildMediaFormData (multipart).
-        // Leaving these empty here is correct FOR THIS PATH — the fix is
-        // to stop this path from overwriting already-saved file refs
-        // (see submitEvent fix below).
+        // This JSON-only path can never carry File objects — real uploads
+        // must go through buildMediaFormData (multipart). Leave file arrays
+        // empty here rather than clobbering already-saved refs (see onSave
+        // in Form.jsx: this path should not be used once files exist).
         referencePosterFiles:      [],
         certificateContent:        day.poster?.contentCertificate  || "",
         referenceCertificateFiles: [],
@@ -936,6 +939,7 @@ export default function Form() {
 
   // ── submitEvent ───────────────────────────────────────────────────────────
   const submitEvent = async () => {
+    console.log("submitEvent started");
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
     setApiError("");
@@ -947,7 +951,38 @@ export default function Form() {
         body: JSON.stringify(fullPayload),
       });
       const data = await response.json();
+      console.log("Reached after submit API");
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
+      // Generate PDF only if finance details exist
+      console.log("Finance :", formDataRef.current.event.finance);
+      console.log("Amount :", formDataRef.current.event.advanceAmount);
+      console.log("Purpose :", formDataRef.current.event.purposeOfAdvance);
+      if (
+          formDataRef.current.event.finance === "Yes" &&
+          formDataRef.current.event.advanceAmount &&
+          formDataRef.current.event.purposeOfAdvance
+      ) {
+          console.log("Generating PDF...");
+          console.log(formDataRef.current.event);
+          console.log(user);
+          console.log(data);
+          const organizer =
+            data.data.requestDetails.organizerDetails.organizers?.[0];
+
+          let facultyDetails = {};
+          console.log("Submit Response:", data);
+          console.log("Organizer ID:", data.data.organizerId);
+          if (data.data.organizerId) {
+            facultyDetails = await getFacultyById(data.data.organizerId);
+          }
+
+          await generateAdvanceReceiptPdf({
+            formData: formDataRef.current.event,
+            employee: facultyDetails,
+            submitResponse: data.data,
+          });
+          console.log("PDF Generated");
+      }
       setSubmitSuccess(true);
     } catch (error) {
       setApiError(error.message || "Unable to submit event. Please try again.");
