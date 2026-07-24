@@ -9,6 +9,7 @@ import {
   Check,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
+import FormSubmitted from "../IndividualForm/FormSubmitted";
 
 import UploadIcon from "../../assets/upload.svg";
 import { useAuth } from "../../Components/AuthContext";
@@ -396,7 +397,7 @@ export default function PurchaseDetails() {
 
   const [apiError, setApiError] = useState("");
 
-  const [success, setSuccess] = useState(false);
+ const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [errors, setErrors] = useState({});
 
@@ -718,7 +719,7 @@ export default function PurchaseDetails() {
 
   const handleSubmit = async () => {
   setApiError("");
-  setSuccess(false);
+setSubmitSuccess(true);
   setIsLoading(true);
 
   if (!validateForm()) {
@@ -886,6 +887,10 @@ export default function PurchaseDetails() {
   //     setIsLoading(false);
   //   }
   // };
+
+  if (submitSuccess) {
+  return <FormSubmitted />;
+}
 
   return (
     <div
@@ -1160,16 +1165,7 @@ export default function PurchaseDetails() {
         )}
 
         {/* SUCCESS */}
-        {success && (
-          <div
-            className="bg-green-500/10
-            border border-green-500/30
-            text-green-300
-            rounded-lg px-4 py-3"
-          >
-            Purchase Details Submitted Successfully
-          </div>
-        )}
+       
 
         {/* BUTTON */}
         <div className="flex justify-end">

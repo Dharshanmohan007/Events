@@ -1,8 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getRouteForRole } from "../../utils/roleRoutes";
+import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
 
-export default function FormSubmitted({ onSubmitAnother }) {
+export default function FormSubmitted({
+  onSubmitAnother,
+  formData,
+}) {
+
+  const handleDownloadReceipt = async () => {
+  await generateAdvanceReceiptPdf({
+    formData,
+    employee: JSON.parse(localStorage.getItem("user") || "{}"),
+    submitResponse: {},
+  });
+};
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
@@ -111,6 +123,22 @@ export default function FormSubmitted({ onSubmitAnother }) {
         >
           Go to Dashboard
         </button>
+
+        <button
+  onClick={handleDownloadReceipt}
+  className="
+    mt-3
+    px-8
+    py-3
+    rounded-[10px]
+    bg-green-600
+    hover:bg-green-700
+    text-white
+    font-semibold
+  "
+>
+  Download Advance Request
+</button>
 
       </div>
     </div>

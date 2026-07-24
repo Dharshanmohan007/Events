@@ -15,6 +15,7 @@ import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 
 import { API_BASE } from "../../utils/apiConfig";
+import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
 import FormSubmitted from "../IndividualForm/FormSubmitted";
 
 // ======================================================
@@ -1045,6 +1046,12 @@ useEffect(() => {
     setIsSubmitting(true);
 
     try {
+      const authToken = localStorage.getItem("token") || token;
+
+      if (!authToken) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
       let submittedCount = 0;
 
       for (const [index, card] of formCards.entries()) {
@@ -1112,9 +1119,9 @@ const response = await fetch(`${API_BASE}/api/foods`, {
   method: "POST",
 
   headers: {
-    ...(token
+    ...(authToken
       ? {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${authToken}`,
         }
       : {}),
   },
@@ -1139,13 +1146,39 @@ const response = await fetch(`${API_BASE}/api/foods`, {
 
       setValidationErrors([]);
 
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const employeeDetails = {
+        name: storedUser?.name || storedUser?.employeeName || "",
+        empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+        designation: storedUser?.designation || "",
+        department: storedUser?.department || "",
+      };
+
+      const firstCard = formCards[0];
+      const financeEnabled = firstCard?.financeRequired === "Yes";
+
+      if (financeEnabled) {
+        await generateAdvanceReceiptPdf({
+          formData: {
+            selectDate: firstCard?.selectDate,
+            advanceAmount: firstCard?.advanceAmount || "",
+            advancePurpose: firstCard?.advancePurpose || "",
+          },
+          employee: employeeDetails,
+          submitResponse: {
+            iqacNumber: `IQAC-${Date.now()}`,
+          },
+        });
+      }
+
       setSubmitMessage(
         `${submittedCount} food request${
           submittedCount > 1 ? "s" : ""
         } submitted successfully.`,
       );
 
-setSubmitSuccess(true);
+      setSubmitSuccess(true);
     } catch (error) {
       setValidationErrors([error.message || "Unable to send food data."]);
     } finally {
@@ -1154,8 +1187,12 @@ setSubmitSuccess(true);
   };
 
 
-  if (submitSuccess) {
-  return <FormSubmitted />;
+if (submitSuccess) {
+  return (
+    <FormSubmitted
+      advanceData={formCards[0]}
+    />
+  );
 }
   return (
     <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">

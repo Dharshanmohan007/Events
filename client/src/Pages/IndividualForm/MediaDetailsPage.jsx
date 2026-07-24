@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
+import FormSubmitted from "../IndividualForm/FormSubmitted";
 import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
@@ -703,6 +704,10 @@ const [trophyContent, setTrophyContent] = useState("");
       )}
     </div>
   );
+
+    if (submitSuccess) {
+    return <FormSubmitted />;
+  }
 
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">

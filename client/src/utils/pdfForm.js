@@ -1,6 +1,5 @@
 import jsPDF from "jspdf";
-import dayjs from "dayjs";
-import logo from "../assets/clg-logo2.webp"; // Change according to your project
+import logo from "../assets/logo.svg";
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
@@ -10,14 +9,26 @@ const RIGHT = 200;
 
 const formatDate = (date) => {
   if (!date) return "";
-
-  return dayjs(date).format("DD.MM.YYYY");
+  
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  
+  return `${day}.${month}.${year}`;
 };
 
 const add15Days = (date) => {
   if (!date) return "";
-
-  return dayjs(date).add(15, "day").format("DD.MM.YYYY");
+  
+  const d = new Date(date);
+  d.setDate(d.getDate() + 15);
+  
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  
+  return `${day}.${month}.${year}`;
 };
 
 const formatAmount = (amount) => {
