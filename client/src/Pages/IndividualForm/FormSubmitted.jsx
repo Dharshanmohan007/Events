@@ -6,15 +6,54 @@ import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
 export default function FormSubmitted({
   onSubmitAnother,
   formData,
+  advanceData,
 }) {
 
   const handleDownloadReceipt = async () => {
-  await generateAdvanceReceiptPdf({
-    formData,
-    employee: JSON.parse(localStorage.getItem("user") || "{}"),
-    submitResponse: {},
-  });
-};
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+    const receiptPayload = {
+      selectDate:
+        advanceData?.selectDate ||
+        advanceData?.deliveryDate ||
+        advanceData?.pickupDateTime ||
+        advanceData?.posterDeliveryDate ||
+        advanceData?.videoDeliveryDate ||
+        formData?.selectDate ||
+        formData?.date ||
+        null,
+      advanceAmount:
+        advanceData?.advanceAmount ||
+        formData?.advanceAmount ||
+        "",
+      advancePurpose:
+        advanceData?.advancePurpose ||
+        formData?.advancePurpose ||
+        "",
+      employeeName: storedUser?.name || storedUser?.employeeName || "",
+      empId: storedUser?.empId || storedUser?.employeeId || "",
+      designation: storedUser?.designation || "",
+      department: storedUser?.department || "",
+      event: {
+        organizers: [
+          {
+            name: storedUser?.name || storedUser?.employeeName || "",
+            empId: storedUser?.empId || storedUser?.employeeId || "",
+            designation: storedUser?.designation || "",
+            department: storedUser?.department || "",
+          },
+        ],
+      },
+    };
+
+    await generateAdvanceReceiptPdf({
+      formData: receiptPayload,
+      employee: storedUser,
+      submitResponse: {
+        iqacNumber: `IQAC-${Date.now()}`,
+      },
+    });
+  };
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 

@@ -1161,9 +1161,23 @@ const response = await fetch(`${API_BASE}/api/foods`, {
       if (financeEnabled) {
         await generateAdvanceReceiptPdf({
           formData: {
-            selectDate: firstCard?.selectDate,
+            selectDate: firstCard?.selectDate || "",
             advanceAmount: firstCard?.advanceAmount || "",
             advancePurpose: firstCard?.advancePurpose || "",
+            employeeName: employeeDetails.name,
+            empId: employeeDetails.empId,
+            designation: employeeDetails.designation,
+            department: employeeDetails.department,
+            event: {
+              organizers: [
+                {
+                  name: employeeDetails.name,
+                  empId: employeeDetails.empId,
+                  designation: employeeDetails.designation,
+                  department: employeeDetails.department,
+                },
+              ],
+            },
           },
           employee: employeeDetails,
           submitResponse: {

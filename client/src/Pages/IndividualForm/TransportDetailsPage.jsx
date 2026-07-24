@@ -552,7 +552,7 @@ const TransportDetailsPage = () => {
   };
 
   if (submitSuccess) {
-    return <FormSubmitted />;
+    return <FormSubmitted advanceData={transportForms[0] || {}} />;
   }
 
   return (

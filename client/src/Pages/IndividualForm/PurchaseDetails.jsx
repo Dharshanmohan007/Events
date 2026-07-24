@@ -889,7 +889,7 @@ setSubmitSuccess(true);
   // };
 
   if (submitSuccess) {
-  return <FormSubmitted />;
+  return <FormSubmitted advanceData={form} />;
 }
 
   return (

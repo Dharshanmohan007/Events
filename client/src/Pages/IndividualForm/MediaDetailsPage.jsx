@@ -706,7 +706,25 @@ const [trophyContent, setTrophyContent] = useState("");
   );
 
     if (submitSuccess) {
-    return <FormSubmitted />;
+    return (
+      <FormSubmitted
+        advanceData={{
+          selectDate: posterDeliveryDate || videoDeliveryDate || "",
+          advanceAmount:
+            posterFinanceRequired === "Yes"
+              ? posterAdvanceAmount || ""
+              : videoFinanceRequired === "Yes"
+                ? videoAdvanceAmount || ""
+                : "",
+          advancePurpose:
+            posterFinanceRequired === "Yes"
+              ? posterAdvancePurpose || ""
+              : videoFinanceRequired === "Yes"
+                ? videoAdvancePurpose || ""
+                : "",
+        }}
+      />
+    );
   }
 
   return (
