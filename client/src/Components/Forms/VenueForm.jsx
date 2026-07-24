@@ -764,6 +764,8 @@ export default function VenueForm({
 
   // Popup state
   const [popupVenue, setPopupVenue] = useState(null);
+  const [venueAvailability, setVenueAvailability] = useState(null);
+  const [checkingVenueAvailability, setCheckingVenueAvailability] = useState(false);
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -887,6 +889,7 @@ export default function VenueForm({
       updatedErrors[currentDayIndex] = currentDayErrors;
       return updatedErrors;
     });
+    checkVenueAvailability(selectedVenues);
   };
 
   const updateVenueCard = (cardIndex, updated) => {
@@ -897,6 +900,67 @@ export default function VenueForm({
       data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
       return data;
     });
+  };
+
+  const checkVenueAvailability = async (selectedVenues) => {
+    // Clear previous result
+    setVenueAvailability(null);
+
+    if (!selectedVenues.length) return;
+
+    const currentEventDay = eventDays[currentDayIndex];
+
+    if (
+      !currentEventDay?.date ||
+      !currentEventDay?.startTime ||
+      !currentEventDay?.endTime
+    ) {
+      return;
+    }
+
+    try {
+      setCheckingVenueAvailability(true);
+
+      const payload = {
+        eventSchedule: [
+          {
+            dayIndex: currentDayIndex,
+            eventDate: currentEventDay.date,
+            startTime: currentEventDay.startTime,
+            endTime: currentEventDay.endTime,
+          },
+        ],
+        venues: selectedVenues.map((venue) => ({
+          dayIndex: currentDayIndex,
+          venueName: venue,
+        })),
+      };
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/events/check-venue-availability`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to check venue availability.");
+      }
+
+      setVenueAvailability(data);
+    } catch (err) {
+      console.error(err);
+      setVenueAvailability(null);
+    } finally {
+      setCheckingVenueAvailability(false);
+    }
   };
 
   const handleNext = useCallback(async () => {
@@ -1023,6 +1087,65 @@ export default function VenueForm({
               )}
             </div>
           </div>
+        )}
+        {/* Venue Availability Status */}
+
+        {checkingVenueAvailability && (
+          <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-blue-300 text-sm">
+            Checking venue availability...
+          </div>
+        )}
+
+        {venueAvailability &&
+          venueAvailability.unavailableVenues &&
+          venueAvailability.unavailableVenues.length > 0 && (
+            <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-5 py-4 flex items-center gap-6 flex-wrap">
+
+              {/* Icon + Message */}
+              <div className="flex items-center gap-2 whitespace-nowrap">
+                <svg
+                  className="w-5 h-5 text-red-400 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+
+                <p className="text-red-300 font-semibold">
+                  {venueAvailability.message}
+                </p>
+              </div>
+
+              {/* Booked Venues */}
+              {venueAvailability.unavailableVenues.map((venue, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-8 text-sm"
+                >
+                  <p className="font-semibold text-white whitespace-nowrap">
+                    {venue.venueName}
+                  </p>
+
+                  {/* <p className="text-gray-300 whitespace-nowrap">
+                    <span className="text-gray-400">Booked Event :</span>{" "}
+                    {venue.eventName}
+                  </p>
+                  <p>
+                    <span className="text-gray-400">Date :</span>{" "}
+                    {venue.date}
+                  </p>
+
+                  <p>
+                    <span className="text-gray-400">Time :</span>{" "}
+                    {venue.startTime} - {venue.endTime}
+                  </p> */}
+                </div>
+              ))}
+            </div>
         )}
 
         <CustomInput

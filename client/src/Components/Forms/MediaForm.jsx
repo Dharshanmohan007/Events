@@ -99,13 +99,28 @@ export function buildMediaFormData(mediaData) {
     // ── helper: append files, return matching metadata (key + original name) ──
     const appendFiles = (files = [], keyPrefix) => {
       const meta = [];
-      files.forEach((f, fi) => {
-        if (f instanceof File) {
-          const key = `${keyPrefix}_${fi}`;
-          fd.append(key, f);
-          meta.push({ key, originalName: f.name, mimeType: f.type, size: f.size });
+
+      files.forEach((file, index) => {
+        // Newly uploaded file
+        if (file instanceof File) {
+          const key = `${keyPrefix}_${index}`;
+
+          fd.append(key, file);
+
+          meta.push({
+            key,
+            originalName: file.name,
+            mimeType: file.type,
+            size: file.size,
+          });
+        }
+
+        // Already uploaded file (edit mode)
+        else if (file?.key) {
+          meta.push(file);
         }
       });
+
       return meta;
     };
 
@@ -115,7 +130,7 @@ export function buildMediaFormData(mediaData) {
 
     // ── Sizes: ONLY Flex / Glass Sticker carry a size value.
     //    Trim and normalize so nothing but a clean string reaches the backend.
-    const sizes = [];
+    const sizes =  {};
     const flexVal  = day.poster?.sizeForFlex?.trim();
     const glassVal = day.poster?.sizeForGlass?.trim();
     if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {

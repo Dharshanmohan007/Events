@@ -44,7 +44,7 @@ function chunkPairs(arr, size = 2) {
 function Card({ children, className = "" }) {
   return (
     <div
-      className={`bg-[#1c1c34] border border-[#2a2a45] rounded-xl px-5 py-4 ${className}`}
+      className={` ${className}`}
     >
       {children}
     </div>
@@ -52,12 +52,12 @@ function Card({ children, className = "" }) {
 }
 
 function Divider() {
-  return <div className="hidden sm:block w-px bg-[#2e2e4d] self-stretch mx-2" />;
+  return <div className="hidden sm:block w-[2px] h-10 bg-[#454D67] mx-6 self-center rounded-full" />
 }
 
 function InfoBlock({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 min-w-0">
+    <div className="flex items-center gap-3 min-w-0 bg-[#252C3F] rounded-xl px-5 py-4">
       {Icon && (
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-600/15 flex-shrink-0">
           <Icon size={16} className="text-purple-400" />
@@ -73,25 +73,45 @@ function InfoBlock({ icon: Icon, label, value }) {
   );
 }
 
-function LocationStop({ label, name, isLast }) {
+function LocationStop({
+  label,
+  name,
+  type,
+  checkpointNumber,
+}) {
   return (
-    <div className="flex items-center flex-1 min-w-[160px]">
-      <div className="flex items-start gap-3 min-w-0">
-        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-purple-600/20 flex-shrink-0 mt-0.5">
-          <MapPin size={14} className="text-purple-400" />
+    <div className="flex items-center gap-3 bg-[#252C3F] border border-[#343C59] rounded-xl px-5 py-4 w-[280px] h-[72px]">
+      {type === "checkpoint" ? (
+        <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+          {checkpointNumber}
         </div>
-        <div className="min-w-0">
-          <p className="text-[11px] tracking-wide uppercase text-gray-400 mb-0.5">
-            {label}
-          </p>
-          <p className="text-sm font-semibold text-white truncate">
-            {name?.trim() ? name : "—"}
-          </p>
+      ) : (
+        <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
+          <MapPin
+            size={17}
+            className="text-white"
+            fill="currentColor"
+          />
         </div>
-      </div>
-      {!isLast && (
-        <div className="flex-1 mx-3 border-t border-dashed border-[#4b4b74] min-w-[24px] self-start mt-4" />
       )}
+
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+          {label}
+        </p>
+
+        <p className="text-sm font-semibold text-white truncate">
+          {name || "—"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function Connector() {
+  return (
+    <div className="flex items-center w-12 flex-shrink-0">
+      <div className="w-full border-t-2 border-dashed border-[#62658B]" />
     </div>
   );
 }
@@ -111,6 +131,20 @@ function PreviewHeader() {
         <CheckCircle2 size={13} />
         Completed
       </span> */}
+    </div>
+  );
+}
+
+function HorizontalInfoBlock({ label, value }) {
+  return (
+    <div className="flex items-center justify-between w-full">
+      <p className="text-[15px] text-[#B5B8C7]">
+        {label}
+      </p>
+
+      <p className="text-[15px] font-semibold text-white text-right">
+        {value}
+      </p>
     </div>
   );
 }
@@ -148,9 +182,24 @@ export default function TransportPreview({ transportData = [] }) {
     : [];
 
   const locations = [
-    { label: "Pickup Location", name: form.pickupLocation },
-    ...checkpoints.map((cp) => ({ label: "Checkpoint", name: cp.name })),
-    { label: "Drop Location", name: form.dropLocation },
+    {
+      label: "Pickup Location",
+      name: form.pickupLocation,
+      type: "pickup",
+    },
+
+    ...checkpoints.map((cp, index) => ({
+      label: "Checkpoint",
+      name: cp.name,
+      type: "checkpoint",
+      number: index + 1,
+    })),
+
+    {
+      label: "Drop Location",
+      name: form.dropLocation,
+      type: "drop",
+    },
   ];
 
   return (
@@ -180,157 +229,236 @@ export default function TransportPreview({ transportData = [] }) {
       <div className="space-y-4">
         {/* Row 1: Pickup / Drop date & time */}
         <Card>
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-    {/* Pickup Card */}
-    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
-      <div className="flex items-center">
+            {/* Pickup Card */}
+            <div className="bg-[#252C3F]  rounded-xl px-6 py-5">
+              <div className="flex items-center">
 
-        <InfoBlock
-          icon={Calendar}
-          label="Pickup Date"
-          value={formatDate(form.pickupDate)}
-        />
+                <InfoBlock
+                  icon={Calendar}
+                  label="Pickup Date"
+                  value={formatDate(form.pickupDate)}
+                />
 
-        <div className="mx-6 h-14 w-px bg-[#454D67]" />
+                <div className="mx-6 h-14 w-px bg-[#454D67]" />
 
-        <InfoBlock
-          icon={Clock}
-          label="Pickup Time"
-          value={formatTime(form.pickupDate)}
-        />
+                <InfoBlock
+                  icon={Clock}
+                  label="Pickup Time"
+                  value={formatTime(form.pickupDate)}
+                />
 
-      </div>
-    </div>
+              </div>
+            </div>
 
-    {/* Drop Card */}
-    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
-      <div className="flex items-center">
+            {/* Drop Card */}
+            <div className="bg-[#252C3F] rounded-xl px-6 py-5">
+              <div className="flex items-center">
 
-        <InfoBlock
-          icon={Calendar}
-          label="Drop Date"
-          value={formatDate(form.dropDate)}
-        />
+                <InfoBlock
+                  icon={Calendar}
+                  label="Drop Date"
+                  value={formatDate(form.dropDate)}
+                />
 
-        <div className="mx-6 h-14 w-px bg-[#454D67]" />
+                <div className="mx-6 h-14 w-px bg-[#454D67]" />
 
-        <InfoBlock
-          icon={Clock}
-          label="Drop Time"
-          value={formatTime(form.dropDate)}
-        />
+                <InfoBlock
+                  icon={Clock}
+                  label="Drop Time"
+                  value={formatTime(form.dropDate)}
+                />
 
-      </div>
-    </div>
+              </div>
+            </div>
 
-  </div>
-</Card>
+          </div>
+        </Card>
 
         {/* Row 2: Location flow — Pickup → Checkpoint(s) → Drop */}
         <Card>
-          <div className="flex items-start flex-wrap sm:flex-nowrap gap-y-4">
-            {locations.map((loc, idx) => (
-              <LocationStop
-                key={idx}
-                label={loc.label}
-                name={loc.name}
-                isLast={idx === locations.length - 1}
-              />
-            ))}
+          <div className="flex flex-wrap items-center gap-y-5">
+            {locations.map((loc, index) => {
+              const isCheckpoint = loc.type === "checkpoint";
+
+              const checkpointNumber = index;
+
+              return (
+                <React.Fragment key={index}>
+                  <LocationStop
+                    label={loc.label}
+                    name={loc.name}
+                    type={isCheckpoint ? "checkpoint" : "location"}
+                    checkpointNumber={loc.number}
+                  />
+
+                  {index !== locations.length - 1 && (
+                    <Connector />
+                  )}
+                </React.Fragment>
+              );
+            })}
           </div>
         </Card>
 
         {/* Row 3: Total members / Vehicle types needed */}
-        <Card className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1">
-            <InfoBlock
-              label="Total Number of Members"
-              value={
-                form.totalPassengers ? `${form.totalPassengers} Members` : "—"
-              }
-            />
-          </div>
-          <Divider />
-          <div className="flex-1">
-            <InfoBlock
-              label="Types of Vehicle needed"
-              value={
-                vehicleTypes.length > 0 ? vehicleTypes.join(" / ") : "—"
-              }
-            />
+        <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-6">
+          <div className="flex flex-col md:flex-row">
+
+            <div className="flex-1">
+              <HorizontalInfoBlock
+                label="Total Number of Members"
+                value={
+                  form.totalPassengers
+                    ? `${form.totalPassengers} Members`
+                    : "—"
+                }
+              />
+            </div>
+
+            <Divider />
+
+            <div className="flex-1">
+              <HorizontalInfoBlock
+                label="Types of Vehicle needed"
+                value={
+                  vehicleTypes.length
+                    ? vehicleTypes.join(" / ")
+                    : "—"
+                }
+              />
+            </div>
+
           </div>
         </Card>
 
         {/* Row 4: Vehicle counts, 2 per row */}
         {vehicleTypes.length > 0 && (
-          <Card>
-            <div className="space-y-4">
-              {chunkPairs(vehicleTypes).map((row, ri) => (
-                <div
-                  key={ri}
-                  className={`flex flex-col sm:flex-row sm:items-center gap-4 ${
-                    ri > 0 ? "pt-4 border-t border-[#2a2a45]" : ""
-                  }`}
-                >
-                  {row.map((type, i) => (
-                    <Fragment key={type}>
-                      <div className="flex-1">
-                        <InfoBlock
-                          label={`Total ${type} needed`}
-                          value={form.vehicleCounts?.[type] ?? "0"}
-                        />
-                      </div>
-                      {i === 0 && row.length === 2 && <Divider />}
-                    </Fragment>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </Card>
-        )}
+        <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-6">
+          <div className="space-y-5">
+            {chunkPairs(vehicleTypes).map((row, ri) => (
+              <div
+                key={ri}
+                className={`flex flex-col md:flex-row ${
+                  ri > 0 ? "pt-5 border-t border-[#3A415E]" : ""
+                }`}
+              >
+                {row.map((type, i) => (
+                  <Fragment key={type}>
+                    <div className="flex-1">
+                      <HorizontalInfoBlock
+                        label={`Total ${type} needed`}
+                        value={form.vehicleCounts?.[type] ?? "0"}
+                      />
+                    </div>
+                    {i === 0 && row.length === 2 && <Divider />}
+                  </Fragment>
+                ))}
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
 
         {/* Row 5: Accompanying staff */}
         {staffMembers.length > 0 ? (
           staffMembers.map((staff, idx) => (
             <Card
               key={idx}
-              className="flex flex-col sm:flex-row sm:items-center gap-4"
+              className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5"
             >
-              <div className="flex-1">
-                <InfoBlock
-                  icon={User}
-                  label="Accompanying Staff Name"
-                  value={staff.name?.trim() ? staff.name : "—"}
-                />
-              </div>
-              <Divider />
-              <div className="flex-1">
-                <InfoBlock
-                  icon={Phone}
-                  label="Accompanying Mobile Number"
-                  value={staff.mobile ? String(staff.mobile) : "—"}
-                />
+              <div className="flex flex-col md:flex-row">
+
+                <div className="flex-1 flex gap-4">
+
+                  <div className="w-11 h-11 rounded-xl bg-purple-600/20 flex items-center justify-center flex-shrink-0">
+                    <User size={20} className="text-purple-400" />
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-[#8E93A9]">
+                      Accompanying Staff Name
+                    </p>
+
+                    <p className="text-[15px] font-semibold text-white mt-1">
+                      {staff.name?.trim() || "—"}
+                    </p>
+                  </div>
+
+                </div>
+
+                <Divider />
+
+                <div className="flex-1 flex gap-4">
+
+                  <div className="w-11 h-11 rounded-xl bg-purple-600/20 flex items-center justify-center flex-shrink-0">
+                    <Phone size={20} className="text-purple-400" />
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wide text-[#8E93A9]">
+                      Accompanying Mobile Number
+                    </p>
+
+                    <p className="text-[15px] font-semibold text-white mt-1">
+                      {staff.mobile || "—"}
+                    </p>
+                  </div>
+
+                </div>
+
               </div>
             </Card>
           ))
         ) : (
-          <Card className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <InfoBlock icon={User} label="Accompanying Staff Name" value="—" />
-            </div>
-            <Divider />
-            <div className="flex-1">
-              <InfoBlock
-                icon={Phone}
-                label="Accompanying Mobile Number"
-                value="—"
-              />
+          <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
+            <div className="flex flex-col md:flex-row">
+
+              <div className="flex-1 flex gap-4">
+
+                <div className="w-11 h-11 rounded-xl bg-purple-600/20 flex items-center justify-center">
+                  <User size={20} className="text-purple-400" />
+                </div>
+
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-[#8E93A9]">
+                    Accompanying Staff Name
+                  </p>
+
+                  <p className="text-[15px] font-semibold text-white mt-1">
+                    —
+                  </p>
+                </div>
+
+              </div>
+
+              <Divider />
+
+              <div className="flex-1 flex gap-4">
+
+                <div className="w-11 h-11 rounded-xl bg-purple-600/20 flex items-center justify-center">
+                  <Phone size={20} className="text-purple-400" />
+                </div>
+
+                <div>
+                  <p className="text-[11px] uppercase tracking-wide text-[#8E93A9]">
+                    Accompanying Mobile Number
+                  </p>
+
+                  <p className="text-[15px] font-semibold text-white mt-1">
+                    —
+                  </p>
+                </div>
+
+              </div>
+
             </div>
           </Card>
         )}
 
         {/* Row 6: Special requirements */}
+        <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-5 py-4">
         <Card>
           <div className="flex items-center gap-2 mb-2">
             <FileText size={15} className="text-purple-400" />
@@ -343,6 +471,7 @@ export default function TransportPreview({ transportData = [] }) {
               "No special requirements specified."}
           </p>
         </Card>
+        </div>
       </div>
     </div>
   );

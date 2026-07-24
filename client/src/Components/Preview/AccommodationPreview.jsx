@@ -1,29 +1,44 @@
 import React, { useState } from "react";
-import { Calendar, Users, BedDouble, UtensilsCrossed, FileText } from "lucide-react";
+import {
+  Calendar,
+  Users,
+  BedDouble,
+  UtensilsCrossed,
+  FileText,
+  User,
+  Phone,
+} from "lucide-react";
 
-// ─── Helpers ───────────────────────────────────────────────────────────────────
+// -------------------------------------------------------
+// Helpers
+// -------------------------------------------------------
 
 function flattenGuests(eventDays = []) {
   const seen = new Set();
   const result = [];
+
   eventDays.forEach((day, dayIdx) => {
-    (day.guests || []).forEach((g, gIdx) => {
-      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
+    (day.guests || []).forEach((guest, guestIdx) => {
+      const guestId = `day${dayIdx}_g${guestIdx}_${(guest.name || "")
         .replace(/\s+/g, "")
         .toLowerCase()}`;
+
       if (!seen.has(guestId)) {
         seen.add(guestId);
-        result.push({ ...g, guestId });
+        result.push({ ...guest, guestId });
       }
     });
   });
+
   return result;
 }
 
 function formatDateTime(value) {
   if (!value) return "—";
+
   const d = value instanceof Date ? value : new Date(value);
   if (isNaN(d.getTime())) return "—";
+
   return d.toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -33,10 +48,9 @@ function formatDateTime(value) {
   });
 }
 
-// ─── Small UI atoms ─────────────────────────────────────────────────────────────
-
 function GenderIcon({ gender }) {
   const g = (gender || "").toLowerCase();
+
   if (g === "female") {
     return (
       <svg width="14" height="14" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
@@ -45,6 +59,7 @@ function GenderIcon({ gender }) {
       </svg>
     );
   }
+
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
       <circle cx="12" cy="6" r="3.5" />
@@ -53,154 +68,93 @@ function GenderIcon({ gender }) {
   );
 }
 
-function SectionHeader({ icon: Icon, title }) {
+// -------------------------------------------------------
+// Header
+// -------------------------------------------------------
+
+function PreviewHeader() {
   return (
-    <div className="flex items-center gap-2 mb-3">
-      <div className="w-7 h-7 rounded-md bg-purple-600/15 flex items-center justify-center flex-shrink-0">
-        <Icon size={14} className="text-purple-400" />
+    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+      <div>
+        <h2 className="text-[20px] font-bold text-[#8B5CF6] playfair">
+          Accommodation Preview
+        </h2>
+
+        <p className="mt-2 text-sm text-[#98A2B3] leading-6">
+          Review the complete accommodation arrangement for the selected event
+          day, including stay duration, guest allocation, room occupancy,
+          dine-in preferences, and any special requirements before submission.
+        </p>
       </div>
-      <h4 className="text-sm font-semibold text-white">{title}</h4>
     </div>
   );
 }
 
-function InfoRow({ label, value }) {
+// -------------------------------------------------------
+// Divider Card
+// -------------------------------------------------------
+
+function TwoColumnCard({
+  leftLabel,
+  leftValue,
+  leftIcon: LeftIcon,
+  rightLabel,
+  rightValue,
+  rightIcon: RightIcon,
+}) {
   return (
-    <div className="flex justify-between items-center py-1.5 border-b border-[#2a2a45] last:border-b-0">
-      <span className="text-xs text-gray-400">{label}</span>
-      <span className="text-sm text-white text-right">{value ?? "—"}</span>
+    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        <div className="flex items-center justify-between gap-6 px-6 py-6">
+          <div className="flex items-center gap-3">
+            {LeftIcon && <LeftIcon size={18} className="text-[#C4B5FD]" />}
+            <span className="text-[14px] text-[#C4C8D4]">{leftLabel}</span>
+          </div>
+
+          <span className="font-semibold text-white text-[14px]">
+            {leftValue || "—"}
+          </span>
+        </div>
+
+        <div className="border-l border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
+          <div className="flex items-center gap-3">
+            {RightIcon && <RightIcon size={18} className="text-[#C4B5FD]" />}
+            <span className="text-[14px] text-[#C4C8D4]">{rightLabel}</span>
+          </div>
+
+          <span className="font-semibold text-white text-[14px] text-right">
+            {rightValue || "—"}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
 
-function Pill({ children }) {
+// -------------------------------------------------------
+// Section Card
+// -------------------------------------------------------
+
+function  SectionCard({ title, icon: Icon, children }) {
   return (
-    <span className="inline-block bg-purple-600/15 border border-purple-600/30 text-purple-300 text-xs px-2.5 py-1 rounded-full mr-2 mb-2">
-      {children}
-    </span>
+    <div className="border border-[#343C59] rounded-2xl bg-[#1E2435] p-5">
+      <h3 className="flex items-center gap-2 text-[20px] playfair font-bold text-[#8B5CF6] mb-5">
+        <Icon size={18} className="text-[#C4B5FD]" />
+        {title}
+      </h3>
+
+      <div className="space-y-3">{children}</div>
+    </div>
   );
 }
 
 function EmptyState({ text }) {
-  return <p className="text-xs text-gray-500 italic">{text}</p>;
+  return <p className="text-[14px] text-[#98A2B3]">{text}</p>;
 }
 
-// ─── Single accommodation block preview (one "day" tab's content) ─────────────
-
-function AccommodationBlockPreview({ acc, allGuests }) {
-  const selectedGuests = allGuests.filter((g) =>
-    (acc.selectedGuestIds || []).includes(g.guestId)
-  );
-
-  const roomOccupancy = [];
-  if (parseInt(acc.singleRooms) > 0) roomOccupancy.push({ type: "Single Room", count: acc.singleRooms });
-  if (parseInt(acc.doubleRooms) > 0) roomOccupancy.push({ type: "Double Room", count: acc.doubleRooms });
-
-  return (
-    <div className="space-y-5">
-      {/* Check In / Out */}
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-5">
-        <SectionHeader icon={Calendar} title="Stay Duration" />
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-[11px] text-gray-500 mb-1">Check In</p>
-            <p className="text-sm text-white font-medium">{formatDateTime(acc.checkIn)}</p>
-          </div>
-          <div>
-            <p className="text-[11px] text-gray-500 mb-1">Check Out</p>
-            <p className="text-sm text-white font-medium">{formatDateTime(acc.checkOut)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Guests */}
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-5">
-        <div className="flex items-center justify-between mb-3">
-          <SectionHeader icon={Users} title="Guests" />
-          <span className="text-xs text-gray-400">
-            {selectedGuests.length} <span className="text-purple-400">/ {allGuests.length}</span>
-          </span>
-        </div>
-        {selectedGuests.length === 0 ? (
-          <EmptyState text="No guests selected for this accommodation." />
-        ) : (
-          <div className="space-y-2">
-            {selectedGuests.map((g) => (
-              <div
-                key={g.guestId}
-                className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] px-3 py-2.5 rounded-lg"
-              >
-                <span className="text-sm text-white truncate">{g.name || "—"}</span>
-                <div className="flex items-center gap-4 text-xs text-gray-400 flex-shrink-0">
-                  <span className="flex items-center gap-1.5">
-                    <GenderIcon gender={g.gender} />
-                    {g.gender || "—"}
-                  </span>
-                  <span>{g.mobile || "—"}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Rooms */}
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-5">
-        <SectionHeader icon={BedDouble} title="Room Details" />
-
-        {roomOccupancy.length > 0 && (
-          <div className="mb-3">
-            <p className="text-[11px] text-gray-500 mb-1.5">Occupancy</p>
-            <div className="flex flex-wrap">
-              {roomOccupancy.map((r) => (
-                <Pill key={r.type}>{r.type} × {r.count}</Pill>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <p className="text-[11px] text-gray-500 mb-1.5">Room Type(s)</p>
-        {(!acc.roomTypes || acc.roomTypes.length === 0) ? (
-          <EmptyState text="No room type selected." />
-        ) : (
-          <div className="space-y-1">
-            {acc.roomTypes.map((rt) => (
-              <InfoRow key={rt} label={rt} value={`${acc.roomCounts?.[rt] || 0} room(s)`} />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Dine-in */}
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-5">
-        <SectionHeader icon={UtensilsCrossed} title="Dine-in" />
-        <InfoRow label="Dine-in Required" value={acc.dine || "—"} />
-        {acc.dine === "Yes" && (
-          <>
-            {acc.dineTypes?.includes("Hostel") && (
-              <InfoRow label="Hostel Dine-in Guests" value={acc.hostelGuests || "0"} />
-            )}
-            {acc.dineTypes?.includes("Amenity") && (
-              <InfoRow label="Amenity Dine-in Guests" value={acc.amenityGuests || "0"} />
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Special Requirements */}
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-5">
-        <SectionHeader icon={FileText} title="Special Requirements" />
-        {acc.special?.trim() ? (
-          <p className="text-sm text-gray-200 whitespace-pre-wrap">{acc.special}</p>
-        ) : (
-          <EmptyState text="None specified." />
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Preview Component ────────────────────────────────────────────────────
+// -------------------------------------------------------
+// Main Component
+// -------------------------------------------------------
 
 export default function AccommodationPreview({ accommodationData, eventDays = [] }) {
   const accommodations =
@@ -209,45 +163,189 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
       : [];
 
   const allGuests = flattenGuests(eventDays);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeDay, setActiveDay] = useState(0);
 
   if (accommodations.length === 0) {
     return (
-      <div className="text-white w-full">
-        <h3 className="text-lg font-bold playfair mb-4">Accommodation Details</h3>
-        <div className="bg-[#1f1f38] border border-[#3a3a5a] rounded-xl p-6 text-center">
-          <EmptyState text="No accommodation details have been added." />
-        </div>
+      <div className="rounded-2xl border border-[#343C59] bg-[#1E2435] p-12 text-center">
+        <p className="text-[#98A2B3]">No Accommodation Details Added</p>
       </div>
     );
   }
 
+  const safeIndex = Math.min(activeDay, accommodations.length - 1);
+  const acc = accommodations[safeIndex] || {};
+  const selectedGuests = allGuests.filter((g) =>
+    (acc.selectedGuestIds || []).includes(g.guestId)
+  );
+
+  const roomOccupancy = [];
+  if (parseInt(acc.singleRooms) > 0) {
+    roomOccupancy.push({ type: "Single Room", count: acc.singleRooms });
+  }
+
+  if (parseInt(acc.doubleRooms) > 0) {
+    roomOccupancy.push({ type: "Double Room", count: acc.doubleRooms });
+  }
+
   return (
-    <div className="text-white w-full">
-      <h3 className="text-lg font-bold playfair mb-4">Accommodation Details</h3>
+    <div className="space-y-6">
+      {accommodations.length > 1 && (
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {accommodations.map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setActiveDay(index)}
+              className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
+                safeIndex === index
+                  ? "bg-[#7C3AED] border-[#7C3AED] text-white"
+                  : "bg-[#252C3F] border-[#343C59] text-[#C4C8D4] hover:border-[#7C3AED]"
+              }`}
+            >
+              Day {index + 1}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Day tabs — same pattern as Venue / ICTS preview */}
-      <div className="flex gap-2 mb-5 overflow-x-auto no-scrollbar">
-        {accommodations.map((_, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => setActiveTab(idx)}
-            className={`flex-shrink-0 px-5 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap ${
-              activeTab === idx
-                ? "bg-purple-600 text-white"
-                : "bg-[#1f1f38] border border-[#3a3a5a] text-gray-400 hover:text-white hover:border-purple-500"
-            }`}
-          >
-            Day {idx + 1}
-          </button>
-        ))}
+      <div className="rounded-2xl bg-[#1C2233] border border-[#343C59] p-6 space-y-6">
+        <PreviewHeader />
+
+        <TwoColumnCard
+          leftLabel="Check In"
+          leftValue={formatDateTime(acc.checkIn)}
+          leftIcon={Calendar}
+          rightLabel="Check Out"
+          rightValue={formatDateTime(acc.checkOut)}
+          rightIcon={Calendar}
+        />
+
+        <TwoColumnCard
+          leftLabel="Guest Name"
+          leftValue={selectedGuests.length ? selectedGuests.map((g) => g.name).join(", ") : "—"}
+          leftIcon={User}
+          rightLabel="Guest Mobile Number"
+          rightValue={selectedGuests.length ? selectedGuests.map((g) => g.mobile || "—").join(", ") : "—"}
+          rightIcon={Phone}
+        />
+
+        <SectionCard title="Guests" icon={Users}>
+          {selectedGuests.length === 0 ? (
+            <EmptyState text="No guests selected for this accommodation." />
+          ) : (
+            <div className="space-y-2">
+              {selectedGuests.map((guest) => (
+                <div
+                  key={guest.guestId}
+                  className="bg-[#2A3042] border border-[#394156] rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold text-white truncate">
+                      {guest.name || "—"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-row gap-10">
+                    <div className="flex items-center gap-2 text-[13px] text-[#C4C8D4]">
+                      <User className="h-5" gender={guest.gender} />
+                      <span>{guest.gender || "—"}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[13px] text-[#C4C8D4]">
+                      <Phone className="h-5"  gender={guest.gender} />
+                      <span>{guest.mobile || "—"}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Room Details" icon={BedDouble}>
+          <div className="space-y-3">
+            <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
+              <p className="text-[14px] text-[#C4C8D4] mb-2">Occupancy</p>
+              <div className="flex flex-wrap gap-2">
+                {roomOccupancy.length > 0 ? (
+                  roomOccupancy.map((room) => (
+                    <span
+                      key={room.type}
+                      className="inline-block rounded-full border border-[#7C3AED]/40 bg-[#7C3AED]/15 px-3 py-1 text-[13px] text-[#C4B5FD]"
+                    >
+                      {room.type} × {room.count}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[14px] text-[#98A2B3]">No room occupancy provided.</span>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
+              <p className="text-[14px] text-[#C4C8D4] mb-2">Room Types</p>
+              {(acc.roomTypes || []).length > 0 ? (
+                <div className="space-y-2">
+                  {(acc.roomTypes || []).map((roomType) => (
+                    <div
+                      key={roomType}
+                      className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2 last:border-b-0 last:pb-0"
+                    >
+                      <span className="text-[14px] text-[#D6D8E1]">{roomType}</span>
+                      <span className="text-[14px] text-white font-semibold">
+                        {acc.roomCounts?.[roomType] || 0} room(s)
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-[14px] text-[#98A2B3]">No room type selected.</span>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Dine-in" icon={UtensilsCrossed}>
+          <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4 space-y-2">
+            <div className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2">
+              <span className="text-[14px] text-[#C4C8D4]">Dine-in Required</span>
+              <span className="text-[14px] text-white font-semibold">{acc.dine || "—"}</span>
+            </div>
+
+            {(acc.dineTypes || []).length > 0 ? (
+              <div className="space-y-2">
+                {acc.dineTypes?.includes("Hostel") && (
+                  <div className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2">
+                    <span className="text-[14px] text-[#C4C8D4]">Hostel Dine-in Guests</span>
+                    <span className="text-[14px] text-white font-semibold">
+                      {acc.hostelGuests || 0}
+                    </span>
+                  </div>
+                )}
+
+                {acc.dineTypes?.includes("Amenity") && (
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-[14px] text-[#C4C8D4]">Amenity Dine-in Guests</span>
+                    <span className="text-[14px] text-white font-semibold">
+                      {acc.amenityGuests || 0}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span className="text-[14px] text-[#98A2B3]">No dine-in option selected.</span>
+            )}
+          </div>
+        </SectionCard>
+
+        <SectionCard title="Special Requirements" icon={FileText}>
+          <div className=" ">
+            <p className="text-[14px] leading-6 text-[#D6D8E1] whitespace-pre-wrap">
+              {acc.special?.trim() ? acc.special : "No special requirements provided."}
+            </p>
+          </div>
+        </SectionCard>
       </div>
-
-      <AccommodationBlockPreview
-        acc={accommodations[activeTab] || {}}
-        allGuests={allGuests}
-      />
     </div>
   );
 }

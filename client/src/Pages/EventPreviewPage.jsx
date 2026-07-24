@@ -26,7 +26,7 @@ export default function EventPreviewPage({
         foodandrefreshments: "Food & Refreshments",
         accommodation: "Accommodation Details",
         purchase: "Purchase Details",
-        media: "Media Requirement Details",
+        media: "Media Details",
     };
 
     const requirementKeys = Array.isArray(selectedRequirements)

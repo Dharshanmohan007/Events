@@ -57,6 +57,8 @@ export default async function generateAdvanceReceiptPdf({
     format: "a4",
   });
 
+  const offsetY = 0;
+
   //----------------------------------------------------
   // Dynamic Values
   //----------------------------------------------------
