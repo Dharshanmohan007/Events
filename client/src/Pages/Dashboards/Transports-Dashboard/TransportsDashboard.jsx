@@ -114,7 +114,7 @@ const TransportsDashboard = () => {
                         ) : (
                             <UpcomingEventsTable
                                 events={events}
-                                viewAllLink="/transport-requests"
+                                viewAllLink="/dashboard-transports/events"
                                 title="Upcoming Event Transport Request"
                                 module="transport"
                                 individualEvents={individualRequests}

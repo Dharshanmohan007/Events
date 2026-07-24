@@ -24,7 +24,7 @@ const AdminDashboardHeader = () => {
                 <div className="first-container flex items-center gap-6 ">
                     <img src={smallLogo} alt="Small Logo" className='w-10 h-10' />
 
-                    <div className="navlins text-white flex items-center gap-4 text-sm">
+                    <div className="navlins text-white flex items-center gap-4 text-[13px] whitespace-nowrap 2xl:text-sm">
                         <NavLink to={adminRoutes.dashboard} end className={getNavLinkClassName}>Dashboard</NavLink>
                         <NavLink to={adminRoutes.requests} className={getNavLinkClassName}>Requests List</NavLink>
                         <NavLink to={adminRoutes.venues} className={getNavLinkClassName}>Venue Management</NavLink>

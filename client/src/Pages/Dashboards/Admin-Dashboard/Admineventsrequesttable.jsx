@@ -1,10 +1,11 @@
 import { ExternalLink, ListFilter, Search } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import ThemedDatePicker from "../../../Components/ThemedDatePicker";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`;
-const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=individual`;
+const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 
 const formatDate = (dateValue) => {
     if (!dateValue) return "-";
@@ -53,18 +54,13 @@ const normalizeEventRequest = (event) => ({
 });
 
 const normalizeIndividualRequest = (request) => ({
-    id: request.requestId || request.eventId || request.id,
-    eventName: request.eventName || request.name || "-",
-    requestType: request.requestType || request.type || "-",
-    requiredDates: Array.isArray(request.requiredDates)
-        ? request.requiredDates.map(formatDate)
-        : [request.requiredDate || request.date].filter(Boolean).map(formatDate),
-    dateKeys: Array.isArray(request.requiredDates)
-        ? request.requiredDates.map(toDateKey)
-        : [request.requiredDate || request.date].filter(Boolean).map(toDateKey),
-    approvedStatus: request.adminApproval ? "Approved" : (request.approvedStatus || "Pending"),
-    acknowledgedStatus: request.acknowledgedStatus || request.acknowledgementStatus || "Pending",
-    eventStatus: request.overallStatus || request.eventStatus || "-",
+    id: request.id,
+    organizerName: request.employee || "-",
+    organizerEmail: request.employeeEmail || "-",
+    eventType: request.formType || "-",
+    date: request.createdAt ? formatDate(request.createdAt) : "-",
+    dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
+    status: typeof request.status === "string" ? request.status : "-",
 });
 
 const getEventStatusClassName = (status = "") => {
@@ -93,30 +89,39 @@ const StatusBadge = ({ status, className }) => {
 };
 
 const MultiValueCell = ({ values }) => {
+    const [isHovered, setIsHovered] = useState(false);
     const list = values?.length ? values : ["-"];
     const remainingItems = list.slice(1);
 
+    if (remainingItems.length === 0) {
+        return <span className="whitespace-nowrap">{list[0]}</span>;
+    }
+
     return (
-        <div className="min-w-35.5 relative">
-            <div className="flex items-center gap-2">
-                <span className="whitespace-nowrap">{list[0]}</span>
-                {remainingItems.length > 0 && (
-                    <div className="group relative inline-flex">
-                        <span className="cursor-default rounded bg-[#263044] px-1.5 py-0.5 text-xs font-semibold text-[#aeb7ca]">
-                            +{remainingItems.length}
-                        </span>
-                        <div className="pointer-events-none absolute left-1/2 -top-6 z-20 mt-2 hidden min-w-max  rounded-md border border-[#303b52] bg-[#101827] px-3 py-2 text-xs text-white shadow-lg group-hover:block">
-                            <div className="space-y-1">
-                                {remainingItems.map((value, index) => (
-                                    <div key={`${value}-${index}`} className="whitespace-nowrap">
-                                        {value}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+        <div
+            className="relative inline-flex items-center gap-1.5"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <span className="whitespace-nowrap">{list[0]}</span>
+            <span className="cursor-pointer text-xs font-medium text-[#853FF9] hover:text-[#a76df9]">
+                +{remainingItems.length}
+            </span>
+            {isHovered && (
+                <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsHovered(false)} />
+                    <div className="absolute left-full z-50 mb-2 min-w-[180px] rounded-lg border border-[#374155] bg-[#1B2334] p-3 shadow-xl">
+                        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                            Details
+                        </p>
+                        {remainingItems.map((value, index) => (
+                            <p key={`${value}-${index}`} className="py-0.5 text-sm text-white">
+                                {value}
+                            </p>
+                        ))}
                     </div>
-                )}
-            </div>
+                </>
+            )}
         </div>
     );
 };
@@ -135,7 +140,7 @@ const getFilteredDateValues = (values, dateKeys, selectedDateKey) => {
 };
 
 const SelectFilter = ({ icon, value, onChange, options, ariaLabel }) => (
-    <div className="filter-container border border-gray-700 rounded-lg flex items-center py-2 px-3 gap-2 bg-[#232A3C]">
+    <div className="filter-container border border-[#343b4a] rounded-lg flex items-center py-2 px-3 gap-2 bg-[#232A3C]">
         {icon}
         <select
             value={value}
@@ -224,119 +229,133 @@ export default function AdminEventsRequestTable() {
     });
 
     return (
-        <>
-            <div className="mt-5 flex border-b border-[#52596b]">
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("event")}
-                    className={`min-w-[145px] px-3 pb-3 text-left text-base font-medium ${isEventTab ? "border-b-2 border-[#8B3DFF] text-[#8B3DFF]" : "text-white"}`}
-                >
-                    Event Request
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab("individual")}
-                    className={`min-w-[165px] px-3 pb-3 text-left text-base font-medium ${!isEventTab ? "border-b-2 border-[#8B3DFF] text-[#8B3DFF]" : "text-white"}`}
-                >
-                    Individual Request
-                </button>
+        <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] w-full flex flex-col max-h-[calc(100vh-160px)]">
+            {/* Header with tabs */}
+            <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
+                <h2 className="text-white font-medium">
+                    {isEventTab ? "Event Request List" : "Individual Request List"}{" "}
+                    <span className="text-[#8B3DFF]">({filteredRows.length})</span>
+                </h2>
+
+                <div className="flex items-center gap-3">
+                    <nav className="flex rounded-md bg-[#1b2335] p-0.5" aria-label="Request type tabs">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("event")}
+                            className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
+                                isEventTab
+                                    ? "bg-[#8B3DFF] text-white shadow-sm"
+                                    : "text-[#8b93a7] hover:text-white"
+                            }`}
+                        >
+                            Event Requests
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("individual")}
+                            className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
+                                !isEventTab
+                                    ? "bg-[#8B3DFF] text-white shadow-sm"
+                                    : "text-[#8b93a7] hover:text-white"
+                            }`}
+                        >
+                            Individual Requests
+                        </button>
+                    </nav>
+                </div>
             </div>
 
-            <div className="bg-[#171F31] mt-3 border border-gray-800 rounded-xl py-4">
-                <div className="flex items-center justify-between gap-3 mb-4 flex-wrap px-6">
-                    <h2 className="text-white font-semibold">
-                        {isEventTab ? "Overall Event Request List" : "Individual Request List"}{" "}
-                        <span className="text-[#8B3DFF]">( {filteredRows.length} )</span>
-                    </h2>
-
-                    <div className="flex items-center justify-end gap-3 flex-wrap">
-                        <div className="search-bar flex items-center gap-2 border border-gray-700 py-2 px-4 rounded-full bg-[#232A3C]">
-                            <Search size={16} className="text-gray-400" />
-                            <input
-                                value={searchQuery}
-                                onChange={(event) => setSearchQuery(event.target.value)}
-                                type="text"
-                                placeholder="Search events, venues"
-                                className="w-[250px] bg-transparent text-xs text-gray-300 placeholder:text-gray-500 outline-none"
-                            />
-                        </div>
-
-                        {isEventTab && (
-                            <SelectFilter
-                                icon={<ListFilter size={16} className="text-gray-400" />}
-                                value={eventTypeFilter}
-                                onChange={setEventTypeFilter}
-                                options={eventTypeOptions}
-                                ariaLabel="Filter by event type"
-                            />
-                        )}
-
-                        <SelectFilter
-                            icon={<ListFilter size={16} className="text-gray-400" />}
-                            value={approvalFilter}
-                            onChange={setApprovalFilter}
-                            options={[
-                                { value: "all", label: "All Approval" },
-                                { value: "approved", label: "Approved" },
-                                { value: "pending", label: "Pending" },
-                            ]}
-                            ariaLabel="Filter by approval status"
-                        />
-
-                        <ThemedDatePicker
-                            value={dateFilter}
-                            onChange={setDateFilter}
-                            placeholder="Date"
+            {/* Filters row */}
+            <div className="flex items-center justify-between gap-3 px-6 pb-3 flex-shrink-0">
+                <div /> {/* spacer */}
+                <div className="flex items-center justify-end gap-3 flex-wrap">
+                    <div className="search-bar flex items-center gap-2 border border-[#343b4a] py-2 px-4 rounded-lg bg-[#232A3C]">
+                        <Search size={14} className="text-[#8b93a4]" />
+                        <input
+                            value={searchQuery}
+                            onChange={(event) => setSearchQuery(event.target.value)}
+                            type="text"
+                            placeholder="Search events, venues"
+                            className="w-[200px] bg-transparent text-xs text-gray-300 placeholder:text-gray-500 outline-none"
                         />
                     </div>
-                </div>
 
-                <div className="max-h-[calc(100vh-290px)] table-custom-scrollbar overflow-auto">
-                    {isEventTab ? (
-                        <EventRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
-                    ) : (
-                        <IndividualRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
+                    {isEventTab && (
+                        <SelectFilter
+                            icon={<ListFilter size={14} className="text-[#8b93a4]" />}
+                            value={eventTypeFilter}
+                            onChange={setEventTypeFilter}
+                            options={eventTypeOptions}
+                            ariaLabel="Filter by event type"
+                        />
                     )}
+
+                    <SelectFilter
+                        icon={<ListFilter size={14} className="text-[#8b93a4]" />}
+                        value={approvalFilter}
+                        onChange={setApprovalFilter}
+                        options={[
+                            { value: "all", label: "All Approval" },
+                            { value: "approved", label: "Approved" },
+                            { value: "pending", label: "Pending" },
+                        ]}
+                        ariaLabel="Filter by approval status"
+                    />
+
+                    <ThemedDatePicker
+                        value={dateFilter}
+                        onChange={setDateFilter}
+                        placeholder="Date"
+                    />
                 </div>
             </div>
-        </>
+
+            {/* Table */}
+            <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
+                {isEventTab ? (
+                    <EventRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
+                ) : (
+                    <IndividualRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
+                )}
+            </div>
+        </section>
     );
 }
 
 const EventRequestTable = ({ rows, selectedDateKey }) => (
     <table className="w-full text-left">
-        <thead className="sticky top-0 bg-[#1C2335]">
-            <tr className="border-b border-[#22253a] text-[#7f8799] uppercase text-xs">
-                <th className="px-5 py-3.5 font-semibold">Event Name</th>
-                <th className="px-5 py-3.5 font-semibold">Event Type</th>
-                <th className="px-5 py-3.5 font-semibold">Event Venue</th>
-                <th className="px-5 py-3.5 font-semibold">Event Date</th>
-                <th className="px-5 py-3.5 font-semibold">Dpt</th>
-                <th className="px-5 py-3.5 font-semibold">Event Status</th>
-                <th className="px-5 py-3.5 font-semibold">Approved Status</th>
-                <th className="px-5 py-3.5 font-semibold text-center">Action</th>
+        <thead className="sticky top-0 bg-[#151c2c]">
+            <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
+                <th className="px-6 py-4 font-semibold">Event Name</th>
+                <th className="px-6 py-4 font-semibold">Event Type</th>
+                <th className="px-6 py-4 font-semibold">Event Venue</th>
+                <th className="px-6 py-4 font-semibold">Event Date</th>
+                <th className="px-6 py-4 font-semibold">Dpt</th>
+                <th className="px-6 py-4 font-semibold">Event Status</th>
+                <th className="px-6 py-4 font-semibold">Approved Status</th>
+                <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
         </thead>
         <tbody>
             {rows.length > 0 ? rows.map((event, index) => (
-                <tr key={event.id || index} className="border-b border-[#1e2130] text-sm text-white align-top hover:bg-[#1e2232]">
-                    <td className="px-5 py-3.5 font-medium whitespace-nowrap">
+                <tr key={event.id || index} className="border-t border-[#20283a] text-sm text-white align-top">
+                    <td className="px-6 py-4 font-medium whitespace-nowrap">
                         <div className="max-w-34 truncate" title={event.eventName}>{event.eventName}</div>
                     </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">{event.eventType}</td>
-                    <td className="px-5 py-3.5"><MultiValueCell values={event.venues} /></td>
-                    <td className="px-5 py-3.5">
+                    <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
+                    <td className="px-6 py-4"><MultiValueCell values={event.venues} /></td>
+                    <td className="px-6 py-4">
                         <MultiValueCell values={getFilteredDateValues(event.dates, event.dateKeys, selectedDateKey)} />
                     </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">{event.department}</td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                         <span className={getEventStatusClassName(event.eventStatus)}>{event.eventStatus}</span>
                     </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
+                    <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={event.approvedStatus} />
                     </td>
-                    <td className="px-5 py-3.5 text-center">
-                        <button className="text-gray-400 hover:text-white transition-colors" title="Open">
+                    <td className="px-6 py-4">
+                        <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open">
                             <ExternalLink size={17} />
                         </button>
                     </td>
@@ -350,46 +369,52 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
 
 const IndividualRequestTable = ({ rows, selectedDateKey }) => (
     <table className="w-full text-left">
-        <thead className="sticky top-0 bg-[#1C2335]">
-            <tr className="border-b border-[#22253a] text-[#7f8799] uppercase text-xs">
-                <th className="px-5 py-3.5 font-semibold">Event Name</th>
-                <th className="px-5 py-3.5 font-semibold">Request Type</th>
-                <th className="px-5 py-3.5 font-semibold">Required Date</th>
-                <th className="px-5 py-3.5 font-semibold">Approved Status</th>
-                <th className="px-5 py-3.5 font-semibold">Acknowledged Status</th>
-                <th className="px-5 py-3.5 font-semibold">Event Status</th>
-                <th className="px-5 py-3.5 font-semibold text-center">Action</th>
+        <thead className="sticky top-0 bg-[#151c2c]">
+            <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
+                <th className="px-6 py-4 font-semibold">Date</th>
+                <th className="px-6 py-4 font-semibold">Organizer Name</th>
+                <th className="px-6 py-4 font-semibold">Event Type</th>
+                <th className="px-6 py-4 font-semibold">Organizer Email</th>
+                <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
         </thead>
         <tbody>
             {rows.length > 0 ? rows.map((request, index) => (
-                <tr key={request.id || index} className="border-b border-[#1e2130] text-sm text-white align-top hover:bg-[#1e2232]">
-                    <td className="px-5 py-3.5 font-medium whitespace-nowrap">{request.eventName}</td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">{request.requestType}</td>
-                    <td className="px-5 py-3.5">
-                        <MultiValueCell values={getFilteredDateValues(request.requiredDates, request.dateKeys, selectedDateKey)} />
+                <tr key={request.id || index} className="border-t border-[#20283a] text-sm text-white align-top">
+                    <td className="px-6 py-4 whitespace-nowrap">{request.date}</td>
+                    <td className="px-6 py-4 font-medium whitespace-nowrap">
+                        <div className="max-w-34 truncate" title={request.organizerName}>
+                            {request.organizerName}
+                        </div>
                     </td>
-                    <td className="px-5 py-3.5 whitespace-nowrap"><StatusBadge status={request.approvedStatus} /></td>
-                    <td className="px-5 py-3.5 whitespace-nowrap"><StatusBadge status={request.acknowledgedStatus} /></td>
-                    <td className="px-5 py-3.5 whitespace-nowrap">
-                        <span className={getEventStatusClassName(request.eventStatus)}>{request.eventStatus}</span>
+                    <td className="px-6 py-4 whitespace-nowrap">{request.eventType}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="max-w-40 truncate" title={request.organizerEmail}>
+                            {request.organizerEmail}
+                        </div>
                     </td>
-                    <td className="px-5 py-3.5 text-center">
-                        <button className="text-gray-400 hover:text-white transition-colors" title="Open">
+                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={request.status} /></td>
+                    <td className="px-6 py-4">
+                        <Link
+                            to={`/dashboard/IndividualEvents/${request.id}`}
+                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                            title="Open request details"
+                        >
                             <ExternalLink size={17} />
-                        </button>
+                        </Link>
                     </td>
                 </tr>
             )) : (
-                <EmptyRow colSpan={7} />
+                <EmptyRow colSpan={6} />
             )}
         </tbody>
     </table>
 );
 
 const EmptyRow = ({ colSpan }) => (
-    <tr className="border-b border-[#1e2130] text-sm text-[#8b93a7]">
-        <td className="px-5 py-8 text-center" colSpan={colSpan}>
+    <tr className="border-t border-[#20283a] text-sm text-[#8b93a7]">
+        <td className="px-6 py-8 text-center" colSpan={colSpan}>
             No requests available
         </td>
     </tr>

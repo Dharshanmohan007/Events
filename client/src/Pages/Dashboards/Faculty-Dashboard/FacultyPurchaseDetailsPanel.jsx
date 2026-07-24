@@ -3,6 +3,13 @@ import { FileText } from 'lucide-react'
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
+const formatDate = (dateValue) => {
+  if (!dateValue) return '-'
+  const date = new Date(dateValue)
+  if (Number.isNaN(date.getTime())) return dateValue
+  return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
 const SplitInfoRow = ({ items }) => (
   <div className="grid grid-cols-2 rounded-lg border border-[#374155]/70 bg-[#242B3D] px-4 py-5">
     {items.map(([label, value], index) => (
@@ -86,7 +93,7 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
   const purchases = purchaseDetails?.purchases || []
   const dayCount = Math.max(eventSchedule.length, purchases.length, 1)
   const selectedDay = Math.min(activeDay, dayCount - 1)
-  const dayPurchase = purchases.find((p) => Number(p.dayIndex) === selectedDay)
+  const dayPurchase = purchases[selectedDay]
 
   if (!purchaseDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No purchase details are available.</p>
 
@@ -113,6 +120,14 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
 
       {dayPurchase ? (
         <>
+          {/* Day Index & Delivery Date */}
+          <SplitInfoRow
+            items={[
+              ['Day', `Day ${dayPurchase.dayIndex || selectedDay + 1}`],
+              ['Delivery Date', formatDate(dayPurchase.deliveryDate)],
+            ]}
+          />
+
           {/* Requirements Needed */}
           {(dayPurchase.requirementNeeded || []).length > 0 && (
             <section className="rounded-lg border border-[#465168] bg-[#1B2334] p-5">

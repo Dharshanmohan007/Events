@@ -114,7 +114,7 @@ const PurchaseDashboard = () => {
                         ) : (
                             <UpcomingEventsTable
                                 events={events}
-                                viewAllLink="/purchase-requests"
+                                viewAllLink="/dashboard-purchase/events"
                                 title="Upcoming Purchase Requests"
                                 module="purchase"
                                 individualEvents={individualRequests}
