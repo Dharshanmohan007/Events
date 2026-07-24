@@ -43,6 +43,7 @@ import VenueEventsDetailViewPage from './Pages/Dashboards/Venue-Dashboard/VenueE
 import VenueReportsPage from './Pages/Dashboards/Venue-Dashboard/VenueReportsPage'
 import ForgetPassword from './Components/ForgetPassword'
 import EventDetailsPage from "./Pages/Dashboards/Admin-Dashboard/EventDetailsPage"
+import IndividualEventDetailPage from "./Pages/Dashboards/Admin-Dashboard/IndividualEventDetailPage"
 import FacultyDashboard from "./Pages/Dashboards/Faculty-Dashboard/FacultyDashboard"
 import FacultyVenueListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyVenueListPage"
 import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyfeedbackPage"
@@ -53,6 +54,14 @@ import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
 import PurchaseDetails from "./Pages/IndividualForm/PurchaseDetails";
 
+// Module request list pages (Event / Individual two-tab)
+import AudioEventsListPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsListPage"
+import TransportEventsListPage from "./Pages/Dashboards/Transports-Dashboard/TransportEventsListPage"
+import VenueRequestListPage from "./Pages/Dashboards/Venue-Dashboard/VenueRequestListPage"
+import PurchaseEventsListPage from "./Pages/Dashboards/Purchase-Dashboard/PurchaseEventsListPage"
+import FoodEventsListPage from "./Pages/Dashboards/Food-Dashboard/FoodEventsListPage"
+import AccommodationRequestListPage from "./Pages/Dashboards/Accommodation-Dashboard/AccommodationRequestListPage"
+import MediaEventsListPage from "./Pages/Dashboards/Media-Dashboard/MediaEventsListPage"
 
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
@@ -82,14 +91,17 @@ function AppRoutes() {
       <Route path="/dashboard-ictcs/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
 
       <Route path="/dashboard-audio" element={<ProtectedRoute><AUDIODashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-audio/events" element={<ProtectedRoute><AudioEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-audio/events/detailView/:eventId" element={<ProtectedRoute><AudioEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-audio/reports" element={<ProtectedRoute><AudioReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-transports" element={<ProtectedRoute><TransportsDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-transports/events" element={<ProtectedRoute><TransportEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-transports/events/detailView/:eventId" element={<ProtectedRoute><TransportEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-transports/reports" element={<ProtectedRoute><TransportsReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/reports" element={<ProtectedRoute><PosterReportsPage /></ProtectedRoute>} />
@@ -106,8 +118,9 @@ function AppRoutes() {
         <Route path="reports" element={<AdminReportsPage />} />
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
-
       </Route>
+
+      <Route path="/dashboard/IndividualEvents/:id" element={<ProtectedRoute><IndividualEventDetailPage /></ProtectedRoute>} />
 
        <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/media" element={<MediaDetailsPage />} />
@@ -121,18 +134,22 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-accommodation" element={<ProtectedRoute><AccommodationDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-accommodation/requests" element={<ProtectedRoute><AccommodationRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/events/detailView/:eventId" element={<ProtectedRoute><AccommodationEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/reports" element={<ProtectedRoute><AccommodationReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-venue" element={<ProtectedRoute><VenueDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-venue/requests" element={<ProtectedRoute><VenueRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-venue/events/detailView/:eventId" element={<ProtectedRoute><VenueEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-venue/reports" element={<ProtectedRoute><VenueReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-food" element={<ProtectedRoute><FoodDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-food/events" element={<ProtectedRoute><FoodEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/events/detailView/:eventId" element={<ProtectedRoute><FoodEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/reports" element={<ProtectedRoute><FoodReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-purchase/events" element={<ProtectedRoute><PurchaseEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />

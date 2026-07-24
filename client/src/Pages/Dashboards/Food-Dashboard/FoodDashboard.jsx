@@ -117,7 +117,7 @@ const FoodDashboard = () => {
                         ) : (
                             <UpcomingEventsTable
                                 events={events}
-                                viewAllLink="/food-requests"
+                                viewAllLink="/dashboard-food/events"
                                 title="Upcoming Food & Catering Requests"
                                 module="food"
                                 individualEvents={individualRequests}

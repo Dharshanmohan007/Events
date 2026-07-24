@@ -124,7 +124,7 @@ const MediaDashboard = () => {
 
                     {/* table and charts    */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <MediaRequestTable requests={mediaRequests} viewAllLink="/media-requests" />
+                        <MediaRequestTable requests={mediaRequests} viewAllLink="/dashboard-media/events" />
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">

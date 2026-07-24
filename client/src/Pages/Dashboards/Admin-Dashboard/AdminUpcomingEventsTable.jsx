@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowRight, ExternalLink, ListFilter } from 'lucide-react'
+import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`
-const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=individual`
+const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`
 
 const formatDate = (dateValue) => {
     if (!dateValue) return '-'
@@ -35,15 +35,14 @@ const normalizeEvent = (event) => ({
 })
 
 const normalizeIndividualRequest = (request) => ({
-    id: request.requestId || request.eventId || request.id,
-    eventName: request.eventName || request.name || '-',
-    requestType: request.requestType || request.type || '-',
-    requiredDates: Array.isArray(request.requiredDates)
-        ? request.requiredDates.map(formatDate)
-        : [request.requiredDate || request.date].filter(Boolean).map(formatDate),
-    approvedStatus: request.adminApproval ? 'Approved' : (request.approvedStatus || 'Pending'),
-    acknowledgedStatus: request.acknowledgedStatus || request.acknowledgementStatus || 'Pending',
-    eventStatus: request.overallStatus || request.eventStatus || '-',
+    id: request.id,
+    organizerName: request.employee || '-',
+    organizerEmail: request.employeeEmail || '-',
+    eventType: request.formType || '-',
+    date: request.createdAt
+        ? formatDate(request.createdAt)
+        : '-',
+    status: typeof request.status === 'string' ? request.status : '-',
 })
 
 const getStatusClassName = (status = '') => {
@@ -69,7 +68,7 @@ const getStatusClassName = (status = '') => {
 }
 
 const StatusBadge = ({ status }) => {
-    const normalizedStatus = status.toLowerCase()
+    const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : ''
     const isPositive = normalizedStatus.includes('approved') || normalizedStatus.includes('acknowledged')
 
     return (
@@ -189,18 +188,28 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                 <h2 className="text-white font-medium">{title}</h2>
 
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 rounded-lg border border-[#343b4a] bg-[#232A3C] px-3 py-2">
-                        <ListFilter size={14} className="text-[#8b93a4]" />
-                        <select
-                            value={requestType}
-                            onChange={(event) => setRequestType(event.target.value)}
-                            aria-label="Filter request type"
-                            className="bg-transparent text-xs text-gray-300 outline-none"
+                    <nav className="flex rounded-md bg-[#1b2335] p-0.5" aria-label="Request type tabs">
+                        <button
+                            type="button"
+                            onClick={() => setRequestType('event')}
+                            className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${isEventRequest
+                                ? 'bg-[#8B3DFF] text-white shadow-sm'
+                                : 'text-[#8b93a7] hover:text-white'
+                                }`}
                         >
-                            <option value="event" className="bg-[#171F31] text-white">Event Request</option>
-                            <option value="individual" className="bg-[#171F31] text-white">Individual Request</option>
-                        </select>
-                    </div>
+                            Event Requests
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRequestType('individual')}
+                            className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${!isEventRequest
+                                ? 'bg-[#8B3DFF] text-white shadow-sm'
+                                : 'text-[#8b93a7] hover:text-white'
+                                }`}
+                        >
+                            Individual Requests
+                        </button>
+                    </nav>
 
                     {viewAllLink && (
                         <Link to={viewAllLink} className="flex items-center gap-2 text-[#853FF9] hover:text-[#a76df9] cursor-pointer text-sm font-medium">
@@ -227,12 +236,11 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                             </tr>
                         ) : (
                             <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
-                                <th className="px-6 py-4 font-semibold">Event Name</th>
-                                <th className="px-6 py-4 font-semibold">Request Type</th>
-                                <th className="px-6 py-4 font-semibold">Required Date</th>
-                                <th className="px-6 py-4 font-semibold">Approved Status</th>
-                                <th className="px-6 py-4 font-semibold">Acknowledged Status</th>
-                                <th className="px-6 py-4 font-semibold">Event Status</th>
+                                <th className="px-6 py-4 font-semibold">Date</th>
+                                <th className="px-6 py-4 font-semibold">Organizer Name</th>
+                                <th className="px-6 py-4 font-semibold">Event Type</th>
+                                <th className="px-6 py-4 font-semibold">Organizer Email</th>
+                                <th className="px-6 py-4 font-semibold">Status</th>
                                 <th className="px-6 py-4 font-semibold text-center">Action</th>
                             </tr>
                         )}
@@ -248,7 +256,7 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         key={rowId}
                                         className="border-t border-[#20283a] text-sm text-white align-top"
                                     >
-                                        <td className="px-6 py-4 font-medium whitespace-nowrap ">
+                                        <td className="px-6 py-4 font-medium whitespace-nowrap">
                                             <div className="max-w-30 truncate" title={event.eventName}>
                                                 {event.eventName}
                                             </div>
@@ -273,52 +281,51 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={event.approvedStatus} />
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white">
-                                                <ExternalLink size={17} />
-                                            </button>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white">
+                                            <ExternalLink size={17} />
+                                        </button>
+                                    </td>
                                     </tr>
                                 )
-                            }) : tableRows.map((request, index) => {
-                                const rowId = request.id || index
+                            }) : tableRows.map((row, index) => {
+                                const rowId = row.id || index
 
                                 return (
                                     <tr
                                         key={rowId}
                                         className="border-t border-[#20283a] text-sm text-white align-top"
                                     >
+                                        <td className="px-6 py-4 whitespace-nowrap">{row.date}</td>
                                         <td className="px-6 py-4 font-medium whitespace-nowrap">
-                                            <div className="max-w-30 truncate" title={request.eventName}>
-                                                {request.eventName}
+                                            <div className="max-w-34 truncate" title={row.organizerName}>
+                                                {row.organizerName}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{request.requestType}</td>
-                                        <td className="px-6 py-4">
-                                            <ExpandableListCell values={request.requiredDates} />
+                                        <td className="px-6 py-4 whitespace-nowrap">{row.eventType}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="max-w-40 truncate" title={row.organizerEmail}>
+                                                {row.organizerEmail}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <StatusBadge status={request.approvedStatus} />
+                                            <StatusBadge status={row.status} />
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <StatusBadge status={request.acknowledgedStatus} />
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={getStatusClassName(request.eventStatus)}>
-                                                {request.eventStatus}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white">
-                                                <ExternalLink size={17} />
-                                            </button>
-                                        </td>
+                                    <td className="px-6 py-4">
+                                        <Link
+                                            to={`/dashboard/IndividualEvents/${row.id}`}
+                                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                            title="Open request details"
+                                        >
+                                            <ExternalLink size={17} />
+                                        </Link>
+                                    </td>
                                     </tr>
                                 )
                             })
                         ) : (
                             <tr className="border-t border-[#20283a] text-sm text-[#8b93a7]">
-                                <td className="px-6 py-8 text-center" colSpan={isEventRequest ? 8 : 7}>
+                                <td className="px-6 py-8 text-center" colSpan={isEventRequest ? 8 : 6}>
                                     No requests available
                                 </td>
                             </tr>
