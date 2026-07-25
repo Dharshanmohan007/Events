@@ -165,8 +165,8 @@ const FacultyLatestEventsRequestTable = () => {
     }
 
     return (
-        <section className="rounded-lg border border-[#263044] bg-[#151d2d]">
-            <div className="flex items-center justify-between px-4 py-4">
+        <section className="rounded-lg border border-[#263044] max-h-[calc(100vh-390px)] overflow-auto table-custom-scrollbar bg-[#151d2d] ">
+            <div className="flex items-center justify-between px-4 py-4 sticky top-0 bg-[#151d2d]">
                 <h2 className="text-sm font-semibold text-white">Latest Requests</h2>
                 <div className="flex items-center gap-4">
                     {/* Tabs */}

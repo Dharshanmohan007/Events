@@ -65,6 +65,7 @@ import MediaEventsListPage from "./Pages/Dashboards/Media-Dashboard/MediaEventsL
 
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
+import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
 // Navigation after login is handled by Login.jsx itself via navigate()
@@ -72,7 +73,6 @@ function PublicRoute({ children }) {
   return children;
 }
 
-console.log("Nishanth's code is comming here...")
 
 function AppRoutes() {
   return (
@@ -132,6 +132,9 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/events/detailView/:eventId" element={<ProtectedRoute><FacultyEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
+
+      <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
+
 
       <Route path="/dashboard-accommodation" element={<ProtectedRoute><AccommodationDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/requests" element={<ProtectedRoute><AccommodationRequestListPage /></ProtectedRoute>} />
