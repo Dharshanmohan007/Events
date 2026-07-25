@@ -4,35 +4,29 @@ import logo from "../assets/logo.png.jpeg";
 
 const PAGE_WIDTH = 210;
 const PAGE_HEIGHT = 297;
+const HALF_HEIGHT = 148.5;
+const BOX_HEIGHT = HALF_HEIGHT - 10; // 138.5mm usable box per half
 
-const formatDate = (date) => {
-  if (!date) return "";
-  return dayjs(date).format("DD.MM.YYYY");
-};
+//----------------------------------------------------
+// Helpers
+//----------------------------------------------------
 
-const add15Days = (date) => {
-  if (!date) return "";
-  return dayjs(date).add(15, "day").format("DD.MM.YYYY");
-};
+const formatDate = (date) => (date ? dayjs(date).format("DD.MM.YYYY") : "");
 
-const formatAmount = (amount) => {
-  if (!amount && amount !== 0) return "";
-  return Number(amount).toLocaleString("en-IN");
-};
+const add15Days = (date, days = 15) =>
+  date ? dayjs(date).add(days, "day").format("DD.MM.YYYY") : "";
 
-const drawLine = (doc, x1, y1, x2, y2) => {
-  doc.line(x1, y1, x2, y2);
-};
+const formatAmount = (amount) =>
+  amount ? Number(amount).toLocaleString("en-IN") : "";
+
+const drawLine = (doc, x1, y1, x2, y2) => doc.line(x1, y1, x2, y2);
 
 const drawCenteredText = (doc, text, y, fontSize = 12, style = "normal") => {
   doc.setFont("times", style);
   doc.setFontSize(fontSize);
-
-  const width = doc.getTextWidth(text || "");
-  doc.text(text || "", (PAGE_WIDTH - width) / 2, y);
+  const width = doc.getTextWidth(text);
+  doc.text(text, (PAGE_WIDTH - width) / 2, y);
 };
-
-const safeText = (value) => (value ?? "").toString().trim();
 
 const loadImage = (src) =>
   new Promise((resolve) => {
@@ -40,6 +34,232 @@ const loadImage = (src) =>
     img.src = src;
     img.onload = () => resolve(img);
   });
+
+/**
+ * Draws "Label : ____________" and, if a value is supplied, sits the value
+ * text just above the underline so it never collides with a neighbouring row.
+ * Returns the x position where the blank line started (useful if you need
+ * to know the remaining width, e.g. for the amount / purpose rows).
+ */
+const drawField = (
+  doc,
+  { label, labelX, y, lineEndX, value, fontSize = 9, gap = 2 }
+) => {
+  doc.setFont("times", "bold");
+  doc.setFontSize(fontSize);
+  doc.text(label, labelX, y);
+
+  const labelWidth = doc.getTextWidth(label);
+  const lineStartX = labelX + labelWidth + gap;
+
+  drawLine(doc, lineStartX, y, lineEndX, y);
+
+  if (value) {
+    doc.setFont("times", "normal");
+    doc.setFontSize(fontSize);
+    doc.text(String(value), lineStartX + 1, y - 1);
+  }
+
+  return lineStartX;
+};
+
+//----------------------------------------------------
+// Draws ONE full receipt inside a half-page box starting at boxTop
+//----------------------------------------------------
+
+const drawReceiptCopy = (doc, boxTop, logoImg, data) => {
+  const {
+    iqacNumber,
+    requisitionDate,
+    employeeName,
+    empId,
+    designation,
+    department,
+    advanceAmount,
+    purpose,
+    clearBeforeDate,
+    clearanceDays,
+  } = data;
+
+  //-------------------- Outer border --------------------
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(0);
+  doc.rect(5, boxTop, 200, BOX_HEIGHT);
+
+  //-------------------- Header / logo --------------------
+  const logoWidth = 60;
+  const logoHeight = 13;
+  doc.addImage(
+    logoImg,
+    "PNG",
+    (PAGE_WIDTH - logoWidth) / 2,
+    boxTop + 4,
+    logoWidth,
+    logoHeight
+  );
+
+  drawLine(doc, 5, boxTop + 19, 205, boxTop + 19);
+
+  //-------------------- Title + IQAC number (top right) --------------------
+  const titleY = boxTop + 26;
+  drawCenteredText(doc, "Request for Advance / Travel Advance", titleY, 11, "bold");
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(8);
+  doc.text(iqacNumber || "", 165, titleY);
+
+  //-------------------- Row 1: Requisition Date --------------------
+  const row1Y = boxTop + 35;
+  drawField(doc, {
+    label: "Requisition Date :",
+    labelX: 10,
+    y: row1Y,
+    lineEndX: 100,
+    value: requisitionDate,
+  });
+
+  //-------------------- Row 2: Name / Emp ID --------------------
+  const row2Y = boxTop + 44;
+  drawField(doc, {
+    label: "Name :",
+    labelX: 10,
+    y: row2Y,
+    lineEndX: 100,
+    value: employeeName,
+  });
+  drawField(doc, {
+    label: "Emp ID :",
+    labelX: 110,
+    y: row2Y,
+    lineEndX: 201,
+    value: empId,
+  });
+
+  //-------------------- Row 3: Designation / Department --------------------
+  const row3Y = boxTop + 53;
+  drawField(doc, {
+    label: "Designation :",
+    labelX: 10,
+    y: row3Y,
+    lineEndX: 100,
+    value: designation,
+  });
+  drawField(doc, {
+    label: "Department :",
+    labelX: 110,
+    y: row3Y,
+    lineEndX: 201,
+    value: department,
+  });
+
+  //-------------------- Row 4: Amount --------------------
+  const row4Y = boxTop + 62;
+  drawField(doc, {
+    label:
+      "I required a Cash / In Bank / Travel Advance / Online Payment of Rs.",
+    labelX: 10,
+    y: row4Y,
+    lineEndX: 201,
+    value: advanceAmount,
+  });
+
+  //-------------------- Row 5 & 6: Purpose (wrapped) --------------------
+  const row5Y = boxTop + 71;
+  const row6Y = boxTop + 79;
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(9);
+  doc.text("Purpose of Advance :", 10, row5Y);
+  const purposeLabelWidth = doc.getTextWidth("Purpose of Advance :");
+  const purposeLine1StartX = 10 + purposeLabelWidth + 2;
+
+  drawLine(doc, purposeLine1StartX, row5Y, 201, row5Y);
+  drawLine(doc, 10, row6Y, 201, row6Y);
+
+  doc.setFont("times", "normal");
+  doc.setFontSize(9);
+
+  const purposeText = purpose || "";
+  const maxWidthRow5 = 201 - purposeLine1StartX - 2;
+  const maxWidthRow6 = 201 - 10 - 2;
+
+  const wrappedRow1 = doc.splitTextToSize(purposeText, maxWidthRow5);
+  const line1 = wrappedRow1[0] || "";
+  const remainingText = purposeText.slice(line1.length).trim();
+  const wrappedRow2 = doc.splitTextToSize(remainingText, maxWidthRow6);
+  const line2 = wrappedRow2[0] || "";
+
+  if (line1) doc.text(line1, purposeLine1StartX + 1, row5Y - 1);
+  if (line2) doc.text(line2, 11, row6Y - 1);
+
+  //-------------------- Row 7: Clear the advance within --------------------
+  const row7Y = boxTop + 90;
+  doc.setFont("times", "bold");
+  doc.setFontSize(9);
+  doc.text("I will Clear the Advance within", 10, row7Y);
+  const daysLabelWidth = doc.getTextWidth("I will Clear the Advance within");
+  const daysLineStartX = 10 + daysLabelWidth + 2;
+  const daysLineEndX = daysLineStartX + 16;
+  drawLine(doc, daysLineStartX, row7Y, daysLineEndX, row7Y);
+
+  doc.setFont("times", "normal");
+  doc.text(String(clearanceDays ?? 15), daysLineStartX + 3, row7Y - 1);
+
+  const daysWordX = daysLineEndX + 3;
+  doc.setFont("times", "bold");
+  doc.text("Days", daysWordX, row7Y);
+
+  const orLabelX = daysWordX + doc.getTextWidth("Days") + 5;
+  doc.text("Or On or before", orLabelX, row7Y);
+  const orLabelWidth = doc.getTextWidth("Or On or before");
+  const dateLineStartX = orLabelX + orLabelWidth + 2;
+  drawLine(doc, dateLineStartX, row7Y, 201, row7Y);
+
+  doc.setFont("times", "normal");
+  doc.text(clearBeforeDate || "", dateLineStartX + 1, row7Y - 1);
+
+  //-------------------- IQAC Number box --------------------
+  const iqacLabelY = boxTop + 99;
+  const iqacBoxY = boxTop + 102;
+  const iqacBoxHeight = 12;
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(10);
+  doc.text("IQAC Number", 160, iqacLabelY);
+
+  doc.rect(150, iqacBoxY, 42, iqacBoxHeight);
+  doc.setFontSize(9);
+  doc.text(iqacNumber || "", 153, iqacBoxY + iqacBoxHeight / 2 + 2.5);
+
+  //-------------------- Signature row --------------------
+  const sigLine1Y = boxTop + 123;
+  const sigLine2Y = boxTop + 127;
+  const sigLine3Y = boxTop + 131;
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(7);
+
+  doc.text("Signature of Faculty", 9, sigLine1Y);
+  doc.text("Member", 9, sigLine2Y);
+
+  doc.text("Recommended", 51, sigLine1Y);
+  doc.text("by Dean / HOD /", 46, sigLine2Y);
+  doc.text("Section Head", 51, sigLine3Y);
+
+  doc.text("Clearance", 94, sigLine1Y);
+  doc.text("from Lead IQAC", 89, sigLine2Y);
+
+  doc.text("Approved by", 131, sigLine1Y);
+  doc.text("Principal", 137, sigLine2Y);
+
+  doc.text("Alloted by IQAC Office", 156, sigLine1Y);
+  doc.text("after", 178, sigLine2Y);
+  doc.text("Principal's Approval", 161, sigLine3Y);
+};
+
+//----------------------------------------------------
+// Main export
+//----------------------------------------------------
 
 export default async function generateAdvanceReceiptPdf({
   formData,
@@ -52,177 +272,36 @@ export default async function generateAdvanceReceiptPdf({
     format: "a4",
   });
 
-  const iqacNumber = submitResponse?.iqacNumber || "";
+  const selectedDate =
+    formData?.selectDate || formData?.date || formData?.eventDays?.[0]?.date || null;
 
-  const selectDate =
-    formData?.selectDate ||
-    formData?.eventDays?.[0]?.date ||
-    formData?.date ||
-    null;
+  const data = {
+    iqacNumber: submitResponse?.iqacNumber || "",
+    requisitionDate: formatDate(selectedDate),
+    employeeName:
+      employee?.name || employee?.employeeName || formData?.employeeName || "",
+    empId: employee?.empId || employee?.employeeId || "",
+    designation: employee?.designation || "",
+    department: employee?.department || "",
+    advanceAmount: formatAmount(formData?.advanceAmount),
+    purpose: formData?.purposeOfAdvance || "",
+    clearBeforeDate: add15Days(selectedDate, formData?.clearanceDays || 15),
+    clearanceDays: formData?.clearanceDays || 15,
+  };
 
-  const requisitionDate = formatDate(selectDate);
-  const clearBeforeDate = add15Days(selectDate);
+  const logoImg = await loadImage(logo);
 
-  const organizer =
-    formData?.event?.organizers?.find?.(
-      (entry) => entry?.name || entry?.empId || entry?.designation
-    ) ||
-    formData?.event?.organizers?.[0] ||
-    {};
+  // Dashed cutting line across the middle of the page
+  doc.setDrawColor(180);
+  doc.setLineDash([2, 2], 0);
+  doc.line(5, HALF_HEIGHT, 205, HALF_HEIGHT);
+  doc.setLineDash([], 0);
+  doc.setDrawColor(0);
 
-  const employeeName =
-    employee?.name ||
-    employee?.employeeName ||
-    organizer?.name ||
-    formData?.employeeName ||
-    "";
+  // Top copy — the actual filled receipt
+  drawReceiptCopy(doc, 5, logoImg, data);
 
-  const empId =
-    employee?.empId ||
-    employee?.employeeId ||
-    organizer?.empId ||
-    formData?.empId ||
-    "";
+  // Bottom half intentionally left blank — no border, no content
 
-  const designation =
-    employee?.designation ||
-    organizer?.designation ||
-    formData?.designation ||
-    "";
-
-  const department =
-    employee?.department ||
-    organizer?.department ||
-    formData?.event?.department ||
-    formData?.department ||
-    "";
-
-  const advanceAmountRaw =
-    formData?.advanceAmount ||
-    formData?.cards?.[0]?.advanceAmount ||
-    formData?.purposeOfAdvance ||
-    0;
-
-  const advanceAmount = formatAmount(Number(advanceAmountRaw || 0));
-
-  const purpose =
-    formData?.advancePurpose ||
-    formData?.purposeOfAdvance ||
-    formData?.cards?.[0]?.advancePurpose ||
-    "";
-
-  doc.setLineWidth(0.5);
-  doc.rect(5, 5, 200, 287);
-
-  const img = await loadImage(logo);
-  doc.addImage(img, "JPEG", 67, 8, 75, 28);
-
-  drawLine(doc, 5, 40, 205, 40);
-
-  doc.setFont("times", "bold");
-  doc.setFontSize(15);
-  drawCenteredText(doc, "Request for Advance / Travel Advance", 50, 15, "bold");
-
-  doc.setFont("times", "bold");
-  doc.setFontSize(10);
-  doc.text(iqacNumber, 160, 49);
-
-  doc.setFontSize(11);
-  doc.text("Requisition Date :", 10, 67);
-  drawLine(doc, 48, 68, 83, 68);
-  doc.setFont("times", "normal");
-  doc.text(requisitionDate, 50, 66.5);
-
-  doc.setFont("times", "bold");
-  doc.text("Name :", 10, 83);
-  drawLine(doc, 23, 84, 80, 84);
-  doc.setFont("times", "normal");
-  doc.text(employeeName, 24, 82.5);
-
-  doc.setFont("times", "bold");
-  doc.text("Emp ID :", 116, 83);
-  drawLine(doc, 132, 84, 182, 84);
-  doc.setFont("times", "normal");
-  doc.text(empId, 133, 82.5);
-
-  doc.setFont("times", "bold");
-  doc.text("Designation :", 10, 99);
-  drawLine(doc, 33, 100, 80, 100);
-  doc.setFont("times", "normal");
-  doc.text(designation, 34, 98.5);
-
-  doc.setFont("times", "bold");
-  doc.text("Department :", 116, 99);
-  drawLine(doc, 137, 100, 182, 100);
-  doc.setFont("times", "normal");
-  doc.setFontSize(10);
-  doc.text(department, 138, 98.5);
-
-  doc.setFont("times", "bold");
-  doc.text(
-    "I required a Cash / In Bank / Travel Advance / Online Payment of Rs.",
-    10,
-    115,
-  );
-  drawLine(doc, 132, 116, 202, 116);
-  doc.setFont("times", "normal");
-  doc.text(advanceAmount, 134, 114.5);
-
-  doc.setFont("times", "bold");
-  doc.text("Purpose of Advance :", 10, 131);
-  drawLine(doc, 48, 132, 202, 132);
-  doc.setFont("times", "normal");
-
-  const purposeText = safeText(purpose);
-  const purposeLine1 = purposeText.substring(0, 100);
-  doc.text(purposeLine1, 49, 130.5);
-
-  drawLine(doc, 10, 145, 202, 145);
-  const purposeLine2 = purposeText.substring(100, 220);
-  doc.text(purposeLine2, 11, 143.5);
-
-  doc.setFont("times", "bold");
-  doc.setFontSize(11);
-  doc.text("I will Clear the Advance within", 10, 162);
-  drawLine(doc, 63, 163, 88, 163);
-  doc.setFont("times", "normal");
-  doc.text("15", 74, 161.5);
-  doc.setFont("times", "bold");
-  doc.text("Days", 90, 162);
-  doc.text("Or On or before", 104, 162);
-  drawLine(doc, 132, 163, 168, 163);
-  doc.setFont("times", "normal");
-  doc.text(clearBeforeDate, 130, 161.5);
-
-  doc.setFont("times", "bold");
-  doc.setFontSize(12);
-  doc.text("IQAC Number", 160, 172);
-  doc.rect(150, 176, 42, 15);
-  doc.setFont("times", "bold");
-  doc.setFontSize(11);
-  doc.text(iqacNumber, 153, 187);
-
-  const signatureTop = 118;
-  const labelY = 272;
-
-  doc.setFont("times", "bold");
-  doc.setFontSize(8);
-  doc.text("Signature of Faculty", 9, labelY);
-  doc.text("Member", 17, labelY + 8);
-
-  doc.text("Recommended", 51, labelY);
-  doc.text("by Dean / HOD /", 46, labelY + 8);
-  doc.text("Section Head", 51, labelY + 16);
-
-  doc.text("Clearance", 94, labelY);
-  doc.text("from Lead IQAC", 89, labelY + 8);
-
-  doc.text("Approved by", 131, labelY);
-  doc.text("Principal", 137, labelY + 8);
-
-  doc.text("Alloted by IQAC Office", 156, labelY);
-  doc.text("after", 178, labelY + 8);
-  doc.text("Principal's Approval", 161, labelY + 16);
-
-  doc.save(`Advance_Receipt_${iqacNumber || "Receipt"}.pdf`);
+  doc.save(`Advance_Receipt_${data.iqacNumber || "Receipt"}.pdf`);
 }

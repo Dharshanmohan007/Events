@@ -1098,7 +1098,7 @@ formData.append(
   payload.status
 );
 
-formData.append("financeRequested", payload.financeRequested);
+formData.append("financeRequired", payload.financeRequested);
 
 if (payload.advanceAmount !== undefined) {
   formData.append("advanceAmount", payload.advanceAmount);
