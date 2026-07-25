@@ -88,6 +88,11 @@ function validateDay(data, showCertificate = false) {
 
 // ── Build FormData for submission (includes File objects) ─────────────────────
 
+// ── Build FormData for submission (includes File objects) ─────────────────────
+// Mirrors buildEventRequisitionPayload's pattern: JSON metadata goes in one
+// field ("mediaData"), and every actual File is appended as its own separate
+// top-level FormData field — the same way previousEventDocumentation and
+// principalApprovalDocument are appended outside requestDetails.
 export function buildMediaFormData(mediaData) {
   const fd = new FormData();
 
@@ -96,27 +101,18 @@ export function buildMediaFormData(mediaData) {
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    // ── helper: append files, return matching metadata (key + original name) ──
-    const appendFiles = (files = [], keyPrefix) => {
+    // ── helper: appends real Files as top-level FormData fields (outside the
+    //    JSON), and returns plain metadata for files already saved (edit mode)
+    //    so those references aren't lost when re-submitting.
+    const appendFiles = (files = [], fieldName) => {
       const meta = [];
 
-      files.forEach((file, index) => {
-        // Newly uploaded file
+      (files || []).forEach((file) => {
         if (file instanceof File) {
-          const key = `${keyPrefix}_${index}`;
-
-          fd.append(key, file);
-
-          meta.push({
-            key,
-            originalName: file.name,
-            mimeType: file.type,
-            size: file.size,
-          });
-        }
-
-        // Already uploaded file (edit mode)
-        else if (file?.key) {
+          // Same pattern as: fd.append("previousEventDocumentation", eventRequisition.file)
+          fd.append(fieldName, file);
+        } else if (file) {
+          // Already-uploaded file (edit mode) — keep its saved metadata (url/publicId/etc.)
           meta.push(file);
         }
       });
@@ -124,13 +120,15 @@ export function buildMediaFormData(mediaData) {
       return meta;
     };
 
-    const referencePosterFiles      = appendFiles(day.poster?.referencePoster,      `day_${dayIndex}_referencePoster`);
-    const referenceCertificateFiles = appendFiles(day.poster?.referenceCertificate, `day_${dayIndex}_referenceCertificate`);
-    const referenceFiles            = appendFiles(day.video?.referenceVideo,        `day_${dayIndex}_referenceVideo`);
+    // Field names are day-scoped so the backend can tell which day each
+    // uploaded file belongs to, while still being flat top-level fields
+    // (same style as previousEventDocumentation / principalApprovalDocument).
+    const referencePosterFiles      = appendFiles(day.poster?.referencePoster,      `referencePosterFiles_day${dayIndex}`);
+    const referenceCertificateFiles = appendFiles(day.poster?.referenceCertificate, `referenceCertificateFiles_day${dayIndex}`);
+    const referenceFiles            = appendFiles(day.video?.referenceVideo,        `referenceFiles_day${dayIndex}`);
 
     // ── Sizes: ONLY Flex / Glass Sticker carry a size value.
-    //    Trim and normalize so nothing but a clean string reaches the backend.
-    const sizes =  {};
+    const sizes = [];
     const flexVal  = day.poster?.sizeForFlex?.trim();
     const glassVal = day.poster?.sizeForGlass?.trim();
     if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
@@ -169,7 +167,9 @@ export function buildMediaFormData(mediaData) {
     };
   });
 
+  // JSON metadata goes in first, exactly like fd.append("requestDetails", JSON.stringify(requestDetails))
   fd.append("mediaData", JSON.stringify({ mediaRequirementDetails: { mediaRequirements } }));
+
   return fd;
 }
 
