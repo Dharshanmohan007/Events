@@ -7,43 +7,13 @@ import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const individualRequests = [
-    {
-        requiredDate: '15-03-2026',
-        organizerName: 'Surya Chandran',
-        department: 'CSE',
-        organizerPhone: '9080884370',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '18-03-2026',
-        organizerName: 'Priya Sharma',
-        department: 'ECE',
-        organizerPhone: '9876543210',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '22-03-2026',
-        organizerName: 'Arun Kumar',
-        department: 'AIML',
-        organizerPhone: '8765432109',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '25-03-2026',
-        organizerName: 'Meena Rajan',
-        department: 'ME',
-        organizerPhone: '7654321098',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '28-03-2026',
-        organizerName: 'Rajesh Kumar',
-        department: 'IT',
-        organizerPhone: '6543210987',
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+}
 
 const transformFoodData = (apiData) =>
     apiData.map((item) => ({
@@ -53,6 +23,16 @@ const transformFoodData = (apiData) =>
         eventType: item.eventType || '-',
         department: item.organizingDepartment || '-',
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
+
+const transformIndividualData = (apiData) =>
+    apiData.map((item) => ({
+        requiredDate: formatDate(item.createdAt),
+        organizerName: item.employeeDetail?.name || item.employee || '-',
+        department: item.employeeDetail?.department || '-',
+        organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
+        acknowledgeStatus: item.data?.overallStatus || item.status || '-',
+        eventId: item.id || item.data?._id,
     }))
 
 const departmentData = [
@@ -67,18 +47,32 @@ const departmentData = [
 
 const FoodDashboard = () => {
     const [events, setEvents] = useState([])
+    const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('token')
-                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=food`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                })
-                const json = await res.json()
-                if (json.data && Array.isArray(json.data)) {
-                    setEvents(transformFoodData(json.data))
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+                const [eventsRes, individualsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=food`, { headers }),
+                    fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=food`, { headers }),
+                ])
+
+                if (eventsRes.ok) {
+                    const json = await eventsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setEvents(transformFoodData(json.data))
+                    }
+                }
+
+                if (individualsRes.ok) {
+                    const json = await individualsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setIndividualEvents(transformIndividualData(json.data))
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch food dashboard data:', err)
@@ -120,7 +114,7 @@ const FoodDashboard = () => {
                                 viewAllLink="/dashboard-food/events"
                                 title="Upcoming Food & Catering Requests"
                                 module="food"
-                                individualEvents={individualRequests}
+                                individualEvents={individualEvents}
                                 detailViewPath="/dashboard-food/events/detailView"
                             />
                         )}

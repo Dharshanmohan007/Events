@@ -10,8 +10,9 @@ const PurchaseEventsListPage = () => (
       title="Purchase Request List Overview"
       description="View and manage purchase event requests."
       detailViewPath="/dashboard-purchase/events/detailView"
-      individualDetailViewPath="/dashboard/IndividualEvents"
+      individualDetailViewPath="/dashboard-purchase/events/individualDetailView"
       showIndividualTab={true}
+      individualEndpoint="/api/individual-submissions/getrequest?module=purchase"
     />
   </section>
 );
