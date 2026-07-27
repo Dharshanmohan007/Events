@@ -1,96 +1,39 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
-import FoodRequestTable from './FoodRequestTable'
+import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 
-const foodRequests = [
-    {
-        eventName: 'Annual Tech Fest 2026',
-        department: 'CSE',
-        type: 'Lunch & Snacks',
-        expectedCount: 150,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Annual Tech Fest 2026',
-        department: 'CSE',
-        type: 'Breakfast',
-        expectedCount: 80,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Cultural Night',
-        department: 'ECE',
-        type: 'Dinner',
-        expectedCount: 200,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Cultural Night',
-        department: 'ECE',
-        type: 'Snacks',
-        expectedCount: 100,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Workshop on AI',
-        department: 'AIML',
-        type: 'Lunch',
-        expectedCount: 60,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Workshop on AI',
-        department: 'AIML',
-        type: 'Breakfast',
-        expectedCount: 40,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Sports Meet',
-        department: 'ME',
-        type: 'Lunch & Snacks',
-        expectedCount: 250,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Sports Meet',
-        department: 'ME',
-        type: 'Dinner',
-        expectedCount: 180,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Hackathon 2026',
-        department: 'IT',
-        type: '24/7 Catering',
-        expectedCount: 120,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Hackathon 2026',
-        department: 'IT',
-        type: 'Snacks',
-        expectedCount: 80,
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        type: 'Lunch',
-        expectedCount: 90,
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Robotics Expo',
-        department: 'EEE',
-        type: 'Breakfast',
-        expectedCount: 50,
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+}
+
+const transformFoodData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        eventType: item.eventType || '-',
+        department: item.organizingDepartment || '-',
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
+
+const transformIndividualData = (apiData) =>
+    apiData.map((item) => ({
+        requiredDate: formatDate(item.createdAt),
+        organizerName: item.employeeDetail?.name || item.employee || '-',
+        department: item.employeeDetail?.department || '-',
+        organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
+        acknowledgeStatus: item.data?.overallStatus || item.status || '-',
+        eventId: item.id || item.data?._id,
+    }))
 
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
@@ -103,6 +46,43 @@ const departmentData = [
 ]
 
 const FoodDashboard = () => {
+    const [events, setEvents] = useState([])
+    const [individualEvents, setIndividualEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+                const [eventsRes, individualsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=food`, { headers }),
+                    fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=food`, { headers }),
+                ])
+
+                if (eventsRes.ok) {
+                    const json = await eventsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setEvents(transformFoodData(json.data))
+                    }
+                }
+
+                if (individualsRes.ok) {
+                    const json = await individualsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setIndividualEvents(transformIndividualData(json.data))
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch food dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
@@ -124,7 +104,20 @@ const FoodDashboard = () => {
 
                     {/* table and charts    */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <FoodRequestTable requests={foodRequests} viewAllLink="/food-requests" />
+                        {loading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                            </div>
+                        ) : (
+                            <UpcomingEventsTable
+                                events={events}
+                                viewAllLink="/dashboard-food/events"
+                                title="Upcoming Food & Catering Requests"
+                                module="food"
+                                individualEvents={individualEvents}
+                                detailViewPath="/dashboard-food/events/detailView"
+                            />
+                        )}
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">

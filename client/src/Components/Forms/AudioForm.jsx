@@ -622,11 +622,19 @@ export default function AudioForm({
   const navRef = useRef({ next: handleNext, prev: handleBack, isLoading });
   navRef.current = { next: handleNext, prev: handleBack, isLoading };
 
+  const nextDayLabel = isLastDay ? "Save & Next" : `Day ${currentDayIndex + 2} →`;
+
   useEffect(() => {
     if (!registerChildNavigation) return;
     const stableNext = (...args) => navRef.current.next(...args);
     const stablePrev = (...args) => navRef.current.prev(...args);
-    registerChildNavigation({ next: stableNext, prev: stablePrev, isLoading: false });
+    registerChildNavigation({
+      next: stableNext,
+      prev: stablePrev,
+      isLoading: false,
+      isOnLastDay: isLastDay,
+      nextDayLabel,
+    });
     return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [registerChildNavigation]);
@@ -637,8 +645,10 @@ export default function AudioForm({
       next: (...args) => navRef.current.next(...args),
       prev: (...args) => navRef.current.prev(...args),
       isLoading,
+      isOnLastDay: isLastDay,
+      nextDayLabel,
     });
-  }, [isLoading, registerChildNavigation]);
+  }, [isLoading, registerChildNavigation, isLastDay, nextDayLabel]);
 
   if (dayCount === 0) {
     return (

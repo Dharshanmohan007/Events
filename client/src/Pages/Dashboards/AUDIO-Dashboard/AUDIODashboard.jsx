@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
@@ -10,6 +10,8 @@ import calendarFill from '../../../assets/calendarFill.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
 import tick from '../../../assets/tick.svg'
 import circleTick from '../../../assets/circle-tick.svg'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const statCardData = [
     {
@@ -46,65 +48,6 @@ const statCardData = [
     },
 ]
 
-const upcomingEvents = [
-    {
-        eventName: 'Audio Mixing Workshop',
-        eventType: 'Workshop',
-        eventDate: '20-03-2026',
-        department: 'Audio Eng.',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Sound Design Masterclass',
-        eventType: 'Masterclass',
-        eventDate: '22-03-2026',
-        department: 'Media',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Podcast Recording Session',
-        eventType: 'Recording',
-        eventDate: '25-03-2026',
-        department: 'Broadcasting',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Live Sound Engineering',
-        eventType: 'Training',
-        eventDate: '28-03-2026',
-        department: 'Audio Eng.',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Music Production Seminar',
-        eventType: 'Seminar',
-        eventDate: '01-04-2026',
-        department: 'Music',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Voice Over Workshop',
-        eventType: 'Workshop',
-        eventDate: '05-04-2026',
-        department: 'Broadcasting',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        eventName: 'Audio Post-Production',
-        eventType: 'Training',
-        eventDate: '08-04-2026',
-        department: 'Media',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        eventName: 'Spatial Audio Seminar',
-        eventType: 'Seminar',
-        eventDate: '10-04-2026',
-        department: 'Audio Eng.',
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
-
 const departmentData = [
     { name: 'Audio Eng.', value: 35, color: '#74b9ff' },
     { name: 'Media', value: 30, color: '#159283' },
@@ -112,8 +55,41 @@ const departmentData = [
     { name: 'Music', value: 15, color: '#4169e1' },
 ]
 
+const transformAudioData = (apiData) =>
+    apiData.map((item) => ({
+        eventId: item.eventId,
+        eventName: item.eventName || '-',
+        eventDate: item.dates || [],
+        eventType: item.eventType || '-',
+        department: item.organizingDepartment || '-',
+        venue: item.venues || [],
+        acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
+    }))
+
 const AUDIODashboard = () => {
-    console.log("AUDIO Dashboard rendered") // Debug log to check rendering 
+    const [events, setEvents] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=audio`, {
+                    headers: token ? { Authorization: `Bearer ${token}` } : {},
+                })
+                const json = await res.json()
+                if (json.data && Array.isArray(json.data)) {
+                    setEvents(transformAudioData(json.data))
+                }
+            } catch (err) {
+                console.error('Failed to fetch audio dashboard data:', err)
+            } finally {
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen overflow-auto table-custom-scrollbar'>
@@ -133,11 +109,19 @@ const AUDIODashboard = () => {
 
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
-                        <UpcomingEventsTable
-                            events={upcomingEvents}
-                            viewAllLink="/dashboard-audio/events"
-                            title="Upcoming Events"
-                        />
+                        {loading ? (
+                            <div className="flex h-full items-center justify-center">
+                                <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>
+                            </div>
+                        ) : (
+                            <UpcomingEventsTable
+                                events={events}
+                                viewAllLink="/dashboard-audio/events"
+                                title="Upcoming Events"
+                                module="audio"
+                                detailViewPath="/dashboard-audio/events/detailView"
+                            />
+                        )}
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">

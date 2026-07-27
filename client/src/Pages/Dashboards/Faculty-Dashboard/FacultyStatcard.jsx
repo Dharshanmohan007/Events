@@ -1,31 +1,66 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
+import { jwtDecode } from 'jwt-decode'
 import calendarFill from '../../../assets/calendarFill.svg'
 import circleTick from '../../../assets/circle-tick.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
 import tick from '../../../assets/tick.svg'
 
-const statCardData = [
-    {
-        title: 'Event Request',
-        stats: [
-            { label: 'Total Event request', value: 50, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
-            { label: 'Approved Events', value: 50, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
-            { label: 'Completed Events', value: 50, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
-            { label: 'pending Approval Events', value: 50, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
-        ],
-    },
-    {
-        title: 'Individual Request',
-        stats: [
-            { label: 'Total Request', value: 50, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
-            { label: 'Approved Request', value: 50, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
-            { label: 'Completed', value: 50, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
-            { label: 'pending Approval Request', value: 50, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
-        ],
-    },
-]
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const FacultyStatcard = () => {
+    const [eventStats, setEventStats] = useState({
+        totalEvents: 0,
+        approvedEvents: 0,
+        completedEvents: 0,
+        pendingApprovalEvents: 0,
+    })
+
+    useEffect(() => {
+        const fetchEventStats = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                if (!token) return
+
+                const decoded = jwtDecode(token)
+                const facultyId = decoded.id || decoded._id || decoded.userId
+
+                const res = await fetch(
+                    `${API_BASE_URL}/api/dashboard/faculty-dashboard-events-count?facultyId=${facultyId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                )
+
+                const data = await res.json()
+                if (data.success) {
+                    setEventStats(data.data)
+                }
+            } catch (err) {
+                console.error('Failed to fetch event stats:', err)
+            }
+        }
+
+        fetchEventStats()
+    }, [])
+
+    const statCardData = [
+        {
+            title: 'Event Request',
+            stats: [
+                { label: 'Total Event request', value: eventStats.totalEvents, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
+                { label: 'Approved Events', value: eventStats.approvedEvents, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
+                { label: 'Completed Events', value: eventStats.completedEvents, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
+                { label: 'pending Approval Events', value: eventStats.pendingApprovalEvents, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
+            ],
+        },
+        {
+            title: 'Individual Request',
+            stats: [
+                { label: 'Total Request', value: 50, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
+                { label: 'Approved Request', value: 50, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
+                { label: 'Completed', value: 50, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
+                { label: 'pending Approval Request', value: 50, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
+            ],
+        },
+    ]
     return (
         <section className="mt-4 grid grid-cols-1 gap-7 xl:grid-cols-2">
             {statCardData.map((section) => (

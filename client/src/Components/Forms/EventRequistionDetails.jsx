@@ -9,9 +9,10 @@ function validateOrganizer(data = {}) {
   const e = {};
   if (!data.name?.trim()) e.name = "Name is required";
   if (!data.department) e.department = "Department is required";
-  if (!data.mobile?.trim()) {
+  const mobile = data.mobile != null ? String(data.mobile).trim() : "";
+  if (!mobile) {
     e.mobile = "Mobile number is required";
-  } else if (!/^[6-9]\d{9}$/.test(data.mobile.trim())) {
+  } else if (!/^[6-9]\d{9}$/.test(mobile)) {
     e.mobile = "Enter a valid 10-digit Indian mobile number";
   }
   if (!data.designation?.trim()) e.designation = "Designation is required";
@@ -28,9 +29,10 @@ function validateGuest(data = {}) {
   }
   if (!data.designation?.trim()) e.designation = "Designation is required";
   if (!data.organization?.trim()) e.organization = "Organization is required";
-  if (!data.mobile?.trim()) {
+  const mobile = data.mobile != null ? String(data.mobile).trim() : "";
+  if (!mobile) {
     e.mobile = "Mobile number is required";
-  } else if (!/^[6-9]\d{9}$/.test(data.mobile.trim())) {
+  } else if (!/^[6-9]\d{9}$/.test(mobile)) {
     e.mobile = "Enter a valid 10-digit Indian mobile number";
   }
   if (!data.gender) e.gender = "Gender is required";
@@ -59,8 +61,8 @@ function validateDay(day = {}, idx) {
 
 function validateOrganizerSection(state) {
   const e = {};
-  if (!state.principalApprovalDocument)
-  e.principalApprovalDocument = "Principal Approval Form is required";
+  // if (!state.principalApprovalDocument)
+  // e.principalApprovalDocument = "Principal Approval Form is required";
   if (!state.doc) e.doc = "This field is required";
   if (state.doc === "Yes" && !state.file)
     e.file = "Please upload the previous event documentation";
@@ -68,6 +70,15 @@ function validateOrganizerSection(state) {
     e.reason = "Reason is required";
   if (!state.budget) e.budget = "This field is required";
   if (!state.finance) e.finance = "This field is required";
+  if (state.finance === "Yes") {
+  if (!state.advanceAmount?.trim()) {
+      e.advanceAmount = "Advance amount is required";
+    }
+
+    if (!state.purposeOfAdvance?.trim()) {
+      e.purposeOfAdvance = "Purpose of advance is required";
+    }
+  }
   if (!state.department?.trim()) e.department = "Department name is required";
   if (!state.numOrganizers || parseInt(state.numOrganizers) < 1)
     e.numOrganizers = "At least 1 organizer is required";
@@ -106,11 +117,28 @@ function validateEventDetails(data = {}, days = []) {
   return e;
 }
 
-function validateRequirements(requirements = []) {
-  if (!requirements || requirements.length === 0)
-    return { requirements: "Select at least one requirement" };
-  return {};
-}
+  function validateRequirements(values = {}) {
+    const e = {};
+
+    const LABEL_MAP = {
+      venue: "Venue",
+      icts: "ICTS",
+      audio: "Audio",
+      transport: "Transport",
+      foodandrefreshments: "Food & Refreshments",
+      accommodation: "Accommodation",
+      purchase: "Purchase",
+      media: "Media",
+    };
+
+    Object.keys(LABEL_MAP).forEach((key) => {
+      if (!values[key]) {
+        e[key] = `${LABEL_MAP[key]} is required`;
+      }
+    });
+
+    return e;
+  }
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -128,6 +156,12 @@ export default function EventRequisitionDetails({
 }) {
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
+  const [advanceAmount, setAdvanceAmount] = useState(
+    initialEventRequisition.advanceAmount || ""
+  );
+  const [purposeOfAdvance, setPurposeOfAdvance] = useState(
+    initialEventRequisition.purposeOfAdvance || ""
+  );
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
   const [department, setDepartment] = useState(initialEventRequisition.department || "");
   const [principalApprovalDocument, setprincipalApprovalDocument] = useState(
@@ -141,7 +175,18 @@ export default function EventRequisitionDetails({
   const [eventData, setEventData] = useState(initialEventRequisition.eventData || {});
   const [eventDaysLocal, setEventDaysLocal] = useState(initialEventRequisition.eventDays || []);
 
-  const [requirements, setRequirements] = useState(initialEventRequisition.requirements || []);
+  const [requirements, setRequirements] = useState(
+    initialEventRequisition.requirements || {
+      venue: "",
+      icts: "",
+      audio: "",
+      transport: "",
+      foodandrefreshments: "",
+      accommodation: "",
+      purchase: "",
+      media: "",
+    }
+  );
 
   const [orgErrors, setOrgErrors] = useState({});
   const [eventErrors, setEventErrors] = useState({});
@@ -152,12 +197,12 @@ export default function EventRequisitionDetails({
   useEffect(() => {
     if (!setEventRequisition) return;
     const next = {
-      doc, finance, budget, department,principalApprovalDocument, file, reason,
+      doc, finance,advanceAmount,purposeOfAdvance, budget, department,principalApprovalDocument, file, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
     };
     const comparable = JSON.stringify({
-      doc, finance, budget, department, reason,
+      doc, finance,advanceAmount,purposeOfAdvance, budget, department, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
@@ -173,16 +218,20 @@ export default function EventRequisitionDetails({
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance, budget, department, file,principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance,advanceAmount,purposeOfAdvance, budget, department, file,principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
     if (setEventDays) setEventDays(days);
   };
 
-  const handleRequirementsChange = (selectedReqs) => {
-    setRequirements(selectedReqs);
-    if (setSelectedRequirements) setSelectedRequirements(selectedReqs);
+  const handleRequirementsChange = (values) => {
+    setRequirements(values);
+
+    if (setSelectedRequirements) {
+      setSelectedRequirements(values);
+    }
+
     setReqErrors({});
   };
 
@@ -190,7 +239,7 @@ export default function EventRequisitionDetails({
     const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = validateOrganizerSection({
-      principalApprovalDocument,doc, file, reason, budget, finance, department, numOrganizers, organizers,
+      principalApprovalDocument,doc, file, reason, budget, finance,advanceAmount,purposeOfAdvance, department, numOrganizers, organizers,
     });
     const eErr = validateEventDetails(eventData, eventDaysLocal);
     const rErr = validateRequirements(currentRequirements);
@@ -217,18 +266,20 @@ export default function EventRequisitionDetails({
   const mergedEventErrors = { ...eventErrors, ...parentErrors };
   const mergedReqErrors = { ...reqErrors, ...parentErrors };
 
-  const requirementValues = requirements.reduce(
-    (acc, key) => ({ ...acc, [key]: "Yes" }),
-    {}
-  );
+  const requirementValues = requirements;
 
+  const isPrincipalUploaded = !!principalApprovalDocument;
   return (
     <div className='w-full flex flex-col'>
       <EventOrganizerDetails
-      principalApprovalDocument={principalApprovalDocument}
-      setprincipalApprovalDocument={setprincipalApprovalDocument}
+        principalApprovalDocument={principalApprovalDocument}
+        setprincipalApprovalDocument={setprincipalApprovalDocument}
         doc={doc} setDoc={setDoc}
         finance={finance} setFinance={setFinance}
+        advanceAmount={advanceAmount}
+        setAdvanceAmount={setAdvanceAmount}
+        purposeOfAdvance={purposeOfAdvance}
+        setPurposeOfAdvance={setPurposeOfAdvance}
         budget={budget} setBudget={setBudget}
         department={department} setDepartment={setDepartment}
         file={file} setFile={setFile}
@@ -240,6 +291,7 @@ export default function EventRequisitionDetails({
       <hr className="my-1 border-[#333351]" />
 
       <EventDetails
+        // disabled={!isPrincipalUploaded}
         setEventDays={syncEventDays}
         errors={mergedEventErrors}
         eventData={eventData}
@@ -249,6 +301,7 @@ export default function EventRequisitionDetails({
       <hr className="my-1 border-[#333351]" />
 
       <EventRequirements
+        // disabled={!isPrincipalUploaded}
         nextStep={handleSaveAndNext}
         setSelectedRequirements={setRequirements}
         onRequirementsChange={handleRequirementsChange}
