@@ -223,6 +223,7 @@ const UpcomingEventsTable = ({
   module = 'default',
   individualEvents = [],
   detailViewPath,
+  individualDetailViewPath = '/dashboard/IndividualEvents',
 }) => {
   const [activeTab, setActiveTab] = useState('events')
 
@@ -289,14 +290,14 @@ const UpcomingEventsTable = ({
           </thead>
 
           <tbody>
-            {currentData.map((item, index) => (
+                    {currentData.map((item, index) => (
               <tr
                 key={index}
                 className="border-t border-[#20283a] text-sm text-white"
               >
                 {currentHeaders.map((header) => (
                   <td key={header} className="px-6 py-4 whitespace-nowrap">
-                    {renderCellValue(item, header, detailViewPath)}
+                    {renderCellValue(item, header, activeTab === 'individual' ? individualDetailViewPath : detailViewPath)}
                   </td>
                 ))}
               </tr>

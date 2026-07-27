@@ -7,43 +7,13 @@ import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const individualRequests = [
-    {
-        requiredDate: '15-03-2026',
-        organizerName: 'Surya Chandran',
-        department: 'CSE',
-        organizerPhone: '9080884370',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '16-03-2026',
-        organizerName: 'Vikram Raj',
-        department: 'ECE',
-        organizerPhone: '9876543210',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '22-03-2026',
-        organizerName: 'Ananya Devi',
-        department: 'AIML',
-        organizerPhone: '8765432109',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '25-03-2026',
-        organizerName: 'Karthik Rajan',
-        department: 'ME',
-        organizerPhone: '7654321098',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '28-03-2026',
-        organizerName: 'Deepika Patel',
-        department: 'IT',
-        organizerPhone: '6543210987',
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+}
 
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
@@ -61,20 +31,48 @@ const transformTransportData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
+const transformIndividualData = (apiData) =>
+    apiData.map((item) => {
+        const transport = item.data?.transports?.[0]
+        const dateField = transport?.pickupDateTime || transport?.requiredDate || item.createdAt
+        return {
+            requiredDate: formatDate(dateField),
+            organizerName: item.employeeDetail?.name || item.employee || '-',
+            department: item.employeeDetail?.department || '-',
+            organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
+            acknowledgeStatus: item.data?.overallStatus || item.status || '-',
+            eventId: item.id || item.data?._id,
+        }
+    })
+
 const TransportsDashboard = () => {
     const [events, setEvents] = useState([])
+    const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const token = localStorage.getItem('token')
-                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=transport`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                })
-                const json = await res.json()
-                if (json.data && Array.isArray(json.data)) {
-                    setEvents(transformTransportData(json.data))
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+                const [eventsRes, individualsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=transport`, { headers }),
+                    fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=transport`, { headers }),
+                ])
+
+                if (eventsRes.ok) {
+                    const json = await eventsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setEvents(transformTransportData(json.data))
+                    }
+                }
+
+                if (individualsRes.ok) {
+                    const json = await individualsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setIndividualEvents(transformIndividualData(json.data))
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch transport dashboard data:', err)
@@ -117,7 +115,7 @@ const TransportsDashboard = () => {
                                 viewAllLink="/dashboard-transports/events"
                                 title="Upcoming Event Transport Request"
                                 module="transport"
-                                individualEvents={individualRequests}
+                                individualEvents={individualEvents}
                                 detailViewPath="/dashboard-transports/events/detailView"
                             />
                         )}

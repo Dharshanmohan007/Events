@@ -12,6 +12,7 @@ const TransportEventsListPage = () => (
       detailViewPath="/dashboard-transports/events/detailView"
       individualDetailViewPath="/dashboard/IndividualEvents"
       showIndividualTab={true}
+      individualEndpoint="/api/individual-submissions/getrequest?module=transport"
     />
   </section>
 );

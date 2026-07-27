@@ -16,6 +16,7 @@ import IctcsEventsDetailViewPage from './Pages/Dashboards/ICTC-Dashboard/IctcsEv
 import TransportsDashboard from './Pages/Dashboards/Transports-Dashboard/TransportsDashboard'
 import TransportsReportsPage from './Pages/Dashboards/Transports-Dashboard/TransportsReportsPage'
 import TransportEventsDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportEventsDetailViewPage'
+import TransportIndividualDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportIndividualDetailViewPage'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
@@ -35,9 +36,11 @@ import AccommodationEventsDetailViewPage from './Pages/Dashboards/Accommodation-
 import AccommodationReportsPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationReportsPage'
 import FoodDashboard from './Pages/Dashboards/Food-Dashboard/FoodDashboard'
 import FoodEventsDetailViewPage from './Pages/Dashboards/Food-Dashboard/FoodEventsDetailViewPage'
+import FoodIndividualDetailViewPage from './Pages/Dashboards/Food-Dashboard/FoodIndividualDetailViewPage'
 import FoodReportsPage from './Pages/Dashboards/Food-Dashboard/FoodReportsPage'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
 import PurchaseEventsDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseEventsDetailViewPage'
+import PurchaseIndividualDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseIndividualDetailViewPage'
 import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
 import VenueEventsDetailViewPage from './Pages/Dashboards/Venue-Dashboard/VenueEventsDetailViewPage'
 import VenueReportsPage from './Pages/Dashboards/Venue-Dashboard/VenueReportsPage'
@@ -49,6 +52,7 @@ import FacultyVenueListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyVe
 import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyfeedbackPage"
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
+import FacultyIndividualRequestDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualRequestDetailViewPage"
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
@@ -98,6 +102,7 @@ function AppRoutes() {
       <Route path="/dashboard-transports" element={<ProtectedRoute><TransportsDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-transports/events" element={<ProtectedRoute><TransportEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-transports/events/detailView/:eventId" element={<ProtectedRoute><TransportEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-transports/events/individualDetailView/:id" element={<ProtectedRoute><TransportIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-transports/reports" element={<ProtectedRoute><TransportsReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
@@ -130,6 +135,7 @@ function AppRoutes() {
       <Route path="/dashboard-faculty" element={<ProtectedRoute><FacultyDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events" element={<ProtectedRoute><FacultyEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events/detailView/:eventId" element={<ProtectedRoute><FacultyEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
 
@@ -146,11 +152,13 @@ function AppRoutes() {
       <Route path="/dashboard-food" element={<ProtectedRoute><FoodDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-food/events" element={<ProtectedRoute><FoodEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/events/detailView/:eventId" element={<ProtectedRoute><FoodEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-food/events/individualDetailView/:id" element={<ProtectedRoute><FoodIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/reports" element={<ProtectedRoute><FoodReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events" element={<ProtectedRoute><PurchaseEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
