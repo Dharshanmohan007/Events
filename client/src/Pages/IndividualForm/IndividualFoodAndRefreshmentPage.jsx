@@ -11,9 +11,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 
 import { API_BASE } from "../../utils/apiConfig";
+import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
+import FormSubmitted from "../IndividualForm/FormSubmitted";
 
 // ======================================================
 // CUSTOM DATE TIME PICKER
@@ -93,6 +96,10 @@ const createFoodFormCard = () => ({
     },
   ],
   specialRequirement: "",
+  financeRequired: "No",
+  advanceAmount: "",
+  advancePurpose: "",
+  showFinanceDropdown: false,
 });
 
 function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
@@ -695,9 +702,80 @@ const IndividualFoodAndRefreshment = () => {
     "Evening Refreshment",
   ];
 
+  const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
+  const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
+
   // =========================
   // INPUT STATES
   // =========================
+
+  const principalInputRef = useRef(null);
+  const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
+
+  const handlePrincipalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      e.target.value = "";
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(selectedFile);
+  };
+
+  const handlePrincipalDrop = (e) => {
+    e.preventDefault();
+
+    const droppedFile = e.dataTransfer.files[0];
+
+    if (!droppedFile) return;
+
+    if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+    }
+
+    if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(droppedFile);
+  };
+
+  const handlePrincipalRemove = (e) => {
+    e.stopPropagation();
+    setPrincipalApprovalDocument(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) {
+      principalInputRef.current.value = "";
+    }
+  };
+
+  const openPrincipalFilePicker = () => {
+    if (principalInputRef.current) {
+      principalInputRef.current.click();
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
 
   // =========================
   // AUTH
@@ -711,10 +789,8 @@ const IndividualFoodAndRefreshment = () => {
 
   const [submitMessage, setSubmitMessage] = useState("");
 
-  const [submitResponses, setSubmitResponses] = useState([]);
-
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+const [submitSuccess, setSubmitSuccess] = useState(false);
   const updateFormCard = (cardId, updater) => {
     setFormCards((prev) =>
       prev.map((card) =>
@@ -735,23 +811,23 @@ const IndividualFoodAndRefreshment = () => {
     setFormCards((prev) => prev.filter((card) => card.id !== cardId));
   };
 
-  useEffect(() => {
-    const storedToken = localStorage.getItem("token");
+useEffect(() => {
+  const storedToken = localStorage.getItem("token");
 
-    if (storedToken) {
-      setToken(storedToken);
+  if (storedToken) {
+    setToken(storedToken);
 
-      try {
-        const decoded = jwtDecode(storedToken);
+    try {
+      const decoded = jwtDecode(storedToken);
 
-        if (decoded?.id) {
-          setEmployeeId(decoded.id);
-        }
-      } catch (error) {
-        console.error("Failed to decode token:", error);
+      if (decoded?.id) {
+        setEmployeeId(decoded.id);
       }
+    } catch (error) {
+      console.error("Failed to decode token:", error);
     }
-  }, []);
+  }
+}, []);
 
   // =========================
   // HANDLE STAFF COUNT
@@ -858,7 +934,7 @@ const IndividualFoodAndRefreshment = () => {
 
     return {
       employee: employeeId || "6a0411af4579d3137b255e70",
-
+      principalApprovalFormName: principalApprovalDocument?.name || null,
       date: card.selectDate
         ? new Date(
             card.selectDate.getTime() - card.selectDate.getTimezoneOffset() * 60000,
@@ -880,6 +956,12 @@ const IndividualFoodAndRefreshment = () => {
 
       specialRequirements: card.specialRequirement.trim(),
 
+      financeRequested: card.financeRequired,
+      ...(card.financeRequired === "Yes" && {
+        advanceAmount: Number(card.advanceAmount) || 0,
+        advancePurpose: card.advancePurpose.trim(),
+      }),
+
       status: "Pending",
     };
   };
@@ -890,6 +972,10 @@ const IndividualFoodAndRefreshment = () => {
 
   const handleSubmit = async () => {
     const errors = [];
+
+    // if (!principalApprovalDocument) {
+    //   errors.push("Principal Approval Form is required.");
+    // }
 
     formCards.forEach((card, cardIndex) => {
       const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
@@ -938,41 +1024,111 @@ const IndividualFoodAndRefreshment = () => {
             errors.push(`${formLabel}${type}: Non-Veg Guest count is required.`);
         }
       });
+
+      // Finance validation
+      if (card.financeRequired === "Yes") {
+        if (!card.advanceAmount) {
+          errors.push(`${formLabel}Advance amount is required.`);
+        }
+
+        if (!card.advancePurpose || !card.advancePurpose.trim()) {
+          errors.push(`${formLabel}Advance purpose is required.`);
+        }
+      }
     });
 
     setValidationErrors(errors);
 
     setSubmitMessage("");
 
-    setSubmitResponses([]);
-
     if (errors.length) return;
 
     setIsSubmitting(true);
 
     try {
-      const createdResponses = [];
+      const authToken = localStorage.getItem("token") || token;
+
+      if (!authToken) {
+        throw new Error("Authentication token not found. Please login again.");
+      }
+
+      let submittedCount = 0;
 
       for (const [index, card] of formCards.entries()) {
-        const payload = buildFoodPayload(card);
+       const payload = buildFoodPayload(card);
 
-        console.log(`Food submit payload ${index + 1}:`, payload);
+const formData = new FormData();
 
-        const response = await fetch(`${API_BASE}/api/foods`, {
-          method: "POST",
+formData.append("employee", payload.employee);
 
-          headers: {
-            "Content-Type": "application/json",
+formData.append("date", payload.date);
 
-            ...(token
-              ? {
-                  Authorization: `Bearer ${token}`,
-                }
-              : {}),
-          },
+formData.append(
+  "resourcePersonType",
+  JSON.stringify(payload.resourcePersonType)
+);
 
-          body: JSON.stringify(payload),
-        });
+formData.append(
+  "numberOfResourcePersons",
+  payload.numberOfResourcePersons
+);
+
+formData.append(
+  "numberOfInternalAccompanyingStaff",
+  payload.numberOfInternalAccompanyingStaff
+);
+
+formData.append(
+  "accompanyingStaff",
+  JSON.stringify(payload.accompanyingStaff)
+);
+
+formData.append(
+  "foodTypes",
+  JSON.stringify(payload.foodTypes)
+);
+
+formData.append(
+  "specialRequirements",
+  payload.specialRequirements
+);
+
+formData.append(
+  "status",
+  payload.status
+);
+
+formData.append("financeRequired", payload.financeRequested);
+
+if (payload.advanceAmount !== undefined) {
+  formData.append("advanceAmount", payload.advanceAmount);
+}
+
+if (payload.advancePurpose !== undefined) {
+  formData.append("advancePurpose", payload.advancePurpose);
+}
+
+if (principalApprovalDocument) {
+  formData.append(
+    "principalApprovalForm",
+    principalApprovalDocument
+  );
+}
+
+const response = await fetch(`${API_BASE}/api/foods`, {
+  method: "POST",
+
+  headers: {
+    ...(authToken
+      ? {
+          Authorization: `Bearer ${authToken}`,
+        }
+      : {}),
+  },
+
+  body: formData,
+});
+      
 
         const data = await response.json();
 
@@ -985,24 +1141,58 @@ const IndividualFoodAndRefreshment = () => {
           );
         }
 
-        createdResponses.push({
-          formNumber: index + 1,
-          payload,
-          response: data,
-        });
+        submittedCount += 1;
       }
-
-      console.log("All food submit responses:", createdResponses);
 
       setValidationErrors([]);
 
-      setSubmitResponses(createdResponses);
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const employeeDetails = {
+        name: storedUser?.name || storedUser?.employeeName || "",
+        empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+        designation: storedUser?.designation || "",
+        department: storedUser?.department || "",
+      };
+
+      const firstCard = formCards[0];
+      const financeEnabled = firstCard?.financeRequired === "Yes";
+
+      if (financeEnabled) {
+        await generateAdvanceReceiptPdf({
+          formData: {
+            selectDate: firstCard?.selectDate || "",
+            advanceAmount: firstCard?.advanceAmount || "",
+            advancePurpose: firstCard?.advancePurpose || "",
+            employeeName: employeeDetails.name,
+            empId: employeeDetails.empId,
+            designation: employeeDetails.designation,
+            department: employeeDetails.department,
+            event: {
+              organizers: [
+                {
+                  name: employeeDetails.name,
+                  empId: employeeDetails.empId,
+                  designation: employeeDetails.designation,
+                  department: employeeDetails.department,
+                },
+              ],
+            },
+          },
+          employee: employeeDetails,
+          submitResponse: {
+            iqacNumber: `IQAC-${Date.now()}`,
+          },
+        });
+      }
 
       setSubmitMessage(
-        `${createdResponses.length} food request${
-          createdResponses.length > 1 ? "s" : ""
+        `${submittedCount} food request${
+          submittedCount > 1 ? "s" : ""
         } submitted successfully.`,
       );
+
+      setSubmitSuccess(true);
     } catch (error) {
       setValidationErrors([error.message || "Unable to send food data."]);
     } finally {
@@ -1010,6 +1200,14 @@ const IndividualFoodAndRefreshment = () => {
     }
   };
 
+
+if (submitSuccess) {
+  return (
+    <FormSubmitted
+      advanceData={formCards[0]}
+    />
+  );
+}
   return (
     <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">
       <style>{`
@@ -1030,6 +1228,116 @@ const IndividualFoodAndRefreshment = () => {
       <h1 className="text-white text-3xl font-bold mb-6">
         Food And Refreshment Form
       </h1>
+
+      <div className="mb-6">
+        <label className="block mb-2 text-sm text-white">
+          Principal Approval Form (without uploading this document you cannot proceed further) 
+        </label>
+
+        <div
+          onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
+          onDrop={handlePrincipalDrop}
+          onDragOver={handleDragOver}
+          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="10"
+              ry="10"
+              fill="none"
+              stroke={
+                principalFileError ? "#f87171" : "#3A3A5A"
+              }
+              strokeWidth="2"
+              strokeDasharray="10 4"
+            />
+          </svg>
+
+          <img
+            src={UploadIcon}
+            alt="upload"
+            className="w-7 h-8 opacity-80 z-10 flex-shrink-0"
+          />
+
+          {principalApprovalDocument ? (
+            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+
+                <span className="text-purple-300 text-sm font-medium">
+                  {principalApprovalDocument.name}
+                </span>
+
+                <span className="text-gray-400 text-xs">
+                  ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePrincipalRemove}
+                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="z-10">
+              Drag and drop files here or <span className="text-purple-400 underline">choose file</span>
+
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Only PDF files supported • Max file size: 1MB
+              </span>
+            </p>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          ref={principalInputRef}
+          onChange={handlePrincipalFileChange}
+          className="hidden"
+        />
+
+        {principalFileError && (
+          <p className="text-red-400 text-xs mt-1">
+            {principalFileError}
+          </p>
+        )}
+      </div>
 
       {/* HEADER */}
       <div className="flex justify-end mb-6">
@@ -1227,6 +1535,130 @@ const IndividualFoodAndRefreshment = () => {
           </div>
         </div>
 
+        {/* FINANCE REQUIRED - 100% WIDTH */}
+        <div className="relative w-full mb-4">
+          <label className={cardFloatingLabelClass}>Finance Required *</label>
+
+          <div
+            tabIndex={0}
+            onClick={() =>
+              updateFormCard(card.id, {
+                showFinanceDropdown: !card.showFinanceDropdown,
+              })
+            }
+            className="
+              food-select-control
+              w-full
+              border
+              border-[#383847]
+              rounded-md
+              px-4
+              py-3
+              flex
+              justify-between
+              items-center
+              cursor-pointer
+            "
+          >
+            <span className={card.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              {card.financeRequired}
+            </span>
+
+            <ChevronDown
+              size={18}
+              className={`transition-transform duration-300 ${
+                card.showFinanceDropdown ? "rotate-180" : "rotate-0"
+              }`}
+            />
+          </div>
+
+          {card.showFinanceDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+              {[
+                { label: "Yes", value: "Yes" },
+                { label: "No", value: "No" },
+              ].map((opt) => (
+                <div
+                  key={opt.label}
+                  onClick={() =>
+                    updateFormCard(card.id, {
+                      financeRequired: opt.value,
+                      showFinanceDropdown: false,
+                      ...(opt.value === "No"
+                        ? { advanceAmount: "", advancePurpose: "" }
+                        : {}),
+                    })
+                  }
+                  className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                    card.financeRequired === opt.value
+                      ? "bg-[#492A6F] text-white"
+                      : "text-white hover:bg-[#492A6F] hover:text-white"
+                  }`}
+                >
+                  <span>{opt.label}</span>
+
+                  {card.financeRequired === opt.value && <span>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ADVANCE FIELDS - 50%-50% LAYOUT ONLY WHEN YES */}
+        {card.financeRequired === "Yes" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+            <div className="relative">
+              <label className={cardFloatingLabelClass}>
+                I require Cash / In bank / Travel Advance /Online Payment of Rs.
+              </label>
+
+              <input
+                type="number"
+                value={card.advanceAmount}
+                onChange={(e) =>
+                  updateFormCard(card.id, { advanceAmount: e.target.value })
+                }
+                placeholder="0"
+                className="
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-white
+                outline-none
+              "
+              />
+            </div>
+
+            <div className="relative">
+              <label className={cardFloatingLabelClass}>
+                Purpose of Advance
+              </label>
+
+              <input
+                type="text"
+                value={card.advancePurpose}
+                onChange={(e) =>
+                  updateFormCard(card.id, { advancePurpose: e.target.value })
+                }
+                placeholder="Purpose"
+                className="
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-white
+                outline-none
+              "
+              />
+            </div>
+          </div>
+        )}
+
         {/* DYNAMIC STAFF INPUTS */}
         {/* DYNAMIC STAFF INPUTS */}
         {Number(card.internalAccompanyingCount) > 0 &&
@@ -1317,7 +1749,7 @@ const IndividualFoodAndRefreshment = () => {
             </div>
           ))}
         {/* FOOD TYPE SELECTION */}
-        <div className="relative mb-6">
+        <div className="relative mb-6 mt-4">
           <label className={cardFloatingLabelClass}>Food Type *</label>
 
           <div
@@ -1617,28 +2049,18 @@ const IndividualFoodAndRefreshment = () => {
         {submitMessage && (
           <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
             {submitMessage}
-            {submitResponses.length > 0 && (
-              <div className="mt-3 space-y-1">
-                {submitResponses.map((item) => (
-                  <div key={item.formNumber}>
-                    Form {item.formNumber}:{" "}
-                    {item.response?.data?._id || "Created"}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
       </div>
       </div>
       ))}
 
-      <div className="flex justify-center md:justify-end mt-8">
-  <button
-    type="button"
-    onClick={handleSubmit}
-    disabled={isSubmitting}
-    className="
+        <div className="flex justify-center md:justify-end mt-8">
+    <button
+      type="button"
+      onClick={handleSubmit}
+     disabled={isSubmitting}
+      className="
       bg-[#8b5cf6]
       hover:bg-[#7c3aed]
       disabled:opacity-60
@@ -1655,12 +2077,12 @@ const IndividualFoodAndRefreshment = () => {
       transition-all
       duration-300
     "
-  >
-    {isSubmitting ? "Submitting..." : "Next"}
+    >
+      {isSubmitting ? "Submitting..." : "Submit"}
 
-    <ArrowRight size={16} />
-  </button>
-</div>
+      <ArrowRight size={16} />
+    </button>
+  </div>
     </div>
   );
 };
