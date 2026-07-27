@@ -1,131 +1,100 @@
-import React, { useState } from 'react'
-import { Calendar, ExternalLink, ListFilter, Search } from 'lucide-react'
-import { Link } from 'react-router-dom'
-import FacultyDahsboardHeader from './FacultyDahsboardHeader'
+import React, { useState, useEffect } from "react";
+import { jwtDecode } from "jwt-decode";
+import FacultyDahsboardHeader from "./FacultyDahsboardHeader";
+import RequestListTable from "../../../Components/RequestListTable";
 
-const eventsData = [
-  { id: 1, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Approved', acknowledgementStatus: 'Acknowledged' },
-  { id: 2, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Pending Approval', acknowledgementStatus: 'Pending Approval' },
-  { id: 3, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Approved', acknowledgementStatus: 'Acknowledged' },
-  { id: 4, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Pending Approval', acknowledgementStatus: 'Pending Approval' },
-  { id: 5, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Approved', acknowledgementStatus: 'Acknowledged' },
-  { id: 6, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Approved', acknowledgementStatus: 'Acknowledged' },
-  { id: 7, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Pending Approval', acknowledgementStatus: 'Pending Approval' },
-  { id: 8, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Approved', acknowledgementStatus: 'Acknowledged' },
-  { id: 9, eventName: 'Welcome Freshers', eventType: 'Seminar', eventVenue: 'Main Board Room', eventDate: '15-03-2026', approvedStatus: 'Pending Approval', acknowledgementStatus: 'Pending Approval' },
-]
-
-const columns = [
-  'EVENT NAME',
-  'EVENT TYPE',
-  'EVENT VENUE',
-  'EVENT DATE',
-  'APPROVED STATUS',
-  'STATUS',
-  'ACTION',
-]
-
-const StatusBadge = ({ status }) => {
-  const isApproved = status === 'Approved' || status === 'Acknowledged'
-
-  return (
-    <span className={`flex items-center gap-1.5 text-[11px] font-semibold ${isApproved ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${isApproved ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
-      {status}
-    </span>
-  )
-}
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FacultyEventsListPage = () => {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [eventRows, setEventRows] = useState([]);
+  const [individualRows, setIndividualRows] = useState([]);
 
-  const filteredEvents = eventsData.filter((event) => {
-    const query = searchQuery.toLowerCase()
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-    return (
-      event.eventName.toLowerCase().includes(query) ||
-      event.eventType.toLowerCase().includes(query) ||
-      event.eventVenue.toLowerCase().includes(query)
-    )
-  })
+    // Fetch events from faculty API
+    (async () => {
+      try {
+        const decoded = jwtDecode(token);
+        const facultyId = decoded.id || decoded._id || decoded.userId || decoded.facultyId;
+        const res = await fetch(
+          `${API_BASE_URL}/api/table/faculty-dashboard-table?facultyId=${facultyId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const json = await res.json();
+        if (json.success && isMounted) {
+          // Normalize to match what RequestListTable expects
+          setEventRows((json.data || []).map((ev) => ({
+            id: ev.eventId || ev.id,
+            eventName: ev.eventName || "-",
+            eventType: ev.eventType || "-",
+            venues: Array.isArray(ev.venues) ? ev.venues : [ev.eventVenue || ev.venue].filter(Boolean),
+            dates: Array.isArray(ev.dates || ev.eventDates) 
+              ? (ev.dates || ev.eventDates).map((d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" }))
+              : [ev.eventDate].filter(Boolean).map((d) => new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })),
+            dateKeys: Array.isArray(ev.dates || ev.eventDates)
+              ? (ev.dates || ev.eventDates).map((d) => new Date(d).toISOString().slice(0, 10))
+              : [ev.eventDate].filter(Boolean).map((d) => new Date(d).toISOString().slice(0, 10)),
+            department: ev.organizingDepartment || ev.department || "-",
+            approvedStatus: ev.adminApproval ? "Approved" : "Pending",
+            eventStatus: ev.eventStatus || ev.overallStatus || "-",
+            rawEventId: ev.eventId || ev.id,
+          })));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch faculty events:", err.message);
+      }
+    })();
+
+    // Fetch individual submissions
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = await res.json();
+        if (json.success && isMounted) {
+          setIndividualRows((json.data || []).map((req) => ({
+            id: req.id,
+            employee: req.employee || req.employeeDetail?.name || "-",
+            employeeEmail: req.employeeEmail || "-",
+            formType: req.formType || "-",
+            createdAt: req.createdAt
+              ? new Date(req.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })
+              : "-",
+            dateKeys: req.createdAt ? [new Date(req.createdAt).toISOString().slice(0, 10)] : [],
+            status: typeof req.status === "string" ? req.status : "Pending",
+          })));
+        }
+      } catch (err) {
+        console.warn("Failed to fetch individual submissions:", err.message);
+      }
+    })();
+
+    return () => { isMounted = false; };
+  }, []);
 
   return (
     <section className="min-h-screen bg-[#0b1326] poppins">
       <FacultyDahsboardHeader />
-
       <main className="px-6 pb-8">
-        <div className="mt-3">
-          <h1 className="text-lg font-medium text-white">Request List Overview</h1>
-          <p className="mt-1 text-sm text-[#FFFFFF80]">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
+        <div className="pt-3 pb-4">
+          <h1 className="text-white text-lg font-medium">Request List Overview</h1>
+          <p className="text-[#FFFFFF80] text-sm">
+            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
           </p>
         </div>
-
-        <section className="mt-4 rounded-lg border border-gray-800 bg-[#171F31] py-4">
-          <div className="mb-4 flex flex-wrap items-center justify-end gap-3 px-6">
-            <div className="flex items-center gap-2 rounded-full border border-gray-700 bg-[#232A3C] px-4 py-2">
-              <Search size={14} className="text-gray-400" />
-              <input
-                value={searchQuery}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                type="text"
-                placeholder="Search events, venues"
-                className="w-[230px] bg-transparent text-xs text-gray-300 outline-none placeholder:text-gray-500"
-              />
-            </div>
-
-            <button className="flex items-center gap-2 rounded-lg border border-gray-700 bg-[#232A3C] px-3 py-2 text-xs text-gray-300">
-              <ListFilter size={14} className="text-gray-400" />
-              Seminar
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-gray-700 bg-[#232A3C] px-3 py-2 text-xs text-gray-300">
-              <ListFilter size={14} className="text-gray-400" />
-              Acknowledged
-            </button>
-            <button className="flex items-center gap-2 rounded-lg border border-gray-700 bg-[#232A3C] px-3 py-2 text-xs text-gray-300">
-              <Calendar size={14} className="text-gray-400" />
-              15/03/2026
-            </button>
-          </div>
-
-          <div className="max-h-[calc(100vh-260px)] overflow-auto table-custom-scrollbar">
-            <table className="w-full min-w-[950px]">
-              <thead className="sticky top-0 bg-[#1C2335]">
-                <tr className="border-b border-[#22253a]">
-                  {columns.map((column) => (
-                    <th key={column} className="px-5 py-3.5 text-left text-[11px] font-semibold tracking-widest text-gray-500">
-                      {column}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredEvents.map((event) => (
-                  <tr key={event.id} className="border-b border-[#1e2130] text-[#FFFFFF]/80 transition-colors hover:bg-[#1e2232] last:border-b-0">
-                    <td className="whitespace-nowrap px-5 py-3.5 text-sm">{event.eventName}</td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-sm">{event.eventType}</td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-sm">{event.eventVenue}</td>
-                    <td className="whitespace-nowrap px-5 py-3.5 text-sm">{event.eventDate}</td>
-                    <td className="whitespace-nowrap px-5 py-3.5"><StatusBadge status={event.approvedStatus} /></td>
-                    <td className="whitespace-nowrap px-5 py-3.5"><StatusBadge status={event.acknowledgementStatus} /></td>
-                    <td className="px-5 py-3.5 text-center">
-                      <Link
-                        to={`/dashboard-faculty/events/detailView/${event.id}`}
-                        className="inline-flex text-gray-400 transition-colors hover:text-white"
-                        title="Open event"
-                      >
-                        <ExternalLink size={16} />
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <RequestListTable
+          eventRows={eventRows}
+          individualRows={individualRows}
+          detailViewPath="/dashboard-faculty/events/detailView"
+          individualDetailViewPath="/dashboard/IndividualEvents"
+        />
       </main>
     </section>
-  )
-}
+  );
+};
 
-export default FacultyEventsListPage
+export default FacultyEventsListPage;

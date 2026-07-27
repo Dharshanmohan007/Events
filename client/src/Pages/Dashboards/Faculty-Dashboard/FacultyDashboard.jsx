@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
+import { jwtDecode } from 'jwt-decode'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import FacultyDraft from './FacultyDraft'
 import FacultyLatestEventsRequestTable from './FacultyLatestEventsRequestTable'
@@ -8,7 +9,36 @@ import FacultyQuickActions from './FacultyQuickActions'
 import FacultyStatcard from './FacultyStatcard'
 import FacultyVenueAvailability from './FacultyVenueAvailability'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
 const FacultyDashboard = () => {
+    const [draftData, setDraftData] = useState(null)
+
+    useEffect(() => {
+        const fetchDrafts = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                if (!token) return
+
+                const decoded = jwtDecode(token)
+                const userId = decoded.id || decoded._id || decoded.userId
+
+                const res = await fetch(`${API_BASE_URL}/api/events/draft/${userId}`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+
+                const data = await res.json()
+                if (data.success && data.totalDrafts > 0) {
+                    setDraftData(data)
+                }
+            } catch (err) {
+                console.error('Failed to fetch drafts:', err)
+            }
+        }
+
+        fetchDrafts()
+    }, [])
+
     return (
         <section className="min-h-screen bg-[#0b1326] poppins">
             <FacultyDahsboardHeader />
@@ -31,7 +61,7 @@ const FacultyDashboard = () => {
                     </Link>
                 </div>
 
-                <FacultyDraft />
+                {draftData && <FacultyDraft data={draftData} />}
                 <FacultyStatcard />
                 <FacultyQuickActions />
 
