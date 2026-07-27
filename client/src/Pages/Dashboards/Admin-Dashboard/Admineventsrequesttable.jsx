@@ -355,9 +355,13 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
                         <StatusBadge status={event.approvedStatus} />
                     </td>
                     <td className="px-6 py-4">
-                        <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open">
+                        <Link
+                            to={`/dashboard-admin/AdminEventsRequests/${event.id}`}
+                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                            title="Open event details"
+                        >
                             <ExternalLink size={17} />
-                        </button>
+                        </Link>
                     </td>
                 </tr>
             )) : (

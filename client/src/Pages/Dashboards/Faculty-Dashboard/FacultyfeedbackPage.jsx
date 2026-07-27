@@ -1,6 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Sparkles } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const ratingOptions = [
   { value: 'poor', label: 'Poor', icon: '😫' },
@@ -10,21 +13,57 @@ const ratingOptions = [
   { value: 'excellent', label: 'Excellent', icon: '🤩' },
 ]
 
-const initialFeedback = {
-  venue: { rating: '', reason: '' },
-  icts: { rating: '', reason: '' },
-  audio: { rating: '', reason: '' },
-  transport: { rating: '', reason: '' },
-  food: { rating: '', reason: '' },
-  accommodation: { rating: '', reason: '' },
-  mediaPoster: { rating: '', reason: '' },
-  mediaVideo: { rating: '', reason: '' },
-  purchase: { rating: '', reason: '' },
+const SECTION_META = {
+  venue: { apiKey: 'venue', title: 'Venue Feedback', description: 'Feedback about the venue arrangements and facilities.' },
+  icts: { apiKey: 'icts', title: 'ICTS Feedback', description: 'Feedback about the ICTS infrastructure and support.' },
+  audio: { apiKey: 'audio', title: 'Audio Feedback', description: 'Feedback about the audio systems and setup.' },
+  transport: { apiKey: 'transport', title: 'Transport Feedback', description: 'Feedback about the transportation arrangements.' },
+  food: { apiKey: 'refreshment', title: 'Food & Refreshment Feedback', description: 'Feedback about the food and refreshments provided.' },
+  accommodation: { apiKey: 'accommodation', title: 'Accommodation Feedback', description: 'Feedback about the accommodation arrangements.' },
+  mediaPoster: { apiKey: 'poster', title: 'Media Feedback (Poster)', description: 'Feedback about the poster media materials.' },
+  mediaVideo: { apiKey: 'video', title: 'Media Feedback (Video)', description: 'Feedback about the video media production.' },
+  purchase: { apiKey: 'purchase', title: 'Purchase Feedback', description: 'Feedback about the purchase and procurement process.' },
 }
 
 const FacultyfeedbackPage = () => {
   const { eventId } = useParams()
-  const [feedback, setFeedback] = useState(initialFeedback)
+  const [feedback, setFeedback] = useState({})
+  const [requiredSections, setRequiredSections] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchRequirements = async () => {
+      try {
+        const token = localStorage.getItem('token')
+        if (!token) return
+
+        const res = await fetch(`${API_BASE_URL}/api/events/requirements/${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const data = await res.json()
+
+        if (data.success) {
+          const departments = data.departments
+          const available = Object.keys(SECTION_META).filter(
+            (key) => departments[SECTION_META[key].apiKey]?.required === true
+          )
+          setRequiredSections(available)
+
+          const initial = {}
+          available.forEach((key) => {
+            initial[key] = { rating: '', reason: '' }
+          })
+          setFeedback(initial)
+        }
+      } catch (err) {
+        console.error('Failed to fetch requirements:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRequirements()
+  }, [eventId])
 
   const updateRating = (section, rating) => {
     setFeedback((currentFeedback) => ({
@@ -46,15 +85,48 @@ const FacultyfeedbackPage = () => {
     }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
 
-    const feedbackPayload = {
-      eventId,
-      feedback,
-    }
+    try {
+      const token = localStorage.getItem('token')
+      if (!token) return
 
-    console.log('Faculty feedback payload:', feedbackPayload)
+      const decoded = jwtDecode(token)
+      const organizerId = decoded.facultyId
+
+      const sections = Object.entries(feedback)
+        .filter(([, val]) => val.rating !== '')
+        .map(([key, val]) => ({
+          sectionKey: SECTION_META[key].apiKey,
+          sectionTitle: SECTION_META[key].title.replace(' Feedback', ''),
+          rating: ratingOptions.findIndex((o) => o.value === val.rating) + 1,
+          ratingLabel: ratingOptions.find((o) => o.value === val.rating)?.label || '',
+          comment: val.reason,
+        }))
+
+      const payload = {
+        eventId,
+        organizerId,
+        sections,
+      }
+
+      const res = await fetch(`${API_BASE_URL}/api/feedback`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+
+      const data = await res.json()
+      if (data.success) {
+        console.log('Feedback submitted successfully')
+      }
+    } catch (err) {
+      console.error('Failed to submit feedback:', err)
+    }
   }
 
   const renderFeedbackFields = (section) => (
@@ -95,13 +167,33 @@ const FacultyfeedbackPage = () => {
     </>
   )
 
+  if (loading) {
+    return (
+      <section className="min-h-screen bg-[#121126] px-6 pb-4 pt-8 text-white poppins">
+        <div className="mx-auto max-w-[1310px] flex items-center justify-center min-h-[50vh]">
+          <p className="text-sm text-[#FFFFFF80]">Loading feedback form...</p>
+        </div>
+      </section>
+    )
+  }
+
+  if (requiredSections.length === 0) {
+    return (
+      <section className="min-h-screen bg-[#121126] px-6 pb-4 pt-8 text-white poppins">
+        <div className="mx-auto max-w-[1310px] flex items-center justify-center min-h-[50vh]">
+          <p className="text-sm text-[#FFFFFF80]">No feedback sections required for this event.</p>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="min-h-screen bg-[#121126] px-6 pb-4 pt-8 text-white poppins">
       <div className="mx-auto max-w-[1310px]">
         <header>
           <h1 className="text-xl font-semibold">Give Your Valuable Feedback</h1>
           <p className="mt-2 max-w-[1050px] text-sm text-[#FFFFFF80]">
-            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
+            Please provide your feedback for the departments listed below.
           </p>
 
           <div className="mt-7 flex items-center gap-3">
@@ -111,86 +203,13 @@ const FacultyfeedbackPage = () => {
         </header>
 
         <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-          {/* Venue Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Venue Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('venue')}
-          </section>
-
-          {/* ICTS Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">ICTS Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('icts')}
-          </section>
-
-          {/* Audio Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Audio Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('audio')}
-          </section>
-
-          {/* Transport Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Transport Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('transport')}
-          </section>
-
-          {/* Food & Refreshment Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Food & Refreshment Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('food')}
-          </section>
-
-          {/* Accommodation Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Accomodation Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('accommodation')}
-          </section>
-
-          {/* Media Feedback Poster Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Media Feedback (Poster)</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('mediaPoster')}
-          </section>
-
-          {/* Media Feedback Video Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Media Feedback (Video)</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('mediaVideo')}
-          </section>
-
-          {/* Purchase Feedback Form */}
-          <section className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
-            <h3 className="text-lg font-semibold text-[#8B3DFF]">Purchase Feedback</h3>
-            <p className="mt-2 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
-            {renderFeedbackFields('purchase')}
-          </section>
+          {requiredSections.map((key) => (
+            <section key={key} className="rounded-lg bg-[#222136] px-4 py-3 sm:px-5">
+              <h3 className="text-lg font-semibold text-[#8B3DFF]">{SECTION_META[key].title}</h3>
+              <p className="mt-2 text-sm text-[#FFFFFF80]">{SECTION_META[key].description}</p>
+              {renderFeedbackFields(key)}
+            </section>
+          ))}
 
           <div className="-mx-6 flex justify-end px-6 ">
             <button

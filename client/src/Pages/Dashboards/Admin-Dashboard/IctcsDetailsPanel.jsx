@@ -1,75 +1,112 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FileText } from 'lucide-react'
 
-const basicRequirements = [
-    ['Desktop', 'Yes'],
-    ['Internet Facility', 'LAN'],
-    ['Expected Internet Users', '20'],
-    ['Total Number of Guest WIFI Count', '20'],
-]
+const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
-const objectRequirements = ['Chief Guest AV', 'Stage LED', 'Pointer', 'WebCam']
+const yesNo = (value) => (value ? 'Yes' : 'No')
 
 const RequirementCard = ({ title, children, className = '' }) => (
-    <section className={`rounded-lg border border-[#374155] bg-[#232A3B] p-5 ${className}`}>
-        <div className="mb-4 flex items-center gap-2 text-base font-semibold text-[#E6E2F0]">
-            <FileText size={17} />
-            {title}
-        </div>
-        {children}
-    </section>
+  <section className={`rounded-lg border border-[#374155] bg-[#232A3B] p-5 ${className}`}>
+    <div className="mb-4 flex items-center gap-2 text-base font-semibold text-[#E6E2F0]">
+      <FileText size={17} />
+      {title}
+    </div>
+    {children}
+  </section>
 )
 
 const KeyValueList = ({ items }) => (
-    <div>
-        {items.map(([label, value]) => (
-            <div key={label} className="flex items-center justify-between border-b border-[#30384d]/60 py-3 text-sm last:border-b-0">
-                <span className="text-[#CBC3D7]/75">{label}</span>
-                <span className="font-medium text-[#E6E2F0]">{value}</span>
-            </div>
-        ))}
-    </div>
+  <div>
+    {items.map(([label, value]) => (
+      <div key={label} className="flex items-center justify-between border-b border-[#30384d]/60 py-3 text-sm last:border-b-0">
+        <span className="text-[#CBC3D7]/75">{label}</span>
+        <span className="font-medium text-[#E6E2F0]">{value}</span>
+      </div>
+    ))}
+  </div>
 )
 
-const TextList = ({ items }) => (
-    <div>
-        {items.map((item) => (
-            <p key={item} className="border-b border-[#30384d]/60 py-3 text-sm font-medium text-[#E6E2F0] last:border-b-0">
-                {item}
-            </p>
-        ))}
+const IctsVenueDetails = ({ icts }) => {
+  const desktopLaptopItems = (icts.desktopLaptop || []).map(
+    (item) => [`${item.type || 'System'} Count`, displayValue(item.count)]
+  )
+  const requirements = (icts.requirements || []).filter(Boolean).join(', ') || '-'
+
+  const basicItems = [
+    ...desktopLaptopItems,
+    ['Internet Facility', displayValue(icts.internetFacility)],
+    ['Expected Internet Users', displayValue(icts.expectedInternetUsers)],
+    ['Proctoring / Exam Users', displayValue(icts.proctoringUsers)],
+    ['Guest WiFi Needed', yesNo(icts.guestWifiNeeded)],
+  ]
+
+  if (icts.guestWifiNeeded) {
+    basicItems.push(['Guest WiFi Exceeds 5 Devices', yesNo(icts.guestWifiExceed5)])
+    basicItems.push(['Total Guest Count', displayValue(icts.totalGuestCount)])
+  }
+
+  basicItems.push(['Requirements', requirements])
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(icts.venueName)}</h3>
+      <KeyValueList items={basicItems} />
+
+      {icts.otherRequirements ? (
+        <RequirementCard title="Other Requirements">
+          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.otherRequirements)}</p>
+        </RequirementCard>
+      ) : null}
+
+      {icts.specialRequirements ? (
+        <RequirementCard title="Special Requirements">
+          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.specialRequirements)}</p>
+        </RequirementCard>
+      ) : null}
     </div>
-)
+  )
+}
 
-const IctcsDetailsPanel = () => {
-    return (
-        <div className="w-[80%] max-h-[calc(100vh-150px)] overflow-auto table-custom-scrollbar rounded-lg border border-[#27334c] bg-[#151d31] p-5">
-            <h2 className="text-lg font-medium text-[#8F5BFF]">ICTCS Details</h2>
-            <p className="mt-1 text-xs leading-5 text-[#CBC3D7]/50">
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
-            </p>
+const IctcsDetailsPanel = ({ ictsDetails, eventSchedule = [] }) => {
+  const [activeDay, setActiveDay] = useState(0)
+  const ictses = ictsDetails?.ictses ?? []
+  if (!ictsDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No ICTS details are available.</p>
+  const dayCount = Math.max(eventSchedule.length, ...ictses.map((i) => Number(i.dayIndex) + 1), 1)
+  const selectedDay = Math.min(activeDay, dayCount - 1)
+  const dayIctses = ictses.filter((icts) => Number(icts.dayIndex) === selectedDay)
 
-            <div className="mt-8 grid grid-cols-2 gap-5">
-                <RequirementCard title="Basic Requirement">
-                    <KeyValueList items={basicRequirements} />
-                </RequirementCard>
+  return (
+    <div className="space-y-5">
+      {dayCount > 1 && (
+        <nav className="flex border-b border-[#374155]" aria-label="ICTCS event days">
+          {Array.from({ length: dayCount }, (_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => setActiveDay(index)}
+              className={`border-b-2 px-5 py-2 text-[10px] font-medium transition ${
+                selectedDay === index
+                  ? 'border-[#8B3DFF] text-[#9F68FF]'
+                  : 'border-transparent text-[#CBC3D7]/75 hover:text-white'
+              }`}
+            >
+              Day {index + 1}
+            </button>
+          ))}
+        </nav>
+      )}
 
-                <RequirementCard title="Object Requirement">
-                    <TextList items={objectRequirements} />
-                </RequirementCard>
-            </div>
+      {dayIctses.map((icts, index) => (
+        <section key={`${icts.venueName}-${index}`} className="rounded-lg border border-[#374155] bg-[#232A3C] p-5">
+          <IctsVenueDetails icts={icts} />
+        </section>
+      ))}
 
-            <RequirementCard title="Special Requirement" className="mt-5">
-                <p className="text-sm font-medium leading-7 text-[#E6E2F0]">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                    Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
-                </p>
-            </RequirementCard>
-        </div>
-    )
+      {!dayIctses.length && (
+        <p className="py-8 text-center text-sm text-[#CBC3D7]/65">No ICTS requirements were submitted for Day {selectedDay + 1}.</p>
+      )}
+    </div>
+  )
 }
 
 export default IctcsDetailsPanel

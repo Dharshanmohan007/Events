@@ -29,7 +29,7 @@ const AdminDashboardHeader = () => {
                         <NavLink to={adminRoutes.requests} className={getNavLinkClassName}>Requests List</NavLink>
                         <NavLink to={adminRoutes.venues} className={getNavLinkClassName}>Venue Management</NavLink>
                         <NavLink to={adminRoutes.faculty} className={getNavLinkClassName}>Faculty Management</NavLink>
-                        <NavLink to={adminRoutes.admins} className={getNavLinkClassName}>Admin Management</NavLink>
+                        {/* <NavLink to={adminRoutes.admins} className={getNavLinkClassName}>Admin Management</NavLink> */}
                         <NavLink to={adminRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
                         <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
                     </div>
