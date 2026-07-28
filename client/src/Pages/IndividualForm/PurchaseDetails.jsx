@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import FormSubmitted from "../IndividualForm/FormSubmitted";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 import UploadIcon from "../../assets/upload.svg";
 import { useAuth } from "../../Components/AuthContext";
@@ -718,8 +719,8 @@ export default function PurchaseDetails() {
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
+  console.log('[PurchaseDetails] handleSubmit start');
   setApiError("");
-setSubmitSuccess(true);
   setIsLoading(true);
 
   if (!validateForm()) {
@@ -729,6 +730,19 @@ setSubmitSuccess(true);
 
   try {
     const payload = buildPayload();
+    console.log('[PurchaseDetails] payload built:', payload);
+
+    // Validate token before attempting submit. Show an error instead of redirecting.
+    const authToken = localStorage.getItem("token");
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setApiError("Session expired or invalid token. Please login again.");
+      setIsLoading(false);
+      return;
+    }
 
     if (!payload.employee) {
       throw new Error("Unable to determine employee id. Please login again.");
@@ -777,6 +791,7 @@ setSubmitSuccess(true);
 
     const requestUrl = `${API_BASE}/api/purchase/create`;
 
+    console.log('[PurchaseDetails] Sending POST to', requestUrl);
     const response = await fetch(requestUrl, {
       method: "POST",
 
@@ -811,7 +826,7 @@ setSubmitSuccess(true);
       );
     }
 
-    setSuccess(true);
+    setSubmitSuccess(true);
   } catch (error) {
     console.error(error);
     setApiError(error.message || "Unable to send purchase data.");

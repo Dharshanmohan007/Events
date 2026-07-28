@@ -225,11 +225,14 @@ const drawReceiptCopy = (doc, boxTop, logoImg, data) => {
 
   doc.setFont("times", "bold");
   doc.setFontSize(10);
-  doc.text("IQAC Number", 160, iqacLabelY);
+  doc.text("IQAC Number", 10, iqacLabelY);
 
-  doc.rect(150, iqacBoxY, 42, iqacBoxHeight);
-  doc.setFontSize(9);
-  doc.text(iqacNumber || "", 153, iqacBoxY + iqacBoxHeight / 2 + 2.5);
+  doc.rect(10, iqacBoxY, 195, iqacBoxHeight);
+  doc.setFontSize(7);
+  doc.setFont("times", "normal");
+  const iqacTextWidth = doc.getTextWidth(iqacNumber || "");
+  const iqacTextX = 10 + (195 - iqacTextWidth) / 2;
+  doc.text(iqacNumber || "", iqacTextX, iqacBoxY + iqacBoxHeight / 2 + 2);
 
   //-------------------- Signature row --------------------
   const sigLine1Y = boxTop + 123;
@@ -280,11 +283,11 @@ export default async function generateAdvanceReceiptPdf({
     requisitionDate: formatDate(selectedDate),
     employeeName:
       employee?.name || employee?.employeeName || formData?.employeeName || "",
-    empId: employee?.empId || employee?.employeeId || "",
+    empId: submitResponse?.employeeId || employee?.empId || employee?.employeeId || "",
     designation: employee?.designation || "",
     department: employee?.department || "",
     advanceAmount: formatAmount(formData?.advanceAmount),
-    purpose: formData?.purposeOfAdvance || "",
+    purpose: formData?.advancePurpose || formData?.purposeOfAdvance || "",
     clearBeforeDate: add15Days(selectedDate, formData?.clearanceDays || 15),
     clearanceDays: formData?.clearanceDays || 15,
   };

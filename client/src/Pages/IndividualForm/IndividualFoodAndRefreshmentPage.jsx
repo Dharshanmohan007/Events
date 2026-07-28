@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   ChevronDown,
@@ -12,7 +13,7 @@ import {
 } from "lucide-react";
 
 import UploadIcon from "../../assets/upload.svg";
-import { jwtDecode } from "jwt-decode";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 import { API_BASE } from "../../utils/apiConfig";
 import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
@@ -790,7 +791,9 @@ const IndividualFoodAndRefreshment = () => {
   const [submitMessage, setSubmitMessage] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const navigate = useNavigate();
+
   const updateFormCard = (cardId, updater) => {
     setFormCards((prev) =>
       prev.map((card) =>
@@ -817,14 +820,17 @@ useEffect(() => {
   if (storedToken) {
     setToken(storedToken);
 
-    try {
-      const decoded = jwtDecode(storedToken);
+    const decoded = decodeToken(storedToken);
 
-      if (decoded?.id) {
-        setEmployeeId(decoded.id);
-      }
-    } catch (error) {
-      console.error("Failed to decode token:", error);
+    if (!decoded || isTokenExpired(decoded)) {
+      console.warn("Expired or invalid token found; clearing stored auth.");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      return;
+    }
+
+    if (decoded?.id) {
+      setEmployeeId(decoded.id);
     }
   }
 }, []);
@@ -970,7 +976,8 @@ useEffect(() => {
   // SUBMIT
   // =========================
 
-  const handleSubmit = async () => {
+  const handleSubmit = async () => { 
+    console.log("Submitting food forms:", formCards); 
     const errors = [];
 
     // if (!principalApprovalDocument) {
@@ -1047,12 +1054,18 @@ useEffect(() => {
 
     try {
       const authToken = localStorage.getItem("token") || token;
+      const decodedAuthToken = decodeToken(authToken);
 
-      if (!authToken) {
-        throw new Error("Authentication token not found. Please login again.");
+      if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setValidationErrors(["Session expired or invalid token. Please login again."]);
+        navigate("/login");
+        return;
       }
 
       let submittedCount = 0;
+      let firstSubmissionData = null;
 
       for (const [index, card] of formCards.entries()) {
        const payload = buildFoodPayload(card);
@@ -1116,6 +1129,7 @@ if (principalApprovalDocument) {
 }
 
 const response = await fetch(`${API_BASE}/api/foods`, {
+
   method: "POST",
 
   headers: {
@@ -1134,11 +1148,24 @@ const response = await fetch(`${API_BASE}/api/foods`, {
 
         console.log(`Food submit response ${index + 1}:`, response.status, data);
 
+        if (response.status === 401 || response.status === 403) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          throw new Error(
+            data?.message ||
+              "Invalid or expired token. Please login again.",
+          );
+        }
+
         if (!response.ok) {
           throw new Error(
             data?.message ||
               `Food submission failed for form ${index + 1}: ${response.status}`,
           );
+        }
+
+        if (index === 0 && data.data) {
+          firstSubmissionData = data.data;
         }
 
         submittedCount += 1;
@@ -1181,7 +1208,8 @@ const response = await fetch(`${API_BASE}/api/foods`, {
           },
           employee: employeeDetails,
           submitResponse: {
-            iqacNumber: `IQAC-${Date.now()}`,
+            iqacNumber: firstSubmissionData?.requestNo || `IQAC-${Date.now()}`,
+            employeeId: firstSubmissionData?.empId || employeeDetails.empId,
           },
         });
       }

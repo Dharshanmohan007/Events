@@ -50,7 +50,8 @@ export default function FormSubmitted({
       formData: receiptPayload,
       employee: storedUser,
       submitResponse: {
-        iqacNumber: `IQAC-${Date.now()}`,
+        iqacNumber: advanceData?.requestNo || `IQAC-${Date.now()}`,
+        employeeId: advanceData?.empId || storedUser?.empId || storedUser?.employeeId,
       },
     });
   };

@@ -13,6 +13,7 @@ import FormSubmitted from "../IndividualForm/FormSubmitted";
 import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 const floatingLabelClass =
   "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
@@ -596,6 +597,7 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const handleNext = async () => {
+    console.log('[MediaDetails] handleNext start');
     console.log("activated function");
     
     if (!selectedTypes.length) {
@@ -616,18 +618,35 @@ const [trophyContent, setTrophyContent] = useState("");
 
     console.log("no errors");
 
+    // Validate token before attempting submit. Show an error instead of redirecting.
+    const authToken = localStorage.getItem("token");
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setValidationErrors(["Session expired or invalid token. Please login again."]);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitSuccess(false);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/individual-media/create`, {
+      const requestUrl = `${API_BASE}/api/individual-media/create`;
+      const formData = buildMediaFormData();
+      console.log('[MediaDetails] Sending POST to', requestUrl);
+      for (const entry of formData.entries()) {
+        console.log('[MediaDetails] formData entry:', entry[0], entry[1]);
+      }
+      const response = await fetch(requestUrl, {
         method: "POST",
-          headers: {
-            ...(token && {
-              Authorization: `Bearer ${token}`,
-            }),
-          },
-        body: buildMediaFormData(),
+        headers: {
+          ...(token && {
+            Authorization: `Bearer ${token}`,
+          }),
+        },
+        body: formData,
       });
       const data = await response.json();
       console.log("Media submit response:", data);

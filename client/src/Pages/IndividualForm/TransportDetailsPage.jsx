@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { jwtDecode } from "jwt-decode";
+
 import { API_BASE } from "../../utils/apiConfig";
 
 const createTransportForm = () => ({
@@ -421,6 +422,7 @@ const TransportDetailsPage = () => {
   // SUBMIT
   // =========================
   const handleSubmit = async () => {
+    console.log('[TransportDetails] handleSubmit start');
     const errors = [];
 
     // if (!principalApprovalDocument) {
@@ -475,6 +477,18 @@ const TransportDetailsPage = () => {
 
     if (errors.length) return;
 
+    // Validate stored token before attempting submit. If token is missing/expired,
+    // show an error instead of forcing a navigation to the login page.
+    const authToken = localStorage.getItem("token") || token;
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setValidationErrors(["Session expired or invalid token. Please login again."]);
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitSuccess(true);
 
@@ -499,9 +513,7 @@ const TransportDetailsPage = () => {
           body: payload,
         });
 
-        // The API should return JSON, but Express sends an HTML error page for
-        // unhandled server errors. Read the body first so that the useful error
-        // is not hidden behind a `response.json()` parsing error.
+        
         const responseText = await response.text();
         let responseData;
 
