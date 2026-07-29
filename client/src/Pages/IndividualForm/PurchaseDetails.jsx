@@ -904,7 +904,7 @@ export default function PurchaseDetails() {
   // };
 
   if (submitSuccess) {
-  return <FormSubmitted advanceData={form} />;
+  return <FormSubmitted advanceData={form} showDownloadButton={false} />;
 }
 
   return (

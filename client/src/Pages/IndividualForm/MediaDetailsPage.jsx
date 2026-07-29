@@ -742,6 +742,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 ? videoAdvancePurpose || ""
                 : "",
         }}
+        showDownloadButton={false}
       />
     );
   }

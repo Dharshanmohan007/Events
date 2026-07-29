@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { jwtDecode } from "jwt-decode";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 import { API_BASE } from "../../utils/apiConfig";
 
@@ -29,6 +30,8 @@ const createTransportForm = () => ({
   // VEHICLES
   selectedVehicles: [],
   vehicleCounts: {},
+  availableVehicleCounts: {},
+  inventoryLoading: false,
   showVehicleDropdown: false,
 
   // STAFF
@@ -163,12 +166,38 @@ const TransportDetailsPage = () => {
   // =========================
   // UPDATE FIELD
   // =========================
-  const updateFormField = (formIndex, field, value) => {
-    const updatedForms = [...transportForms];
+  const updateTransportForm = (formIndex, updates) => {
+    setTransportForms((prevForms) => {
+      const updatedForms = [...prevForms];
+      updatedForms[formIndex] = {
+        ...updatedForms[formIndex],
+        ...updates,
+      };
+      return updatedForms;
+    });
+  };
 
-    updatedForms[formIndex][field] = value;
+  const updateFormField = async (formIndex, field, value) => {
+    const isDateField = field === "pickupDateTime" || field === "dropDateTime";
+    const nextForm = {
+      ...transportForms[formIndex],
+      [field]: value,
+    };
 
-    setTransportForms(updatedForms);
+    if (isDateField) {
+      nextForm.availableVehicleCounts = {};
+      nextForm.inventoryLoading = true;
+    }
+
+    updateTransportForm(formIndex, nextForm);
+
+    if (isDateField) {
+      if (nextForm.pickupDateTime && nextForm.dropDateTime) {
+        await fetchVehicleInventory(formIndex, nextForm.pickupDateTime, nextForm.dropDateTime);
+      } else {
+        updateTransportForm(formIndex, { inventoryLoading: false });
+      }
+    }
   };
 
   // =========================
@@ -314,7 +343,38 @@ const TransportDetailsPage = () => {
     }
   };
 
-  // Format a Date into ISO-like string that preserves local timezone offset
+  const formatDateOnly = (date) => {
+    if (!date) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
+  const rangesOverlap = (aStart, aEnd, bStart, bEnd) => {
+    if (!aStart || !aEnd || !bStart || !bEnd) return false;
+    const aS = new Date(aStart).getTime();
+    const aE = new Date(aEnd).getTime();
+    const bS = new Date(bStart).getTime();
+    const bE = new Date(bEnd).getTime();
+    return aS <= bE && bS <= aE;
+  };
+
+  const getDisplayedAvailability = (formIndex, vehicle) => {
+    const form = transportForms[formIndex];
+    const available = form.availableVehicleCounts?.[vehicle];
+    if (available === undefined || available === null) return undefined;
+
+    // subtract counts reserved by other forms that overlap this form's date range
+    const reserved = transportForms.reduce((sum, otherForm, idx) => {
+      if (idx === formIndex) return sum;
+      if (!rangesOverlap(form.pickupDateTime, form.dropDateTime, otherForm.pickupDateTime, otherForm.dropDateTime)) return sum;
+      const v = Number(otherForm.vehicleCounts?.[vehicle]) || 0;
+      return sum + v;
+    }, 0);
+
+    const remaining = Number(available) - reserved;
+    return remaining >= 0 ? remaining : 0;
+  };
+
   const formatDateWithOffset = (date) => {
     if (!date) return null;
     const pad = (n) => String(n).padStart(2, "0");
@@ -331,6 +391,83 @@ const TransportDetailsPage = () => {
     const offM = pad(absOff % 60);
 
     return `${y}-${mo}-${d}T${hh}:${mm}:${ss}${sign}${offH}:${offM}`;
+  };
+
+  const isFinanceYes = (value) => String(value || "").toLowerCase() === "yes";
+
+  const fetchVehicleInventory = async (formIndex, pickupDate, dropDate) => {
+    if (!pickupDate || !dropDate) return;
+
+    const pickup = formatDateOnly(new Date(pickupDate));
+    const drop = formatDateOnly(new Date(dropDate));
+    const candidateUrls = [
+      `${API_BASE}/api/transport-inventory/available?pickupDateTime=${encodeURIComponent(
+        pickup,
+      )}&dropDateTime=${encodeURIComponent(drop)}`,
+      `http://10.57.1.245:5005/api/transport-inventory/available?pickupDateTime=${encodeURIComponent(
+        pickup,
+      )}&dropDateTime=${encodeURIComponent(drop)}`,
+    ];
+
+    let inventory = [];
+    let lastError = null;
+
+    for (const url of candidateUrls) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!res.ok) {
+          lastError = new Error(
+            `Transport inventory API returned ${res.status} for ${url}`,
+          );
+          console.warn(lastError.message);
+          continue;
+        }
+
+        const json = await res.json();
+        // Backend may return either { data: [...] } or [...] directly — handle both
+        const candidateData = json?.data ?? json;
+        if (Array.isArray(candidateData)) {
+          inventory = candidateData;
+        } else if (Array.isArray(candidateData?.data)) {
+          inventory = candidateData.data;
+        } else {
+          inventory = [];
+        }
+        // Debugging aid when availability isn't present
+        console.debug("Transport inventory response:", { url, json, inventory });
+        break;
+      } catch (error) {
+        lastError = error;
+        console.warn("Transport inventory fetch error:", error, "url=", url);
+      }
+    }
+
+    const availableVehicleCounts = inventory.reduce((acc, item) => {
+      if (item?.vehicleType) {
+        acc[item.vehicleType] = item.availableCount ?? 0;
+      }
+      return acc;
+    }, {});
+
+    if (!inventory.length && lastError) {
+      console.warn("Failed to load transport inventory:", lastError);
+    }
+
+    setTransportForms((prev) => {
+      const updated = [...prev];
+      updated[formIndex] = {
+        ...updated[formIndex],
+        availableVehicleCounts,
+        inventoryLoading: false,
+      };
+      return updated;
+    });
   };
 
   const buildTransportPayload = (form) => {
@@ -564,7 +701,7 @@ const TransportDetailsPage = () => {
   };
 
   if (submitSuccess) {
-    return <FormSubmitted advanceData={transportForms[0] || {}} />;
+    return <FormSubmitted advanceData={transportForms[0] || {}} showDownloadButton={false} />;
   }
 
   return (
@@ -1059,9 +1196,11 @@ const TransportDetailsPage = () => {
                               (v) => v !== option,
                             );
 
-                            delete updatedForms[formIndex].vehicleCounts?.[
-                              option
-                            ];
+                            const newVehicleCounts = {
+                              ...updatedForms[formIndex].vehicleCounts,
+                            };
+                            delete newVehicleCounts[option];
+                            updatedForms[formIndex].vehicleCounts = newVehicleCounts;
                           } else {
                             updatedVehicles = [...currentVehicles, option];
                           }
@@ -1070,6 +1209,18 @@ const TransportDetailsPage = () => {
                             updatedVehicles;
 
                           setTransportForms(updatedForms);
+
+                          const nextForm = {
+                            ...updatedForms[formIndex],
+                            selectedVehicles: updatedVehicles,
+                          };
+                          if (nextForm.pickupDateTime && nextForm.dropDateTime) {
+                            fetchVehicleInventory(
+                              formIndex,
+                              nextForm.pickupDateTime,
+                              nextForm.dropDateTime,
+                            );
+                          }
                         }}
                         className={`
                                  px-4
@@ -1091,6 +1242,30 @@ const TransportDetailsPage = () => {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {form.pickupDateTime && form.dropDateTime && (
+                <div className="mt-2 text-xs text-gray-400">
+                  {form.inventoryLoading ? (
+                    <span>Checking available vehicle counts...</span>
+                  ) : Object.keys(form.availableVehicleCounts).length > 0 ? (
+                    <span>
+                      Available counts: {vehicleOptions
+                        .map((vehicle) => {
+                          const raw = form.availableVehicleCounts[vehicle];
+                          const displayed = getDisplayedAvailability(formIndex, vehicle);
+                          const toShow = displayed === undefined ? (raw !== undefined ? raw : null) : displayed;
+                          return toShow !== null && toShow !== undefined
+                            ? `${vehicle}: ${toShow}`
+                            : null;
+                        })
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
+                  ) : (
+                    <span>No availability data available for selected dates.</span>
+                  )}
                 </div>
               )}
             </div>
@@ -1128,7 +1303,11 @@ const TransportDetailsPage = () => {
 
                         setTransportForms(updatedForms);
                       }}
-                      placeholder={getVehiclePlaceholder(vehicle)}
+                      placeholder={
+                        (form.availableVehicleCounts?.[vehicle] !== undefined)
+                          ? `${getVehiclePlaceholder(vehicle)} (Available: ${getDisplayedAvailability(formIndex, vehicle)})`
+                          : getVehiclePlaceholder(vehicle)
+                      }
                       className="
                             w-full
                          
@@ -1306,7 +1485,9 @@ const TransportDetailsPage = () => {
             <button
               type="button"
               onClick={() =>
-                updateFormField(formIndex, "showFinanceDropdown", !form.showFinanceDropdown)
+                updateTransportForm(formIndex, {
+                  showFinanceDropdown: !form.showFinanceDropdown,
+                })
               }
               className="
                 transport-select-control
@@ -1337,11 +1518,12 @@ const TransportDetailsPage = () => {
                   <div
                     key={opt.label}
                     onClick={() =>
-                      updateFormField(formIndex, "showFinanceDropdown", false) ||
-                      updateFormField(formIndex, "financeRequired", opt.value) ||
-                      (opt.value === "No"
-                        ? updateFormField(formIndex, "advanceAmount", "") || updateFormField(formIndex, "advancePurpose", "")
-                        : null)
+                      updateTransportForm(formIndex, {
+                        showFinanceDropdown: false,
+                        financeRequired: opt.value,
+                        advanceAmount: opt.value === "No" ? "" : undefined,
+                        advancePurpose: opt.value === "No" ? "" : undefined,
+                      })
                     }
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       form.financeRequired === opt.value

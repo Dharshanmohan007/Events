@@ -264,7 +264,7 @@ const drawReceiptCopy = (doc, boxTop, logoImg, data) => {
 // Main export
 //----------------------------------------------------
 
-export default async function generateAdvanceReceiptPdf({
+export default async function ReportPdf({
   formData,
   employee,
   submitResponse,

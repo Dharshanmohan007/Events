@@ -16,7 +16,7 @@ import UploadIcon from "../../assets/upload.svg";
 import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 import { API_BASE } from "../../utils/apiConfig";
-import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
+import ReportPdf from "../../utils/ReportPdf";
 import FormSubmitted from "../IndividualForm/FormSubmitted";
 
 // ======================================================
