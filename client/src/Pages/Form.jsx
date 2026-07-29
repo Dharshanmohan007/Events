@@ -14,7 +14,7 @@ import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
 import EventPreviewPage from "./EventPreviewPage";
 import { jwtDecode } from "jwt-decode";
-import generateAdvanceReceiptPdf from "../utils/generateAdvanceReceiptPdf";
+import generateAdvanceReceiptPdf from '../utils/generateAdvanceReceiptPdf';
 import { getFacultyById } from "../services/events/facultyService";
 
 
@@ -954,11 +954,14 @@ export default function Form() {
               ...day,
               poster: {
                 ...day.poster,
+                referencePoster: [],            // clear raw Files — already uploaded
+                referenceCertificate: [],        // clear raw Files — already uploaded
                 referencePosterFiles: req.poster?.referencePosterFiles || day.poster?.referencePosterFiles || [],
                 referenceCertificateFiles: req.poster?.referenceCertificateFiles || day.poster?.referenceCertificateFiles || [],
               },
               video: {
                 ...day.video,
+                referenceVideo: [],              // clear raw Files — already uploaded
                 referenceFiles: req.video?.referenceFiles || day.video?.referenceFiles || [],
               },
             };

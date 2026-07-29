@@ -119,19 +119,36 @@ export function buildMediaFormData(mediaData) {
 
     const appendFiles = (files1, files2, fieldName) => {
       const meta = [];
-      const list1 = Array.isArray(files1) ? files1 : files1 ? [files1] : [];
-      const list2 = Array.isArray(files2) ? files2 : files2 ? [files2] : [];
 
-      const combined = [...list1];
-      list2.forEach((item) => {
-        if (!combined.includes(item)) combined.push(item);
-      });
+      const list = [
+        ...(Array.isArray(files1) ? files1 : files1 ? [files1] : []),
+        ...(Array.isArray(files2) ? files2 : files2 ? [files2] : []),
+      ];
 
-      combined.forEach((file) => {
-        if (file instanceof File) {
-          fd.append(fieldName, file);
-        } else if (file) {
-          meta.push(file);
+      const uploadedFiles = new Set();
+      const uploadedMeta = new Set();
+
+      list.forEach((item) => {
+        if (!item) return;
+
+        if (item instanceof File) {
+          // unique key for each File
+          const key = `${item.name}_${item.size}_${item.lastModified}`;
+
+          if (!uploadedFiles.has(key)) {
+            uploadedFiles.add(key);
+            fd.append(fieldName, item);
+          }
+        } else {
+          const key =
+            item.publicId ||
+            item.url ||
+            JSON.stringify(item);
+
+          if (!uploadedMeta.has(key)) {
+            uploadedMeta.add(key);
+            meta.push(item);
+          }
         }
       });
 
@@ -345,7 +362,29 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
     if (oversized.length) {
       setSizeError(`${sizeErrorPrefix}File(s) exceed ${MAX_FILE_SIZE_MB}MB: ${oversized.join(", ")}`);
     }
-    if (valid.length) onChange([...value, ...valid]);
+    if (valid.length) {
+      const existing = new Set(
+        value.map(
+          (f) =>
+            f instanceof File
+              ? `${f.name}_${f.size}_${f.lastModified}`
+              : ""
+        )
+      );
+
+      const uniqueFiles = valid.filter((file) => {
+        const key = `${file.name}_${file.size}_${file.lastModified}`;
+
+        if (existing.has(key)) {
+          return false;
+        }
+
+        existing.add(key);
+        return true;
+      });
+
+      onChange([...value, ...uniqueFiles]);
+    }
   };
 
   const removeFile = (idx) => {
@@ -709,6 +748,7 @@ export default function MediaForm({
   const currentIdxRef   = useRef(currentDayIndex);
   const registerNavRef  = useRef(registerChildNavigation);
   const purchaseDataRef = useRef(purchaseData);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => { mediaDataRef.current    = mediaData;               }, [mediaData]);
   useEffect(() => { onSaveRef.current       = onSave;                  }, [onSave]);
@@ -797,6 +837,7 @@ export default function MediaForm({
 
   // handleNext
   const handleNext = useCallback(async () => {
+    if (isSubmittingRef.current) return;
     const latestData     = mediaDataRef.current;
     const latestPurchase = purchaseDataRef.current;
     const idx            = currentIdxRef.current;
@@ -823,6 +864,7 @@ export default function MediaForm({
       setCurrentDayIndex(nextIdx);
       setErrors((prev) => ({ ...prev, [nextIdx]: {} }));
       pushNavState(nextIdx, false);
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -840,13 +882,27 @@ export default function MediaForm({
       setCurrentDayIndex(parseInt(Object.keys(allErrors)[0]));
       return false;
     }
-
+    isSubmittingRef.current = true;
     setIsLoading(true);
     pushNavState(idx, true);
     setApiError("");
     try {
       const formData = buildMediaFormData(latestData);
       if (onSaveRef.current) await onSaveRef.current(formData);
+
+      // Clear local File objects now that they've been uploaded — otherwise
+      // a later re-entry into this day would re-upload the same Files again.
+      setMediaData((prev) => {
+        const updated = [...prev];
+        const day = updated[idx];
+        if (!day) return prev;
+        updated[idx] = {
+          ...day,
+          poster: { ...day.poster, referencePoster: [], referenceCertificate: [] },
+          video:  { ...day.video,  referenceVideo: [] },
+        };
+        return updated;
+      });
       if (registerNavRef.current) {
         registerNavRef.current({ next: null, prev: null, isLoading: false, isOnLastDay: true, nextDayLabel: "Save & Next" });
       }
