@@ -63,6 +63,7 @@ import FoodEventsListPage from "./Pages/Dashboards/Food-Dashboard/FoodEventsList
 import AccommodationRequestListPage from "./Pages/Dashboards/Accommodation-Dashboard/AccommodationRequestListPage"
 import MediaEventsListPage from "./Pages/Dashboards/Media-Dashboard/MediaEventsListPage"
 
+import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 
@@ -151,6 +152,7 @@ function AppRoutes() {
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events" element={<ProtectedRoute><PurchaseEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<Calendar />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
