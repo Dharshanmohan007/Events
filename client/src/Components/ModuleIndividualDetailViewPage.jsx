@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, FileText } from "lucide-react";
+import { ChevronRight, FileText, Shield, CheckCircle2, XCircle, Clock } from "lucide-react";
 
 import FacultyPurchaseDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyPurchaseDetailsPanel";
 import FacultyFoodRefreshmentDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyFoodRefreshmentDetailsPanel";
@@ -42,6 +42,117 @@ const InfoGridItem = ({ label, value }) => (
     <span className="text-sm font-medium text-white">{value || "-"}</span>
   </div>
 );
+
+const ApprovalStageCard = ({ label, approval }) => {
+  const statusText = approval?.status || "Pending";
+  const statusClass = statusText.toLowerCase() === "approved"
+    ? "bg-[#0e5149]/55 text-[#20D18C]"
+    : statusText.toLowerCase() === "rejected"
+      ? "bg-red-900/40 text-[#FF4F91]"
+      : "bg-[#5D1438]/50 text-[#FF4F91]";
+
+  return (
+    <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">{label}</h3>
+        <span className={`rounded-full px-3 py-1 text-[10px] font-semibold ${statusClass}`}>{statusText}</span>
+      </div>
+      <div className="space-y-2 text-sm">
+        {approval?.approvedBy && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[#CBC3D7]/65">Approved By</span>
+            <span className="font-medium text-white">{approval.approvedBy}</span>
+          </div>
+        )}
+        {(approval?.approvedAt || approval?.updatedAt) && (
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[#CBC3D7]/65">Updated At</span>
+            <span className="font-medium text-white">{formatDate(approval?.approvedAt || approval?.updatedAt)}</span>
+          </div>
+        )}
+        {approval?.reason && (
+          <p className="rounded-md bg-[#232A3B] p-2.5 text-xs leading-5 text-[#CBC3D7]/80">{approval.reason}</p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ApprovalFlowSection = ({ approvalSource, currentStatus, approvalHistory }) => {
+  const overviewEntries = useMemo(() => [
+    { label: "Overall Status", value: currentStatus },
+    { label: "Workflow Stage", value: approvalSource?.workflowStage || approvalSource?.currentWorkflowStage || "-" },
+    { label: "Final Status", value: approvalSource?.finalStatus || "-" },
+    { label: "Media Head Approval", value: approvalSource?.headApproval?.status || "Pending" },
+  ], [approvalSource, currentStatus]);
+
+  return (
+    <div className="mt-6 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+      <div className="mb-5 flex items-center gap-3">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#8B3DFF]/15">
+          <Shield size={18} className="text-[#8B3DFF]" />
+        </div>
+        <div>
+          <h3 className="text-base font-semibold text-white">Approval Flow</h3>
+          <p className="mt-0.5 text-xs text-[#CBC3D7]/50">Read-only approval progress for this individual media request</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {overviewEntries.map((item) => (
+          <InfoGridItem key={item.label} label={item.label} value={item.value} />
+        ))}
+      </div>
+      <div className="mt-5 rounded-xl border border-[#374155]/60 bg-[#151d31] p-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ApprovalStageCard label="Admin Approval" approval={approvalSource?.adminApproval} />
+          <ApprovalStageCard label="HOD Approval" approval={approvalSource?.hodApproval} />
+          <ApprovalStageCard label="Department Approval" approval={approvalSource?.departmentApproval} />
+          <ApprovalStageCard label="Super Admin Approval" approval={approvalSource?.superAdminApproval} />
+          <ApprovalStageCard label="Media Head Approval" approval={approvalSource?.headApproval} />
+        </div>
+      </div>
+      {Array.isArray(approvalHistory) && approvalHistory.length > 0 && (
+        <div className="mt-6 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#8B3DFF]/15">
+              <Clock size={18} className="text-[#8B3DFF]" />
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-white">Approval History</h3>
+              <p className="mt-0.5 text-xs text-[#CBC3D7]/50">Timeline of actions taken for this request</p>
+            </div>
+          </div>
+          <div className="relative ml-4 border-l-2 border-[#374155]/50 pl-6">
+            {approvalHistory.map((entry, index) => {
+              const action = entry?.action || entry?.status || "Action";
+              const isApproved = String(action).toLowerCase() === "approved";
+              const isRejected = String(action).toLowerCase() === "rejected";
+              const isPending = String(action).toLowerCase() === "pending";
+              return (
+                <div key={entry?._id || index} className="relative pb-6 last:pb-0">
+                  <div className={`absolute -left-7.75 flex h-6 w-6 items-center justify-center rounded-full border-2 border-[#0b1326] ${isApproved ? "bg-[#20D18C]/20" : isPending ? "bg-[#FF4F91]/20" : isRejected ? "bg-red-500/20" : "bg-[#8B3DFF]/20"}`}>
+                    {isApproved ? <CheckCircle2 size={12} className="text-[#20D18C]" /> : isRejected ? <XCircle size={12} className="text-red-500" /> : <Clock size={12} className={isPending ? "text-[#FF4F91]" : "text-[#8B3DFF]"} />}
+                  </div>
+                  <div className="rounded-lg border border-[#374155]/50 bg-[#242B3D] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-medium text-white">{action}</p>
+                      {(entry?.actionDate || entry?.updatedAt) && <span className="text-[11px] text-[#CBC3D7]/50">{formatDate(entry?.actionDate || entry?.updatedAt)}</span>}
+                    </div>
+                    {entry?.role && <span className="mt-2 inline-block rounded-full bg-[#8B3DFF]/10 px-2.5 py-0.5 text-[10px] font-medium text-[#8B3DFF]">{entry.role}</span>}
+                    {entry?.remarks && <p className="mt-2.5 rounded-md bg-[#1B2334] p-2.5 text-xs leading-5 text-[#CBC3D7]/75">{entry.remarks}</p>}
+                    {entry?.reason && entry.reason !== entry.remarks && (
+                      <p className="mt-2 rounded-md bg-[#1B2334] p-2.5 text-xs leading-5 text-[#CBC3D7]/75"><span className="font-medium text-[#CBC3D7]/50">Reason: </span>{entry.reason}</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const FORM_TYPE_CONFIG = {
   purchase: {
@@ -129,6 +240,10 @@ const ModuleIndividualDetailViewPage = ({
   const DetailComponent = config?.component;
   const detailProps = config?.props?.(submission?.data) || {};
   const status = submission?.status || submission?.data?.overallStatus || "-";
+  const isMediaSubmission = /media/i.test(submission?.formType || "") || Array.isArray(submission?.data?.typeOfMedia) || /media/i.test(String(submission?.data?.typeOfMedia || ""));
+  const approvalSource = submission?.data || submission || {};
+  const approvalHistory = submission?.approvalHistory || approvalSource?.approvalHistory || [];
+  const currentStatus = submission?.finalStatus || approvalSource?.finalStatus || submission?.status || approvalSource?.status || "Pending";
 
   useEffect(() => {
     let token = localStorage.getItem("token");
@@ -311,6 +426,14 @@ const ModuleIndividualDetailViewPage = ({
                     />
                   </div>
                 </div>
+              )}
+
+              {isMediaSubmission && (
+                <ApprovalFlowSection
+                  approvalSource={approvalSource}
+                  currentStatus={currentStatus}
+                  approvalHistory={approvalHistory}
+                />
               )}
 
               {submission.data?.financeRequired === "Yes" && (

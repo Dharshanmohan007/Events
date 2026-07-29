@@ -19,13 +19,16 @@ import TransportEventsDetailViewPage from './Pages/Dashboards/Transports-Dashboa
 import TransportIndividualDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportIndividualDetailViewPage'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import MediaEventsDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaEventsDetailViewPage'
+import MediaIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaIndividualDetailViewPage'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
 import PosterReportsPage from './Pages/Dashboards/Media-Dashboard/PosterReportsPage'
 import PosterFeedbackPage from './Pages/Dashboards/Media-Dashboard/PosterFeedbackPage'
 import PosterDetailView from './Pages/Dashboards/Media-Dashboard/PosterDetailView'
+import PosterIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/PosterIndividualDetailViewPage'
 import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
 import VideoDetailView from './Pages/Dashboards/Media-Dashboard/VideoDetailView'
+import VideoIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/VideoIndividualDetailViewPage'
 import AdminDashboard from './Pages/Dashboards/Admin-Dashboard/AdminDashboard'
 import AdminEventsListPage from './Pages/Dashboards/Admin-Dashboard/AdminEventsListPage'
 import AdminDashboardLayout from './Pages/Dashboards/Admin-Dashboard/AdminDashboardLayout'
@@ -110,13 +113,16 @@ function AppRoutes() {
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-media/events/detailView/:eventId" element={<ProtectedRoute><MediaEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/reports" element={<ProtectedRoute><PosterReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/feedback" element={<ProtectedRoute><PosterFeedbackPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/detailView/:posterId" element={<ProtectedRoute><PosterDetailView /></ProtectedRoute>} />
+      <Route path="/dashboard-poster/individualDetailView/:id" element={<ProtectedRoute><PosterIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-video" element={<ProtectedRoute><VideoDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-video/detailView/:videoId" element={<ProtectedRoute><VideoDetailView /></ProtectedRoute>} />
+      <Route path="/dashboard-video/individualDetailView/:id" element={<ProtectedRoute><VideoIndividualDetailViewPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-admin" element={<ProtectedRoute><AdminDashboardLayout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
