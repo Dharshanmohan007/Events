@@ -4,7 +4,12 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const getEventTypes = async () => {
   try {
+    console.log("========== LOCAL STORAGE ==========");
+    console.log(localStorage);
+
     const token = localStorage.getItem("token");
+
+    console.log("Token:", token);
 
     const response = await axios.get(`${BASE_URL}/api/eventTypes`, {
       headers: {
@@ -14,7 +19,7 @@ export const getEventTypes = async () => {
 
     return response.data;
   } catch (error) {
-    console.error("Error fetching event types:", error);
+    console.log("Error Response:", error.response?.data);
     throw error;
   }
 };
