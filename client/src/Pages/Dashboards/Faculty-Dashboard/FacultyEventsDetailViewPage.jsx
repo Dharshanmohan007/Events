@@ -13,6 +13,7 @@ import FacultyPurchaseDetailsPanel from './FacultyPurchaseDetailsPanel'
 import FacultyStaticDetailsPanel from './FacultyStaticDetailsPanel'
 import FacultyTransportationDetailsPanel from './FacultyTransportationDetailsPanel'
 import FacultyVenueDetailsPanel from './FacultyVenueDetailsPanel'
+import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -66,6 +67,7 @@ const FacultyEventsDetailViewPage = () => {
   const [accommodationLoading, setAccommodationLoading] = useState(false)
   const [accommodationError, setAccommodationError] = useState('')
   const [purchaseDetails, setPurchaseDetails] = useState(null)
+  const [data, setData] = useState([]);
   const [purchaseLoading, setPurchaseLoading] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
   const activeTabConfig = detailTabs.find((tab) => tab.name === activeTab)
@@ -77,7 +79,7 @@ const FacultyEventsDetailViewPage = () => {
       try {
         const token = localStorage.getItem('token')
         const res = await fetch(
-          `${API_BASE_URL}/api/events/${eventId}?module=requestDetails`,
+          `${API_BASE_URL}/api/events/${eventId}`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} }
         )
         const payload = await res.json()
@@ -85,6 +87,7 @@ const FacultyEventsDetailViewPage = () => {
 
         const eventData = payload.data || payload
         const details = eventData.requestDetails
+        setData(eventData);
         console.log("event tabs data : ", details)
         if (!details) throw new Error('Event requisition details are not available')
 
@@ -410,10 +413,37 @@ const FacultyEventsDetailViewPage = () => {
     fetchPurchaseDetails()
   }, [activeTab, eventId])
 
-  
 
-  const openFeedbackPage = () => {
-    window.open(`/dashboard-faculty/feedback/${eventId}`, '_blank', 'noopener,noreferrer')
+
+  const openFeedbackPage = async () => {
+    // const newTab = window.open("", "_blank");
+
+    try {
+      const token = localStorage.getItem("token");
+
+     const res =  await axios.patch(
+        `${API_BASE_URL}/api/events/${eventId}/status`,
+        { action: "close" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (res.status === 200) {
+        const newTab = window.open("", "_blank");
+
+        if (newTab) {
+          newTab.location.href = `/dashboard-faculty/feedback/${eventId}`;
+        } else {
+          console.error("Popup was blocked by the browser.");
+        }
+      }
+
+    } catch (err) {
+      console.error(err);
+    }
+
   }
 
   const renderActivePanel = () => {
@@ -508,15 +538,23 @@ const FacultyEventsDetailViewPage = () => {
               <h2 className="text-md font-medium text-[#D0BCFF]">{requestDetails?.eventDetails?.eventName}</h2>
             </div>
           </div>
-
-          <button
+          {console.log("data : ", data)}
+          {data.adminApproval == true && data.status.toLowerCase() !== "closed" ? <button
+            type="button"
+            onClick={openFeedbackPage}
+            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"
+          >
+            <Check size={18} />
+            Close
+          </button> : ""}
+          {/* <button
             type="button"
             onClick={openFeedbackPage}
             className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"
           >
             <Check size={18} />
             Completed
-          </button>
+          </button> */}
         </header>
 
         <section className="mt-3">

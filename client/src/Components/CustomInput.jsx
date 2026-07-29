@@ -8,6 +8,7 @@ export default function CustomInput({
   className = "",
   labelBg = "#16162A",
   borderColor = "#3A3A5A",
+  readOnly = false,
   placeholder = "",
   disabled = false,
 }) {
@@ -41,6 +42,7 @@ export default function CustomInput({
         {...(onChange ? { onChange } : {})}
         placeholder={derivedPlaceholder}
         disabled={disabled}
+        readOnly={readOnly}
         className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border placeholder-gray-500 ${
           isDarkBg ? "text-gray-400 [color-scheme:dark]" : ""
         } ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${className}`}

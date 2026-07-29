@@ -17,6 +17,10 @@ export default function EventOrganizerDetails({
   setDoc,
   finance,
   setFinance,
+  advanceAmount,
+  setAdvanceAmount,
+  purposeOfAdvance,
+  setPurposeOfAdvance,
   budget,
   setBudget,
   department,
@@ -35,6 +39,8 @@ export default function EventOrganizerDetails({
   const principalInputRef = useRef();
   const [fileSizeError, setFileSizeError] = React.useState("");
   const [principalFileError, setPrincipalFileError] = React.useState("");
+  // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
+  // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
 
   const handleOrganizersChange = (e) => {
     const val = e.target.value;
@@ -197,7 +203,7 @@ export default function EventOrganizerDetails({
       {/* Principal Approval Form Upload */}
       <div className="mb-7">
         <label className="block mb-1 text-sm text-white">
-          Principal Approval Form (without upoading this document you cannot proceed further) *
+          Principal Approval Form
         </label>
 
         <div
@@ -315,13 +321,13 @@ export default function EventOrganizerDetails({
           </p>
         )}
       </div>
-      <div
+      {/* <div
         className={`${
           !principalApprovalDocument
             ? "opacity-50 pointer-events-none select-none"
             : ""
         }`}
-      >
+      > */}
       {/* Completion of previous Event documentation */}
       <div className="mb-6">
         <CustomSelect
@@ -442,12 +448,62 @@ export default function EventOrganizerDetails({
             label="Finance Required"
             required
             value={finance}
-            onChange={setFinance}
+            onChange={(value) => {
+              setFinance(value);
+
+              if (value === "No") {
+                setAdvanceAmount("");
+                setPurposeOfAdvance("");
+              }
+            }}
             options={["Yes", "No"]}
             placeholder="Select an option"
           />
           {errors.finance && <p className="text-red-400 text-xs mt-1">{errors.finance}</p>}
         </div>
+        {finance === "Yes" && (
+          <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="relative">
+              {advanceAmount && (
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                  ₹
+                </span>
+              )}
+
+              <CustomInput
+                label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."
+                value={advanceAmount}
+                onChange={(e) => {
+                  // Allow only digits
+                  const value = e.target.value.replace(/\D/g, "");
+                  setAdvanceAmount(value);
+                }}
+                placeholder="Enter amount"
+                className={advanceAmount ? "pl-8" : ""}
+              />
+
+              {errors.advanceAmount && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.advanceAmount}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <CustomInput
+                label="Purpose of Advance"
+                value={purposeOfAdvance}
+                onChange={(e) => setPurposeOfAdvance(e.target.value)}
+                placeholder="Enter purpose"
+              />
+              {errors.purposeOfAdvance && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.purposeOfAdvance}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Department & Organizers count */}
@@ -467,7 +523,30 @@ export default function EventOrganizerDetails({
                 : val.toUpperCase();
               setDepartment(formattedValue);
             }}
-            options={["AIDS","AIML","CSBS","CSE","CYS","IT","CCE","ECE","EEE","MECH","S&H","Placement","CFRD","IQAC","CIR","Library"]}placeholder="Select an option"
+            options={
+              [
+                "CCE",
+                "MECH",
+                "AIML",
+                "CSE",
+                "ECE",
+                "EEE",
+                "AI&DS",
+                "CFRD",
+                "IQAC",
+                "MATHS",
+                "S&H",
+                "IR",
+                "CSBS",
+                "IT",
+                "CYS",
+                "PLACEMENT",
+                "PD",
+                "INNOVATION",
+                "COE",
+                "HR",
+              ]}
+            placeholder="Select an option"
           />
           {errors.department && <p className="text-red-400 text-xs mt-1">{errors.department}</p>}
         </div>
@@ -502,6 +581,6 @@ export default function EventOrganizerDetails({
         </div>
       )}
     </div>
-    </div>
+    // </div>
   );
 }

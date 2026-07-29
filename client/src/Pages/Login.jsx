@@ -11,7 +11,12 @@ import Logo from "../assets/logo.svg";
 import LoginBackground from "../assets/login_Background.svg";
 
 async function loginApi(email, password) {
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login`, {
+  console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
+  console.log(
+    "LOGIN URL:",
+    `${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`
+  );
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -26,6 +31,7 @@ async function loginApi(email, password) {
 
   try {
     data = text ? JSON.parse(text) : {};
+    console.log("data", data);
   } catch {
     throw new Error("Invalid server response");
   }
@@ -154,6 +160,8 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState("login");
+  const [step, setStep] = useState("login");
+  const [otp, setOtp] = useState("");
 
   const { login } = useAuth();
 
@@ -179,47 +187,19 @@ export default function LoginPage() {
     setError("");
     if (!validate()) return;
     setLoading(true);
-
     try {
       const data = await loginApi(email, password);
 
-      console.log("RAW API DATA:", JSON.stringify(data));
+      console.log("LOGIN RESPONSE:", data);
 
-      if (!data.token) throw new Error("No token received from server");
-
-      localStorage.setItem("token", data.token);
-
-      const decoded = decodeToken(data.token);
-      console.log("DECODED TOKEN:", JSON.stringify(decoded));
-
-      // Role and department both come from the token
-      const role       = decoded?.role       || data.role;
-      const department = decoded?.department || data.department;
-
-      console.log(`👤 role: "${role}" | department: "${department}"`);
-
-      const userData = {
-        _id:        data._id        || decoded?.id,
-        name:       data.name       || decoded?.name,
-        email:      data.email      || decoded?.email,
-        role,
-        department,
-        isadmin:    decoded?.isadmin ?? data.isadmin ?? false,
-        hasAccess:  decoded?.hasAccess ?? data.hasAccess ?? true,
-      };
-
-      localStorage.setItem("user", JSON.stringify(userData));
-
-      // ── Navigate BEFORE login() to avoid PublicRoute bounce ──────────
-      const destination = getRouteForRole(role, department);
-      console.log(`🚀 Navigating to: ${destination}`);
-
-      showSuccessToast("Login Successful");
-      navigate(destination, { replace: true });
-      login(userData);
-
+      if (data.otpRequired) {
+        showSuccessToast(data.message || "OTP sent successfully");
+        setStep("otp");
+      } else {
+        throw new Error("OTP was not generated");
+      }
     } catch (err) {
-      console.error("❌ LOGIN ERROR:", err.message);
+      console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -237,6 +217,95 @@ export default function LoginPage() {
       });
     }
     if (error) setError("");
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+
+    setError("");
+
+    if (!otp.trim()) {
+      setError("OTP is required");
+      return;
+    }
+
+    if (otp.length !== 6) {
+      setError("Enter a valid OTP");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/auth/verify-login-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            otp,
+          }),
+        }
+      );
+
+      const text = await res.text();
+
+      let data = {};
+
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error("Invalid server response");
+      }
+
+      console.log("VERIFY OTP RESPONSE:", data);
+
+      if (!res.ok) {
+        throw new Error(data.message || "OTP verification failed");
+      }
+
+      if (!data.token) {
+        throw new Error("Token not received");
+      }
+
+      localStorage.setItem("token", data.token);
+
+      const decoded = decodeToken(data.token);
+
+      const role = decoded?.role || data.role;
+      const department = decoded?.department || data.department;
+
+      const userData = {
+        _id: data._id || decoded?.id,
+        name: data.name || decoded?.name,
+        email: data.email || decoded?.email,
+        role,
+        department,
+        isadmin: decoded?.isadmin ?? data.isadmin ?? false,
+        hasAccess: decoded?.hasAccess ?? data.hasAccess ?? true,
+        facultyId: decoded?.facultyId ?? data.facultyId,
+        isFirstTimeLogin:
+          decoded?.isFirstTimeLogin ?? data.isFirstTimeLogin ?? false,
+      };
+
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      login(userData);
+
+      showSuccessToast("Login Successful");
+
+      navigate(getRouteForRole(role, department), {
+        replace: true,
+      });
+    } catch (err) {
+      console.error(err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -298,11 +367,12 @@ export default function LoginPage() {
                     <>
                       <div className="mb-10">
                         <h2 className="playfair text-2xl sm:text-3xl font-extrabold text-white mb-2">
-                          Welcome Back!
+                          {step === "login" ? "Welcome Back!" : "Verify OTP"}
                         </h2>
                         <p className="text-white/40 text-xs leading-relaxed">
-                          The all-in-one platform for academic event management,
-                          combining institutional rigor with modern technological agility.
+                          {step === "login"
+                            ? "The all-in-one platform for academic event management, combining institutional rigor with modern technological agility."
+                            : `We've sent a verification OTP to ${email}`}
                         </p>
                       </div>
 
@@ -317,82 +387,124 @@ export default function LoginPage() {
                         </div>
                       )}
 
-                      <form onSubmit={handleLogin} noValidate className="flex flex-col gap-0">
-                        <div className="flex flex-col gap-2 mb-1">
-                          <label className="text-white text-xs font-medium">
-                            E-mail <span className="text-purple-400">*</span>
-                          </label>
-                          <input
-                            type="email"
-                            autoComplete="email"
-                            value={email}
-                            onChange={(e) => handleFieldChange("email", e.target.value)}
-                            placeholder="Enter Your E-mail id here"
-                            className={`w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.email ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
-                          />
-                          {fieldErrors.email && <p className="text-red-400 text-xs ml-1">{fieldErrors.email}</p>}
-                        </div>
-
-                        <div className="h-4" />
-
-                        <div className="flex flex-col gap-2 mb-1">
-                          <label className="text-white text-xs font-medium">
-                            Password <span className="text-purple-400">*</span>
-                          </label>
-                          <div className="relative">
+                      {step === "login" ? (
+                        <form onSubmit={handleLogin} noValidate className="flex flex-col gap-0">
+                          <div className="flex flex-col gap-2 mb-1">
+                            <label className="text-white text-xs font-medium">
+                              E-mail <span className="text-purple-400">*</span>
+                            </label>
                             <input
-                              type={showPass ? "text" : "password"}
-                              value={password}
-                              onChange={(e) => handleFieldChange("password", e.target.value)}
-                              placeholder="Enter Your Password here"
-                              className={`w-full rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.password ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
+                              type="email"
+                              autoComplete="email"
+                              value={email}
+                              onChange={(e) => handleFieldChange("email", e.target.value)}
+                              placeholder="Enter Your E-mail id here"
+                              className={`w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.email ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
                             />
-                            <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/90 transition-colors">
-                              {showPass ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.584 10.587a2.25 2.25 0 003.182 3.182" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277" />
-                                </svg>
-                              )}
+                            {fieldErrors.email && <p className="text-red-400 text-xs ml-1">{fieldErrors.email}</p>}
+                          </div>
+
+                          <div className="h-4" />
+
+                          <div className="flex flex-col gap-2 mb-1">
+                            <label className="text-white text-xs font-medium">
+                              Password <span className="text-purple-400">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showPass ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => handleFieldChange("password", e.target.value)}
+                                placeholder="Enter Your Password here"
+                                className={`w-full rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.password ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
+                              />
+                              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/90 transition-colors">
+                                {showPass ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                  </svg>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.584 10.587a2.25 2.25 0 003.182 3.182" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277" />
+                                  </svg>
+                                )}
+                              </button>
+                            </div>
+                            {fieldErrors.password && <p className="text-red-400 text-xs ml-1">{fieldErrors.password}</p>}
+                          </div>
+
+                          <div className="flex justify-end mt-3 mb-8">
+                            <button type="button" onClick={() => setMode("forgot")} className="text-purple-400 text-xs hover:text-purple-300 hover:underline transition-colors">
+                              Forgot Password?
                             </button>
                           </div>
-                          {fieldErrors.password && <p className="text-red-400 text-xs ml-1">{fieldErrors.password}</p>}
-                        </div>
 
-                        <div className="flex justify-end mt-3 mb-8">
-                          <button type="button" onClick={() => setMode("forgot")} className="text-purple-400 text-xs hover:text-purple-300 hover:underline transition-colors">
-                            Forgot Password?
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 rounded-xl text-white font-medium text-sm bg-gradient-to-r from-[#4F2593] to-[#853FF9] hover:from-[#5a2ba8] hover:to-[#9550ff] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
+                          >
+                            {loading ? (
+                              <>
+                                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                                </svg>
+                                Signing in...
+                              </>
+                            ) : (
+                              <>
+                                Login to your Account
+                                <MoveRight className="w-4 h-4" />
+                              </>
+                            )}
                           </button>
-                        </div>
+                        </form>
+                      ) : (
+                        <form onSubmit={handleVerifyOtp} className="flex flex-col gap-0">
+                          <div className="flex flex-col gap-2">
+                            <label className="text-white text-xs font-medium">
+                              OTP <span className="text-purple-400">*</span>
+                            </label>
 
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="w-full py-3.5 rounded-xl text-white font-medium text-sm bg-gradient-to-r from-[#4F2593] to-[#853FF9] hover:from-[#5a2ba8] hover:to-[#9550ff] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-                        >
-                          {loading ? (
-                            <>
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                              </svg>
-                              Signing in...
-                            </>
-                          ) : (
-                            <>
-                              Login to your Account
-                              <MoveRight className="w-4 h-4" />
-                            </>
-                          )}
-                        </button>
-                      </form>
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={6}
+                              value={otp}
+                              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                              placeholder="Enter 6-digit OTP"
+                              className="w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none bg-[#0d0b1e]/60 border border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80"
+                            />
+                          </div>
+
+                          <div className="h-6" />
+
+                          <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full py-3.5 rounded-xl text-white font-medium text-sm bg-gradient-to-r from-[#4F2593] to-[#853FF9] hover:from-[#5a2ba8] hover:to-[#9550ff] disabled:opacity-60"
+                          >
+                            {loading ? "Verifying..." : "Verify OTP"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStep("login");
+                              setOtp("");
+                              setError("");
+                            }}
+                            className="mt-4 text-sm text-purple-400 hover:text-purple-300"
+                          >
+                            Back to Login
+                          </button>
+                        </form>
+                      )}
                     </>
                   ) : (
                     <ForgetPassword onBack={() => setMode("login")} embedded />

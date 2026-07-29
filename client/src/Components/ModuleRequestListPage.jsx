@@ -21,6 +21,7 @@ const ModuleRequestListPage = ({
   individualDetailViewPath = "/dashboard/IndividualEvents",
   customHeader,
   useIndividualSubmissionsApi = false,
+  individualEndpoint = "",
   showIndividualTab = false,
 }) => {
   const getToken = () => localStorage.getItem("token");
@@ -34,7 +35,16 @@ const ModuleRequestListPage = ({
     return json.data || [];
   };
 
-  const fetchIndividuals = useIndividualSubmissionsApi
+  const fetchIndividuals = individualEndpoint
+    ? async () => {
+        const res = await fetch(`${API_BASE_URL}${individualEndpoint}`, {
+          headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},
+        });
+        if (!res.ok) throw new Error("Failed to fetch individual submissions");
+        const json = await res.json();
+        return json.data || [];
+      }
+    : useIndividualSubmissionsApi
     ? async () => {
         const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
           headers: getToken() ? { Authorization: `Bearer ${getToken()}` } : {},

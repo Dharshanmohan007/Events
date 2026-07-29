@@ -1,547 +1,563 @@
-  import React, { useEffect, useState } from "react";
-  import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
+import React, { useEffect, useState, useRef } from "react";
+import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
+import FormSubmitted from "./FormSubmitted";
 
-  import {
-    Plus,
-    MapPin,
-    GripVertical,
-    X,
-    ChevronDown,
-    ArrowRight,
-  } from "lucide-react";
+import UploadIcon from "../../assets/upload.svg";
 
-  import { jwtDecode } from "jwt-decode";
-  import { API_BASE } from "../../utils/apiConfig";
+import {
+  Plus,
+  MapPin,
+  GripVertical,
+  X,
+  ChevronDown,
+  ArrowRight,
+} from "lucide-react";
 
-  const createTransportForm = () => ({
-    pickupDateTime: null,
-    dropDateTime: null,
-    pickupLocation: "",
-    dropLocation: "",
-    checkpoints: [],
-    draggedIndex: null,
-    totalPassengers: "",
+import { jwtDecode } from "jwt-decode";
+import { API_BASE } from "../../utils/apiConfig";
 
-    // VEHICLES
-    selectedVehicles: [],
-    vehicleCounts: {},
-    showVehicleDropdown: false,
+const createTransportForm = () => ({
+  pickupDateTime: null,
+  dropDateTime: null,
+  pickupLocation: "",
+  dropLocation: "",
+  checkpoints: [],
+  draggedIndex: null,
+  totalPassengers: "",
 
-    // STAFF
-    staffOptionType: "",
-    showStaffDropdown: false,
-    staffDetails: [],
+  // VEHICLES
+  selectedVehicles: [],
+  vehicleCounts: {},
+  showVehicleDropdown: false,
 
-    specialRequirement: "",
-  });
+  // STAFF
+  staffOptionType: "",
+  showStaffDropdown: false,
+  staffDetails: [],
 
-  const floatingLabelClass =
-    "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+  specialRequirement: "",
+  financeRequired: "No",
+  advanceAmount: "",
+  advancePurpose: "",
+  showFinanceDropdown: false,
+});
 
-  const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+const floatingLabelClass =
+  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
 
-  const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
+const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 
-  const TransportDetailsPage = () => {
-    const [transportForms, setTransportForms] = useState([
-      createTransportForm(),
-    ]);
+const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
 
-    const [employeeId, setEmployeeId] = useState("");
-    const [token, setToken] = useState("");
-    const [validationErrors, setValidationErrors] = useState([]);
-    const [submitMessage, setSubmitMessage] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+const TransportDetailsPage = () => {
+  const [transportForms, setTransportForms] = useState([createTransportForm()]);
 
-    useEffect(() => {
-      const storedToken = localStorage.getItem("token");
+  const [employeeId, setEmployeeId] = useState("");
+  const [token, setToken] = useState("");
+  const [validationErrors, setValidationErrors] = useState([]);
+  const [submitMessage, setSubmitMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
 
-      if (storedToken) {
-        setToken(storedToken);
+  const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
+  const MAX_PRINCIPAL_FILE_SIZE_BYTES =
+    MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
 
-        try {
-          const decoded = jwtDecode(storedToken);
+  const principalInputRef = useRef(null);
+  const [principalApprovalDocument, setPrincipalApprovalDocument] =
+    useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
 
-          if (decoded?.id) {
-            setEmployeeId(decoded.id);
-          }
-        } catch (error) {
-          console.error("Failed to decode token:", error);
+  useEffect(() => {
+    const storedToken = localStorage.getItem("token");
+
+    if (storedToken) {
+      setToken(storedToken);
+
+      try {
+        const decoded = jwtDecode(storedToken);
+
+        if (decoded?.id) {
+          setEmployeeId(decoded.id);
         }
+      } catch (error) {
+        console.error("Failed to decode token:", error);
       }
-    }, []);
+    }
+  }, []);
 
-    const vehicleOptions = ["Bus", "Van", "Car"];
+  const handlePrincipalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
 
-    // =========================
-    // ADD FORM
-    // =========================
-    const addTransportForm = () => {
-      setTransportForms((prev) => [
-        ...prev,
-        createTransportForm(),
-      ]);
-    };
+    if (!selectedFile) return;
 
-    // =========================
-    // UPDATE FIELD
-    // =========================
-    const updateFormField = (
-      formIndex,
-      field,
-      value
-    ) => {
-      const updatedForms = [...transportForms];
+    if (selectedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      e.target.value = "";
+      return;
+    }
 
-      updatedForms[formIndex][field] = value;
+    if (selectedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      e.target.value = "";
+      return;
+    }
 
-      setTransportForms(updatedForms);
-    };
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(selectedFile);
+  };
 
-    // =========================
-    // CHECKPOINTS
-    // =========================
-    const addCheckpoint = (formIndex) => {
-      const updatedForms = [...transportForms];
+  const handlePrincipalDrop = (e) => {
+    e.preventDefault();
 
-      updatedForms[formIndex].checkpoints.push("");
+    const droppedFile = e.dataTransfer.files[0];
 
-      setTransportForms(updatedForms);
-    };
+    if (!droppedFile) return;
 
-    const updateCheckpoint = (
-      formIndex,
-      checkpointIndex,
-      value
-    ) => {
-      const updatedForms = [...transportForms];
+    if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+    }
 
-      updatedForms[formIndex].checkpoints[
-        checkpointIndex
-      ] = value;
+    if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(
+        `File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`,
+      );
+      return;
+    }
 
-      setTransportForms(updatedForms);
-    };
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(droppedFile);
+  };
 
-    const removeCheckpoint = (
-      formIndex,
-      checkpointIndex
-    ) => {
-      const updatedForms = [...transportForms];
+  const handlePrincipalRemove = (e) => {
+    e.stopPropagation();
+    setPrincipalApprovalDocument(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) {
+      principalInputRef.current.value = "";
+    }
+  };
 
-      updatedForms[formIndex].checkpoints =
-        updatedForms[formIndex].checkpoints.filter(
-          (_, i) => i !== checkpointIndex
-        );
+  const openPrincipalFilePicker = () => {
+    if (principalInputRef.current) {
+      principalInputRef.current.click();
+    }
+  };
 
-      setTransportForms(updatedForms);
-    };
+  const handleUploadDragOver = (e) => e.preventDefault();
 
-    // =========================
-    // DRAG
-    // =========================
-    const handleDragStart = (
-      formIndex,
-      index
-    ) => {
-      const updatedForms = [...transportForms];
+  const vehicleOptions = ["Bus", "Van", "Car"];
 
-      updatedForms[formIndex].draggedIndex =
-        index;
+  // =========================
+  // ADD FORM
+  // =========================
+  const addTransportForm = () => {
+    setTransportForms((prev) => [...prev, createTransportForm()]);
+  };
 
-      setTransportForms(updatedForms);
-    };
+  // =========================
+  // UPDATE FIELD
+  // =========================
+  const updateFormField = (formIndex, field, value) => {
+    const updatedForms = [...transportForms];
 
-    const handleDragOver = (e) => {
-      e.preventDefault();
-    };
+    updatedForms[formIndex][field] = value;
 
-    const handleDrop = (
-      formIndex,
-      dropIndex
-    ) => {
-      const updatedForms = [...transportForms];
+    setTransportForms(updatedForms);
+  };
 
-      const draggedIndex =
-        updatedForms[formIndex].draggedIndex;
+  // =========================
+  // CHECKPOINTS
+  // =========================
+  const addCheckpoint = (formIndex) => {
+    const updatedForms = [...transportForms];
 
-      if (
-        draggedIndex === null ||
-        draggedIndex === dropIndex
-      ) {
-        return;
-      }
+    updatedForms[formIndex].checkpoints.push("");
 
-      const checkpoints = [
-        ...updatedForms[formIndex].checkpoints,
-      ];
+    setTransportForms(updatedForms);
+  };
 
-      const draggedItem =
-        checkpoints[draggedIndex];
+  const updateCheckpoint = (formIndex, checkpointIndex, value) => {
+    const updatedForms = [...transportForms];
 
-      checkpoints.splice(draggedIndex, 1);
+    updatedForms[formIndex].checkpoints[checkpointIndex] = value;
 
-      checkpoints.splice(dropIndex, 0, draggedItem);
+    setTransportForms(updatedForms);
+  };
 
-      updatedForms[formIndex].checkpoints =
-        checkpoints;
+  const removeCheckpoint = (formIndex, checkpointIndex) => {
+    const updatedForms = [...transportForms];
 
-      updatedForms[formIndex].draggedIndex =
-        null;
+    updatedForms[formIndex].checkpoints = updatedForms[
+      formIndex
+    ].checkpoints.filter((_, i) => i !== checkpointIndex);
 
-      setTransportForms(updatedForms);
-    };
+    setTransportForms(updatedForms);
+  };
 
-    // =========================
-    // STAFF
-    // =========================
-    const updateStaffDetail = (
-      formIndex,
-      staffIndex,
-      field,
-      value
-    ) => {
-      const updatedForms = [...transportForms];
+  // =========================
+  // DRAG
+  // =========================
+  const handleDragStart = (formIndex, index) => {
+    const updatedForms = [...transportForms];
 
-      updatedForms[formIndex].staffDetails[
-        staffIndex
-      ][field] = value;
+    updatedForms[formIndex].draggedIndex = index;
 
-      setTransportForms(updatedForms);
-    };
+    setTransportForms(updatedForms);
+  };
 
-    // =========================
-    // VEHICLE LABELS
-    // =========================
-    const getVehicleLabel = (
-      vehicleType
-    ) => {
-      switch (vehicleType) {
-        case "Car":
-          return "How many cars needed *";
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
-        case "Bus":
-          return "How many buses needed *";
+  const handleDrop = (formIndex, dropIndex) => {
+    const updatedForms = [...transportForms];
 
-        case "Van":
-          return "How many vans needed *";
+    const draggedIndex = updatedForms[formIndex].draggedIndex;
 
-        default:
-          return "How many vehicles needed *";
-      }
-    };
+    if (draggedIndex === null || draggedIndex === dropIndex) {
+      return;
+    }
 
-    const getVehiclePlaceholder = (
-      vehicleType
-    ) => {
-      switch (vehicleType) {
-        case "Car": 
-          return "Enter number of cars";
+    const checkpoints = [...updatedForms[formIndex].checkpoints];
 
-        case "Bus":
-          return "Enter number of buses";
+    const draggedItem = checkpoints[draggedIndex];
 
-        case "Van":
-          return "Enter number of vans";
+    checkpoints.splice(draggedIndex, 1);
 
-        default:
-          return "Enter vehicle count";
-      }
-    };
+    checkpoints.splice(dropIndex, 0, draggedItem);
 
-    // =========================
-    // HELPERS
-    // =========================
-      // Convert UTC ISO string back to local date for display
-      const convertUTCToLocal = (utcString) => {
-        if (!utcString) return null;
-        const date = new Date(utcString);
-        return date; // new Date() automatically interprets as local when used with getHours(), etc.
-      };
+    updatedForms[formIndex].checkpoints = checkpoints;
 
-      // Format date/time in Indian Standard Time (IST / Asia/Kolkata)
-      const formatInIST = (date) => {
-        if (!date) return "N/A";
-        try {
-          return new Intl.DateTimeFormat("en-IN", {
-            timeZone: "Asia/Kolkata",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit",
-            hour12: true,
-          }).format(date);
-        } catch (e) {
-          return date.toLocaleString();
-        }
-      };
+    updatedForms[formIndex].draggedIndex = null;
 
-      // Format a Date into ISO-like string that preserves local timezone offset
-      const formatDateWithOffset = (date) => {
-        if (!date) return null;
-        const pad = (n) => String(n).padStart(2, "0");
-        const y = date.getFullYear();
-        const mo = pad(date.getMonth() + 1);
-        const d = pad(date.getDate());
-        const hh = pad(date.getHours());
-        const mm = pad(date.getMinutes());
-        const ss = pad(date.getSeconds());
-        const offsetMin = -date.getTimezoneOffset();
-        const sign = offsetMin >= 0 ? "+" : "-";
-        const absOff = Math.abs(offsetMin);
-        const offH = pad(Math.floor(absOff / 60));
-        const offM = pad(absOff % 60);
+    setTransportForms(updatedForms);
+  };
 
-        return `${y}-${mo}-${d}T${hh}:${mm}:${ss}${sign}${offH}:${offM}`;
-      };
+  // =========================
+  // STAFF
+  // =========================
+  const updateStaffDetail = (formIndex, staffIndex, field, value) => {
+    const updatedForms = [...transportForms];
 
-    const buildTransportPayload = (
-      form
-    ) => {
-      return {
-        employee:
-          employeeId ||
-          "6a0411af4579d3137b255e70",
+    updatedForms[formIndex].staffDetails[staffIndex][field] = value;
 
-        pickupDateTime:
-          form.pickupDateTime
-            ? new Date(
-                form.pickupDateTime.getTime() -
-                  form.pickupDateTime.getTimezoneOffset() *
-                    60000
-              ).toISOString()
-            : null,
+    setTransportForms(updatedForms);
+  };
 
-        dropDateTime:
-          form.dropDateTime
-            ? new Date(
-                form.dropDateTime.getTime() -
-                  form.dropDateTime.getTimezoneOffset() *
-                    60000
-              ).toISOString()
-            : null,
+  // =========================
+  // VEHICLE LABELS
+  // =========================
+  const getVehicleLabel = (vehicleType) => {
+    switch (vehicleType) {
+      case "Car":
+        return "How many cars needed *";
 
-        pickupLocation:
-          form.pickupLocation.trim(),
+      case "Bus":
+        return "How many buses needed *";
 
-        dropLocation:
-          form.dropLocation.trim(),
+      case "Van":
+        return "How many vans needed *";
 
-        checkpoints: (
-          form.checkpoints || []
-        ).map((location) => ({
+      default:
+        return "How many vehicles needed *";
+    }
+  };
+
+  const getVehiclePlaceholder = (vehicleType) => {
+    switch (vehicleType) {
+      case "Car":
+        return "Enter number of cars";
+
+      case "Bus":
+        return "Enter number of buses";
+
+      case "Van":
+        return "Enter number of vans";
+
+      default:
+        return "Enter vehicle count";
+    }
+  };
+
+  // =========================
+  // HELPERS
+  // =========================
+  // Convert UTC ISO string back to local date for display
+  const convertUTCToLocal = (utcString) => {
+    if (!utcString) return null;
+    const date = new Date(utcString);
+    return date; // new Date() automatically interprets as local when used with getHours(), etc.
+  };
+
+  // Format date/time in Indian Standard Time (IST / Asia/Kolkata)
+  const formatInIST = (date) => {
+    if (!date) return "N/A";
+    try {
+      return new Intl.DateTimeFormat("en-IN", {
+        timeZone: "Asia/Kolkata",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }).format(date);
+    } catch (e) {
+      return date.toLocaleString();
+    }
+  };
+
+  // Format a Date into ISO-like string that preserves local timezone offset
+  const formatDateWithOffset = (date) => {
+    if (!date) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    const y = date.getFullYear();
+    const mo = pad(date.getMonth() + 1);
+    const d = pad(date.getDate());
+    const hh = pad(date.getHours());
+    const mm = pad(date.getMinutes());
+    const ss = pad(date.getSeconds());
+    const offsetMin = -date.getTimezoneOffset();
+    const sign = offsetMin >= 0 ? "+" : "-";
+    const absOff = Math.abs(offsetMin);
+    const offH = pad(Math.floor(absOff / 60));
+    const offM = pad(absOff % 60);
+
+    return `${y}-${mo}-${d}T${hh}:${mm}:${ss}${sign}${offH}:${offM}`;
+  };
+
+  const buildTransportPayload = (form) => {
+    const formData = new FormData();
+
+    formData.append("employee", employeeId || "6a0411af4579d3137b255e70");
+
+    if (principalApprovalDocument) {
+      formData.append("principalApprovalForm", principalApprovalDocument);
+    }
+
+    formData.append(
+      "pickupDateTime",
+      form.pickupDateTime
+        ? new Date(
+            form.pickupDateTime.getTime() -
+              form.pickupDateTime.getTimezoneOffset() * 60000,
+          ).toISOString()
+        : "",
+    );
+
+    formData.append(
+      "dropDateTime",
+      form.dropDateTime
+        ? new Date(
+            form.dropDateTime.getTime() -
+              form.dropDateTime.getTimezoneOffset() * 60000,
+          ).toISOString()
+        : "",
+    );
+
+    formData.append("pickupLocation", form.pickupLocation.trim());
+
+    formData.append("dropLocation", form.dropLocation.trim());
+
+    formData.append(
+      "checkpoints",
+      JSON.stringify(
+        (form.checkpoints || []).map((location) => ({
           location,
         })),
+      ),
+    );
 
-        totalPassengers:
-          Number(form.totalPassengers) || 0,
+    formData.append("totalPassengers", Number(form.totalPassengers) || 0);
 
-        vehicles: (
-          form.selectedVehicles || []
-        ).map((vehicle) => ({
+    formData.append(
+      "vehicles",
+      JSON.stringify(
+        (form.selectedVehicles || []).map((vehicle) => ({
           type: vehicle,
-          count:
-            Number(
-              form.vehicleCounts?.[vehicle]
-            ) || 0,
+          count: Number(form.vehicleCounts?.[vehicle]) || 0,
         })),
+      ),
+    );
 
-        numberOfBusNeeded:
-          Number(
-            form.vehicleCounts?.["Bus"]
-          ) || 0,
+    formData.append(
+      "numberOfBusNeeded",
+      Number(form.vehicleCounts?.["Bus"]) || 0,
+    );
 
-        numberOfAccompanyingStaff:
-          Number(form.staffOptionType) || 0,
+    formData.append(
+      "numberOfAccompanyingStaff",
+      Number(form.staffOptionType) || 0,
+    );
 
-        accompanyingStaff: (
-          form.staffDetails || []
-        ).map((staff) => ({
+    formData.append(
+      "accompanyingStaff",
+      JSON.stringify(
+        (form.staffDetails || []).map((staff) => ({
           name: staff.name,
           mobile: Number(staff.mobile),
         })),
+      ),
+    );
 
-        specialRequirements:
-          form.specialRequirement,
+    formData.append("specialRequirements", form.specialRequirement);
 
-        status: "Pending",
-      };
-    };
+    formData.append("financeRequired", form.financeRequired);
+    formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
+    formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
 
-    // =========================
-    // SUBMIT
-    // =========================
-    const handleSubmit = async () => {
-      const errors = [];
+    formData.append("status", "Pending");
 
-      transportForms.forEach(
-        (form, index) => {
-          if (!form.pickupDateTime) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Pickup Date & Time is required`
-            );
-          }
+    return formData;
+  };
 
-          if (!form.dropDateTime) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Drop Date & Time is required`
-            );
-          }
+  // =========================
+  // SUBMIT
+  // =========================
+  const handleSubmit = async () => {
+    const errors = [];
 
-          if (
-            !form.pickupLocation.trim()
-          ) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Pickup Location is required`
-            );
-          }
+    // if (!principalApprovalDocument) {
+    //   errors.push("Principal Approval Form is required.");
+    // }
 
-          if (
-            !form.dropLocation.trim()
-          ) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Drop Location is required`
-            );
-          }
-
-          if (!form.totalPassengers) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Total passengers required`
-            );
-          }
-
-          if (
-            !form.selectedVehicles ||
-            form.selectedVehicles.length === 0
-          ) {
-            errors.push(
-              `Form ${
-                index + 1
-              }: Vehicle type required`
-            );
-          }
-
-          (
-            form.selectedVehicles || []
-          ).forEach((vehicle) => {
-            if (
-              !form.vehicleCounts?.[vehicle]
-            ) {
-              errors.push(
-                `Form ${
-                  index + 1
-                }: ${vehicle} count required`
-              );
-            }
-          });
-        }
-      );
-
-      setValidationErrors(errors);
-
-      if (errors.length) return;
-
-      setIsSubmitting(true);
-
-      try {
-        for (const form of transportForms) {
-          const payload =
-            buildTransportPayload(form);
-
-          // Log payload to verify timezone handling
-          console.log(
-            "📤 Transport Payload Sent:",
-            JSON.stringify(payload, null, 2)
-          );
-          console.log(
-            "✅ Pickup sent as:",
-            payload.pickupDateTime
-          );
-          console.log(
-            "✅ Drop sent as:",
-            payload.dropDateTime
-          );
-
-          const response = await fetch(
-            `${API_BASE}/api/transports`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type":
-                  "application/json",
-                ...(token && {
-                  Authorization: `Bearer ${token}`,
-                }),
-              },
-              body: JSON.stringify(payload),
-            }
-          );
-
-          const responseData =
-            await response.json();
-
-          // Log response with IST formatting
-          console.log(
-            "📥 Response received:",
-            responseData.data
-          );
-          console.log(
-            "⏰ Pickup stored as (UTC):",
-            responseData.data?.pickupDateTime
-          );
-          const pickupIST = responseData.data?.pickupDateTime
-            ? formatInIST(
-                new Date(
-                  responseData.data.pickupDateTime
-                )
-              )
-            : "N/A";
-          console.log(
-            "🇮🇳 Pickup displayed as (IST):",
-            pickupIST
-          );
-          const dropIST = responseData.data?.dropDateTime
-            ? formatInIST(
-                new Date(
-                  responseData.data.dropDateTime
-                )
-              )
-            : "N/A";
-          console.log(
-            "🇮🇳 Drop displayed as (IST):",
-            dropIST
-          );
-        }
-
-        setSubmitMessage(
-          "All transport forms submitted successfully."
-        );
-
-        setValidationErrors([]);
-      } catch (error) {
-        setValidationErrors([
-          "Unable to submit transport forms.",
-        ]);
-      } finally {
-        setIsSubmitting(false);
+    transportForms.forEach((form, index) => {
+      if (!form.pickupDateTime) {
+        errors.push(`Form ${index + 1}: Pickup Date & Time is required`);
       }
-    };
 
-    return (
-      <div className="transport-form min-h-screen bg-[#141428] text-white p-5">
-        <style>{`
+      if (!form.dropDateTime) {
+        errors.push(`Form ${index + 1}: Drop Date & Time is required`);
+      }
+
+      if (!form.pickupLocation.trim()) {
+        errors.push(`Form ${index + 1}: Pickup Location is required`);
+      }
+
+      if (!form.dropLocation.trim()) {
+        errors.push(`Form ${index + 1}: Drop Location is required`);
+      }
+
+      if (!form.totalPassengers) {
+        errors.push(`Form ${index + 1}: Total passengers required`);
+      }
+
+      if (!form.selectedVehicles || form.selectedVehicles.length === 0) {
+        errors.push(`Form ${index + 1}: Vehicle type required`);
+      }
+
+      (form.selectedVehicles || []).forEach((vehicle) => {
+        if (!form.vehicleCounts?.[vehicle]) {
+          errors.push(`Form ${index + 1}: ${vehicle} count required`);
+        }
+      });
+
+      // Finance validation
+      if (form.financeRequired === "Yes") {
+        if (!form.advanceAmount) {
+          errors.push(`Form ${index + 1}: Advance amount is required.`);
+        }
+
+        if (!form.advancePurpose || !form.advancePurpose.trim()) {
+          errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+      }
+    });
+
+    setValidationErrors(errors);
+    setSubmitMessage("");
+
+    if (errors.length) return;
+
+    setIsSubmitting(true);
+    setSubmitSuccess(true);
+
+    try {
+      for (const form of transportForms) {
+        const payload = buildTransportPayload(form);
+
+        // Log payload to verify timezone handling
+        for (let pair of payload.entries()) {
+          console.log(pair[0], pair[1]);
+        }
+        console.log("✅ Pickup sent as:", payload.pickupDateTime);
+        console.log("✅ Drop sent as:", payload.dropDateTime);
+
+        const response = await fetch(`${API_BASE}/api/transports`, {
+          method: "POST",
+          headers: {
+            ...(token && {
+              Authorization: `Bearer ${token}`,
+            }),
+          },
+          body: payload,
+        });
+
+        // The API should return JSON, but Express sends an HTML error page for
+        // unhandled server errors. Read the body first so that the useful error
+        // is not hidden behind a `response.json()` parsing error.
+        const responseText = await response.text();
+        let responseData;
+
+        try {
+          responseData = responseText ? JSON.parse(responseText) : null;
+        } catch {
+          responseData = null;
+        }
+
+        if (!response.ok) {
+          const serverMessage =
+            responseData?.message ||
+            responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
+            `Transport submission failed (HTTP ${response.status}).`;
+
+          console.error("Transport API error:", {
+            status: response.status,
+            response: responseData || responseText,
+          });
+          throw new Error(serverMessage);
+        }
+
+        // Log response with IST formatting
+        console.log("📥 Response received:", responseData?.data);
+        console.log(
+          "⏰ Pickup stored as (UTC):",
+          responseData?.data?.pickupDateTime,
+        );
+        const pickupIST = responseData?.data?.pickupDateTime
+          ? formatInIST(new Date(responseData.data.pickupDateTime))
+          : "N/A";
+        console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
+        const dropIST = responseData?.data?.dropDateTime
+          ? formatInIST(new Date(responseData.data.dropDateTime))
+          : "N/A";
+        console.log("🇮🇳 Drop displayed as (IST):", dropIST);
+      }
+
+      setValidationErrors([]);
+    } catch (error) {
+      console.error("Transport submission failed:", error);
+      setValidationErrors([
+        error.message || "Unable to submit transport forms.",
+      ]);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (submitSuccess) {
+    return <FormSubmitted advanceData={transportForms[0] || {}} />;
+  }
+
+  return (
+    <div className="transport-form min-h-screen bg-[#141428] text-white p-5">
+      <style>{`
           .transport-form input:focus,
           .transport-form textarea:focus,
           .transport-form button:focus,
@@ -552,16 +568,123 @@
           }
         `}</style>
 
-        <h1 className="text-3xl font-bold mb-6">
-          Transport Details Form
-        </h1>
+      <h1 className="text-3xl font-bold mb-6">Transport Details Form</h1>
 
-        {/* ADD BUTTON */}
-        <div className="flex justify-end mb-5">
-          <button
-            type="button"
-            onClick={addTransportForm}
-            className="
+      <div className="mb-6">
+        <label className="block mb-2 text-sm text-white">
+          Principal Approval Form (without uploading this document you cannot
+          proceed further)
+        </label>
+
+        <div
+          onClick={
+            !principalApprovalDocument ? openPrincipalFilePicker : undefined
+          }
+          onDrop={handlePrincipalDrop}
+          onDragOver={handleUploadDragOver}
+          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="10"
+              ry="10"
+              fill="none"
+              stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+              strokeWidth="2"
+              strokeDasharray="10 4"
+            />
+          </svg>
+
+          <img
+            src={UploadIcon}
+            alt="upload"
+            className="w-7 h-8 opacity-80 z-10 flex-shrink-0"
+          />
+
+          {principalApprovalDocument ? (
+            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+
+                <span className="text-purple-300 text-sm font-medium">
+                  {principalApprovalDocument.name}
+                </span>
+
+                <span className="text-gray-400 text-xs">
+                  ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)}{" "}
+                  MB)
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePrincipalRemove}
+                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="z-10">
+              Drag and drop files here or{" "}
+              <span className="text-purple-400 underline">choose file</span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Only PDF files supported • Max file size: 1MB
+              </span>
+            </p>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          ref={principalInputRef}
+          onChange={handlePrincipalFileChange}
+          className="hidden"
+        />
+
+        {principalFileError && (
+          <p className="text-red-400 text-xs mt-1">{principalFileError}</p>
+        )}
+      </div>
+
+      {/* ADD BUTTON */}
+      <div className="flex justify-end mb-5">
+        <button
+          type="button"
+          onClick={addTransportForm}
+          className="
               flex
               items-center
               gap-2
@@ -572,18 +695,17 @@
               rounded-md
               transition-all
             "
-          >
-            <Plus size={18} />
-            Add
-          </button>
-        </div>
+        >
+          <Plus size={18} />
+          Add
+        </button>
+      </div>
 
-        {/* FORMS */}
-        {transportForms.map(
-          (form, formIndex) => (
-            <div
-              key={formIndex}
-              className="
+      {/* FORMS */}
+      {transportForms.map((form, formIndex) => (
+        <div
+          key={formIndex}
+          className="
                 bg-[#1b1b35]
                 border
                 border-[#2a2a40]
@@ -591,24 +713,23 @@
                 p-6
                 mb-8
               "
-            >
-             <div className="flex items-center justify-between mb-6">
-  <h2 className="text-2xl font-bold text-[#8b5cf6]">
-    Transport Form {formIndex + 1}
-  </h2>
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-[#8b5cf6]">
+              Transport Form {formIndex + 1}
+            </h2>
 
- {formIndex !== 0 && (
-  <button
-    type="button"
-    onClick={() => {
-      const updatedForms =
-        transportForms.filter(
-          (_, index) => index !== formIndex
-        );
+            {formIndex !== 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const updatedForms = transportForms.filter(
+                    (_, index) => index !== formIndex,
+                  );
 
-      setTransportForms(updatedForms);
-    }}
-    className="
+                  setTransportForms(updatedForms);
+                }}
+                className="
       w-[42px]
       h-[42px]
       p-2
@@ -620,67 +741,57 @@
       transition-all
      
     "
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"  
-      width="36"
-      height="36"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#ff2b2b"
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M3 6h18" />
-      <path d="M8 6V4h8v2" />
-      <path d="M19 6l-1 14H6L5 6" />
-      <path d="M10 11v6" />
-      <path d="M14 11v6" />
-    </svg>
-  </button>
-)}
-</div>
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#ff2b2b"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v6" />
+                  <path d="M14 11v6" />
+                </svg>
+              </button>
+            )}
+          </div>
 
-              {/* DATE PICKERS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <CustomDateTimePicker
-                  label="Pickup Date & Time *"
-                  value={form.pickupDateTime}
-                  onChange={(date) =>
-                    updateFormField(
-                      formIndex,
-                      "pickupDateTime",
-                      date
-                    )
-                  }
-                  placeholder="Select pickup date & time"
-                  labelBgClass="bg-[#1b1b35]"
-                />
+          {/* DATE PICKERS */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <CustomDateTimePicker
+              label="Pickup Date & Time *"
+              value={form.pickupDateTime}
+              onChange={(date) =>
+                updateFormField(formIndex, "pickupDateTime", date)
+              }
+              placeholder="Select pickup date & time"
+              labelBgClass="bg-[#1b1b35]"
+            />
 
-                <CustomDateTimePicker
-                  label="Drop Date & Time *"
-                  value={form.dropDateTime}
-                  onChange={(date) =>
-                    updateFormField(
-                      formIndex,
-                      "dropDateTime",
-                      date
-                    )
-                  }
-                  placeholder="Select drop date & time"
-                  labelBgClass="bg-[#1b1b35]"
-                />
-              </div>
+            <CustomDateTimePicker
+              label="Drop Date & Time *"
+              value={form.dropDateTime}
+              onChange={(date) =>
+                updateFormField(formIndex, "dropDateTime", date)
+              }
+              placeholder="Select drop date & time"
+              labelBgClass="bg-[#1b1b35]"
+            />
+          </div>
 
-              {/* PICKUP */}
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>
-                  Pickup Location *
-                </label>
+          {/* PICKUP */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Pickup Location *</label>
 
-                <div
-                  className="
+            <div
+              className="
                     flex
                     items-center
                     gap-3
@@ -695,75 +806,54 @@
                     focus-within:ring-[#3b82f6]
                     transition-all
                   "
-                >
-                  <MapPin size={18} />
+            >
+              <MapPin size={18} />
 
-                  <input
-                    type="text"
-                    value={form.pickupLocation}
-                    onChange={(e) =>
-                      updateFormField(
-                        formIndex,
-                        "pickupLocation",
-                        e.target.value
-                      )
-                    }
-                    placeholder="Enter pickup location"
-                    className="
+              <input
+                type="text"
+                value={form.pickupLocation}
+                onChange={(e) =>
+                  updateFormField(formIndex, "pickupLocation", e.target.value)
+                }
+                placeholder="Enter pickup location"
+                className="
                       bg-transparent
                       outline-none
                       w-full
                       text-white
                     "
-                  />
-                </div>
-              </div>
+              />
+            </div>
+          </div>
 
-              {/* CHECKPOINT */}
-              <div className="flex justify-center mt-5">
-                <button
-                  type="button"
-                  onClick={() =>
-                    addCheckpoint(formIndex)
+          {/* CHECKPOINT */}
+          <div className="flex justify-center mt-5">
+            <button
+              type="button"
+              onClick={() => addCheckpoint(formIndex)}
+              className="flex items-center gap-2 text-[#9b5cff] font-medium"
+            >
+              <Plus
+                size={16}
+                className="bg-[#9b5cff] rounded-full p-0.5 text-white"
+              />
+              Add Checkpoint
+            </button>
+          </div>
+
+          {/* CHECKPOINTS */}
+          {(form.checkpoints || []).length > 0 && (
+            <div className="mt-5 space-y-3">
+              {(form.checkpoints || []).map((checkpoint, checkpointIndex) => (
+                <div
+                  key={checkpointIndex}
+                  draggable
+                  onDragStart={() =>
+                    handleDragStart(formIndex, checkpointIndex)
                   }
-                  className="flex items-center gap-2 text-[#9b5cff] font-medium"
-                >
-                  <Plus
-                    size={16}
-                    className="bg-[#9b5cff] rounded-full p-0.5 text-white"
-                  />
-                  Add Checkpoint
-                </button>
-              </div>
-
-              {/* CHECKPOINTS */}
-              {(form.checkpoints || []).length >
-                0 && (
-                <div className="mt-5 space-y-3">
-                  {(form.checkpoints || []).map(
-                    (
-                      checkpoint,
-                      checkpointIndex
-                    ) => (
-                      <div
-                        key={checkpointIndex}
-                        draggable
-                        onDragStart={() =>
-                          handleDragStart(
-                            formIndex,
-                            checkpointIndex
-                          )
-                        }
-                        onDragOver={
-                          handleDragOver
-                        }
-                        onDrop={() =>
-                          handleDrop(
-                            formIndex,
-                            checkpointIndex
-                          )
-                        }
-                        className="
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(formIndex, checkpointIndex)}
+                  className="
                           bg-[#282846]
                           rounded-md
                           px-4
@@ -772,29 +862,24 @@
                           items-center
                           justify-between
                         "
-                      >
-                        <div className="flex  items-center gap-3 w-full">
-                          <GripVertical
-                            size={18}
-                            className="text-[#8d8da8]"
-                          />
+                >
+                  <div className="flex  items-center gap-3 w-full">
+                    <GripVertical size={18} className="text-[#8d8da8]" />
 
-                          <MapPin size={18} />
+                    <MapPin size={18} />
 
-                          <input
-                            type="text"
-                            value={checkpoint}
-                            onChange={(e) =>
-                              updateCheckpoint(
-                                formIndex,
-                                checkpointIndex,
-                                e.target.value
-                              )
-                            }
-                            placeholder={`Checkpoint ${
-                              checkpointIndex + 1
-                            }`}
-                            className="
+                    <input
+                      type="text"
+                      value={checkpoint}
+                      onChange={(e) =>
+                        updateCheckpoint(
+                          formIndex,
+                          checkpointIndex,
+                          e.target.value,
+                        )
+                      }
+                      placeholder={`Checkpoint ${checkpointIndex + 1}`}
+                      className="
                               bg-transparent
                               outline-none
                               text-white
@@ -808,37 +893,26 @@
                               focus:ring-0
                               focus:ring-[#3b82f6]
                             "
-                          />
-                        </div>
+                    />
+                  </div>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            removeCheckpoint(
-                              formIndex,
-                              checkpointIndex
-                            )
-                          }
-                        >
-                          <X
-                            size={18}
-                            className="text-red-500"
-                          />
-                        </button>
-                      </div>
-                    )
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeCheckpoint(formIndex, checkpointIndex)}
+                  >
+                    <X size={18} className="text-red-500" />
+                  </button>
                 </div>
-              )}
+              ))}
+            </div>
+          )}
 
-              {/* DROP */}
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>
-                  Drop Location *
-                </label>
+          {/* DROP */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Drop Location *</label>
 
-                <div
-                  className="
+            <div
+              className="
                     flex
                     items-center
                     gap-3
@@ -853,50 +927,41 @@
                     focus-within:ring-[#3b82f6]
                     transition-all
                   "
-                >
-                  <MapPin size={18} />
+            >
+              <MapPin size={18} />
 
-                  <input
-                    type="text"
-                    value={form.dropLocation}
-                    onChange={(e) =>
-                      updateFormField(
-                        formIndex,
-                        "dropLocation",
-                        e.target.value
-                      )
-                    }
-                    placeholder="Enter drop location"
-                    className="
+              <input
+                type="text"
+                value={form.dropLocation}
+                onChange={(e) =>
+                  updateFormField(formIndex, "dropLocation", e.target.value)
+                }
+                placeholder="Enter drop location"
+                className="
                       bg-transparent
                       outline-none
                       w-full
                       text-white
                     "
-                  />
-                </div>
-              </div>
+              />
+            </div>
+          </div>
 
-              {/* PASSENGERS + VEHICLES */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                <div className="relative">
-                  <label className={formFloatingLabelClass}>
-                    Total Number of
-                    Passengers *
-                  </label>
+          {/* PASSENGERS + VEHICLES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+            <div className="relative">
+              <label className={formFloatingLabelClass}>
+                Total Number of Passengers *
+              </label>
 
-                  <input
-                    type="number"
-                    value={form.totalPassengers}
-                    onChange={(e) =>
-                      updateFormField(
-                        formIndex,
-                        "totalPassengers",
-                        e.target.value
-                      )
-                    }
-                    placeholder="Enter total passengers"
-                    className="
+              <input
+                type="number"
+                value={form.totalPassengers}
+                onChange={(e) =>
+                  updateFormField(formIndex, "totalPassengers", e.target.value)
+                }
+                placeholder="Enter total passengers"
+                className="
                       w-full
                      
                       border
@@ -911,25 +976,25 @@
                     transition-all
                     
                     "
-                  />
-                </div>
+              />
+            </div>
 
-                {/* VEHICLE DROPDOWN */}
-                <div className="relative">
-                  <label className={formFloatingLabelClass}>
-                    Type of Vehicle Needed *
-                  </label>
+            {/* VEHICLE DROPDOWN */}
+            <div className="relative">
+              <label className={formFloatingLabelClass}>
+                Type of Vehicle Needed *
+              </label>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      updateFormField(
-                        formIndex,
-                        "showVehicleDropdown",
-                        !form.showVehicleDropdown
-                      )
-                    }
-                    className="
+              <button
+                type="button"
+                onClick={() =>
+                  updateFormField(
+                    formIndex,
+                    "showVehicleDropdown",
+                    !form.showVehicleDropdown,
+                  )
+                }
+                className="
                       transport-select-control
                       w-full
                      
@@ -949,84 +1014,52 @@
                       hover:border-[#3b82f6]
                       transition-all
                     "
-                  >
-                    <span className="truncate">
-                      {(form.selectedVehicles ||
-                        []).length > 0
-                        ? form.selectedVehicles.join(
-                            ", "
-                          )
-                        : "Select Vehicle"}
-                    </span>
+              >
+                <span className="truncate">
+                  {(form.selectedVehicles || []).length > 0
+                    ? form.selectedVehicles.join(", ")
+                    : "Select Vehicle"}
+                </span>
 
-                    <ChevronDown size={18} />
-                  </button>
+                <ChevronDown size={18} />
+              </button>
 
-                  {form.showVehicleDropdown && (
-                    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
-                      {vehicleOptions.map(
-                        (option, index) => {
-                          const isSelected =
-                            (
-                              form.selectedVehicles ||
-                              []
-                            ).includes(option);
+              {form.showVehicleDropdown && (
+                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+                  {vehicleOptions.map((option, index) => {
+                    const isSelected = (form.selectedVehicles || []).includes(
+                      option,
+                    );
 
-                          return (
-                            <div
-                              key={index}
-                              onClick={() => {
-                                const updatedForms =
-                                  [
-                                    ...transportForms,
-                                  ];
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          const updatedForms = [...transportForms];
 
-                                const currentVehicles =
-                                  updatedForms[
-                                    formIndex
-                                  ]
-                                    .selectedVehicles ||
-                                  [];
+                          const currentVehicles =
+                            updatedForms[formIndex].selectedVehicles || [];
 
-                                let updatedVehicles =
-                                  [];
+                          let updatedVehicles = [];
 
-                                if (
-                                  isSelected
-                                ) {
-                                  updatedVehicles =
-                                    currentVehicles.filter(
-                                      (
-                                        v
-                                      ) =>
-                                        v !==
-                                        option
-                                    );
+                          if (isSelected) {
+                            updatedVehicles = currentVehicles.filter(
+                              (v) => v !== option,
+                            );
 
-                                  delete updatedForms[
-                                    formIndex
-                                  ]
-                                    .vehicleCounts?.[
-                                    option
-                                  ];
-                                } else {
-                                  updatedVehicles =
-                                    [
-                                      ...currentVehicles,
-                                      option,
-                                    ];
-                                }
+                            delete updatedForms[formIndex].vehicleCounts?.[
+                              option
+                            ];
+                          } else {
+                            updatedVehicles = [...currentVehicles, option];
+                          }
 
-                                updatedForms[
-                                  formIndex
-                                ].selectedVehicles =
-                                  updatedVehicles;
+                          updatedForms[formIndex].selectedVehicles =
+                            updatedVehicles;
 
-                                setTransportForms(
-                                  updatedForms
-                                );
-                              }}
-                                className={`
+                          setTransportForms(updatedForms);
+                        }}
+                        className={`
                                  px-4
                                  py-3
                                  cursor-pointer
@@ -1039,84 +1072,52 @@
                                      : "hover:bg-[#492A6F]"
                                  }
                                `}
-                            >
-                              <span>
-                                {option}
-                              </span>
-
-                              {isSelected && (
-                                <span>✓</span>
-                              )}
-                            </div>
-                          );
-                        }
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* VEHICLE COUNT */}
-              {(form.selectedVehicles || [])
-                .length > 0 && (
-                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {(
-                    form.selectedVehicles || []
-                  ).map(
-                    (vehicle, index) => {
-                      const vehicleCount =
-                        (form.selectedVehicles || []).length;
-                      const isFullWidth =
-                        vehicleCount === 1 ||
-                        (vehicleCount === 3 && index === 2);
-
-                      return (
-                      <div
-                        key={index}
-                        className={
-                          isFullWidth
-                            ? "relative md:col-span-2"
-                            : "relative"
-                        }
                       >
-                        <label className={formFloatingLabelClass}>
-                          {getVehicleLabel(
-                            vehicle
-                          )}
-                        </label>
+                        <span>{option}</span>
 
-                        <input
-                          type="number"
-                          value={
-                            form.vehicleCounts?.[
-                              vehicle
-                            ] || ""
-                          }
-                          onChange={(e) => {
-                            const updatedForms =
-                              [
-                                ...transportForms,
-                              ];
+                        {isSelected && <span>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
 
-                            updatedForms[
-                              formIndex
-                            ].vehicleCounts =
-                              {
-                                ...updatedForms[
-                                  formIndex
-                                ].vehicleCounts,
-                                [vehicle]:
-                                  e.target.value,
-                              };
+          {/* VEHICLE COUNT */}
+          {(form.selectedVehicles || []).length > 0 && (
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
+              {(form.selectedVehicles || []).map((vehicle, index) => {
+                const vehicleCount = (form.selectedVehicles || []).length;
+                const isFullWidth =
+                  vehicleCount === 1 || (vehicleCount === 3 && index === 2);
 
-                            setTransportForms(
-                              updatedForms
-                            );
-                          }}
-                          placeholder={getVehiclePlaceholder(
-                            vehicle
-                          )}
-                          className="
+                return (
+                  <div
+                    key={index}
+                    className={
+                      isFullWidth ? "relative md:col-span-2" : "relative"
+                    }
+                  >
+                    <label className={formFloatingLabelClass}>
+                      {getVehicleLabel(vehicle)}
+                    </label>
+
+                    <input
+                      type="number"
+                      value={form.vehicleCounts?.[vehicle] || ""}
+                      onChange={(e) => {
+                        const updatedForms = [...transportForms];
+
+                        updatedForms[formIndex].vehicleCounts = {
+                          ...updatedForms[formIndex].vehicleCounts,
+                          [vehicle]: e.target.value,
+                        };
+
+                        setTransportForms(updatedForms);
+                      }}
+                      placeholder={getVehiclePlaceholder(vehicle)}
+                      className="
                             w-full
                          
                             border
@@ -1130,71 +1131,50 @@
                             focus:ring-[#3b82f6]
                             transition-all
                           "
-                        />
-                      </div>
-                    );
-                    }
-                  )}
-                </div>
-              )}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
-              {/* STAFF COUNT */}
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>
-                  Number of Accompanying Staff *
-                </label>
+          {/* STAFF COUNT */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>
+              Number of Accompanying Staff *
+            </label>
 
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={form.staffOptionType}
-                  onChange={(e) => {
-                    const value = e.target.value;
+            <input
+              type="number"
+              min="0"
+              max="10"
+              value={form.staffOptionType}
+              onChange={(e) => {
+                const value = e.target.value;
 
-                    const updatedForms = [
-                      ...transportForms,
-                    ];
+                const updatedForms = [...transportForms];
 
-                    updatedForms[
-                      formIndex
-                    ].staffOptionType = value;
+                updatedForms[formIndex].staffOptionType = value;
 
-                    const count =
-                      Number(value);
+                const count = Number(value);
 
-                    updatedForms[
-                      formIndex
-                    ].staffDetails =
-                      Array.from(
-                        {
-                          length:
-                            count || 0,
-                        },
-                        (_, index) => ({
-                          name:
-                            updatedForms[
-                              formIndex
-                            ]
-                              .staffDetails?.[
-                              index
-                            ]?.name || "",
-                          mobile:
-                            updatedForms[
-                              formIndex
-                            ]
-                              .staffDetails?.[
-                              index
-                            ]?.mobile || "",
-                        })
-                      );
+                updatedForms[formIndex].staffDetails = Array.from(
+                  {
+                    length: count || 0,
+                  },
+                  (_, index) => ({
+                    name:
+                      updatedForms[formIndex].staffDetails?.[index]?.name || "",
+                    mobile:
+                      updatedForms[formIndex].staffDetails?.[index]?.mobile ||
+                      "",
+                  }),
+                );
 
-                    setTransportForms(
-                      updatedForms
-                    );
-                  }}
-                  placeholder="Enter staff count"
-                  className="
+                setTransportForms(updatedForms);
+              }}
+              placeholder="Enter staff count"
+              className="
                     w-full
                    
                     border
@@ -1209,53 +1189,47 @@
                     focus:ring-[#3b82f6]
                     transition-all
                   "
-                />
-              </div>
+            />
+          </div>
 
-              {/* STAFF DETAILS */}
-              {(form.staffDetails || [])
-                .length > 0 && (
-                <div className="mt-5 space-y-5">
-                  {(
-                    form.staffDetails || []
-                  ).map(
-                    (staff, staffIndex) => (
-                      <div
-                        key={staffIndex}
-                        className="
+          {/* STAFF DETAILS */}
+          {(form.staffDetails || []).length > 0 && (
+            <div className="mt-5 space-y-5">
+              {(form.staffDetails || []).map((staff, staffIndex) => (
+                <div
+                  key={staffIndex}
+                  className="
                           bg-[#26264a]
                           border
                           border-[#34345c]
                           rounded-2xl
                           p-5
                         "
-                      >
-                        <h3 className="text-[#b06cff] font-semibold mb-4">
-                          Staff {staffIndex + 1}
-                        </h3>
+                >
+                  <h3 className="text-[#b06cff] font-semibold mb-4">
+                    Staff {staffIndex + 1}
+                  </h3>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          {/* NAME */}
-                          <div className="relative">
-                            <label
-                              className={staffFloatingLabelClass}
-                            >
-                              Accompanying Staff Name *
-                            </label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {/* NAME */}
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>
+                        Accompanying Staff Name *
+                      </label>
 
-                            <input
-                              type="text"
-                              value={staff.name}
-                              onChange={(e) =>
-                                updateStaffDetail(
-                                  formIndex,
-                                  staffIndex,
-                                  "name",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Enter staff name"
-                              className="
+                      <input
+                        type="text"
+                        value={staff.name}
+                        onChange={(e) =>
+                          updateStaffDetail(
+                            formIndex,
+                            staffIndex,
+                            "name",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Enter staff name"
+                        className="
                                 w-full
                                 bg-[#26264a]
                                 border
@@ -1270,30 +1244,28 @@
                                 focus:ring-[#3b82f6]
                                 transition-all
                               "
-                            />
-                          </div>
+                      />
+                    </div>
 
-                          {/* MOBILE */}
-                          <div className="relative">
-                            <label
-                              className={staffFloatingLabelClass}
-                            >
-                              Accompanying Staff Mobile Number *
-                            </label>
+                    {/* MOBILE */}
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>
+                        Accompanying Staff Mobile Number *
+                      </label>
 
-                            <input
-                              type="number"
-                              value={staff.mobile}
-                              onChange={(e) =>
-                                updateStaffDetail(
-                                  formIndex,
-                                  staffIndex,
-                                  "mobile",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Enter mobile number"
-                              className="
+                      <input
+                        type="number"
+                        value={staff.mobile}
+                        onChange={(e) =>
+                          updateStaffDetail(
+                            formIndex,
+                            staffIndex,
+                            "mobile",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Enter mobile number"
+                        className="
                                 w-full
                                 bg-[#26264a]
                                 border
@@ -1308,35 +1280,134 @@
                                 focus:ring-[#3b82f6]
                                 transition-all
                               "
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  )}
+                      />
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
+            </div>
+          )}
 
-              {/* SPECIAL REQUIREMENT */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Finance Required *</label>
+
+            <button
+              type="button"
+              onClick={() =>
+                updateFormField(formIndex, "showFinanceDropdown", !form.showFinanceDropdown)
+              }
+              className="
+                transport-select-control
+                w-full
+                border
+                border-[#2F2F47]
+                rounded-md
+                px-4
+                py-3
+                flex
+                justify-between
+                items-center
+                cursor-pointer
+                focus:border-[#3b82f6]
+                transition-all
+              "
+            >
+              <span className={form.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                {form.financeRequired}
+              </span>
+
+              <ChevronDown size={18} />
+            </button>
+
+            {form.showFinanceDropdown && (
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+                {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
+                  <div
+                    key={opt.label}
+                    onClick={() =>
+                      updateFormField(formIndex, "showFinanceDropdown", false) ||
+                      updateFormField(formIndex, "financeRequired", opt.value) ||
+                      (opt.value === "No"
+                        ? updateFormField(formIndex, "advanceAmount", "") || updateFormField(formIndex, "advancePurpose", "")
+                        : null)
+                    }
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      form.financeRequired === opt.value
+                        ? "bg-[#492A6F] text-white"
+                        : "text-white hover:bg-[#492A6F] hover:text-white"
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+
+                    {form.financeRequired === opt.value && <span>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {form.financeRequired === "Yes" && (
+            <>
               <div className="relative mt-5">
                 <label className={formFloatingLabelClass}>
-                  Special Requirement
+                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
                 </label>
 
-                <textarea
-                  rows={4}
-                  value={
-                    form.specialRequirement
-                  }
-                  onChange={(e) =>
-                    updateFormField(
-                      formIndex,
-                      "specialRequirement",
-                      e.target.value
-                    )
-                  }
-                  placeholder="Enter any special requirements"
+                <input
+                  type="number"
+                  value={form.advanceAmount}
+                  onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                  placeholder="0"
                   className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+              </div>
+
+              <div className="relative mt-5">
+                <label className={formFloatingLabelClass}>Purpose of Advance</label>
+
+                <input
+                  type="text"
+                  value={form.advancePurpose}
+                  onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
+                  placeholder="Purpose"
+                  className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+              </div>
+            </>
+          )}
+
+          {/* SPECIAL REQUIREMENT */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>
+              Special Requirement
+            </label>
+
+            <textarea
+              rows={4}
+              value={form.specialRequirement}
+              onChange={(e) =>
+                updateFormField(formIndex, "specialRequirement", e.target.value)
+              }
+              placeholder="Enter any special requirements"
+              className="
                     w-full
                    
                     border
@@ -1351,41 +1422,36 @@
                     focus:ring-[#3b82f6]
                     transition-all
                   "
-                />
-              </div>
-            </div>
-          )
-        )}
-
-        {/* ERRORS */}
-        {validationErrors.length > 0 && (
-          <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
-            <ul className="list-disc list-inside space-y-1">
-              {validationErrors.map(
-                (error, idx) => (
-                  <li key={idx}>
-                    {error}
-                  </li>
-                )
-              )}
-            </ul>
+            />
           </div>
-        )}
+        </div>
+      ))}
 
-        {/* SUCCESS */}
-        {submitMessage && (
-          <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
-            {submitMessage}
-          </div>
-        )}
+      {/* ERRORS */}
+      {validationErrors.length > 0 && (
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+          <ul className="list-disc list-inside space-y-1">
+            {validationErrors.map((error, idx) => (
+              <li key={idx}>{error}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
-        {/* SUBMIT */}
-        <div className="flex justify-end mt-6">
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="
+      {/* SUCCESS */}
+      {submitMessage && (
+        <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+          {submitMessage}
+        </div>
+      )}
+
+      {/* SUBMIT */}
+      <div className="flex justify-end mt-6">
+        <button
+          type="button"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className="
               bg-[#8b5cf6]
               hover:bg-[#7c3aed]
               disabled:opacity-60
@@ -1401,17 +1467,14 @@
               items-center
               gap-2
             "
-          >
-            {isSubmitting
-              ? "Submitting..."
-              : "Submit"}
+        >
+          {isSubmitting ? "Submitting..." : "Submit"}
 
-            <ArrowRight size={18} />
-          </button>
-        </div>
+          <ArrowRight size={18} />
+        </button>
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export default TransportDetailsPage;
-
+export default TransportDetailsPage;

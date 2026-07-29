@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import {
   ChevronDown,
@@ -9,6 +9,8 @@ import {
   ArrowRight,
   Check,
 } from "lucide-react";
+import FormSubmitted from "../IndividualForm/FormSubmitted";
+import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
 
@@ -83,17 +85,17 @@ const MediaDetailsPage = () => {
 
   // Auth 
   const [id, setId] = useState("");
-  useEffect(()=>{
+  useEffect(() => {
     const token = localStorage.getItem("token");
-      console.log("token :", token);
+    console.log("token :", token);
 
-    if(token) {
+    if (token) {
       const decoded = jwtDecode(token);
       setId(decoded.id);
 
       console.log("Decoded JWT:", decoded);
     }
-  }, [])
+  }, []);
   
 
 
@@ -133,9 +135,83 @@ const [trophyContent, setTrophyContent] = useState("");
     posterRequirement,
     setPosterRequirement,
   ] = useState("");
+  const [posterFinanceRequired, setPosterFinanceRequired] = useState("No");
+  const [posterAdvanceAmount, setPosterAdvanceAmount] = useState("");
+  const [posterAdvancePurpose, setPosterAdvancePurpose] = useState("");
+  const [showPosterFinanceDropdown, setShowPosterFinanceDropdown] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const principalInputRef = useRef(null);
+  const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
+  const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
+  const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
+  const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
+
+  const handlePrincipalFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      e.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(`File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`);
+      e.target.value = "";
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(selectedFile);
+  };
+
+  const handlePrincipalDrop = (e) => {
+    e.preventDefault();
+
+    const droppedFile = e.dataTransfer.files[0];
+
+    if (!droppedFile) return;
+
+    if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+  const [videoFinanceRequired, setVideoFinanceRequired] = useState(false);
+  const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
+  const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
+  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+    }
+
+    if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
+      setPrincipalFileError(`File size must be less than ${MAX_PRINCIPAL_FILE_SIZE_MB}MB.`);
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalDocument(droppedFile);
+  };
+
+  const handlePrincipalRemove = (e) => {
+    e.stopPropagation();
+    setPrincipalApprovalDocument(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) {
+      principalInputRef.current.value = "";
+    }
+  };
+
+  const openPrincipalFilePicker = () => {
+    if (principalInputRef.current) {
+      principalInputRef.current.click();
+    }
+  };
+
+  const handleDragOver = (e) => e.preventDefault();
 
   // =========================
   // VIDEO STATES
@@ -221,6 +297,30 @@ const [trophyContent, setTrophyContent] = useState("");
     videoRequirement,
     setVideoRequirement,
   ] = useState("");
+  const [videoFinanceRequired, setVideoFinanceRequired] = useState("No");
+  const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
+  const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
+  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+
+  // =========================
+  // FILE VALIDATION
+  // =========================
+  const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "application/pdf"];
+  const ALLOWED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".pdf"];
+
+  const validateFileType = (file) => {
+    if (!file) return { valid: true };
+    
+    // Check MIME type
+    if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+      return { 
+        valid: false, 
+        error: `Invalid file type. Only ${ALLOWED_EXTENSIONS.join(", ")} are allowed.` 
+      };
+    }
+    
+    return { valid: true };
+  };
 
   // =========================
   // REMOVE FILE
@@ -275,7 +375,15 @@ const [trophyContent, setTrophyContent] = useState("");
         errors.push("Priority is required.");
       }
       if (!posterRequirement.trim()) {
-        errors.push("Special Requirements is required.");
+        errors.push("Special Requirements is required."); 
+      }
+      if (posterFinanceRequired === "Yes") {
+        if (!posterAdvanceAmount || !posterAdvanceAmount.toString().trim()) {
+          errors.push("Poster: Advance amount is required.");
+        }
+        if (!posterAdvancePurpose || !posterAdvancePurpose.trim()) {
+          errors.push("Poster: Advance purpose is required.");
+        }
       }
     }
 
@@ -313,6 +421,14 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!videoRequirement.trim()) {
         errors.push("Special Requirements is required.");
       }
+      if (videoFinanceRequired === "Yes") {
+        if (!videoAdvanceAmount || !videoAdvanceAmount.toString().trim()) {
+          errors.push("Video: Advance amount is required.");
+        }
+        if (!videoAdvancePurpose || !videoAdvancePurpose.trim()) {
+          errors.push("Video: Advance purpose is required.");
+        }
+      }
     }
     return errors;
   };
@@ -323,6 +439,9 @@ const [trophyContent, setTrophyContent] = useState("");
     formData.append("dayIndex", "1");
     formData.append("status", "Pending");
     formData.append("typeOfMedia[]", "Poster");
+    if (principalApprovalDocument) {
+      formData.append("principalApprovalFormName", principalApprovalDocument.name);
+    }
     formData.append("poster[posterContent]", posterContent);
     formData.append("poster[priority]", posterPriority);
     formData.append("poster[specialRequirements]", posterRequirement);
@@ -349,7 +468,14 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const appendPosterFormData = (formData) => {
-    formData.append("typeOfMedia[]", "Poster");
+    // The media API stores these enum values in lowercase.
+    formData.append("typeOfMedia[]", "poster");
+   if (principalApprovalDocument) {
+  formData.append(
+    "principalApprovalForm",
+    principalApprovalDocument
+  );
+}
     formData.append("poster[posterContent]", posterContent);
     formData.append("poster[certificateContent]", certificateContent);
     formData.append("poster[trophyContent]", trophyContent);
@@ -376,7 +502,10 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const appendVideoFormData = (formData) => {
-    formData.append("typeOfMedia[]", "Video");
+    formData.append("typeOfMedia[]", "video");
+    if (principalApprovalDocument) {
+      formData.append("principalApprovalFormName", principalApprovalDocument.name);
+    }
     formData.append("video[videoContent]", videoContent);
     selectedPreEvent.forEach((item) => formData.append("video[preEventVideos][]", item));
     selectedCoverage.forEach((item) => formData.append("video[eventCoverage][]", item));
@@ -393,17 +522,75 @@ const [trophyContent, setTrophyContent] = useState("");
 
   const buildMediaFormData = () => {
     const formData = new FormData();
-    formData.append("employee", "6a0411af4579d3137b255e71");
+    
+    // Root level fields
+    formData.append("employee", id || "6a0411af4579d3137b255e71");
     formData.append("dayIndex", "1");
     formData.append("status", "Pending");
-
+    
+    // Finance fields at root level (only if needed)
+    const hasFinance = (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") || 
+                       (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
+    if (hasFinance) {
+      formData.append("financeRequired", "Yes");
+      const posterAmount = posterFinanceRequired === "Yes" ? posterAdvanceAmount : 0;
+      const videoAmount = videoFinanceRequired === "Yes" ? videoAdvanceAmount : 0;
+      formData.append("advanceAmount", posterAmount || videoAmount || "0");
+      const posterPurpose = posterFinanceRequired === "Yes" ? posterAdvancePurpose : "";
+      const videoPurpose = videoFinanceRequired === "Yes" ? videoAdvancePurpose : "";
+      formData.append("advancePurpose", posterPurpose || videoPurpose || "");
+    }
+    
+    // typeOfMedia with CAPITALIZED names - append each type separately
+    selectedTypes.forEach((type) => formData.append("typeOfMedia[]", type));
+    
+    // Append poster fields separately (not as JSON object)
     if (selectedTypes.includes("Poster")) {
-      appendPosterFormData(formData);
+      formData.append("poster[posterContent]", posterContent);
+      formData.append("poster[certificateContent]", certificateContent);
+      formData.append("poster[trophyContent]", trophyContent);
+      formData.append("poster[priority]", posterPriority);
+      formData.append("poster[specialRequirements]", posterRequirement);
+      formData.append("poster[deliveryDate]", posterDeliveryDate);
+      
+      // Append display options
+      selectedDisplays.forEach((d) => formData.append("poster[displayNeeded][]", d));
+      
+      // Append sizes separately
+      let sizeIndex = 0;
+      if (selectedDisplays.includes("Flex")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Flex");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, displaySize);
+        sizeIndex++;
+      }
+      if (selectedDisplays.includes("Glass Sticker")) {
+        formData.append(`poster[sizes][${sizeIndex}][type]`, "Glass Sticker");
+        formData.append(`poster[sizes][${sizeIndex}][value]`, glassStickerSize);
+        sizeIndex++;
+      }
     }
-
+    
+    // Append video fields separately (not as JSON object)
     if (selectedTypes.includes("Video")) {
-      appendVideoFormData(formData);
+      formData.append("video[videoContent]", videoContent);
+      formData.append("video[deliveryDate]", videoDeliveryDate);
+      formData.append("video[priority]", videoPriority);
+      formData.append("video[specialRequirements]", videoRequirement);
+      
+      // Append video selection options
+      selectedPreEvent.forEach((item) => formData.append("video[preEventVideos][]", item));
+      selectedCoverage.forEach((item) => formData.append("video[eventCoverage][]", item));
+      selectedPostEvent.forEach((item) => formData.append("video[postEventVideos][]", item));
+      selectedSpecialVideo.forEach((item) => formData.append("video[specialVideos][]", item));
     }
+    
+    // Files
+    if (principalApprovalDocument) {
+      formData.append("principalApprovalForm", principalApprovalDocument);
+    }
+    if (posterFile) formData.append("referencePosterFiles", posterFile);
+    if (certificateFile) formData.append("referenceCertificateFiles", certificateFile);
+    if (videoFile) formData.append("referenceFiles", videoFile);
 
     return formData;
   };
@@ -432,8 +619,14 @@ const [trophyContent, setTrophyContent] = useState("");
     setIsSubmitting(true);
     setSubmitSuccess(false);
     try {
+      const token = localStorage.getItem("token");
       const response = await fetch(`${API_BASE}/api/individual-media/create`, {
         method: "POST",
+          headers: {
+            ...(token && {
+              Authorization: `Bearer ${token}`,
+            }),
+          },
         body: buildMediaFormData(),
       });
       const data = await response.json();
@@ -512,11 +705,33 @@ const [trophyContent, setTrophyContent] = useState("");
     </div>
   );
 
+    if (submitSuccess) {
+    return (
+      <FormSubmitted
+        advanceData={{
+          selectDate: posterDeliveryDate || videoDeliveryDate || "",
+          advanceAmount:
+            posterFinanceRequired === "Yes"
+              ? posterAdvanceAmount || ""
+              : videoFinanceRequired === "Yes"
+                ? videoAdvanceAmount || ""
+                : "",
+          advancePurpose:
+            posterFinanceRequired === "Yes"
+              ? posterAdvancePurpose || ""
+              : videoFinanceRequired === "Yes"
+                ? videoAdvancePurpose || ""
+                : "",
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
       {/* TITLE */}
       <h1 className="text-3xl font-bold mb-6">
-        Media  Form
+        Media Form
       </h1>
 
       {validationErrors.length > 0 && (
@@ -529,6 +744,110 @@ const [trophyContent, setTrophyContent] = useState("");
         </div>
       )}
  
+      <div className="mb-8">
+        <label className="block mb-2 text-sm text-white">
+          Principal Approval Form (without uploading this document you cannot proceed further)
+        </label>
+
+        <div
+          onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
+          onDrop={handlePrincipalDrop}
+          onDragOver={handleDragOver}
+          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="10"
+              ry="10"
+              fill="none"
+              stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+              strokeWidth="2"
+              strokeDasharray="10 4"
+            />
+          </svg>
+
+          <img
+            src={UploadIcon}
+            alt="upload"
+            className="w-7 h-8 opacity-80 z-10 shrink-0"
+          />
+
+          {principalApprovalDocument ? (
+            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+
+                <span className="text-purple-300 text-sm font-medium">
+                  {principalApprovalDocument.name}
+                </span>
+
+                <span className="text-gray-400 text-xs">
+                  ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePrincipalRemove}
+                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="z-10">
+              Drag and drop files here or <span className="text-purple-400 underline">choose file</span>
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Only PDF files supported • Max file size: 1MB
+              </span>
+            </p>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          ref={principalInputRef}
+          onChange={handlePrincipalFileChange}
+          className="hidden"
+        />
+
+        {principalFileError && (
+          <p className="text-red-400 text-xs mt-1">{principalFileError}</p>
+        )}
+      </div>
+
       {/* TYPE DROPDOWN */}
       <div className="relative mb-8">
         <label className={pageFloatingLabelClass}>
@@ -651,12 +970,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setPosterFile(
-                    e.target.files[0]
-                  )
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setPosterFile(file);
+                }}
               />
 
               <Upload size={24} />
@@ -726,13 +1051,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setCertificateFile(
-                    e.target.files[0]
-                  )
-                  
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setCertificateFile(file);
+                }}
               />
 
               <Upload size={24} />
@@ -990,6 +1320,71 @@ onChange={(e) => setPosterContent(e.target.value)}
 </div>
 
           {/* Requirement */}
+          {/* FINANCE REQUIRED */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>Finance Required *</label>
+
+              <div
+                onClick={() => setShowPosterFinanceDropdown(!showPosterFinanceDropdown)}
+                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
+              >
+                <span className={posterFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                  {posterFinanceRequired === "Yes" ? "Yes" : "No"}
+                </span>
+
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+
+              {showPosterFinanceDropdown && (
+                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
+                    <div
+                      key={opt.label}
+                      onClick={() => {
+                        setPosterFinanceRequired(opt.value);
+                        setShowPosterFinanceDropdown(false);
+                        if (opt.value === "No") {
+                          setPosterAdvanceAmount("");
+                          setPosterAdvancePurpose("");
+                        }
+                      }}
+                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${posterFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                    >
+                      <span>{opt.label}</span>
+                      {posterFinanceRequired === opt.value && <span>✓</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {posterFinanceRequired === "Yes" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
+                  <input
+                    type="number"
+                    value={posterAdvanceAmount}
+                    onChange={(e) => setPosterAdvanceAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                </div>
+
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
+                  <input
+                    type="text"
+                    value={posterAdvancePurpose}
+                    onChange={(e) => setPosterAdvancePurpose(e.target.value)}
+                    placeholder="Purpose"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           <div className="relative">
             <label className={cardFloatingLabelClass}>
               Special Requirements, If any 
@@ -1117,12 +1512,18 @@ onChange={(e) => setPosterContent(e.target.value)}
             >
               <input
                 type="file"
+                accept=".jpg,.jpeg,.png,.pdf"
                 className="hidden"
-                onChange={(e) =>
-                  setVideoFile(
-                    e.target.files[0]
-                  )
-                }
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  const validation = validateFileType(file);
+                  if (!validation.valid) {
+                    setValidationErrors([validation.error]);
+                    return;
+                  }
+                  setValidationErrors([]);
+                  setVideoFile(file);
+                }}
               />
 
               <Upload size={20} />
@@ -1230,6 +1631,71 @@ onChange={(e) => setPosterContent(e.target.value)}
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>Finance Required *</label>
+
+              <div
+                onClick={() => setShowVideoFinanceDropdown(!showVideoFinanceDropdown)}
+                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
+              >
+                <span className={videoFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                  {videoFinanceRequired === "Yes" ? "Yes" : "No"}
+                </span>
+
+                <ChevronDown size={18} className="text-gray-400" />
+              </div>
+
+              {showVideoFinanceDropdown && (
+                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
+                    <div
+                      key={opt.label}
+                      onClick={() => {
+                        setVideoFinanceRequired(opt.value);
+                        setShowVideoFinanceDropdown(false);
+                        if (opt.value === "No") {
+                          setVideoAdvanceAmount("");
+                          setVideoAdvancePurpose("");
+                        }
+                      }}
+                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${videoFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                    >
+                      <span>{opt.label}</span>
+                      {videoFinanceRequired === opt.value && <span>✓</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {videoFinanceRequired === "Yes" && (
+              <>
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
+                  <input
+                    type="number"
+                    value={videoAdvanceAmount}
+                    onChange={(e) => setVideoAdvanceAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                </div>
+
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
+                  <input
+                    type="text"
+                    value={videoAdvancePurpose}
+                    onChange={(e) => setVideoAdvancePurpose(e.target.value)}
+                    placeholder="Purpose"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
           <div className="relative">
             <label className={cardFloatingLabelClass}>
               Special Requirements, If any*
@@ -1280,7 +1746,7 @@ onChange={(e) => setPosterContent(e.target.value)}
             shadow-purple-900/30
           "
         >
-          Next
+          Submit
 
           <ArrowRight size={18} />
         </button>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, Check } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import AccommodationHeader from './AccommodationHeader'
 import FacultyAccommodationDetailsPanel from '../Faculty-Dashboard/FacultyAccommodationDetailsPanel'
 
@@ -22,6 +23,7 @@ const AccommodationEventsDetailViewPage = () => {
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -59,6 +61,29 @@ const AccommodationEventsDetailViewPage = () => {
     fetchDetails()
   }, [eventId])
 
+  const handleStatusUpdate = async (action) => {
+    setActionLoading(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action, module: 'accommodation' }),
+      })
+      const responseData = await res.json()
+      if (!res.ok || !responseData.success) throw new Error(responseData.message || `Failed to ${action}`)
+      toast.success(`Status updated to ${action === 'acknowledge' ? 'Acknowledged' : 'Completed'} successfully`)
+      setStatus(action === 'acknowledge' ? 'Acknowledged' : 'Completed')
+    } catch (err) {
+      toast.error(err.message || `Failed to ${action}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   return (
     <section className="min-h-screen bg-[#0b1326] poppins">
       <AccommodationHeader />
@@ -86,11 +111,31 @@ const AccommodationEventsDetailViewPage = () => {
                     Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
                   </p>
                 </div>
-                {status && (
-                  <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(status)}`}>
-                    {status}
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {status === 'Pending for Acknowledge' && (
+                    <button
+                      onClick={() => handleStatusUpdate('acknowledge')}
+                      disabled={actionLoading}
+                      className="flex items-center gap-1 bg-gradient-to-r from-[#07785D] to-[#07785D] text-white px-4 py-1 rounded-md hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check size={16} className="text-white" /> {actionLoading ? 'Processing...' : 'Acknowledge'}
+                    </button>
+                  )}
+                  {status === 'Acknowledged' && (
+                    <button
+                      onClick={() => handleStatusUpdate('complete')}
+                      disabled={actionLoading}
+                      className="flex items-center gap-1 bg-gradient-to-r from-[#4A2BB7] to-[#6D3BD8] text-white px-4 py-1 rounded-md hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Check size={16} className="text-white" /> {actionLoading ? 'Processing...' : 'Complete'}
+                    </button>
+                  )}
+                  {status && (
+                    <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(status)}`}>
+                      {status}
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="mt-8">
