@@ -397,7 +397,7 @@ const MediaDashboard = () => {
       <section className="bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar">
         {/* header */}
         <div className="header-container sticky top-0">
-          <DashboardHeader basePath="/dashboard-media" />
+          <DashboardHeader basePath="/dashboard-media" showReports={false} />
         </div>
 
         {/* main-container */}

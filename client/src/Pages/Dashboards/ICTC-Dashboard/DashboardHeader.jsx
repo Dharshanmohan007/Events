@@ -4,7 +4,7 @@ import { Search, Bell, CircleQuestionMark, Settings } from 'lucide-react'
 import profileAvatar from '../../../assets/profile-avatar.svg'
 import { Link, useLocation } from 'react-router-dom'
 
-const DashboardHeader = ({ basePath = '/dashboard-ictcs' }) => {
+const DashboardHeader = ({ basePath = '/dashboard-ictcs', showReports = true }) => {
     const location = useLocation()
 
     const isActive = (path) => location.pathname === path
@@ -19,7 +19,9 @@ const DashboardHeader = ({ basePath = '/dashboard-ictcs' }) => {
                     <div className="navlins text-white flex items-center gap-4 text-sm">
                         <Link to={basePath} className={`font-medium ${isActive(basePath) ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Dashboard</Link>
                         <Link to={`${basePath}/events`} className={`font-medium ${isSectionActive(`${basePath}/events`) ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Request List</Link>
-                        <Link to={`${basePath}/reports`} className={`font-medium ${isActive(`${basePath}/reports`) ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Reports</Link>
+                        {showReports && (
+                            <Link to={`${basePath}/reports`} className={`font-medium ${isActive(`${basePath}/reports`) ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`}>Reports</Link>
+                        )}
                     </div>
                 </div>
                 <div className="second-container flex items-center gap-6 ">
