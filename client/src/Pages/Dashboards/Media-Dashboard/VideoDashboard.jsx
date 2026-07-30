@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Hourglass, Search, Settings } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
@@ -84,29 +84,39 @@ const feedbackRows = Array.from({ length: 13 }, () => ({
 
 // ── Sub-components ───────────────────────────────────────────────────────
 
-const DashboardHeader = () => (
-  <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
-    <div className="flex items-center gap-6">
-      <img src={smallLogo} alt="Logo" className="h-11 w-11" />
-      <nav className="flex items-center gap-8 text-sm">
-        <span className="border-b border-[#8B3DFF] pb-2 font-semibold text-[#8B3DFF]">Dashboard</span>
-      </nav>
-    </div>
+const DashboardHeader = () => {
+  const location = useLocation();
+  const isRequests = location.pathname.includes('/dashboard-video/requests');
 
-    <div className="flex items-center gap-6">
-      <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
-        <Search size={15} className="text-[#8b93a4]" />
-        <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
+  return (
+    <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
+      <div className="flex items-center gap-6">
+        <img src={smallLogo} alt="Logo" className="h-11 w-11" />
+        <nav className="flex items-center gap-8 text-sm">
+          <Link to="/dashboard-video" className={`pb-2 ${!isRequests ? 'border-b border-[#8B3DFF] font-semibold text-[#8B3DFF]' : 'text-[#FFFFFF80] hover:text-white'}`}>
+            Dashboard
+          </Link>
+          <Link to="/dashboard-video/requests" className={`pb-2 ${isRequests ? 'border-b border-[#8B3DFF] font-semibold text-[#8B3DFF]' : 'text-[#FFFFFF80] hover:text-white'}`}>
+            Request List
+          </Link>
+        </nav>
       </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={18} />
-        <CircleQuestionMark size={18} />
-        <Settings size={18} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
+
+      <div className="flex items-center gap-6">
+        <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
+          <Search size={15} className="text-[#8b93a4]" />
+          <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
+        </div>
+        <div className="flex items-center gap-5 text-[#b7bdc8]">
+          <Bell size={18} />
+          <CircleQuestionMark size={18} />
+          <Settings size={18} />
+          <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
+        </div>
       </div>
-    </div>
-  </header>
-)
+    </header>
+  );
+}
 
 const StatGroup = ({ title, cards }) => (
   <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] p-2">
@@ -147,6 +157,26 @@ const VideoDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const [eventStats, setEventStats] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+    const token = localStorage.getItem('token')
+
+    fetch(`${API_BASE_URL}/api/dashboard/stats?module=video`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to fetch video dashboard stats')
+        return response.json()
+      })
+      .then((responseData) => {
+        if (isMounted) setEventStats(responseData.events)
+      })
+      .catch((error) => console.warn(error.message))
+
+    return () => { isMounted = false }
+  }, [])
 
   // ── Individual tab state ────────────────────────────────────────────────
   const [individualRequests, setIndividualRequests] = useState([])
@@ -196,6 +226,39 @@ const VideoDashboard = () => {
     fetchVideoEvents()
     return () => abortController.abort()
   }, [])
+
+  const displayStatGroups = useMemo(() => {
+    if (!eventStats) return statGroups
+
+    return statGroups.map((group) => {
+      if (!group.title.toLowerCase().includes('event')) return group
+
+      return {
+        ...group,
+        cards: group.cards.map((card) => {
+          const label = card.label.toLowerCase()
+
+          if (label.includes('total')) {
+            return { ...card, value: eventStats.total ?? card.value }
+          }
+
+          if (label.includes('completed')) {
+            return { ...card, value: eventStats.completed ?? card.value }
+          }
+
+          if (label.includes('pending')) {
+            return { ...card, value: eventStats.pending ?? card.value }
+          }
+
+          if (label.includes('acknowledged')) {
+            return { ...card, value: eventStats.approved ?? card.value }
+          }
+
+          return card
+        }),
+      }
+    })
+  }, [eventStats])
 
   // ── Fetch individual video requests ─────────────────────────────────────
   const fetchIndividualRequests = useCallback(async () => {
@@ -408,7 +471,7 @@ const VideoDashboard = () => {
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {statGroups.map((group) => <StatGroup key={group.title} {...group} />)}
+          {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
         </div>
 
         <div className="mt-7">

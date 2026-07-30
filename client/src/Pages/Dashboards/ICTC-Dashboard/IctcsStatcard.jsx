@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import {
     CalendarRange,
     Check,
@@ -9,6 +9,9 @@ import hourglassFill from '../../../assets/hourglassFill.svg'
 import tick from '../../../assets/tick.svg'
 import pattern from '../../../assets/pattern.svg'
 import circleTick from '../../../assets/circle-tick.svg'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
+
 const data = [
     {
         lable: 'Total Events',
@@ -50,9 +53,64 @@ const data = [
 
 
 const IctcsStatcard = () => {
+    const [eventStats, setEventStats] = useState(null)
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+
+        fetch(`${API_BASE_URL}/api/dashboard/stats?module=icts`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch ICTS dashboard stats')
+                }
+                return response.json()
+            })
+            .then((responseData) => {
+                if (isMounted) {
+                    setEventStats(responseData.events)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const displayData = useMemo(() => {
+        if (!eventStats) return data
+
+        return data.map((item) => {
+            const label = item.lable.toLowerCase()
+
+            if (label.includes('total')) {
+                return { ...item, value: eventStats.total ?? item.value }
+            }
+
+            if (label.includes('completed')) {
+                return { ...item, value: eventStats.completed ?? item.value }
+            }
+
+            if (label.includes('pending')) {
+                return { ...item, value: eventStats.pending ?? item.value }
+            }
+
+            if (label.includes('acknowledged')) {
+                return { ...item, value: eventStats.approved ?? item.value }
+            }
+
+            return item
+        })
+    }, [eventStats])
+
     return (
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-            {data.map((item, index) => (
+            {displayData.map((item, index) => (
                 <div
                     className={`card relative h-20 overflow-hidden rounded-lg flex ${item.bgColor} w-full`}
                     key={index}

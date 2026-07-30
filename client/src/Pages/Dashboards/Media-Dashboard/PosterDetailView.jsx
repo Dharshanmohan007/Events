@@ -7,7 +7,7 @@ import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import smallLogo from '../../../assets/small-logo.svg'
 import profileAvatar from '../../../assets/profile-avatar.svg'
-import RequestToInterchangeModal from './RequestToInterchangeModal'
+import MediaStaffInterchangeModal from '../../../Components/MediaStaffInterchangeModal'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -475,9 +475,17 @@ const PosterDetailView = () => {
       </main>
 
       {isInterchangeOpen && (
-        <RequestToInterchangeModal
+        <MediaStaffInterchangeModal
+          event={{
+            eventId: posterId,
+            _id: posterId,
+            media: [{ typeOfMedia: ["poster"] }],
+          }}
+          mediaType="poster"
+          isIndividualInterchange={false}
+          title="Interchange Media Staff"
           onClose={() => setIsInterchangeOpen(false)}
-          isInterchangeOpen={isInterchangeOpen}
+          onSuccess={() => refreshDetails()}
         />
       )}
     </section>
