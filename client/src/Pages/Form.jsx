@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import EventsSidebar from "../Components/EventsSidebar";
 import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
@@ -8,13 +8,13 @@ import TransportForm from "../Components/Forms/TransportForm";
 import FoodAndRefreshments from "../Components/Forms/FoodAndRefreshments";
 import AccommodationForm from "../Components/Forms/AccommodationForm";
 import Purchase from "../Components/Forms/Purchase";
-import MediaForm from "../Components/Forms/MediaForm";
+import MediaForm, { buildMediaFormData } from "../Components/Forms/MediaForm";
 import AudioForm from "../Components/Forms/AudioForm";
 import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
 import EventPreviewPage from "./EventPreviewPage";
 import { jwtDecode } from "jwt-decode";
-import generateAdvanceReceiptPdf from "../utils/generateAdvanceReceiptPdf";
+import generateAdvanceReceiptPdf from '../utils/generateAdvanceReceiptPdf';
 import { getFacultyById } from "../services/events/facultyService";
 
 
@@ -538,13 +538,28 @@ const validateMediaData = (mediaData) => {
   return {};
 };
 
+const toIsoDate = (dStr) => {
+  if (!dStr) return "";
+  try {
+    const d = new Date(dStr);
+    return isNaN(d.getTime()) ? dStr : d.toISOString();
+  } catch {
+    return dStr;
+  }
+};
+
+const getArrayValue = (arr1, arr2) => {
+  if (Array.isArray(arr1) && arr1.length > 0) return arr1;
+  if (Array.isArray(arr2) && arr2.length > 0) return arr2;
+  return Array.isArray(arr1) ? arr1 : Array.isArray(arr2) ? arr2 : [];
+};
+
 const buildMediaPayload = (mediaData) => {
   const mediaRequirements = mediaData.map((day, dayIndex) => {
     const typeOfMedia = [];
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    // Only Flex / Glass Sticker carry a size value — same rule as buildMediaFormData.
     const sizes = [];
     const flexVal  = day.poster?.sizeForFlex?.trim();
     const glassVal = day.poster?.sizeForGlass?.trim();
@@ -555,34 +570,36 @@ const buildMediaPayload = (mediaData) => {
       sizes.push({ type: "Glass Sticker", value: glassVal });
     }
 
+    const extractNonFileMeta = (files1, files2) => {
+      const list = getArrayValue(files1, files2);
+      return list.filter((f) => !(f instanceof File));
+    };
+
     return {
-      dayIndex, typeOfMedia,
+      dayIndex,
+      typeOfMedia,
       poster: {
-        posterContent:             day.poster?.contentPoster       || "",
-        // This JSON-only path can never carry File objects — real uploads
-        // must go through buildMediaFormData (multipart). Leave file arrays
-        // empty here rather than clobbering already-saved refs (see onSave
-        // in Form.jsx: this path should not be used once files exist).
-        referencePosterFiles:      [],
-        certificateContent:        day.poster?.contentCertificate  || "",
-        referenceCertificateFiles: [],
-        trophyContent:             day.poster?.contentTrophy       || "",
-        displayNeeded:             day.poster?.displayNeeded       || [],
+        posterContent:             day.poster?.contentPoster || day.poster?.posterContent || "",
+        referencePosterFiles:      extractNonFileMeta(day.poster?.referencePoster, day.poster?.referencePosterFiles ?? day.referencePosterFiles),
+        certificateContent:        day.poster?.contentCertificate || day.poster?.certificateContent || "",
+        referenceCertificateFiles: extractNonFileMeta(day.poster?.referenceCertificate, day.poster?.referenceCertificateFiles ?? day.referenceCertificateFiles),
+        trophyContent:             day.poster?.contentTrophy || day.poster?.trophyContent || "",
+        displayNeeded:             day.poster?.displayNeeded || [],
         sizes,
-        deliveryDate:        day.poster?.deliveryDate ? new Date(day.poster.deliveryDate).toISOString() : "",
+        deliveryDate:        toIsoDate(day.poster?.deliveryDate),
         priority:            day.poster?.priority    || "",
-        specialRequirements: day.poster?.specialReq  || "",
+        specialRequirements: day.poster?.specialReq || day.poster?.specialRequirements || "",
       },
       video: {
-        videoContent:        day.video?.contentVideo  || "",
-        preEventVideos:      day.video?.preEvent      || [],
+        videoContent:        day.video?.contentVideo || day.video?.videoContent || "",
+        preEventVideos:      getArrayValue(day.video?.preEvent, day.video?.preEventVideos),
         eventCoverage:       day.video?.eventCoverage || [],
-        postEventVideos:     day.video?.postEvent     || [],
+        postEventVideos:     getArrayValue(day.video?.postEvent, day.video?.postEventVideos),
         specialVideos:       day.video?.specialVideos || [],
-        referenceFiles:      [],
-        deliveryDate:        day.video?.deliveryDate ? new Date(day.video.deliveryDate).toISOString() : "",
+        referenceFiles:      extractNonFileMeta(day.video?.referenceVideo, day.video?.referenceFiles ?? day.referenceFiles),
+        deliveryDate:        toIsoDate(day.video?.deliveryDate),
         priority:            day.video?.priority   || "",
-        specialRequirements: day.video?.specialReq || "",
+        specialRequirements: day.video?.specialReq || day.video?.specialRequirements || "",
       },
     };
   });
@@ -927,6 +944,31 @@ export default function Form() {
       }
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
       if (sectionKey === "event") setEventId(data.data?._id || eventId);
+      if (sectionKey === "media" && data.data?.mediaRequirementDetails?.mediaRequirements) {
+        const backendReqs = data.data.mediaRequirementDetails.mediaRequirements;
+        setFormData((prev) => {
+          const updatedMedia = prev.media.map((day, idx) => {
+            const req = backendReqs[idx];
+            if (!req) return day;
+            return {
+              ...day,
+              poster: {
+                ...day.poster,
+                referencePoster: [],            // clear raw Files — already uploaded
+                referenceCertificate: [],        // clear raw Files — already uploaded
+                referencePosterFiles: req.poster?.referencePosterFiles || day.poster?.referencePosterFiles || [],
+                referenceCertificateFiles: req.poster?.referenceCertificateFiles || day.poster?.referenceCertificateFiles || [],
+              },
+              video: {
+                ...day.video,
+                referenceVideo: [],              // clear raw Files — already uploaded
+                referenceFiles: req.video?.referenceFiles || day.video?.referenceFiles || [],
+              },
+            };
+          });
+          return { ...prev, media: updatedMedia };
+        });
+      }
       setFormErrors((prev) => ({ ...prev, [sectionKey]: {} }));
       return true;
     } catch (error) {
@@ -938,13 +980,74 @@ export default function Form() {
   };
 
   // ── submitEvent ───────────────────────────────────────────────────────────
+  // Helper: check if any media day has a pending File object that hasn't been uploaded yet
+  const mediaHasFiles = (mediaData) => {
+    if (!Array.isArray(mediaData)) return false;
+    return mediaData.some((day) => {
+      const checkList = (arr) => Array.isArray(arr) && arr.some((f) => f instanceof File);
+      return (
+        checkList(day.poster?.referencePoster) ||
+        checkList(day.poster?.referenceCertificate) ||
+        checkList(day.video?.referenceVideo) ||
+        checkList(day.referencePosterFiles) ||
+        checkList(day.referenceCertificateFiles) ||
+        checkList(day.referenceFiles)
+      );
+    });
+  };
+
   const submitEvent = async () => {
     console.log("submitEvent started");
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
     setApiError("");
     try {
-      const fullPayload = buildFullSubmitPayload(formDataRef.current, selectedRequirements, user);
+      // If media has unsaved File objects, flush them via multipart PUT first
+      let latestMedia = formDataRef.current.media;
+      if (mediaHasFiles(latestMedia)) {
+        const mediaFD = buildMediaFormData(latestMedia);
+        const mediaRes = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventIdRef.current}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          body: mediaFD,
+        });
+        if (!mediaRes.ok) {
+          const errData = await mediaRes.json().catch(() => ({}));
+          throw new Error(errData.message || `Failed to upload media files: ${mediaRes.status}`);
+        }
+        // Build updated media synchronously (don't wait for React state) so submit payload is accurate
+        const mediaRespData = await mediaRes.json().catch(() => ({}));
+        if (mediaRespData.data?.mediaRequirementDetails?.mediaRequirements) {
+          const backendReqs = mediaRespData.data.mediaRequirementDetails.mediaRequirements;
+          latestMedia = latestMedia.map((day, idx) => {
+            const req = backendReqs[idx];
+            if (!req) return day;
+            return {
+              ...day,
+              poster: {
+                ...day.poster,
+                referencePoster: [],
+                referenceCertificate: [],
+                referencePosterFiles: req.poster?.referencePosterFiles || day.poster?.referencePosterFiles || [],
+                referenceCertificateFiles: req.poster?.referenceCertificateFiles || day.poster?.referenceCertificateFiles || [],
+              },
+              video: {
+                ...day.video,
+                referenceVideo: [],
+                referenceFiles: req.video?.referenceFiles || day.video?.referenceFiles || [],
+              },
+            };
+          });
+          // Also update React state for UI consistency
+          setFormData((prev) => ({ ...prev, media: latestMedia }));
+        }
+      }
+
+      const fullPayload = buildFullSubmitPayload(
+        { ...formDataRef.current, media: latestMedia },
+        selectedRequirements,
+        user
+      );
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/submit`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1017,6 +1120,23 @@ export default function Form() {
     const extras       = { venueData: formData.venue };
     const ok           = await saveSection(sectionKey, sectionValue, extras);
     if (ok) advanceStep();
+  };
+
+  const handlePreview = async () => {
+    if (childNav.next) {
+      const ok = await childNav.next();
+      if (ok !== false) setShowPreview(true);
+      return;
+    }
+    const sectionKey   = currentStepKey;
+    if (!sectionKey) {
+      setShowPreview(true);
+      return;
+    }
+    const sectionValue = formData[sectionKey];
+    const extras       = { venueData: formData.venue };
+    const ok           = await saveSection(sectionKey, sectionValue, extras);
+    if (ok) setShowPreview(true);
   };
 
   // ── handleBack ────────────────────────────────────────────────────────────
@@ -1198,11 +1318,11 @@ export default function Form() {
             ─────────────────────────────────────────────────────────────── */}
             {showSubmit ? (
               <button
-                  onClick={() => setShowPreview(true)}
+                  onClick={handlePreview}
                   disabled={!eventId || isLoading || childNav.isLoading}
                   className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                  Preview
+                  {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
               </button>
           ) : (
               <button
