@@ -1,59 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getRouteForRole } from "../../utils/roleRoutes";
-import generateAdvanceReceiptPdf from "../../utils/ReportPdf";
 
 export default function FormSubmitted({
   onSubmitAnother,
-  formData,
-  advanceData,
+  advanceData = {},
+  employee = {},
+  submitResponse = {},
 }) {
-
-  const handleDownloadReceipt = async () => {
-    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-    const receiptPayload = {
-      selectDate:
-        advanceData?.selectDate ||
-        advanceData?.deliveryDate ||
-        advanceData?.pickupDateTime ||
-        advanceData?.posterDeliveryDate ||
-        advanceData?.videoDeliveryDate ||
-        formData?.selectDate ||
-        formData?.date ||
-        null,
-      advanceAmount:
-        advanceData?.advanceAmount ||
-        formData?.advanceAmount ||
-        "",
-      advancePurpose:
-        advanceData?.advancePurpose ||
-        formData?.advancePurpose ||
-        "",
-      employeeName: storedUser?.name || storedUser?.employeeName || "",
-      empId: storedUser?.empId || storedUser?.employeeId || "",
-      designation: storedUser?.designation || "",
-      department: storedUser?.department || "",
-      event: {
-        organizers: [
-          {
-            name: storedUser?.name || storedUser?.employeeName || "",
-            empId: storedUser?.empId || storedUser?.employeeId || "",
-            designation: storedUser?.designation || "",
-            department: storedUser?.department || "",
-          },
-        ],
-      },
-    };
-
-    await generateAdvanceReceiptPdf({
-      formData: receiptPayload,
-      employee: storedUser,
-      submitResponse: {
-        iqacNumber: `IQAC-${Date.now()}`,
-      },
-    });
-  };
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
@@ -61,6 +15,45 @@ export default function FormSubmitted({
     const t = setTimeout(() => setVisible(true), 50);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (!advanceData || Object.keys(advanceData).length === 0) return;
+
+    const timer = setTimeout(() => {
+      (async () => {
+        try {
+          const { default: ReportPdf } = await import("../../utils/ReportPdf");
+
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const effectiveEmployee =
+            employee && Object.keys(employee).length
+              ? employee
+              : storedUser || {};
+
+          const effectiveSubmitResponse =
+            submitResponse && Object.keys(submitResponse).length
+              ? submitResponse
+              : {
+                  iqacNumber:
+                    advanceData?.iqacNumber || `IQAC-${Date.now()}`,
+                  employeeId:
+                    advanceData?.empId || effectiveEmployee?.empId || "",
+                };
+
+          ReportPdf({
+            formData: advanceData,
+            employee: effectiveEmployee,
+            submitResponse: effectiveSubmitResponse,
+          });
+        } catch (err) {
+          console.warn("Receipt generation failed:", err);
+        }
+      })();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [advanceData, employee, submitResponse]);
 
   const handleSubmitAnother = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -162,22 +155,6 @@ export default function FormSubmitted({
         >
           Go to Dashboard
         </button>
-
-        <button
-  onClick={handleDownloadReceipt}
-  className="
-    mt-3
-    px-8
-    py-3
-    rounded-[10px]
-    bg-green-600
-    hover:bg-green-700
-    text-white
-    font-semibold
-  "
->
-  Download Advance Request
-</button>
 
       </div>
     </div>
