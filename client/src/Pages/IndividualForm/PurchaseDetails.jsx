@@ -827,6 +827,40 @@ export default function PurchaseDetails() {
     }
 
     setSubmitSuccess(true);
+
+    const financeEnabled = form?.financeRequired === "Yes";
+    if (financeEnabled) {
+      const respData = data?.data || data || {};
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const employeePayload = {
+        name: storedUser?.name || storedUser?.employeeName || "",
+        empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+        designation: storedUser?.designation || "",
+        department: storedUser?.department || "",
+      };
+
+      const submitRespPayload = {
+        iqacNumber: respData?.requestNo || `IQAC-${Date.now()}`,
+        employeeId: respData?.empId || employeePayload.empId || "",
+      };
+
+      await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+        return ReportPdf({
+          formData: {
+            selectDate: form?.requiredDate || "",
+            advanceAmount: form?.advanceAmount || "",
+            advancePurpose: form?.advancePurpose || "",
+            empId: employeePayload.empId,
+            employeeName: employeePayload.name,
+            designation: employeePayload.designation,
+            department: employeePayload.department,
+          },
+          employee: employeePayload,
+          submitResponse: submitRespPayload,
+        });
+      });
+    }
   } catch (error) {
     console.error(error);
     setApiError(error.message || "Unable to send purchase data.");

@@ -1057,10 +1057,11 @@ useEffect(() => {
       const decodedAuthToken = decodeToken(authToken);
 
       if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        // Do not force a navigation to the login page from here; instead
+        // surface a validation error so the user stays on the form and can
+        // re-authenticate without losing context.
         setValidationErrors(["Session expired or invalid token. Please login again."]);
-        navigate("/login");
+        setIsSubmitting(false);
         return;
       }
 
@@ -1186,7 +1187,7 @@ const response = await fetch(`${API_BASE}/api/foods`, {
       const financeEnabled = firstCard?.financeRequired === "Yes";
 
       if (financeEnabled) {
-        await generateAdvanceReceiptPdf({
+        const receiptPayload = {
           formData: {
             selectDate: firstCard?.selectDate || "",
             advanceAmount: firstCard?.advanceAmount || "",
@@ -1211,7 +1212,9 @@ const response = await fetch(`${API_BASE}/api/foods`, {
             iqacNumber: firstSubmissionData?.requestNo || `IQAC-${Date.now()}`,
             employeeId: firstSubmissionData?.empId || employeeDetails.empId,
           },
-        });
+        };
+
+        await ReportPdf(receiptPayload);
       }
 
       setSubmitMessage(

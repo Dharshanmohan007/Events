@@ -690,6 +690,42 @@ const TransportDetailsPage = () => {
       }
 
       setValidationErrors([]);
+
+      const firstForm = transportForms[0] || {};
+      const financeEnabled = firstForm?.financeRequired === "Yes";
+
+      if (financeEnabled) {
+        const respData = responseData?.data || responseData || {};
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+        const employeePayload = {
+          name: firstForm?.employeeName || storedUser?.name || respData?.employeeName || "",
+          empId: firstForm?.empId || respData?.empId || storedUser?.empId || "",
+          designation: firstForm?.designation || storedUser?.designation || respData?.designation || "",
+          department: firstForm?.department || storedUser?.department || respData?.department || "",
+        };
+
+        const submitRespPayload = {
+          iqacNumber: respData?.requestNo || respData?.requestNo || `IQAC-${Date.now()}`,
+          employeeId: respData?.empId || employeePayload.empId || "",
+        };
+
+        await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+          return ReportPdf({
+            formData: {
+              selectDate: firstForm?.pickupDateTime || "",
+              advanceAmount: firstForm?.advanceAmount || "",
+              advancePurpose: firstForm?.advancePurpose || "",
+              employeeName: employeePayload.name,
+              empId: employeePayload.empId,
+              designation: employeePayload.designation,
+              department: employeePayload.department,
+            },
+            employee: employeePayload,
+            submitResponse: submitRespPayload,
+          });
+        });
+      }
     } catch (error) {
       console.error("Transport submission failed:", error);
       setValidationErrors([

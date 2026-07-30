@@ -654,6 +654,46 @@ const [trophyContent, setTrophyContent] = useState("");
         throw new Error(data.message || "Media submission failed.");
       }
       setSubmitSuccess(true);
+
+      const financeEnabled = selectedTypes.some(() => true);
+      if (financeEnabled) {
+        const respData = data?.data || data || {};
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+        const employeePayload = {
+          name: storedUser?.name || storedUser?.employeeName || respData?.employeeName || "",
+          empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+          designation: storedUser?.designation || respData?.designation || "",
+          department: storedUser?.department || respData?.department || "",
+        };
+
+        const submitRespPayload = {
+          iqacNumber: respData?.requestNo || respData?.requestNo || `IQAC-${Date.now()}`,
+          employeeId: respData?.empId || employeePayload.empId || "",
+        };
+
+        await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+          return ReportPdf({
+            formData: {
+              selectDate: posterDeliveryDate || videoDeliveryDate || "",
+              advanceAmount:
+                posterFinanceRequired === "Yes"
+                  ? posterAdvanceAmount || ""
+                  : videoFinanceRequired === "Yes"
+                    ? videoAdvanceAmount || ""
+                    : "",
+              advancePurpose:
+                posterFinanceRequired === "Yes"
+                  ? posterAdvancePurpose || ""
+                  : videoFinanceRequired === "Yes"
+                    ? videoAdvancePurpose || ""
+                    : "",
+            },
+            employee: employeePayload,
+            submitResponse: submitRespPayload,
+          });
+        });
+      }
     } catch (error) {
       setValidationErrors([error.message || "Unable to send media data."]);
     } finally {
