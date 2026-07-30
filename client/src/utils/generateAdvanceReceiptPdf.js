@@ -109,14 +109,13 @@ function buildReceiptHTML(logoDataUrl, data) {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 6px 14px 8px;
+      padding: 6px 14px 20px;
     }
 
     .title-row .title {
       font-size: 13pt;
       font-weight: bold;
       flex: 1;
-      text-align: center;
     }
 
     .title-row .iqac-ref {
