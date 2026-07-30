@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Hourglass, Search, Settings } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
@@ -151,6 +151,26 @@ const PosterDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const [eventStats, setEventStats] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+    const token = localStorage.getItem('token')
+
+    fetch(`${API_BASE_URL}/api/dashboard/stats?module=poster`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((response) => {
+        if (!response.ok) throw new Error('Failed to fetch poster dashboard stats')
+        return response.json()
+      })
+      .then((responseData) => {
+        if (isMounted) setEventStats(responseData.events)
+      })
+      .catch((error) => console.warn(error.message))
+
+    return () => { isMounted = false }
+  }, [])
 
   // ── Individual tab state ────────────────────────────────────────────────
   const [individualRequests, setIndividualRequests] = useState([])
@@ -200,6 +220,39 @@ const PosterDashboard = () => {
     fetchPosterEvents()
     return () => abortController.abort()
   }, [])
+
+  const displayStatGroups = useMemo(() => {
+    if (!eventStats) return statGroups
+
+    return statGroups.map((group) => {
+      if (!group.title.toLowerCase().includes('event')) return group
+
+      return {
+        ...group,
+        cards: group.cards.map((card) => {
+          const label = card.label.toLowerCase()
+
+          if (label.includes('total')) {
+            return { ...card, value: eventStats.total ?? card.value }
+          }
+
+          if (label.includes('completed')) {
+            return { ...card, value: eventStats.completed ?? card.value }
+          }
+
+          if (label.includes('pending')) {
+            return { ...card, value: eventStats.pending ?? card.value }
+          }
+
+          if (label.includes('acknowledged')) {
+            return { ...card, value: eventStats.approved ?? card.value }
+          }
+
+          return card
+        }),
+      }
+    })
+  }, [eventStats])
 
   // ── Fetch individual poster requests ─────────────────────────────────────
   const fetchIndividualRequests = useCallback(async () => {
@@ -412,7 +465,7 @@ const PosterDashboard = () => {
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {statGroups.map((group) => <StatGroup key={group.title} {...group} />)}
+          {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
         </div>
 
         <div className="mt-7">

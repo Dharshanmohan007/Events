@@ -68,6 +68,20 @@ const departmentData = [
 const AccommodationDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const [eventStats, setEventStats] = useState(null)
+
+    useEffect(() => {
+        const token = localStorage.getItem('token')
+        fetch(`${API_BASE_URL}/api/dashboard/stats?module=accommodation`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((res) => {
+                if (!res.ok) throw new Error('Failed to fetch accommodation dashboard stats')
+                return res.json()
+            })
+            .then((data) => setEventStats(data.events))
+            .catch((error) => console.warn(error.message))
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -104,7 +118,14 @@ const AccommodationDashboard = () => {
                     </div>
 
                     {/* stat cards  */}
-                    <StatCard data={statCardData} />
+                    <StatCard data={eventStats ? statCardData.map((item) => {
+                        const label = item.lable.toLowerCase()
+                        if (label.includes('total')) return { ...item, value: eventStats.total ?? item.value }
+                        if (label.includes('approved')) return { ...item, value: eventStats.approved ?? item.value }
+                        if (label.includes('completed')) return { ...item, value: eventStats.completed ?? item.value }
+                        if (label.includes('pending')) return { ...item, value: eventStats.pending ?? item.value }
+                        return item
+                    }) : statCardData} />
 
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">

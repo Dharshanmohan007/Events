@@ -7,8 +7,6 @@ import profileAvatar from '../../../assets/profile-avatar.svg'
 const facultyRoutes = {
     dashboard: '/dashboard-faculty',
     requests: '/dashboard-faculty/events',
-    calendar: '/dashboard-faculty/calendar',
-    reports: '/dashboard-faculty/reports',
     venues: '/dashboard-faculty/venues',
 }
 
@@ -24,8 +22,6 @@ const FacultyDahsboardHeader = () => {
                 <nav className="navlins text-white flex items-center gap-8 text-sm">
                     <NavLink to={facultyRoutes.dashboard} end className={getNavLinkClassName}>Dashboard</NavLink>
                     <NavLink to={facultyRoutes.requests} className={getNavLinkClassName}>Request List</NavLink>
-                    <NavLink to={facultyRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
-                    <NavLink to={facultyRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
                     <NavLink to={facultyRoutes.venues} className={getNavLinkClassName}>Venue List</NavLink>
                 </nav>
             </div>
