@@ -65,7 +65,7 @@ const FacultyDashboard = () => {
                 <FacultyStatcard />
                 <FacultyQuickActions />
 
-                <div className="mt-4 grid grid-cols-2 gap-5 rounded-lg  ">
+                <div className="mt-4 grid grid-cols-2 gap-5  rounded-lg  ">
                     <FacultyVenueAvailability />
                     <FacultyLatestEventsRequestTable />
                 </div>
