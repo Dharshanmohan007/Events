@@ -86,7 +86,7 @@ const fetchFacultyOptions = async (mediaType, signal) => {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
-  const res = await fetch(endpoint, { headers, signal })
+  const res = await fetch(endpoint, { headers })
 
   if (!res.ok) {
     const errorBody = await res.json().catch(() => ({}))
@@ -100,7 +100,7 @@ const fetchFacultyOptions = async (mediaType, signal) => {
 
 // ── MediaStaffInterchangeModal ──────────────────────────────────────────
 
-const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClose, onSuccess }) => {
+const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClose, onSuccess, isIndividualInterchange = false, title: customTitle }) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFaculty, setSelectedFaculty] = useState(null)
   const [reason, setReason] = useState('')
@@ -179,7 +179,7 @@ const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClos
 
   // ── Derived values ──────────────────────────────────────────────────
 
-  const title = 'Interchange Media Staff'
+  const title = customTitle || 'Interchange Media Staff'
   const eventId = event?.eventId || event?._id || ''
 
   // Filter faculty list based on search query
@@ -294,6 +294,14 @@ const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClos
 
     setIsSubmitting(true)
 
+    // Guard: ensure event/submission ID is present before making the API call
+    const currentEventId = event?.eventId || event?._id || ''
+    if (isIndividualInterchange && !currentEventId) {
+      showErrorToast('Unable to identify this submission for interchange.')
+      setIsSubmitting(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('token')
       const headers = {
@@ -301,30 +309,45 @@ const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClos
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       }
 
-      const payload = {
-        mediaType: selectedMediaType,
-        reason: reason.trim(),
-        staff: [
-          {
-            name: selectedFaculty.name,
-            email: selectedFaculty.email,
-          },
-        ],
-      }
+      const payload = isIndividualInterchange
+        ? {
+            reason: reason.trim(),
+            staff: [
+              {
+                name: selectedFaculty.name,
+                email: selectedFaculty.email,
+              },
+            ],
+          }
+        : {
+            mediaType: selectedMediaType,
+            reason: reason.trim(),
+            staff: [
+              {
+                name: selectedFaculty.name,
+                email: selectedFaculty.email,
+              },
+            ],
+          }
 
-      const res = await fetch(
-        `${API_BASE_URL}/api/media-staff-change/${eventId}/change-media-staff`,
-        {
-          method: 'PUT',
-          headers,
-          body: JSON.stringify(payload),
-        }
-      )
+          console.log("isIndividualInterchange : ", isIndividualInterchange)
+      const endpoint = isIndividualInterchange
+        ? `${API_BASE_URL}/api/individual-submissions/${eventId}/interchange`
+        : `${API_BASE_URL}/api/media-staff-change/${eventId}/change-media-staff`
+
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload),
+      })
 
       const responseData = await res.json()
 
       if (res.ok && responseData.success !== false) {
-        showSuccessToast('Media staff interchanged successfully')
+        const successMessage = isIndividualInterchange
+          ? 'Individual media staff interchanged successfully'
+          : 'Media staff interchanged successfully'
+        showSuccessToast(successMessage)
 
         abortRef.current?.abort()
         setFacultyOptions([])
@@ -342,10 +365,16 @@ const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClos
         onSuccess()
         onClose()
       } else {
-        throw new Error(responseData.message || 'Failed to interchange media staff')
+        const errorMsg = responseData.message || (isIndividualInterchange
+          ? 'Failed to interchange individual media staff'
+          : 'Failed to interchange media staff')
+        throw new Error(errorMsg)
       }
     } catch (err) {
-      showErrorToast(err.message || 'Failed to interchange media staff')
+      const fallbackMsg = isIndividualInterchange
+        ? 'Unable to interchange this individual media request. Please try again.'
+        : 'Failed to interchange media staff'
+      showErrorToast(err.message || fallbackMsg)
       setIsSubmitting(false)
     }
   }
