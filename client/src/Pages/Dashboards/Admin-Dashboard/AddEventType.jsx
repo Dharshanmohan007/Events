@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Check, X,Search  } from 'lucide-react';
 import {
   getEventTypes,
   createEventType,
@@ -141,14 +141,21 @@ export default function AddEventType({ isOpen, onClose }) {
 
         {/* Search Bar */}
         <div className="px-6 pt-6">
-          <input 
-            type="text" 
-            placeholder="Search event types..." 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent border border-[#3A3A5A] rounded-lg p-2.5 text-white text-sm outline-none placeholder-gray-500 focus:border-purple-500 transition-colors"
-          />
-        </div>
+            <div className="relative">
+                <Search
+                size={18}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+
+                <input
+                type="text"
+                placeholder="Search event types..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent appearance-none border-none outline-none ring-0 focus:ring-0 focus:outline-none text-white text-sm placeholder-gray-500"
+                />
+            </div>
+            </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar relative">
