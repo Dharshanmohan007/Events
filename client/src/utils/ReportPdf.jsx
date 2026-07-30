@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 import logoSrc from "../assets/logo.png.jpeg";
+import { API_BASE } from "./apiConfig";
+import { decodeToken } from "./tokenUtils";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -428,6 +430,7 @@ export default async function ReportPdf({
   }
   if (!normalizedIqac) normalizedIqac = `IQAC-${Date.now()}`;
 
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const data = {
     iqacNumber: normalizedIqac,
     requisitionDate: formatDate(requisitionDateValue),
@@ -437,6 +440,8 @@ export default async function ReportPdf({
       submitResponse?.employeeName ||
       submitResponse?.name ||
       formData?.employeeName ||
+      storedUser?.name ||
+      storedUser?.employeeName ||
       "",
     empId:
       employee?.empId ||
@@ -444,15 +449,87 @@ export default async function ReportPdf({
       submitResponse?.empId ||
       submitResponse?.employeeId ||
       formData?.empId ||
+      storedUser?.empId ||
+      storedUser?.employeeId ||
       "",
     designation:
-      employee?.designation || submitResponse?.designation || formData?.designation || "",
-    department: employee?.department || submitResponse?.department || formData?.department || "",
+      employee?.designation ||
+      submitResponse?.designation ||
+      formData?.designation ||
+      storedUser?.designation ||
+      "",
+    department:
+      employee?.department ||
+      submitResponse?.department ||
+      formData?.department ||
+      storedUser?.department ||
+      "",
     advanceAmount: formatAmount(formData?.advanceAmount),
     purpose: formData?.purposeOfAdvance || formData?.advancePurpose || "",
     clearBeforeDate: add15Days(requisitionDateValue, formData?.clearanceDays || 15),
     clearanceDays: formData?.clearanceDays || 15,
   };
+  const facultyId =
+    submitResponse?.employeeId ||
+    submitResponse?.employee ||
+    submitResponse?.data?.employee ||
+    employee?.empId ||
+    employee?.employeeId ||
+    employee?._id ||
+    formData?.empId ||
+    storedUser?._id ||
+    storedUser?.id ||
+    "";
+
+  if (!data.empId && facultyId) {
+    try {
+      const token = localStorage.getItem("token");
+      const resp = await fetch(`${API_BASE}/api/faculty/${facultyId}`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+          if (resp.ok) {
+        const json = await resp.json();
+        const faculty = json?.data?.faculty || json?.faculty || json?.data || json;
+        if (faculty) {
+          data.empId =
+            data.empId ||
+            faculty.empId ||
+            faculty.employeeId ||
+            faculty.employee_id ||
+            faculty.emp_id ||
+            faculty.empid ||
+            faculty.empID ||
+            faculty.empId ||
+            "";
+          data.employeeName =
+            data.employeeName ||
+            faculty.name ||
+            faculty.employeeName ||
+            faculty.empName ||
+            faculty.username ||
+            "";
+          data.designation =
+            data.designation ||
+            faculty.designation ||
+            faculty.jobTitle ||
+            faculty.position ||
+            "";
+          data.department =
+            data.department ||
+            faculty.department ||
+            faculty.dept ||
+            faculty.departmentName ||
+            "";
+        }
+      }
+    } catch (err) {
+      console.warn("Receipt faculty fetch failed:", err);
+    }
+  }
 
   // Convert the bundled logo to a base64 data-URL so the new tab can display it
   const logoDataUrl = await toBase64(logoSrc);
