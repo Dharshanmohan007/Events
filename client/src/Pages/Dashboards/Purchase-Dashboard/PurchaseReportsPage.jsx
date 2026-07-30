@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { Search, ListFilter, Download, ChevronDown } from 'lucide-react'
-import DashboardHeader from './DashboardHeader'
+import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-// ─── Status badge (mirrors TransportLatestEventsRequestTable) ──────────────────
+// ─── Status badge (mirrors PurchaseLatestEventsRequestTable) ──────────────────
 const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted']
 
 const ReportStatus = ({ status }) => {
@@ -28,7 +28,7 @@ const ReportStatus = ({ status }) => {
   )
 }
 
-// ─── Dropdown filter (mirrors TransportVenueListPage's SelectFilter) ────────────
+// ─── Dropdown filter (mirrors PurchaseVenueListPage's SelectFilter) ────────────
 const ReportSelectFilter = ({ value, onChange, options, label }) => {
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -158,12 +158,12 @@ const downloadRow = async (row, tabContext) => {
   // Logic for Individual Requests (CSV Download)
   const lines = [
     ['Field', 'Value'],
-    ['Event Name', row.eventName || '-'],
-    ['Date', row.requiredDate || '-'],
-    ['Event Type', row.eventType || '-'],
-    ['Dept', row.department || '-'],
-    ['Venue', row.eventVenue || '-'],
-    ['Status', row.status || '-'],
+    ['Organizer', row.employee],
+    ['Email', row.employeeEmail],
+    ['Form Type', row.formType],
+    ['Venue', row.eventVenue],
+    ['Date', row.createdAt],
+    ['Status', row.status],
   ]
 
   const csv = lines
@@ -184,11 +184,11 @@ const formatDate = (dateStr) => {
   const d = new Date(dateStr)
   return Number.isNaN(d.getTime())
     ? dateStr
-    : d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+    : d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
-const Reports = () => {
+const PurchaseReportsPage = () => {
   const [activeTab, setActiveTab] = useState('events')
 
   const [events, setEvents] = useState([])
@@ -210,7 +210,7 @@ const Reports = () => {
     ;(async () => {
       try {
         const res = await fetch(
-          `${API_BASE_URL}/api/table/dashboard-table?module=icts`,
+          `${API_BASE_URL}/api/table/dashboard-table?module=purchase`,
           { headers: { Authorization: `Bearer ${token}` } }
         )
         const json = await res.json()
@@ -219,21 +219,22 @@ const Reports = () => {
           setEvents(
             (json.data || []).map((ev) => ({
               id: ev.eventId || ev.id || ev._id,
-              eventName: ev.eventName || ev.name || '-',
+              eventName: ev.eventName || '-',
               eventType: ev.eventType || '-',
-              department: ev.organizingDepartment || ev.department || '-',
-              eventVenue: Array.isArray(ev.venues) 
-                ? ev.venues.map(v => typeof v === 'object' && v !== null ? (v.venueName || v.venue || v.name || '-') : String(v)).join(', ') 
-                : (typeof ev.venues === 'object' && ev.venues !== null ? (ev.venues.venueName || ev.venues.venue || ev.venues.name || '-') : (ev.venues || ev.venue || '-')),
-              requiredDate: (Array.isArray(ev.dates) && ev.dates.length > 0) 
-                  ? `${formatDate(ev.dates[0])}${ev.dates.length > 1 ? ` +${ev.dates.length - 1}` : ''}`
-                  : formatDate(ev.dates || ev.eventDate || ev.requiredDate),
-              status: ev.eventStatus || ev.departmentStatus || ev.overallStatus || ev.status || '-',
+              eventVenue: (Array.isArray(ev.venues) && ev.venues.length > 0)
+                ? ev.venues[0]
+                : ev.eventVenue || ev.venue || '-',
+              eventDate: formatDate(
+                (Array.isArray(ev.eventDates) && ev.eventDates.length > 0)
+                  ? ev.eventDates[0]
+                  : ev.eventDate
+              ),
+              eventStatus: ev.eventStatus || ev.overallStatus || '-',
             }))
           )
         }
       } catch (err) {
-        console.warn('Reports events:', err.message)
+        console.warn('PurchaseReportsPage events:', err.message)
       } finally {
         if (isMounted) setEventsLoading(false)
       }
@@ -250,7 +251,7 @@ const Reports = () => {
 
     ;(async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
+        const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=individual`, {
           headers: { Authorization: `Bearer ${token}` },
         })
         const json = await res.json()
@@ -258,23 +259,21 @@ const Reports = () => {
         if (json.data && isMounted) {
           setIndividualRows(
             (json.data || []).map((req) => ({
-              id: req.id || req._id || req.submissionId,
-              eventName: req.eventName || req.requestDetails?.eventDetails?.eventName || '-',
-              department: req.department || req.organizingDepartment || '-',
-              requesterName: req.employee || req.requesterName || req.employeeDetail?.name || '-',
-              requesterPhone: req.phone || req.requesterPhone || '-',
-              requiredDate: (Array.isArray(req.dates) && req.dates.length > 0) 
-                  ? `${formatDate(req.dates[0])}${req.dates.length > 1 ? ` +${req.dates.length - 1}` : ''}`
-                  : formatDate(req.dates || req.createdAt || req.date || req.requiredDate),
+              id: req.id || req._id,
+              employee: req.employee || req.employeeDetail?.name || '-',
+              employeeEmail: req.employeeEmail || '-',
+              formType: req.formType || '-',
+              eventVenue: req.venue || req.eventVenue || '-',
+              createdAt: formatDate(req.createdAt),
               status:
                 typeof req.status === 'string'
                   ? req.status
-                  : Object.values(req.status || {}).find(Boolean) || req.overallStatus || 'Pending',
+                  : Object.values(req.status || {}).find(Boolean) || 'Pending',
             }))
           )
         }
       } catch (err) {
-        console.warn('Reports individual:', err.message)
+        console.warn('PurchaseReportsPage individual:', err.message)
       } finally {
         if (isMounted) setIndividualLoading(false)
       }
@@ -347,7 +346,7 @@ const Reports = () => {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <section className="min-h-screen bg-[#0b1326] poppins">
-      <DashboardHeader />
+      <DashboardHeader basePath="/dashboard-purchase" />
 
       <main className="px-6 pb-10">
         {/* Page header row — title/subtitle left, pill-toggle right */}
@@ -427,7 +426,7 @@ const Reports = () => {
               <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-y border-[#1d2638]">
-                    {['EVENT NAME', 'DATE', 'EVENT TYPE', 'DEPT', 'VENUE', 'STATUS', 'ACTION'].map(
+                    {['EVENT NAME', 'EVENT TYPE', 'EVENT VENUE', 'EVENT DATE', 'EVENT STATUS', 'ACTION'].map(
                       (col) => (
                         <th
                           key={col}
@@ -441,12 +440,12 @@ const Reports = () => {
                 </thead>
 
                 {isLoading ? (
-                  <TableSkeleton cols={7} />
+                  <TableSkeleton cols={6} />
                 ) : (
                   <tbody>
                     {filteredEvents.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
+                        <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
                           No events found.
                         </td>
                       </tr>
@@ -457,12 +456,11 @@ const Reports = () => {
                           className="border-b border-[#1d2638] last:border-b-0 transition-colors hover:bg-[#161d2e]"
                         >
                           <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.eventName}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.requiredDate}</td>
                           <td className="px-5 py-3.5 text-[12px] text-white">{row.eventType}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.department}</td>
                           <td className="px-5 py-3.5 text-[12px] text-white">{row.eventVenue}</td>
+                          <td className="px-5 py-3.5 text-[12px] text-white">{row.eventDate}</td>
                           <td className="px-5 py-3.5">
-                            <ReportStatus status={row.status} />
+                            <ReportStatus status={row.eventStatus} />
                           </td>
                           <td className="px-5 py-3.5">
                             <button
@@ -484,7 +482,7 @@ const Reports = () => {
               <table className="w-full min-w-[700px]">
                 <thead>
                   <tr className="border-y border-[#1d2638]">
-                    {['REQUIRED DATE', 'ORGANIZER NAME', 'DEPARTMENT', 'ORGANIZER PHONE NO', 'STATUS', 'ACTION'].map((col) => (
+                    {['ORGANIZER NAME', 'FORM TYPE', 'VENUE', 'DATE', 'STATUS', 'ACTION'].map((col) => (
                       <th
                         key={col}
                         className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#FFFFFF66]"
@@ -501,7 +499,7 @@ const Reports = () => {
                   <tbody>
                     {filteredIndividual.length === 0 ? (
                       <tr>
-                        <td colSpan={activeTab === 'events' ? 5 : 6} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
+                        <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
                           No individual requests found.
                         </td>
                       </tr>
@@ -511,10 +509,10 @@ const Reports = () => {
                           key={row.id}
                           className="border-b border-[#1d2638] last:border-b-0 transition-colors hover:bg-[#161d2e]"
                         >
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.requiredDate}</td>
-                          <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.requesterName}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.department}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.requesterPhone}</td>
+                          <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.employee}</td>
+                          <td className="px-5 py-3.5 text-[12px] text-white">{row.formType}</td>
+                          <td className="px-5 py-3.5 text-[12px] text-white">{row.eventVenue}</td>
+                          <td className="px-5 py-3.5 text-[12px] text-white">{row.createdAt}</td>
                           <td className="px-5 py-3.5">
                             <ReportStatus status={row.status} />
                           </td>
@@ -542,4 +540,4 @@ const Reports = () => {
   )
 }
 
-export default Reports
+export default PurchaseReportsPage

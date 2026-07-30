@@ -38,6 +38,7 @@ import FoodEventsDetailViewPage from './Pages/Dashboards/Food-Dashboard/FoodEven
 import FoodReportsPage from './Pages/Dashboards/Food-Dashboard/FoodReportsPage'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
 import PurchaseEventsDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseEventsDetailViewPage'
+import PurchaseReportsPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseReportsPage'
 import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
 import VenueEventsDetailViewPage from './Pages/Dashboards/Venue-Dashboard/VenueEventsDetailViewPage'
 import VenueReportsPage from './Pages/Dashboards/Venue-Dashboard/VenueReportsPage'
@@ -154,6 +155,7 @@ function AppRoutes() {
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events" element={<ProtectedRoute><PurchaseEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-purchase/reports" element={<ProtectedRoute><PurchaseReportsPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
