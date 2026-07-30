@@ -12,6 +12,10 @@ import MediaForm from "../Components/Forms/MediaForm";
 import AudioForm from "../Components/Forms/AudioForm";
 import { useAuth } from "../Components/AuthContext";
 import FormSubmitted from "../Components/Forms/FormSubmitted";
+import EventPreviewPage from "./EventPreviewPage";
+import { jwtDecode } from "jwt-decode";
+import generateAdvanceReceiptPdf from "../utils/generateAdvanceReceiptPdf";
+import { getFacultyById } from "../services/events/facultyService";
 
 
 // ── Empty factories ───────────────────────────────────────────────────────────
@@ -99,12 +103,14 @@ const validateEventRequisition = (data) => {
   if (!data.department?.trim()) errors.department = "Department name is required";
   if (!data.numOrganizers || parseInt(data.numOrganizers) < 1)
     errors.numOrganizers = "At least 1 organizer is required";
+  const toStr = (v) => (v === null || v === undefined ? "" : String(v));
   const organizerErrors = (data.organizers || []).map((org) => {
     const err = {};
     if (!org.name?.trim()) err.name = "Name is required";
     if (!org.department) err.department = "Department is required";
-    if (!org.mobile?.trim()) err.mobile = "Mobile number is required";
-    else if (!/^[6-9]\d{9}$/.test(org.mobile.trim())) err.mobile = "Enter a valid 10-digit Indian mobile number";
+    const mobile = toStr(org.mobile).trim();
+    if (!mobile) err.mobile = "Mobile number is required";
+    else if (!/^[6-9]\d{9}$/.test(mobile)) err.mobile = "Enter a valid 10-digit Indian mobile number";
     if (!org.designation?.trim()) err.designation = "Designation is required";
     if (!org.empId?.trim()) err.empId = "Employee ID is required";
     return err;
@@ -144,14 +150,21 @@ const validateEventRequisition = (data) => {
 };
 
 const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
+let token = localStorage.getItem("token");
+let decodedToken = jwtDecode(token);
+
+  console.log("user log :",user);
+  
   const fd = new FormData();
-  fd.append("organizerId", user?._id ?? "");
+  fd.append("organizerId", decodedToken?.facultyId);
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
       previousEventReason: eventRequisition.doc === "No" ? eventRequisition.reason : "",
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
+      advanceAmount: Number(eventRequisition.advanceAmount) || 0,
+      purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
@@ -188,13 +201,15 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
       })),
     },
     requirementDetails: {
-      venueRequired: eventRequisition.requirements.includes("venue"),
-      audioRequired: eventRequisition.requirements.includes("audio"),
-      ictsRequired: eventRequisition.requirements.includes("icts"),
-      transportRequired: eventRequisition.requirements.includes("transport"),
-      accommodationRequired: eventRequisition.requirements.includes("accommodation"),
-      mediaRequired: eventRequisition.requirements.includes("media"),
-    },
+    venueRequired: eventRequisition.requirements?.venue === "Yes",
+    audioRequired: eventRequisition.requirements?.audio === "Yes",
+    ictsRequired: eventRequisition.requirements?.icts === "Yes",
+    transportRequired: eventRequisition.requirements?.transport === "Yes",
+    refreshmentRequired: eventRequisition.requirements?.foodandrefreshments === "Yes",
+    accommodationRequired: eventRequisition.requirements?.accommodation === "Yes",
+    purchaseRequired: eventRequisition.requirements?.purchase === "Yes",
+    mediaRequired: eventRequisition.requirements?.media === "Yes",
+  },
   };
   fd.append("requestDetails", JSON.stringify(requestDetails));
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
@@ -253,7 +268,24 @@ const buildVenuePayload = (venueData) => {
   return { venues };
 };
 
+function getIctsDepartmentFromStorage() {
+  try {
+    const dept = localStorage.getItem("department");
+    if (dept) return dept.toLowerCase().trim();
+    const raw = localStorage.getItem("user");
+    if (raw) {
+      const user = JSON.parse(raw);
+      return (user?.department || "").toLowerCase().trim();
+    }
+  } catch {
+    // ignore
+  }
+  return "";
+}
+const isIctsPlacementDept = () => getIctsDepartmentFromStorage() === "placement";
+
 const validateIctsData = (ictsData, venueData) => {
+  const showProctoring = isIctsPlacementDept();
   const errors = {};
   Object.entries(ictsData).forEach(([dayIndex, venues]) => {
     const dayErrors = {};
@@ -261,14 +293,34 @@ const validateIctsData = (ictsData, venueData) => {
     selectedVenues.forEach((venueName) => {
       const card = venues?.[venueName] || {};
       const cardErrors = {};
-      if (!card.desktopLaptop) cardErrors.desktopLaptop = "This field is required";
-      if (!card.internetFacility) cardErrors.internetFacility = "This field is required";
-      if (!card.expectedInternetUsers?.trim()) cardErrors.expectedInternetUsers = "This field is required";
-      if (!card.proctorUsers?.trim()) cardErrors.proctorUsers = "This field is required";
-      if (!card.guestWifi) cardErrors.guestWifi = "This field is required";
-      if (card.guestWifi === "Yes" && !card.guestWifiExceed5) cardErrors.guestWifiExceed5 = "This field is required";
-      if (!card.totalGuestCount?.trim()) cardErrors.totalGuestCount = "This field is required";
-      if (!card.requirements || card.requirements.length === 0) cardErrors.requirements = "Select at least one requirement";
+
+      if (!card.equipmentRequired || card.equipmentRequired.length === 0)
+        cardErrors.equipmentRequired = "Select at least one equipment";
+      if (!card.internetFacility)
+        cardErrors.internetFacility = "This field is required";
+      if (
+        card.expectedInternetUsers === "" ||
+        card.expectedInternetUsers === undefined ||
+        card.expectedInternetUsers === null
+      ) {
+        cardErrors.expectedInternetUsers = "This field is required";
+      }
+      if (
+        showProctoring &&
+        (card.proctorUsers === "" || card.proctorUsers === undefined || card.proctorUsers === null)
+      ) {
+        cardErrors.proctorUsers = "This field is required";
+      }
+      if (
+        card.guestWifi === "Yes" &&
+        card.guestWifiExceed5 === "Yes" &&
+        (card.totalGuestCount === "" || card.totalGuestCount === undefined || card.totalGuestCount === null)
+      ) {
+        cardErrors.totalGuestCount = "This field is required";
+      }
+      if (!card.requirements || card.requirements.length === 0)
+        cardErrors.requirements = "Select at least one requirement";
+
       if (Object.keys(cardErrors).length > 0) dayErrors[venueName] = cardErrors;
     });
     if (Object.keys(dayErrors).length > 0) errors[dayIndex] = dayErrors;
@@ -281,18 +333,29 @@ const buildIctsPayload = (ictsData) => {
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      const desktopLaptop = (card.equipmentRequired || []).map((type) => ({
+        type,
+        count:
+          type === "Desktop"
+            ? parseInt(card.desktopCount) || 0
+            : type === "Laptop"
+            ? parseInt(card.laptopCount) || 0
+            : 0,
+      }));
+
       ictses.push({
-        dayIndex, venueName,
-        desktopLaptop: card.desktopLaptop === "Yes",
-        internetFacility: card.internetFacility || "",
+        dayIndex,
+        venueName,
+        desktopLaptop,
+        internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
-        proctoringUsers: parseInt(card.proctorUsers) || 0,
-        guestWifiNeeded: card.guestWifi === "Yes",
-        guestWifiExceed5: card.guestWifiExceed5 === "Yes",
-        totalGuestCount: parseInt(card.totalGuestCount) || 0,
-        requirements: card.requirements || [],
-        otherRequirements: card.others || "",
-        specialRequirements: card.specialRequirements || "",
+        proctoringUsers:       parseInt(card.proctorUsers) || 0,
+        guestWifiNeeded:       card.guestWifi === "Yes",
+        guestWifiExceed5:      card.guestWifiExceed5 === "Yes",
+        totalGuestCount:       parseInt(card.totalGuestCount) || 0,
+        requirements:          card.requirements || [],
+        otherRequirements:     card.others || "",
+        specialRequirements:   card.specialRequirements || "",
       });
     });
   });
@@ -336,23 +399,109 @@ const validatePurchaseData = (purchaseData) => {
   return {};
 };
 
+function buildStudentGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, cashPrizeAmount: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Cash Prize")) {
+    giftItems.push({
+      giftType: "Cash Prize",
+      trophy: [],
+      cashPrizeAmount: parseInt(personData.cashPrizeAmount) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], cashPrizeAmount: 0, voucher });
+  }
+
+  return giftItems;
+}
+
+function buildGuestGiftItems(personData = {}) {
+  const giftItems = [];
+
+  if (personData.giftType?.includes("Trophy")) {
+    const trophy = [];
+    if (personData.trophyType?.includes("Basic"))
+      trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
+    if (personData.trophyType?.includes("Elite"))
+      trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
+    giftItems.push({ giftType: "Trophy", trophy, glassCupQty: 0, voucher: [] });
+  }
+
+  if (personData.giftType?.includes("Glass Cup")) {
+    giftItems.push({
+      giftType: "Glass Cup",
+      trophy: [],
+      glassCupQty: parseInt(personData.glassCupQty) || 0,
+      voucher: [],
+    });
+  }
+
+  if (personData.giftType?.includes("Voucher")) {
+    const selectedWorths = Array.isArray(personData.voucherWorth)
+      ? personData.voucherWorth
+      : (personData.voucherWorth ? [personData.voucherWorth] : []);
+    const worthQty = personData.voucherWorthQty || {};
+    const voucher = selectedWorths.map((w) => ({
+      voucherWorth: w,
+      quantity: parseInt(worthQty[w]) || 0,
+    }));
+    giftItems.push({ giftType: "Voucher", trophy: [], glassCupQty: 0, voucher });
+  }
+
+  return giftItems;
+}
+
 const buildPurchasePayload = (purchaseData) => {
   const purchases = purchaseData.map((day, dayIndex) => {
     const requirementNeeded = [];
-    if (day.requirementNeeded?.includes("Id Card")) requirementNeeded.push({ type: "Id Card", hardCount: parseInt(day.idCardQty) || 0, softCount: 0 });
-    if (day.requirementNeeded?.includes("Certificate")) requirementNeeded.push({ type: "Certificate", hardCount: parseInt(day.certificateQty) || 0, softCount: 0 });
+    if (day.requirementNeeded?.includes("Id Card"))
+      requirementNeeded.push({ type: "Id Card", hardCount: parseInt(day.idCardQty) || 0, softCount: 0 });
+    if (day.requirementNeeded?.includes("Certificate"))
+      requirementNeeded.push({ type: "Certificate", hardCount: parseInt(day.certificateQty) || 0, softCount: 0 });
+
     const requiredFor = [];
     if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
-    if (day.selectedPersons === "Guest" || day.selectedPersons === "Both") requiredFor.push("Guest");
-    const buildPersonData = (personData = {}) => {
-      const giftItems = [];
-      if (personData.giftType?.includes("Trophy")) giftItems.push({ type: "Trophy", trophyTypes: personData.trophyType || [], basicQty: parseInt(personData.basicTrophyQty) || 0, eliteQty: parseInt(personData.eliteTrophyQty) || 0 });
-      if (personData.giftType?.includes("Cash Prize")) giftItems.push({ type: "Cash Prize", amount: parseInt(personData.cashPrizeAmount) || 0 });
-      if (personData.giftType?.includes("Voucher")) giftItems.push({ type: "Voucher", worth: personData.voucherWorth || "" });
-      return { registrationKitNeeded: personData.registrationKitNeeded === "Yes", registrationKitQty: parseInt(personData.registrationKitQty) || 0, specialRequirements: personData.specialRequirements || "", giftItems };
+    if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
+
+    return {
+      dayIndex,
+      requirementNeeded,
+      requiredFor,
+      students: {
+        giftItems: buildStudentGiftItems(day.studentData),
+        registrationKitNeeded: day.studentData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.studentData?.registrationKitQty) || 0,
+        specialRequirements: day.studentData?.specialRequirements || "",
+      },
+      guests: {
+        giftItems: buildGuestGiftItems(day.guestData),
+        registrationKitNeeded: day.guestData?.registrationKitNeeded === "Yes",
+        registrationKitQty: parseInt(day.guestData?.registrationKitQty) || 0,
+        specialRequirements: day.guestData?.specialRequirements || "",
+      },
     };
-    return { dayIndex, requirementNeeded, requiredFor, students: buildPersonData(day.studentData), guests: buildPersonData(day.guestData) };
   });
+
   return { purchases };
 };
 
@@ -394,20 +543,26 @@ const buildMediaPayload = (mediaData) => {
     const typeOfMedia = [];
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
+
+    // Only Flex / Glass Sticker carry a size value — same rule as buildMediaFormData.
     const sizes = [];
-    (day.poster?.displayNeeded || []).forEach((type) => {
-      if (type === "Flex") {
-        if (day.poster?.sizeForFlex?.trim()) sizes.push({ type: "Flex", value: day.poster.sizeForFlex.trim() });
-      } else if (type === "Glass Sticker") {
-        if (day.poster?.sizeForGlass?.trim()) sizes.push({ type: "Glass Sticker", value: day.poster.sizeForGlass.trim() });
-      } else {
-        sizes.push({ type, value: "" });
-      }
-    });
+    const flexVal  = day.poster?.sizeForFlex?.trim();
+    const glassVal = day.poster?.sizeForGlass?.trim();
+    if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
+      sizes.push({ type: "Flex", value: flexVal });
+    }
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && glassVal) {
+      sizes.push({ type: "Glass Sticker", value: glassVal });
+    }
+
     return {
       dayIndex, typeOfMedia,
       poster: {
         posterContent:             day.poster?.contentPoster       || "",
+        // This JSON-only path can never carry File objects — real uploads
+        // must go through buildMediaFormData (multipart). Leave file arrays
+        // empty here rather than clobbering already-saved refs (see onSave
+        // in Form.jsx: this path should not be used once files exist).
         referencePosterFiles:      [],
         certificateContent:        day.poster?.contentCertificate  || "",
         referenceCertificateFiles: [],
@@ -476,7 +631,63 @@ const validateAccommodationData = (accommodationData) => {
   return errors;
 };
 
-const buildPayloadForSection = (sectionKey, data) => {
+// in Form.jsx, near the other buildXPayload helpers
+
+const flattenGuestsForAccommodation = (eventDays = []) => {
+  const seen = new Set();
+  const result = [];
+  eventDays.forEach((day, dayIdx) => {
+    (day.guests || []).forEach((g, gIdx) => {
+      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "").replace(/\s+/g, "").toLowerCase()}`;
+      if (!seen.has(guestId)) {
+        seen.add(guestId);
+        result.push({ ...g, guestId });
+      }
+    });
+  });
+  return result;
+};
+
+const buildAccommodationPayload = (accommodationState, eventDays) => {
+  const allGuests = flattenGuestsForAccommodation(eventDays);
+  const accommodations = (accommodationState?.accommodations || []).map((acc) => {
+    const selectedGuests = allGuests.filter((g) =>
+      (acc.selectedGuestIds || []).includes(g.guestId)
+    );
+
+    const roomOccupancy = [];
+    if (parseInt(acc.singleRooms) > 0) roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
+    if (parseInt(acc.doubleRooms) > 0) roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
+
+    const roomCategory = (acc.roomTypes || []).map((rt) => ({
+      type: rt,
+      count: parseInt(acc.roomCounts?.[rt]) || 0,
+    }));
+
+    const dineInCounts = [];
+    if (acc.dine === "Yes") {
+      if (acc.dineTypes?.includes("Hostel") && parseInt(acc.hostelGuests) > 0)
+        dineInCounts.push({ type: "Hostel", count: parseInt(acc.hostelGuests) });
+      if (acc.dineTypes?.includes("Amenity") && parseInt(acc.amenityGuests) > 0)
+        dineInCounts.push({ type: "Amenity", count: parseInt(acc.amenityGuests) });
+    }
+
+    return {
+      checkInDateTime: acc.checkIn ? new Date(acc.checkIn).toISOString() : "",
+      checkOutDateTime: acc.checkOut ? new Date(acc.checkOut).toISOString() : "",
+      guests: selectedGuests.map((g) => ({
+        name: g.name || "", mobile: parseInt(g.mobile) || 0, gender: g.gender || "",
+      })),
+      roomOccupancy, roomCategory,
+      dineInRequired: acc.dine === "Yes",
+      dineInCounts,
+      specialRequirements: acc.special || "",
+    };
+  });
+  return { accommodations };
+};
+
+const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
     case "icts":                return { ictsDetails: buildIctsPayload(data) };
@@ -485,7 +696,7 @@ const buildPayloadForSection = (sectionKey, data) => {
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
     case "foodandrefreshments": return { foodDetails: data };
-    case "accommodation":       return { accommodationDetails: data };
+    case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
   }
 };
@@ -516,6 +727,8 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
+      advanceAmount: Number(formData.event.advanceAmount) || 0,
+      purposeOfAdvance: formData.event.purposeOfAdvance || "",
       organizingDepartment: formData.event.department,
       organizerCount: parseInt(formData.event.numOrganizers) || 0,
       organizers: (formData.event.organizers || []).map((o) => ({
@@ -531,7 +744,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     audioDetails:        formData.audio,
     transportDetails:    formData.transport,
     foodDetails:         formData.foodandrefreshments,
-    accommodationDetails: formData.accommodation,
+    accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
 };
 
@@ -561,6 +774,7 @@ export default function Form() {
   const [apiError, setApiError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -584,8 +798,19 @@ export default function Form() {
     purchase:            { label: "Purchase Details",              component: Purchase },
     media:               { label: "Media Requirement Details",     component: MediaForm },
   };
+  console.log("selectedRequirements:", selectedRequirements);
+  console.log("type:", typeof selectedRequirements);
+  console.log("isArray:", Array.isArray(selectedRequirements));
+  const requirementKeys = Array.isArray(selectedRequirements)
+    ? selectedRequirements
+    : Object.entries(selectedRequirements || {})
+        .filter(([, value]) => value === "Yes")
+        .map(([key]) => key);
 
-  const dynamicSteps = selectedRequirements.map((key) => ({ key, ...requirementMap[key] }));
+  const dynamicSteps = requirementKeys.map((key) => ({
+    key,
+    ...requirementMap[key],
+  }));
   const steps = [...baseSteps, ...dynamicSteps];
   const CurrentComponent = steps[currentStep]?.component;
   const currentStepKey   = steps[currentStep]?.key;
@@ -670,6 +895,7 @@ export default function Form() {
         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
+        console.log("saveSection: event payload:", payload);
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -684,7 +910,7 @@ export default function Form() {
           body: sectionValueOrFormData,
         });
       } else {
-        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData);
+        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays);
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -713,6 +939,7 @@ export default function Form() {
 
   // ── submitEvent ───────────────────────────────────────────────────────────
   const submitEvent = async () => {
+    console.log("submitEvent started");
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
     setApiError("");
@@ -724,7 +951,38 @@ export default function Form() {
         body: JSON.stringify(fullPayload),
       });
       const data = await response.json();
+      console.log("Reached after submit API");
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
+      // Generate PDF only if finance details exist
+      console.log("Finance :", formDataRef.current.event.finance);
+      console.log("Amount :", formDataRef.current.event.advanceAmount);
+      console.log("Purpose :", formDataRef.current.event.purposeOfAdvance);
+      if (
+          formDataRef.current.event.finance === "Yes" &&
+          formDataRef.current.event.advanceAmount &&
+          formDataRef.current.event.purposeOfAdvance
+      ) {
+          console.log("Generating PDF...");
+          console.log(formDataRef.current.event);
+          console.log(user);
+          console.log(data);
+          const organizer =
+            data.data.requestDetails.organizerDetails.organizers?.[0];
+
+          let facultyDetails = {};
+          console.log("Submit Response:", data);
+          console.log("Organizer ID:", data.data.organizerId);
+          if (data.data.organizerId) {
+            facultyDetails = await getFacultyById(data.data.organizerId);
+          }
+
+          await generateAdvanceReceiptPdf({
+            formData: formDataRef.current.event,
+            employee: facultyDetails,
+            submitResponse: data.data,
+          });
+          console.log("PDF Generated");
+      }
       setSubmitSuccess(true);
     } catch (error) {
       setApiError(error.message || "Unable to submit event. Please try again.");
@@ -872,6 +1130,19 @@ export default function Form() {
     );
   }
 
+  if (showPreview) {
+    return (
+      <EventPreviewPage
+        formData={formData}
+        selectedRequirements={selectedRequirements}
+        onBack={() => setShowPreview(false)}
+        onSubmit={submitEvent}
+        isLoading={isLoading}
+        eventId={eventId}
+      />
+    );
+  }
+
   if (!CurrentComponent) return null;
 
   return (
@@ -927,21 +1198,21 @@ export default function Form() {
             ─────────────────────────────────────────────────────────────── */}
             {showSubmit ? (
               <button
-                onClick={submitEvent}
-                disabled={!eventId || isLoading || childNav.isLoading}
-                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={() => setShowPreview(true)}
+                  disabled={!eventId || isLoading || childNav.isLoading}
+                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading || childNav.isLoading ? "Submitting..." : "Submit"}
+                  Preview
               </button>
-            ) : (
+          ) : (
               <button
-                onClick={handleSaveAndContinue}
-                disabled={isLoading || childNav.isLoading}
-                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                  onClick={handleSaveAndContinue}
+                  disabled={isLoading || childNav.isLoading}
+                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {forwardLabel()}
+                  {forwardLabel()}
               </button>
-            )}
+          )}
           </div>
         </div>
       </div>

@@ -48,8 +48,8 @@ function emptyDayData() {
 function validatePoster(data, showCertificate = false) {
   const e = {};
   if (!data.contentPoster?.trim())  e.contentPoster = "Content for poster is required";
-  if (showCertificate && !data.contentCertificate?.trim())
-    e.contentCertificate = "Content for certificate is required";
+  // if (showCertificate && !data.contentCertificate?.trim())
+  //   e.contentCertificate = "Content for certificate is required";
   if (!data.contentTrophy?.trim())  e.contentTrophy = "Content for trophy is required";
   if (!data.displayNeeded || data.displayNeeded.length === 0)
     e.displayNeeded = "Select at least one display option";
@@ -88,58 +88,87 @@ function validateDay(data, showCertificate = false) {
 
 // ── Build FormData for submission (includes File objects) ─────────────────────
 
+// ── Build FormData for submission (includes File objects) ─────────────────────
+// Mirrors buildEventRequisitionPayload's pattern: JSON metadata goes in one
+// field ("mediaData"), and every actual File is appended as its own separate
+// top-level FormData field — the same way previousEventDocumentation and
+// principalApprovalDocument are appended outside requestDetails.
 export function buildMediaFormData(mediaData) {
   const fd = new FormData();
 
-  const jsonSafe = mediaData.map((day, i) => {
-    const posterFiles      = [];
-    const certFiles        = [];
-    const videoFiles       = [];
+  const mediaRequirements = mediaData.map((day, dayIndex) => {
+    const typeOfMedia = [];
+    if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
+    if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    (day.poster?.referencePoster || []).forEach((f, fi) => {
-      if (f instanceof File) posterFiles.push(`day_${i}_referencePoster_${fi}`);
-    });
-    (day.poster?.referenceCertificate || []).forEach((f, fi) => {
-      if (f instanceof File) certFiles.push(`day_${i}_referenceCertificate_${fi}`);
-    });
-    (day.video?.referenceVideo || []).forEach((f, fi) => {
-      if (f instanceof File) videoFiles.push(`day_${i}_referenceVideo_${fi}`);
-    });
+    // ── helper: appends real Files as top-level FormData fields (outside the
+    //    JSON), and returns plain metadata for files already saved (edit mode)
+    //    so those references aren't lost when re-submitting.
+    const appendFiles = (files = [], fieldName) => {
+      const meta = [];
+
+      (files || []).forEach((file) => {
+        if (file instanceof File) {
+          // Same pattern as: fd.append("previousEventDocumentation", eventRequisition.file)
+          fd.append(fieldName, file);
+        } else if (file) {
+          // Already-uploaded file (edit mode) — keep its saved metadata (url/publicId/etc.)
+          meta.push(file);
+        }
+      });
+
+      return meta;
+    };
+
+    // Field names are day-scoped so the backend can tell which day each
+    // uploaded file belongs to, while still being flat top-level fields
+    // (same style as previousEventDocumentation / principalApprovalDocument).
+    const referencePosterFiles      = appendFiles(day.poster?.referencePoster,      `referencePosterFiles_day${dayIndex}`);
+    const referenceCertificateFiles = appendFiles(day.poster?.referenceCertificate, `referenceCertificateFiles_day${dayIndex}`);
+    const referenceFiles            = appendFiles(day.video?.referenceVideo,        `referenceFiles_day${dayIndex}`);
+
+    // ── Sizes: ONLY Flex / Glass Sticker carry a size value.
+    const sizes = [];
+    const flexVal  = day.poster?.sizeForFlex?.trim();
+    const glassVal = day.poster?.sizeForGlass?.trim();
+    if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
+      sizes.push({ type: "Flex", value: flexVal });
+    }
+    if (day.poster?.displayNeeded?.includes("Glass Sticker") && glassVal) {
+      sizes.push({ type: "Glass Sticker", value: glassVal });
+    }
 
     return {
-      ...day,
-      poster: day.poster
-        ? {
-            ...day.poster,
-            referencePoster:           null,
-            referenceCertificate:      null,
-            referencePosterFiles:      posterFiles,
-            referenceCertificateFiles: certFiles,
-          }
-        : day.poster,
-      video: day.video
-        ? {
-            ...day.video,
-            referenceVideo: null,
-            referenceFiles: videoFiles,
-          }
-        : day.video,
+      dayIndex,
+      typeOfMedia,
+      poster: {
+        posterContent: day.poster?.contentPoster || "",
+        referencePosterFiles,
+        certificateContent: day.poster?.contentCertificate || "",
+        referenceCertificateFiles,
+        trophyContent: day.poster?.contentTrophy || "",
+        displayNeeded: day.poster?.displayNeeded || [],
+        sizes,
+        deliveryDate: day.poster?.deliveryDate ? new Date(day.poster.deliveryDate).toISOString() : "",
+        priority: day.poster?.priority || "",
+        specialRequirements: day.poster?.specialReq || "",
+      },
+      video: {
+        videoContent: day.video?.contentVideo || "",
+        preEventVideos: day.video?.preEvent || [],
+        eventCoverage: day.video?.eventCoverage || [],
+        postEventVideos: day.video?.postEvent || [],
+        specialVideos: day.video?.specialVideos || [],
+        referenceFiles,
+        deliveryDate: day.video?.deliveryDate ? new Date(day.video.deliveryDate).toISOString() : "",
+        priority: day.video?.priority || "",
+        specialRequirements: day.video?.specialReq || "",
+      },
     };
   });
 
-  fd.append("mediaData", JSON.stringify(jsonSafe));
-
-  mediaData.forEach((day, i) => {
-    (day.poster?.referencePoster || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referencePoster_${fi}`, f);
-    });
-    (day.poster?.referenceCertificate || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referenceCertificate_${fi}`, f);
-    });
-    (day.video?.referenceVideo || []).forEach((f, fi) => {
-      if (f instanceof File) fd.append(`day_${i}_referenceVideo_${fi}`, f);
-    });
-  });
+  // JSON metadata goes in first, exactly like fd.append("requestDetails", JSON.stringify(requestDetails))
+  fd.append("mediaData", JSON.stringify({ mediaRequirementDetails: { mediaRequirements } }));
 
   return fd;
 }
@@ -451,12 +480,12 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
       />
 
       {/* ── Certificate fields — shown when purchase form has Certificate selected ── */}
-      {showCertificate && (
+      {/* {showCertificate && ( */}
         <>
           <div>
             <div className="relative w-full">
               <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-                Content for Certificate *
+                Content for Certificate 
               </span>
               <textarea
                 value={data.contentCertificate || ""}
@@ -479,7 +508,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
             sizeErrorPrefix="Certificate: "
           />
         </>
-      )}
+      {/* )} */}
 
       {/* Content for Trophy */}
       <div>
@@ -513,7 +542,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         <div className="flex gap-4">
           {showFlex && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Flex *" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Flex in pixels*" type='text'
                 value={data.sizeForFlex || ""} onChange={updateSizeInput("sizeForFlex")} placeholder="e.g. 4 * 6" />
               <ErrorMsg msg={errors.sizeForFlex} />
             </div>
@@ -699,7 +728,7 @@ export default function MediaForm({
   const currentErrors   = errors[currentDayIndex] || {};
   const showPoster      = currentDay.designType === "Poster" || currentDay.designType === "Both";
   const showVideo       = currentDay.designType === "Video"  || currentDay.designType === "Both";
-  const showCertificate = hasCertificateForDay(currentDayIndex);
+  const showCertificate = true;
 
   const updateDay = (patch) => {
     setMediaData((prev) => {

@@ -12,6 +12,7 @@ const FoodEventsListPage = () => (
       detailViewPath="/dashboard-food/events/detailView"
       individualDetailViewPath="/dashboard/IndividualEvents"
       showIndividualTab={true}
+      individualEndpoint="/api/individual-submissions/getrequest?module=food"
     />
   </section>
 );

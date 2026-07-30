@@ -7,43 +7,13 @@ import FeedbackRatings from '../../../Components/FeedbackRatings'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const individualRequests = [
-    {
-        requiredDate: '15-03-2026',
-        organizerName: 'Surya Chandran',
-        department: 'CSE',
-        organizerPhone: '9080884370',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '18-03-2026',
-        organizerName: 'Kavya R',
-        department: 'ECE',
-        organizerPhone: '9876543210',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '22-03-2026',
-        organizerName: 'Vikram S',
-        department: 'AIML',
-        organizerPhone: '8765432109',
-        acknowledgeStatus: 'Acknowledged',
-    },
-    {
-        requiredDate: '25-03-2026',
-        organizerName: 'Nandini Reddy',
-        department: 'ME',
-        organizerPhone: '7654321098',
-        acknowledgeStatus: 'Pending Acknowledge',
-    },
-    {
-        requiredDate: '28-03-2026',
-        organizerName: 'Arun Prasad',
-        department: 'IT',
-        organizerPhone: '6543210987',
-        acknowledgeStatus: 'Acknowledged',
-    },
-]
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  return Number.isNaN(date.getTime())
+    ? dateStr
+    : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+}
 
 const transformPurchaseData = (apiData) =>
     apiData.map((item) => ({
@@ -54,6 +24,20 @@ const transformPurchaseData = (apiData) =>
         department: item.organizingDepartment || '-',
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
+
+const transformIndividualData = (apiData) =>
+    apiData.map((item) => {
+        const emp = item.data?.employee
+        const purchase = item.data?.purchases?.[0]
+        return {
+            requiredDate: purchase?.deliveryDate ? formatDate(purchase.deliveryDate) : formatDate(item.createdAt),
+            organizerName: emp?.name || item.employee || '-',
+            department: emp?.department || '-',
+            organizerPhone: emp?.phone ? String(emp.phone) : '-',
+            acknowledgeStatus: item.data?.overallStatus || item.status || '-',
+            eventId: item.id || item.data?._id,
+        }
+    })
 
 const departmentData = [
     { name: 'CSE', value: 25, color: '#74b9ff' },
@@ -67,18 +51,34 @@ const departmentData = [
 
 const PurchaseDashboard = () => {
     const [events, setEvents] = useState([])
+    const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
+
+    const getToken = () => localStorage.getItem('token')
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem('token')
-                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=purchase`, {
-                    headers: token ? { Authorization: `Bearer ${token}` } : {},
-                })
-                const json = await res.json()
-                if (json.data && Array.isArray(json.data)) {
-                    setEvents(transformPurchaseData(json.data))
+                const token = getToken()
+                const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+                const [eventsRes, individualsRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=purchase`, { headers }),
+                    fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=purchase`, { headers }),
+                ])
+
+                if (eventsRes.ok) {
+                    const json = await eventsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setEvents(transformPurchaseData(json.data))
+                    }
+                }
+
+                if (individualsRes.ok) {
+                    const json = await individualsRes.json()
+                    if (json.data && Array.isArray(json.data)) {
+                        setIndividualEvents(transformIndividualData(json.data))
+                    }
                 }
             } catch (err) {
                 console.error('Failed to fetch purchase dashboard data:', err)
@@ -117,8 +117,9 @@ const PurchaseDashboard = () => {
                                 viewAllLink="/dashboard-purchase/events"
                                 title="Upcoming Purchase Requests"
                                 module="purchase"
-                                individualEvents={individualRequests}
+                                individualEvents={individualEvents}
                                 detailViewPath="/dashboard-purchase/events/detailView"
+                                individualDetailViewPath="/dashboard-purchase/events/individualDetailView"
                             />
                         )}
                     </div>

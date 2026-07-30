@@ -56,15 +56,18 @@ const normalizeEventRequest = (event) => ({
   rawEventId: event.eventId || event.id,
 });
 
-const normalizeIndividualRequest = (request) => ({
-  id: request.id,
-  employee: safeString(request.employee || request.employeeDetail?.name),
-  employeeEmail: safeString(request.employeeEmail),
-  formType: safeString(request.formType),
-  createdAt: request.createdAt ? formatDate(request.createdAt) : "-",
-  dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
-  status: safeString(typeof request.status === "string" ? request.status : "Pending"),
-});
+const normalizeIndividualRequest = (request) => {
+  const emp = request.data?.employee;
+  return {
+    id: request.id,
+    employee: safeString(request.employee || request.employeeDetail?.name || emp?.name),
+    employeeEmail: safeString(request.employeeEmail || emp?.email),
+    formType: safeString(request.formType),
+    createdAt: request.createdAt ? formatDate(request.createdAt) : "-",
+    dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
+    status: safeString(typeof request.status === "string" ? request.status : "Pending"),
+  };
+};
 
 /** Used only to pick a colour – receives already-safe string values. */
 const getEventStatusClassName = (status = "") => {
