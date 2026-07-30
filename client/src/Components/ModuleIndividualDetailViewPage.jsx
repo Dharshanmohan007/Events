@@ -1,10 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, FileText, Shield, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ChevronRight, FileText, Shield, CheckCircle2, XCircle, Clock, Check } from "lucide-react";
+import { toast } from "react-toastify";
 
 import FacultyPurchaseDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyPurchaseDetailsPanel";
 import FacultyFoodRefreshmentDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyFoodRefreshmentDetailsPanel";
 import FacultyTransportationDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyTransportationDetailsPanel";
+import FacultyMediaDetailsPanel from "../Pages/Dashboards/Faculty-Dashboard/FacultyMediaDetailsPanel";
 import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL =
@@ -176,6 +178,12 @@ const FORM_TYPE_CONFIG = {
       eventSchedule: [],
     }),
   },
+  media: {
+    component: FacultyMediaDetailsPanel,
+    props: (data) => ({
+      mediaDetails: { mediaRequirements: data?.mediaRequirements || [data] },
+    }),
+  },
 };
 
 const resolveFormType = (formType) => {
@@ -184,12 +192,13 @@ const resolveFormType = (formType) => {
   if (key.includes("purchase")) return "purchase";
   if (key.includes("transport")) return "transport";
   if (key.includes("food") || key.includes("refreshment")) return "food";
+  if (key.includes("media")) return "media";
   return null;
 };
 
 const ModuleIndividualDetailViewPage = ({
   basePath,
-  breadcrumbLabel = "Dashboard",    
+  breadcrumbLabel = "Dashboard",
   title = "Individual Request Details",
 }) => {
   const { id } = useParams();
@@ -197,6 +206,20 @@ const ModuleIndividualDetailViewPage = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [userRole, setUserRole] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (token) {
+        const decoded = jwtDecode(token);
+        setUserRole(decoded.role || "");
+      }
+    } catch {
+      setUserRole("");
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const fetchSubmission = async () => {
@@ -215,7 +238,6 @@ const ModuleIndividualDetailViewPage = ({
         if (!response.success)
           throw new Error(response.message || "Failed to fetch submission");
         if (isMounted) {
-          // API returns data as an array; extract the first element
           const submissionData = Array.isArray(response.data)
             ? response.data[0]
             : response.data;
@@ -240,38 +262,117 @@ const ModuleIndividualDetailViewPage = ({
   const DetailComponent = config?.component;
   const detailProps = config?.props?.(submission?.data) || {};
   const status = submission?.status || submission?.data?.overallStatus || "-";
-  const isMediaSubmission = /media/i.test(submission?.formType || "") || Array.isArray(submission?.data?.typeOfMedia) || /media/i.test(String(submission?.data?.typeOfMedia || ""));
+  const isMediaSubmission =
+    /media/i.test(submission?.formType || "") ||
+    Array.isArray(submission?.data?.typeOfMedia) ||
+    /media/i.test(String(submission?.data?.typeOfMedia || ""));
   const approvalSource = submission?.data || submission || {};
   const approvalHistory = submission?.approvalHistory || approvalSource?.approvalHistory || [];
-  const currentStatus = submission?.finalStatus || approvalSource?.finalStatus || submission?.status || approvalSource?.status || "Pending";
-
-  useEffect(() => {
-    let token = localStorage.getItem("token");
-    let deocode = jwtDecode(token);
-    setUserRole(deocode.role);
-  }, []);
-
+  const currentStatus =
+    submission?.finalStatus ||
+    approvalSource?.finalStatus ||
+    submission?.status ||
+    approvalSource?.status ||
+    "Pending";
 
   async function handleCloseSubmission() {
-    try{
+    try {
       const token = localStorage.getItem("token");
       const res = await fetch(
         `${API_BASE_URL}/api/individual-submissions/${id}/close`,
         {
           method: "PUT",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: JSON.stringify({ action : "closed" }),
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ action: "closed" }),
         },
       );
       if (!res.ok) throw new Error("Failed to close submission");
-      const response = await res.json();
-    }catch(err){
+      await res.json();
+      if (submission?.data) {
+        setSubmission((prev) => ({
+          ...prev,
+          data: {
+            ...prev?.data,
+            finalStatus: "Closed",
+          },
+        }));
+      }
+    } catch (err) {
       console.error("Failed to close individual submission:", err);
     }
-  } 
+  }
+
+  const safeHeadStatus = String(
+    submission?.data?.headApproval?.status ??
+    submission?.headApproval?.status ??
+    ""
+  ).trim().toLowerCase();
+
+  const finalStatus = submission?.data?.finalStatus?.toLowerCase();
+  const showCloseButton =
+    userRole.toLowerCase() === "faculty" &&
+    safeHeadStatus !== "pending" &&
+    finalStatus !== "closed";
+
+  const isHead = userRole.toLowerCase() === "head";
+  const showHeadControls = isHead && isMediaSubmission;
+
+  const handleHeadAction = async (action) => {
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${API_BASE_URL}/api/individual-submissions/${id}/head-approval`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ action }),
+        },
+      );
+      const data = await res.json();
+      if (!res.ok || !data.success)
+        throw new Error(data.message || `Failed to ${action}`);
+      toast.success(`${action.charAt(0).toUpperCase() + action.slice(1)}ed successfully`);
+      // Update local state with API response, or fall back to optimistic update
+      if (data.data) {
+        setSubmission(data.data);
+      } else {
+        setSubmission((prev) => {
+          const newStatus = action === "acknowledge" ? "Acknowledged" : "Completed";
+          return {
+            ...prev,
+            headApproval: {
+              ...prev?.headApproval,
+              status: newStatus,
+              updatedAt: new Date().toISOString(),
+            },
+            data: {
+              ...prev?.data,
+              headApproval: {
+                ...prev?.data?.headApproval,
+                status: newStatus,
+                updatedAt: new Date().toISOString(),
+              },
+            },
+          };
+        });
+      }
+    } catch (err) {
+      toast.error(err.message || `Failed to ${action}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <section className="min-h-screen bg-[#0b1326] poppins">
-      <main className="px-6 pb-8 ">
+      <main className="px-6 pb-8">
         <div className="flex items-center justify-between gap-2 py-3 text-sm text-[#CBC3D7]/50">
           <div className="flex items-center gap-2">
             <Link to={basePath} className="hover:text-white transition-colors">
@@ -285,16 +386,43 @@ const ModuleIndividualDetailViewPage = ({
               </span>
             )}
           </div>
-          {console.log("submission faculty : ", submission)}
-          {userRole.toLowerCase() === "faculty" &&
-            submission?.headApproval?.status?.toLowerCase() !== "pending" &&
-            submission?.finalStatus !== "closed" && (
-              <>
-                <button onClick={handleCloseSubmission} className={`bg-emerald-800 text-white px-4 py-2 rounded-lg ${submission?.finalStatus === "Closed" ? "opacity-50 cursor-not-allowed" : "hover:bg-emerald-700 transition-colors"}`} disabled={submission?.finalStatus === "closed"}>
-                  {submission?.finalStatus.toLowerCase() === "closed" ? "Closed" : "Close Submission"}
-                </button>
-              </>
+          <div className="flex items-center gap-2">
+            {showHeadControls && safeHeadStatus === "completed" && (
+              <button
+                disabled
+                className="bg-emerald-800 flex items-center gap-2 text-white px-4 py-2 text-sm rounded-lg opacity-60 cursor-not-allowed"
+              >
+                <Check size={16} className="text-white" />
+                Completed
+              </button>
             )}
+            {showHeadControls && safeHeadStatus === "pending" && (
+              <button
+                onClick={() => handleHeadAction("acknowledge")}
+                disabled={actionLoading}
+                className="bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Acknowledge{actionLoading ? "..." : ""}
+              </button>
+            )}
+            {showHeadControls && safeHeadStatus === "acknowledged" && (
+              <button
+                onClick={() => handleHeadAction("complete")}
+                disabled={actionLoading}
+                className="bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Complete{actionLoading ? "..." : ""}
+              </button>
+            )}
+            {showCloseButton && (
+              <button
+                onClick={handleCloseSubmission}
+                className="bg-emerald-800 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition-colors"
+              >
+                Close Submission
+              </button>
+            )}
+          </div>
         </div>
 
         <section className="mt-2 rounded-lg border border-[#27334c] bg-[#151d31] p-6">
@@ -462,7 +590,7 @@ const ModuleIndividualDetailViewPage = ({
                 </div>
               )}
 
-              {/* Principal Approval Form / Uploaded File — download link + publicId */}
+              {/* Principal Approval Form / Uploaded File */}
               {(submission.data?.principalApprovalForm?.url ||
                 submission.data?.uploadedFile?.url) && (
                 <div className="mt-4 flex flex-wrap items-start gap-3">
@@ -481,8 +609,7 @@ const ModuleIndividualDetailViewPage = ({
                     </a>
                     {submission.data.principalApprovalForm?.publicId && (
                       <span className="text-[10px] text-[#CBC3D7]/50">
-                        Public ID:{" "}
-                        {submission.data.principalApprovalForm.publicId}
+                        Public ID: {submission.data.principalApprovalForm.publicId}
                       </span>
                     )}
                     {submission.data.uploadedFile?.publicId && (
@@ -499,8 +626,8 @@ const ModuleIndividualDetailViewPage = ({
                 </div>
               )}
 
-              {/* Approval Stages — dynamically render all approval levels present in the response */}
-              {(() => {
+              {/* Approval Stages */}
+              {!isMediaSubmission && (() => {
                 const APPROVAL_STAGES = [
                   { key: "adminApproval", label: "Admin Approval" },
                   { key: "hodApproval", label: "HOD Approval" },
@@ -621,14 +748,14 @@ const ModuleIndividualDetailViewPage = ({
                   <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-[#374155] bg-[#1B2334]">
                     <FileText size={40} className="mb-3 text-[#CBC3D7]/30" />
                     <p className="text-sm font-medium text-[#CBC3D7]/50">
-                      No detail view available for &quot;{submission.formType}
-                      &quot;
+                      No detail view available for "{submission.formType}"
                     </p>
                   </div>
                 )}
               </div>
 
-              {submission.data?.approvalHistory?.length > 0 && (
+              {/* Only show bottom approval history for non-media, since media has it inside ApprovalFlowSection */}
+              {!isMediaSubmission && submission.data?.approvalHistory?.length > 0 && (
                 <div className="mt-6">
                   <h3 className="mb-4 text-sm font-semibold text-[#CBC3D7]/65 uppercase tracking-wider">
                     Approval History
