@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import StatCard from '../../../Components/StatCard'
@@ -64,22 +64,43 @@ const transformVenueData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const VenueDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
     const [eventStats, setEventStats] = useState(null)
 
     useEffect(() => {
+        let isMounted = true
         const token = localStorage.getItem('token')
-        fetch(`${API_BASE_URL}/api/dashboard/stats?module=venue`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-            .then((res) => {
-                if (!res.ok) throw new Error('Failed to fetch venue dashboard stats')
-                return res.json()
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=venue`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=venue`, { headers }),
+        ])
+            .then(([eventRes, individualRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+                individualRes.ok ? individualRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData]) => {
+                if (isMounted) {
+                    setEventStats(eventData.modules?.venue ?? eventData.events ?? EMPTY_STATS)
+                }
             })
-            .then((data) => setEventStats(data.events))
-            .catch((error) => console.warn(error.message))
+            .catch((error) => {
+                console.warn(error.message)
+                if (isMounted) setEventStats(EMPTY_STATS)
+            })
+
+        return () => { isMounted = false }
     }, [])
 
     useEffect(() => {
@@ -114,14 +135,15 @@ const VenueDashboard = () => {
                     </h1>
                 </div>
 
-                <StatCard data={eventStats ? statCardData.map((item) => {
+                <StatCard data={statCardData.map((item) => {
                     const label = item.lable.toLowerCase()
-                    if (label.includes('total')) return { ...item, value: eventStats.total ?? item.value }
-                    if (label.includes('approved')) return { ...item, value: eventStats.approved ?? item.value }
-                    if (label.includes('booked') || label.includes('completed')) return { ...item, value: eventStats.completed ?? item.value }
-                    if (label.includes('pending')) return { ...item, value: eventStats.pending ?? item.value }
+                    const stats = eventStats ?? EMPTY_STATS
+                    if (label.includes('total')) return { ...item, value: stats.total ?? 0 }
+                    if (label.includes('approved')) return { ...item, value: stats.approved ?? 0 }
+                    if (label.includes('booked') || label.includes('completed')) return { ...item, value: stats.completed ?? 0 }
+                    if (label.includes('pending')) return { ...item, value: stats.pending ?? 0 }
                     return item
-                }) : statCardData} />
+                })} />
 
                 <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                     {loading ? (

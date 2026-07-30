@@ -66,9 +66,43 @@ const transformIctsData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const ICTCSDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const [eventStats, setEventStats] = useState(null)
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=icts`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=icts`, { headers }),
+        ])
+            .then(([eventRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData]) => {
+                if (isMounted) {
+                    setEventStats(eventData.modules?.icts ?? eventData.events ?? EMPTY_STATS)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+                if (isMounted) setEventStats(EMPTY_STATS)
+            })
+
+        return () => { isMounted = false }
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -105,7 +139,15 @@ const ICTCSDashboard = () => {
                     </div>
 
                     {/* stat cards  */}
-                    <StatCard data={statCardData} />
+                    <StatCard data={statCardData.map((item) => {
+                        const label = item.lable.toLowerCase()
+                        const stats = eventStats ?? EMPTY_STATS
+                        if (label.includes('total')) return { ...item, value: stats.total ?? 0 }
+                        if (label.includes('acknowledged')) return { ...item, value: stats.approved ?? 0 }
+                        if (label.includes('completed')) return { ...item, value: stats.completed ?? 0 }
+                        if (label.includes('pending')) return { ...item, value: stats.pending ?? 0 }
+                        return item
+                    })} />
 
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">

@@ -158,20 +158,26 @@ const VideoDashboard = () => {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
   const [eventStats, setEventStats] = useState(null)
+  const [individualStats, setIndividualStats] = useState(null)
 
   useEffect(() => {
     let isMounted = true
     const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-    fetch(`${API_BASE_URL}/api/dashboard/stats?module=video`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error('Failed to fetch video dashboard stats')
-        return response.json()
-      })
-      .then((responseData) => {
-        if (isMounted) setEventStats(responseData.events)
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/dashboard/stats?module=video`, { headers }),
+      fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=video`, { headers }),
+    ])
+      .then(([eventRes, individualRes]) => Promise.all([
+        eventRes.ok ? eventRes.json() : Promise.resolve({}),
+        individualRes.ok ? individualRes.json() : Promise.resolve({}),
+      ]))
+      .then(([eventData, individualData]) => {
+        if (isMounted) {
+          setEventStats(eventData.modules?.video ?? eventData.events ?? null)
+          setIndividualStats(individualData.stats ?? null)
+        }
       })
       .catch((error) => console.warn(error.message))
 
@@ -227,11 +233,24 @@ const VideoDashboard = () => {
     return () => abortController.abort()
   }, [])
 
+  const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+  }
+
   const displayStatGroups = useMemo(() => {
-    if (!eventStats) return statGroups
+    if (!eventStats && !individualStats) return statGroups
+
+    const eventValues = eventStats ?? EMPTY_STATS
+    const individualValues = individualStats ?? EMPTY_STATS
 
     return statGroups.map((group) => {
-      if (!group.title.toLowerCase().includes('event')) return group
+      const isEventSection = group.title.toLowerCase().includes('event')
+      const isIndividualSection = group.title.toLowerCase().includes('individual')
+      const stats = isEventSection ? eventValues : (isIndividualSection ? individualValues : EMPTY_STATS)
 
       return {
         ...group,
@@ -239,26 +258,26 @@ const VideoDashboard = () => {
           const label = card.label.toLowerCase()
 
           if (label.includes('total')) {
-            return { ...card, value: eventStats.total ?? card.value }
+            return { ...card, value: stats.total ?? 0 }
           }
 
           if (label.includes('completed')) {
-            return { ...card, value: eventStats.completed ?? card.value }
+            return { ...card, value: stats.completed ?? 0 }
           }
 
           if (label.includes('pending')) {
-            return { ...card, value: eventStats.pending ?? card.value }
+            return { ...card, value: stats.pending ?? 0 }
           }
 
           if (label.includes('acknowledged')) {
-            return { ...card, value: eventStats.approved ?? card.value }
+            return { ...card, value: stats.approved ?? 0 }
           }
 
           return card
         }),
       }
     })
-  }, [eventStats])
+  }, [eventStats, individualStats])
 
   // ── Fetch individual video requests ─────────────────────────────────────
   const fetchIndividualRequests = useCallback(async () => {
