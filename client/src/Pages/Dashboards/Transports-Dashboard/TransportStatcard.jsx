@@ -3,8 +3,16 @@ import pattern from '../../../assets/pattern.svg'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const applyEventStats = (sections, eventStats) => {
-    if (!eventStats) return sections
+    const stats = eventStats ?? EMPTY_STATS
 
     return sections.map((section) => {
         if (!section.title.toLowerCase().includes('event')) return section
@@ -15,19 +23,19 @@ const applyEventStats = (sections, eventStats) => {
                 const label = item.label.toLowerCase()
 
                 if (label.includes('total')) {
-                    return { ...item, value: eventStats.total ?? item.value }
+                    return { ...item, value: stats.total ?? 0 }
                 }
 
                 if (label.includes('completed')) {
-                    return { ...item, value: eventStats.completed ?? item.value }
+                    return { ...item, value: stats.completed ?? 0 }
                 }
 
                 if (label.includes('pending')) {
-                    return { ...item, value: eventStats.pending ?? item.value }
+                    return { ...item, value: stats.pending ?? 0 }
                 }
 
                 if (label.includes('acknowledged')) {
-                    return { ...item, value: eventStats.approved ?? item.value }
+                    return { ...item, value: stats.approved ?? 0 }
                 }
 
                 return item
@@ -39,7 +47,7 @@ const applyEventStats = (sections, eventStats) => {
 const individualTargetTitles = ['Catering Requests', 'Order Status', 'Media Request', 'Transport Request']
 
 const applyIndividualStats = (sections, individualStats) => {
-    if (!individualStats) return sections
+    const stats = individualStats ?? EMPTY_STATS
 
     return sections.map((section) => {
         if (!individualTargetTitles.includes(section.title)) return section
@@ -50,23 +58,23 @@ const applyIndividualStats = (sections, individualStats) => {
                 const label = item.label.toLowerCase()
 
                 if (label.includes('total')) {
-                    return { ...item, value: individualStats.total ?? item.value }
+                    return { ...item, value: stats.total ?? 0 }
                 }
 
                 if (label.includes('completed')) {
-                    return { ...item, value: individualStats.completed ?? item.value }
+                    return { ...item, value: stats.completed ?? 0 }
                 }
 
                 if (label.includes('approved')) {
-                    return { ...item, value: individualStats.approved ?? item.value }
+                    return { ...item, value: stats.approved ?? 0 }
                 }
 
                 if (label.includes('pending')) {
-                    return { ...item, value: individualStats.pending ?? item.value }
+                    return { ...item, value: stats.pending ?? 0 }
                 }
 
                 if (label.includes('acknowledged')) {
-                    return { ...item, value: individualStats.approved ?? item.value }
+                    return { ...item, value: stats.approved ?? 0 }
                 }
 
                 return item
@@ -199,7 +207,7 @@ const TransportStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setEventStats(responseData.events)
+                    setEventStats(responseData.modules?.transport ?? responseData.events ?? null)
                 }
             })
             .catch((error) => {
@@ -217,7 +225,7 @@ const TransportStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setIndividualStats(responseData.events)
+                    setIndividualStats(responseData.stats ?? null)
                 }
             })
             .catch((error) => {
