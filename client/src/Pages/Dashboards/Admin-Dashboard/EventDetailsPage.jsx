@@ -571,7 +571,12 @@ const EventDetailsPage = () => {
               </div>
             )}
           </div>
-          {data?.adminApproval == false ?  <div className="btn-container flex items-center gap-2">
+          {String(data?.status || '').toLowerCase() === 'closed' ? (
+            <div className="flex items-center gap-1 bg-gradient-to-r from-[#07785D] to-[#07785D] text-white px-4 py-1 rounded-md">
+              <Check size={16} className="text-white" />
+              Closed
+            </div>
+          ) : data?.adminApproval == false ?  <div className="btn-container flex items-center gap-2">
             <button
               onClick={handleApprove}
               disabled={actionLoading}

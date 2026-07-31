@@ -536,10 +536,20 @@ const FacultyEventsDetailViewPage = () => {
               <h1 className="text-md font-medium text-[#CBC3D7]/50">Event Details</h1>
               <ChevronRight size={16} className="text-white" />
               <h2 className="text-md font-medium text-[#D0BCFF]">{requestDetails?.eventDetails?.eventName}</h2>
+              {requestDetails?.eventDetails?.organizingDepartment && (
+                <div className="ml-3 bg-green-400/10 text-sm text-[#10B981] px-5 py-2 rounded-full">
+                  <h1>{requestDetails.eventDetails.organizingDepartment}</h1>
+                </div>
+              )}
             </div>
           </div>
           {console.log("data : ", data)}
-          {data.adminApproval == true && data.status.toLowerCase() !== "closed" ? <button
+          {data.status?.toLowerCase() === "closed" ? (
+            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
+              <Check size={18} />
+              Closed
+            </div>
+          ) : data.adminApproval == true ? <button
             type="button"
             onClick={openFeedbackPage}
             className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"

@@ -30,7 +30,6 @@ const IctsVenueDetails = ({ icts }) => {
   const desktopLaptopItems = (icts.desktopLaptop || []).map(
     (item) => [`${item.type || 'System'} Count`, displayValue(item.count)]
   )
-  const requirements = (icts.requirements || []).filter(Boolean).join(', ') || '-'
 
   const basicItems = [
     ...desktopLaptopItems,
@@ -45,22 +44,39 @@ const IctsVenueDetails = ({ icts }) => {
     basicItems.push(['Total Guest Count', displayValue(icts.totalGuestCount)])
   }
 
-  basicItems.push(['Requirements', requirements])
+  const objectRequirements = (icts.requirements || []).filter(Boolean)
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(icts.venueName)}</h3>
-      <KeyValueList items={basicItems} />
+
+      <div className="grid grid-cols-[1fr_0.75fr_1.2fr] gap-4">
+        <RequirementCard title="Basic Requirement">
+          <KeyValueList items={basicItems} />
+        </RequirementCard>
+
+        <RequirementCard title="Object Requirement">
+          {objectRequirements.length ? (
+            <div className="divide-y divide-[#30384d]/60">
+              {objectRequirements.map((item) => (
+                <p key={item} className="py-2.5 text-sm font-medium text-[#E6E2F0] first:pt-0 last:pb-0">
+                  {item}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#CBC3D7]/75">-</p>
+          )}
+        </RequirementCard>
+
+        <RequirementCard title="Special Requirement">
+          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.specialRequirements)}</p>
+        </RequirementCard>
+      </div>
 
       {icts.otherRequirements ? (
         <RequirementCard title="Other Requirements">
           <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.otherRequirements)}</p>
-        </RequirementCard>
-      ) : null}
-
-      {icts.specialRequirements ? (
-        <RequirementCard title="Special Requirements">
-          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.specialRequirements)}</p>
         </RequirementCard>
       ) : null}
     </div>

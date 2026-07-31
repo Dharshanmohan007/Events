@@ -94,7 +94,7 @@ const PurchaseDashboard = () => {
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
                 <div className='header-container sticky top-0 z-50'>
-                    <DashboardHeader basePath="/dashboard-purchase" showReports={false} />
+                    <DashboardHeader basePath="/dashboard-purchase" />
                 </div>
                 {/* main-container  */}
                 <div className='main-body-container  px-6 '>

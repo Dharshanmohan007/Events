@@ -1,16 +1,25 @@
 import React, { useState } from 'react'
-import { Monitor } from 'lucide-react'
-import { FacultyKeyValueGrid, FacultySectionCard } from './FacultyDetailsPanelShared'
+import { FacultySectionCard } from './FacultyDetailsPanelShared'
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
 const yesNo = (value) => (value ? 'Yes' : 'No')
 
+const KeyValueList = ({ items }) => (
+  <div>
+    {items.map(([label, value]) => (
+      <div key={label} className="flex items-center justify-between border-b border-[#30384d]/60 py-3 text-sm last:border-b-0">
+        <span className="text-[#CBC3D7]/75">{label}</span>
+        <span className="font-medium text-[#E6E2F0]">{value}</span>
+      </div>
+    ))}
+  </div>
+)
+
 const IctsVenueDetails = ({ icts }) => {
   const desktopLaptopItems = (icts.desktopLaptop || []).map(
     (item) => [`${item.type || 'System'} Count`, displayValue(item.count)]
   )
-  const requirements = (icts.requirements || []).filter(Boolean).join(', ') || '-'
 
   const basicItems = [
     ...desktopLaptopItems,
@@ -25,22 +34,39 @@ const IctsVenueDetails = ({ icts }) => {
     basicItems.push(['Total Guest Count', displayValue(icts.totalGuestCount)])
   }
 
-  basicItems.push(['Requirements', requirements])
+  const objectRequirements = (icts.requirements || []).filter(Boolean)
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(icts.venueName)}</h3>
-      <FacultyKeyValueGrid items={basicItems} />
+
+      <div className="grid grid-cols-[1fr_0.75fr_1.2fr] gap-4">
+        <FacultySectionCard title="Basic Requirement">
+          <KeyValueList items={basicItems} />
+        </FacultySectionCard>
+
+        <FacultySectionCard title="Object Requirement">
+          {objectRequirements.length ? (
+            <div className="divide-y divide-[#30384d]/60">
+              {objectRequirements.map((item) => (
+                <p key={item} className="py-2.5 text-sm font-medium text-[#E6E2F0] first:pt-0 last:pb-0">
+                  {item}
+                </p>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-[#CBC3D7]/75">-</p>
+          )}
+        </FacultySectionCard>
+
+        <FacultySectionCard title="Special Requirement">
+          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.specialRequirements)}</p>
+        </FacultySectionCard>
+      </div>
 
       {icts.otherRequirements ? (
         <FacultySectionCard title="Other Requirements">
           <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.otherRequirements)}</p>
-        </FacultySectionCard>
-      ) : null}
-
-      {icts.specialRequirements ? (
-        <FacultySectionCard title="Special Requirements">
-          <p className="text-sm leading-7 text-[#E6E2F0]">{displayValue(icts.specialRequirements)}</p>
         </FacultySectionCard>
       ) : null}
     </div>
