@@ -465,7 +465,7 @@ const EventDetailsPage = () => {
       })
       const responseData = await res.json()
       if (!res.ok || !responseData.success) throw new Error(responseData.message || `Failed to ${action} event`)
-      toast.success(`Event ${action === 'approve' ? 'approved' : 'rejected'} successfully`)
+      toast.success(`Event ${action === 'adminApprove' ? 'approved' : 'rejected'} successfully`)
       // Refetch the data to reflect the updated status
       fetchRequisitionDetails()
     } catch (err) {

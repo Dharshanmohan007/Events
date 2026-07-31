@@ -25,6 +25,7 @@ const PurchaseEventsDetailViewPage = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -62,7 +63,7 @@ const PurchaseEventsDetailViewPage = () => {
     }
 
     fetchDetails()
-  }, [eventId])
+  }, [eventId, reloadKey])
 
   const handleStatusUpdate = async (action) => {
     setActionLoading(true)
@@ -80,6 +81,7 @@ const PurchaseEventsDetailViewPage = () => {
       if (!res.ok || !responseData.success) throw new Error(responseData.message || `Failed to ${action}`)
       toast.success(`Status updated to ${action === 'acknowledge' ? 'Acknowledged' : 'Completed'} successfully`)
       setStatus(action === 'acknowledge' ? 'Acknowledged' : 'Completed')
+      setReloadKey((k) => k + 1)
     } catch (err) {
       toast.error(err.message || `Failed to ${action}`)
     } finally {

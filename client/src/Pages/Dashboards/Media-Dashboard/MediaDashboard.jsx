@@ -6,6 +6,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import MediaStatcard from './MediaStatcard'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import MediaStaffInterchangeModal from '../../../Components/MediaStaffInterchangeModal'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -95,6 +96,7 @@ const MediaDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const feedbackRows = useDepartmentFeedback('media')
   const [selectedEventForInterchange, setSelectedEventForInterchange] = useState(null)
   const [interchangeMediaType, setInterchangeMediaType] = useState('')
   const abortControllerRef = useRef(null)
@@ -494,7 +496,7 @@ const MediaDashboard = () => {
           </div>
 
           <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-            <FeedbackRatings feedbackLink="/dashboard-media/feedback" />
+            <FeedbackRatings tabs rows={feedbackRows} feedbackLink="/dashboard-media/feedback" />
             <DepartmentRequestChart
               data={departmentData}
               title="Event Media Request By Department"

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import FacultyAccommodationDetailsPanel from './FacultyAccommodationDetailsPanel'
 import FacultyAudioDetailsPanel from './FacultyAudioDetailsPanel'
@@ -68,6 +69,7 @@ const FacultyEventsDetailViewPage = () => {
   const [accommodationError, setAccommodationError] = useState('')
   const [purchaseDetails, setPurchaseDetails] = useState(null)
   const [data, setData] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0)
   const [purchaseLoading, setPurchaseLoading] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
   const activeTabConfig = detailTabs.find((tab) => tab.name === activeTab)
@@ -120,7 +122,7 @@ const FacultyEventsDetailViewPage = () => {
     }
 
     fetchRequisitionDetails()
-  }, [eventId])
+  }, [eventId, reloadKey])
 
   useEffect(() => {
     if (activeTab !== 'Venue Details') return
@@ -431,6 +433,8 @@ const FacultyEventsDetailViewPage = () => {
         }
       );
       if (res.status === 200) {
+        toast.success('Event closed successfully')
+        setReloadKey((k) => k + 1)
         const newTab = window.open("", "_blank");
 
         if (newTab) {

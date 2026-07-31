@@ -4,6 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import PurchaseStatcard from './PurchaseStatcard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -53,6 +54,7 @@ const PurchaseDashboard = () => {
     const [events, setEvents] = useState([])
     const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const feedbackRows = useDepartmentFeedback('purchase')
 
     const getToken = () => localStorage.getItem('token')
 
@@ -125,7 +127,7 @@ const PurchaseDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-purchase/feedback" />
+                        <FeedbackRatings tabs rows={feedbackRows} feedbackLink="/dashboard-purchase/feedback" />
                         <DepartmentRequestChart data={departmentData} title="Purchase Request By Department" />
                     </div>
                 </div>

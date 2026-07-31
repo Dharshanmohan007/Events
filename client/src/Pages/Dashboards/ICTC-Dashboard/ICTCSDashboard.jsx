@@ -4,6 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 // ICTS Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
@@ -78,6 +79,7 @@ const ICTCSDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
     const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('ictc')
 
     useEffect(() => {
         let isMounted = true
@@ -166,7 +168,7 @@ const ICTCSDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-ictcs/feedback" />
+                        <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-ictcs/feedback" />
                         <DepartmentRequestChart data={departmentData} title="ICTCS Request By Department" />
                     </div>
 

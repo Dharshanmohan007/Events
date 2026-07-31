@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import smallLogo from '../../../assets/small-logo.svg'
 import LogoutButton from '../../../Components/LogoutButton'
 
@@ -75,13 +76,6 @@ const chartData = [
   { name: 'VLSI', value: 8, color: '#3352C8' },
 ]
 
-const feedbackRows = Array.from({ length: 13 }, () => ({
-  name: 'Dr. Sarah Jenkins',
-  department: 'Dept. of Computer Science',
-  quote: '"The event poster exceeded expectations. The team captured the technical essence perfectly with modern aesthetics."',
-  time: '2 HOURS AGO',
-}))
-
 // ── Sub-components ───────────────────────────────────────────────────────
 
 const DashboardHeader = () => (
@@ -144,6 +138,7 @@ const PosterDashboard = () => {
   const [activeTab, setActiveTab] = useState('events')
   const [eventStats, setEventStats] = useState(null)
   const [individualStats, setIndividualStats] = useState(null)
+  const feedbackRows = useDepartmentFeedback('poster')
 
   useEffect(() => {
     let isMounted = true

@@ -9,6 +9,7 @@ const FacultyIndividualRequestDetailViewPage = () => (
       basePath="/dashboard-faculty"
       breadcrumbLabel="Faculty Dashboard"
       title="Individual Request Details"
+      openIndividualFeedbackTabOnClose
     />
   </section>
 );
