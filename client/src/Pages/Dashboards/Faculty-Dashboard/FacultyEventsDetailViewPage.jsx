@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
 import { useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import FacultyAccommodationDetailsPanel from './FacultyAccommodationDetailsPanel'
 import FacultyAudioDetailsPanel from './FacultyAudioDetailsPanel'
@@ -68,6 +69,7 @@ const FacultyEventsDetailViewPage = () => {
   const [accommodationError, setAccommodationError] = useState('')
   const [purchaseDetails, setPurchaseDetails] = useState(null)
   const [data, setData] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0)
   const [purchaseLoading, setPurchaseLoading] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
   const activeTabConfig = detailTabs.find((tab) => tab.name === activeTab)
@@ -120,7 +122,7 @@ const FacultyEventsDetailViewPage = () => {
     }
 
     fetchRequisitionDetails()
-  }, [eventId])
+  }, [eventId, reloadKey])
 
   useEffect(() => {
     if (activeTab !== 'Venue Details') return
@@ -431,6 +433,8 @@ const FacultyEventsDetailViewPage = () => {
         }
       );
       if (res.status === 200) {
+        toast.success('Event closed successfully')
+        setReloadKey((k) => k + 1)
         const newTab = window.open("", "_blank");
 
         if (newTab) {
@@ -536,10 +540,20 @@ const FacultyEventsDetailViewPage = () => {
               <h1 className="text-md font-medium text-[#CBC3D7]/50">Event Details</h1>
               <ChevronRight size={16} className="text-white" />
               <h2 className="text-md font-medium text-[#D0BCFF]">{requestDetails?.eventDetails?.eventName}</h2>
+              {requestDetails?.eventDetails?.organizingDepartment && (
+                <div className="ml-3 bg-green-400/10 text-sm text-[#10B981] px-5 py-2 rounded-full">
+                  <h1>{requestDetails.eventDetails.organizingDepartment}</h1>
+                </div>
+              )}
             </div>
           </div>
           {console.log("data : ", data)}
-          {data.adminApproval == true && data.status.toLowerCase() !== "closed" ? <button
+          {data.status?.toLowerCase() === "closed" ? (
+            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
+              <Check size={18} />
+              Closed
+            </div>
+          ) : data.adminApproval == true ? <button
             type="button"
             onClick={openFeedbackPage}
             className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"

@@ -48,18 +48,13 @@ const FacultyAudioDetailsPanel = ({ audioDetails, eventSchedule = [] }) => {
         <section key={`${audio.venueName}-${index}`} className="rounded-lg border border-[#374155] bg-[#232A3C] p-5">
           <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(audio.venueName)}</h3>
           <div className="mt-5 grid grid-cols-2 gap-5">
-            <RequirementCard title="Audio Requirements">
+            <RequirementCard title="Object Requirement">
               <KeyValueList items={(audio.audioItems || []).map((item) => [item.type || 'Requirement', displayValue(item.quantity)])} />
             </RequirementCard>
 
-            <div className="space-y-5">
-              <RequirementCard title="Other Requirements">
-                <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(audio.otherRequirements)}</p>
-              </RequirementCard>
-              <RequirementCard title="Special Requirements">
-                <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(audio.specialRequirements)}</p>
-              </RequirementCard>
-            </div>
+            <RequirementCard title="Special Requirement">
+              <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(audio.specialRequirements)}</p>
+            </RequirementCard>
           </div>
         </section>
       ))}

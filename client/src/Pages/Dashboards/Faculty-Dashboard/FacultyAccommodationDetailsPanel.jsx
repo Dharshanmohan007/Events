@@ -80,7 +80,12 @@ const AccommodationDayDetails = ({ accommodation }) => {
     })
   }
 
-  const totalDineIn = dineInCounts.reduce((sum, item) => sum + (Number(item.count) || 0), 0)
+  const dineInRows = []
+  for (let i = 0; i < dineInCounts.length; i += 2) {
+    dineInRows.push(
+      dineInCounts.slice(i, i + 2).map((item) => [`No. of Guest In ${item.type} Dine-in`, displayValue(item.count)])
+    )
+  }
 
   return (
     <div className="space-y-5">
@@ -98,9 +103,9 @@ const AccommodationDayDetails = ({ accommodation }) => {
         <SplitInfoRow key={i} items={row} />
       ))}
 
-      {accommodation.dineInRequired && (
-        <SplitInfoRow items={[['Dine-in Required', 'Yes'], ['Total Dine-in Count', displayValue(totalDineIn)]]} />
-      )}
+      {dineInRows.map((row, i) => (
+        <SplitInfoRow key={i} items={row} />
+      ))}
 
       {accommodation.specialRequirements ? (
         <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-5">

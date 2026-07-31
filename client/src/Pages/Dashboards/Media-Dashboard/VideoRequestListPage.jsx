@@ -1,8 +1,7 @@
 import React from "react";
-import { Bell, CircleQuestionMark, Search, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import smallLogo from "../../../assets/small-logo.svg";
-import profileAvatar from "../../../assets/profile-avatar.svg";
+import LogoutButton from "../../../Components/LogoutButton";
 import ModuleRequestListPage from "../../../Components/ModuleRequestListPage";
 
 const VideoHeader = () => (
@@ -19,23 +18,14 @@ const VideoHeader = () => (
         >
           Request List
         </Link>
+        <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">
+          Calendar
+        </Link>
       </nav>
     </div>
 
     <div className="flex items-center gap-6">
-      <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
-        <Search size={15} className="text-[#8b93a4]" />
-        <input
-          className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]"
-          placeholder="Search events, venues, or faculty..."
-        />
-      </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={18} />
-        <CircleQuestionMark size={18} />
-        <Settings size={18} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
-      </div>
+      <LogoutButton />
     </div>
   </header>
 );

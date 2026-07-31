@@ -1,13 +1,14 @@
 import React from 'react'
-import { Bell, CircleQuestionMark, Search, Settings } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const facultyRoutes = {
     dashboard: '/dashboard-faculty',
     requests: '/dashboard-faculty/events',
     venues: '/dashboard-faculty/venues',
+    reports: '/dashboard-faculty/reports',
+    calendar: '/calendar',
 }
 
 const getNavLinkClassName = ({ isActive }) =>
@@ -22,26 +23,14 @@ const FacultyDahsboardHeader = () => {
                 <nav className="navlins text-white flex items-center gap-8 text-sm">
                     <NavLink to={facultyRoutes.dashboard} end className={getNavLinkClassName}>Dashboard</NavLink>
                     <NavLink to={facultyRoutes.requests} className={getNavLinkClassName}>Request List</NavLink>
+                    <NavLink to={facultyRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
+                    <NavLink to={facultyRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
                     <NavLink to={facultyRoutes.venues} className={getNavLinkClassName}>Venue List</NavLink>
                 </nav>
             </div>
 
             <div className="second-container flex items-center gap-6">
-                <div className="search-container w-[290px] flex gap-2 items-center border bg-[#161a23] border-[#343b4a] px-3 py-2 rounded-full">
-                    <Search size={16} className="text-[#8b93a4]" />
-                    <input
-                        type="text"
-                        className='outline-none w-full text-xs text-white placeholder:text-[#FFFFFF66] bg-transparent'
-                        placeholder='Search events, venues, or faculty...'
-                    />
-                </div>
-
-                <div className="icons-container text-[#b7bdc8] flex items-center gap-5">
-                    <Bell size={18} />
-                    <CircleQuestionMark size={18} />
-                    <Settings size={18} />
-                    <img src={profileAvatar} alt="Profile Avatar" className="w-8 h-8 rounded-full" />
-                </div>
+                <LogoutButton />
             </div>
         </section>
     )

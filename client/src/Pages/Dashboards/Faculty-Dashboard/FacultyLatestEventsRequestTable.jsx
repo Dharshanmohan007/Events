@@ -1,10 +1,18 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ExternalLink, ListFilter } from 'lucide-react'
+import { ArrowRight, ExternalLink, ListFilter, Search, X } from 'lucide-react'
 import { jwtDecode } from 'jwt-decode'
 import CustomDatePicker from '../../../Components/CustomDatePicker'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return Number.isNaN(date.getTime())
+        ? dateStr
+        : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 const Status = ({ status }) => {
     const isApproved = status === 'Approved'
@@ -52,6 +60,7 @@ const FacultyLatestEventsRequestTable = () => {
     const [eventTypeFilter, setEventTypeFilter] = useState('')
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
+    const [searchQuery, setSearchQuery] = useState('')
 
     const filterRef = useRef(null)
 
@@ -116,6 +125,17 @@ const FacultyLatestEventsRequestTable = () => {
     useEffect(() => {
         let result = [...events]
 
+        const query = searchQuery.trim().toLowerCase()
+        if (query) {
+            result = result.filter(e => {
+                const date = new Date(e.eventDates?.[0])
+                const dateStr = Number.isNaN(date.getTime())
+                    ? ''
+                    : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                return [e.eventName, e.eventType, dateStr, e.eventStatus].join(' ').toLowerCase().includes(query)
+            })
+        }
+
         if (statusFilter) {
             result = result.filter(e => e.eventStatus === statusFilter)
         }
@@ -135,7 +155,7 @@ const FacultyLatestEventsRequestTable = () => {
         }
 
         setFilteredEvents(result)
-    }, [statusFilter, eventTypeFilter, dateFrom, dateTo, events])
+    }, [statusFilter, eventTypeFilter, dateFrom, dateTo, events, searchQuery])
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -156,17 +176,33 @@ const FacultyLatestEventsRequestTable = () => {
 
     const hasActiveFilters = statusFilter || eventTypeFilter || dateFrom || dateTo
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-'
-        const date = new Date(dateStr)
-        return Number.isNaN(date.getTime())
-            ? dateStr
-            : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    }
+    const filteredIndividualRequests = useMemo(() => {
+        let result = [...individualRequests]
+
+        const query = searchQuery.trim().toLowerCase()
+        if (query) {
+            result = result.filter(request => {
+                const status =
+                    typeof request.status === 'object' && request.status !== null
+                        ? Object.values(request.status).filter(Boolean).join(' ')
+                        : request.status || ''
+                return [
+                    request.employee,
+                    request.employeeDetail?.name,
+                    request.formType,
+                    request.employeeEmail,
+                    formatDate(request.data?.date),
+                    status,
+                ].join(' ').toLowerCase().includes(query)
+            })
+        }
+
+        return result
+    }, [individualRequests, searchQuery])
 
     return (
-        <section className="rounded-lg border border-[#263044] max-h-[calc(100vh-390px)] overflow-auto table-custom-scrollbar bg-[#151d2d] ">
-            <div className="flex items-center justify-between px-4 py-4 sticky top-0 bg-[#151d2d]">
+        <section className="flex max-h-[570px] flex-col overflow-hidden rounded-lg border border-[#263044] bg-[#151d2d]">
+            <div className="flex flex-shrink-0 items-center justify-between px-4 py-4">
                 <h2 className="text-sm font-semibold text-white">Latest Requests</h2>
                 <div className="flex items-center gap-4">
                     {/* Tabs */}
@@ -281,10 +317,34 @@ const FacultyLatestEventsRequestTable = () => {
                 </div>
             </div>
 
-            <div className="overflow-auto table-custom-scrollbar">
+            {/* Search */}
+            <div className="flex-shrink-0 px-4 pb-4">
+                <div className="flex items-center gap-2 rounded-md border border-[#2e394e] bg-[#1b2435] px-3 py-2 transition focus-within:border-[#853FF9]">
+                    <Search size={13} className="shrink-0 text-[#8b93a4]" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={`Search ${activeTab === 'events' ? 'events' : 'requests'} by name, type, date, or status`}
+                        className="w-full bg-transparent text-[11px] text-white outline-none placeholder:text-[#FFFFFF66]"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="shrink-0 cursor-pointer text-[#8b93a4] transition hover:text-white"
+                            title="Clear search"
+                        >
+                            <X size={13} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-auto table-custom-scrollbar">
                 {activeTab === 'events' ? (
                     <table className="w-full min-w-[520px]">
-                        <thead className="bg-[#1b2435]">
+                        <thead className="sticky top-0 z-10 bg-[#1b2435]">
                             <tr>
                                 {['EVENT NAME', 'EVENT TYPE', 'EVENT DATE', 'STATUS', 'ACTION'].map((column) => (
                                     <th key={column} className="px-4 py-3 text-left text-[10px] font-semibold text-[#FFFFFF66]">
@@ -320,9 +380,9 @@ const FacultyLatestEventsRequestTable = () => {
                     </table>
                 ) : (
                     <table className="w-full min-w-[520px]">
-                        <thead className="bg-[#1b2435]">
+                        <thead className="sticky top-0 z-10 bg-[#1b2435]">
                             <tr>
-                                {['DATE', 'ORGANIZER NAME','EVENT TYPE', 'ORGANIZER EMAIL', 'STATUS', 'ACTION'].map((column) => (
+                                {['DATE', 'ORGANIZER NAME', 'EVENT TYPE', 'ORGANIZER EMAIL', 'STATUS', 'ACTION'].map((column) => (
                                     <th key={column} className="px-4 py-3 text-left text-[10px] font-semibold text-[#FFFFFF66]">
                                         {column}
                                     </th>
@@ -330,7 +390,7 @@ const FacultyLatestEventsRequestTable = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {individualRequests.map((request) => (
+                            {filteredIndividualRequests.map((request) => (
                                 <tr key={request.id} className="border-b border-[#222b3d] last:border-b-0">
                                     <td className="px-4 py-3 text-[12px] text-white">
                                         {formatDate(request.data?.date)}
@@ -358,7 +418,7 @@ const FacultyLatestEventsRequestTable = () => {
                                     </td>
                                 </tr>
                             ))}
-                            {individualRequests.length === 0 && (
+                            {filteredIndividualRequests.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-6 text-center text-[12px] text-[#FFFFFF66]">
                                         No individual requests found.

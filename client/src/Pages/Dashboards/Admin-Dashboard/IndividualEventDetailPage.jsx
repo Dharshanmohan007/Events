@@ -609,6 +609,7 @@ const IndividualEventDetailPage = () => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -645,7 +646,7 @@ const IndividualEventDetailPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
   const handleApprove = async () => {
     setActionLoading(true);
@@ -704,7 +705,7 @@ const IndividualEventDetailPage = () => {
       if (!res.ok || !data.success)
         throw new Error(data.message || "Failed to acknowledge");
       toast.success("Acknowledge successfully");
-      window.location.reload();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message || "Failed to acknowledge");
     } finally {
@@ -732,7 +733,7 @@ const IndividualEventDetailPage = () => {
       if (!res.ok || !data.success)
         throw new Error(data.message || "Failed to complete");
       toast.success("Completed successfully");
-      window.location.reload();
+      setReloadKey((k) => k + 1);
     } catch (err) {
       toast.error(err.message || "Failed to complete");
     } finally {
