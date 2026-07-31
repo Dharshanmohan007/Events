@@ -19,7 +19,7 @@ const getNavLinkClassName = ({ isActive }) =>
 const AdminDashboardHeader = () => {
     return (
         <>
-            <section className='dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins sticky top-0 z-10 '>
+            <section className='dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins sticky top-0 z-50 '>
                 <div className="first-container flex items-center gap-6 ">
                     <img src={smallLogo} alt="Small Logo" className='w-10 h-10' />
 
