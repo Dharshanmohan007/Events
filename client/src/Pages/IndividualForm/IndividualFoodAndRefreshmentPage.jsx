@@ -100,6 +100,7 @@ const createFoodFormCard = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
 
@@ -966,6 +967,7 @@ useEffect(() => {
       ...(card.financeRequired === "Yes" && {
         advanceAmount: Number(card.advanceAmount) || 0,
         advancePurpose: card.advancePurpose.trim(),
+        estimatedEventBudget: Number(card.estimatedEventBudget) || 0,
       }),
 
       status: "Pending",
@@ -1040,6 +1042,16 @@ useEffect(() => {
 
         if (!card.advancePurpose || !card.advancePurpose.trim()) {
           errors.push(`${formLabel}Advance purpose is required.`);
+        }
+
+        if (!card.estimatedEventBudget || Number(card.estimatedEventBudget) <= 0) {
+          errors.push(`${formLabel}Estimated event budget must be greater than zero.`);
+        }
+
+        if (Number(card.advanceAmount) > Number(card.estimatedEventBudget)) {
+          errors.push(
+            `${formLabel}Advance amount cannot be greater than the estimated event budget.`,
+          );
         }
       }
     });
@@ -1122,6 +1134,10 @@ if (payload.advancePurpose !== undefined) {
   formData.append("advancePurpose", payload.advancePurpose);
 }
 
+if (payload.estimatedEventBudget !== undefined) {
+  formData.append("estimatedEventBudget", payload.estimatedEventBudget);
+}
+
 if (principalApprovalDocument) {
   formData.append(
     "principalApprovalForm",
@@ -1165,8 +1181,8 @@ const response = await fetch(`${API_BASE}/api/foods`, {
           );
         }
 
-        if (index === 0 && data.data) {
-          firstSubmissionData = data.data;
+        if (index === 0) {
+          firstSubmissionData = data.data || data;
         }
 
         submittedCount += 1;
@@ -1185,6 +1201,12 @@ const response = await fetch(`${API_BASE}/api/foods`, {
 
       const firstCard = formCards[0];
       const financeEnabled = firstCard?.financeRequired === "Yes";
+      const receiptRequestNo =
+        firstSubmissionData?.requestNo ||
+        firstSubmissionData?.data?.requestNo ||
+        firstSubmissionData?.food?.requestNo ||
+        firstSubmissionData?.data?.food?.requestNo ||
+        "";
 
       if (financeEnabled) {
         const receiptPayload = {
@@ -1209,8 +1231,13 @@ const response = await fetch(`${API_BASE}/api/foods`, {
           },
           employee: employeeDetails,
           submitResponse: {
-            iqacNumber: firstSubmissionData?.requestNo || `IQAC-${Date.now()}`,
-            employeeId: firstSubmissionData?.empId || employeeDetails.empId,
+            requestNo: receiptRequestNo,
+            response: firstSubmissionData,
+            employeeId:
+              firstSubmissionData?.employee ||
+              firstSubmissionData?.employeeId ||
+              employeeId ||
+              employeeDetails.empId,
           },
         };
 
@@ -1616,7 +1643,11 @@ if (submitSuccess) {
                       financeRequired: opt.value,
                       showFinanceDropdown: false,
                       ...(opt.value === "No"
-                        ? { advanceAmount: "", advancePurpose: "" }
+                        ? {
+                            advanceAmount: "",
+                            advancePurpose: "",
+                            estimatedEventBudget: "",
+                          }
                         : {}),
                     })
                   }
@@ -1645,22 +1676,34 @@ if (submitSuccess) {
 
               <input
                 type="number"
+                min="0"
                 value={card.advanceAmount}
                 onChange={(e) =>
                   updateFormCard(card.id, { advanceAmount: e.target.value })
                 }
                 placeholder="0"
-                className="
+                className={`
                 w-full
                 border
-                border-[#383847]
+                ${
+                  Number(card.advanceAmount) > Number(card.estimatedEventBudget) &&
+                  card.estimatedEventBudget !== ""
+                    ? "border-red-500"
+                    : "border-[#383847]"
+                }
                 rounded-md
                 px-4
                 py-3
                 text-white
                 outline-none
-              "
+              `}
               />
+              {Number(card.advanceAmount) > Number(card.estimatedEventBudget) &&
+                card.estimatedEventBudget !== "" && (
+                  <p className="mt-1 text-sm text-red-400">
+                    Advance amount cannot exceed the estimated event budget.
+                  </p>
+                )}
             </div>
 
             <div className="relative">
@@ -1675,6 +1718,34 @@ if (submitSuccess) {
                   updateFormCard(card.id, { advancePurpose: e.target.value })
                 }
                 placeholder="Purpose"
+                className="
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-white
+                outline-none
+              "
+              />
+            </div>
+
+            <div className="relative order-first md:col-span-2">
+              <label className={cardFloatingLabelClass}>
+                Estimated Event Budget (Rs.)
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                value={card.estimatedEventBudget}
+                onChange={(e) =>
+                  updateFormCard(card.id, {
+                    estimatedEventBudget: e.target.value,
+                  })
+                }
+                placeholder="0"
                 className="
                 w-full
                 border

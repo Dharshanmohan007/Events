@@ -658,6 +658,12 @@ const [trophyContent, setTrophyContent] = useState("");
       const financeEnabled = selectedTypes.some(() => true);
       if (financeEnabled) {
         const respData = data?.data || data || {};
+        const receiptRequestNo =
+          respData?.requestNo ||
+          respData?.data?.requestNo ||
+          respData?.media?.requestNo ||
+          respData?.data?.media?.requestNo ||
+          "";
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
         const employeePayload = {
@@ -668,8 +674,14 @@ const [trophyContent, setTrophyContent] = useState("");
         };
 
         const submitRespPayload = {
-          iqacNumber: respData?.requestNo || respData?.requestNo || `IQAC-${Date.now()}`,
-          employeeId: respData?.empId || employeePayload.empId || "",
+          requestNo: receiptRequestNo,
+          response: data,
+          employeeId:
+            respData?.employee ||
+            respData?.employeeId ||
+            id ||
+            employeePayload.empId ||
+            "",
         };
 
         await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {

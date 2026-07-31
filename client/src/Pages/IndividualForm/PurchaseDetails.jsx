@@ -831,6 +831,12 @@ export default function PurchaseDetails() {
     const financeEnabled = form?.financeRequired === "Yes";
     if (financeEnabled) {
       const respData = data?.data || data || {};
+      const receiptRequestNo =
+        respData?.requestNo ||
+        respData?.data?.requestNo ||
+        respData?.purchase?.requestNo ||
+        respData?.data?.purchase?.requestNo ||
+        "";
       const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
       const employeePayload = {
@@ -841,14 +847,19 @@ export default function PurchaseDetails() {
       };
 
       const submitRespPayload = {
-        iqacNumber: respData?.requestNo || `IQAC-${Date.now()}`,
-        employeeId: respData?.empId || employeePayload.empId || "",
+        requestNo: receiptRequestNo,
+        employeeId:
+          respData?.employee ||
+          respData?.employeeId ||
+          payload.employee ||
+          employeePayload.empId ||
+          "",
       };
 
       await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
         return ReportPdf({
           formData: {
-            selectDate: form?.requiredDate || "",
+            selectDate: form?.deliveryDate || "",
             advanceAmount: form?.advanceAmount || "",
             advancePurpose: form?.advancePurpose || "",
             empId: employeePayload.empId,

@@ -696,6 +696,12 @@ const TransportDetailsPage = () => {
 
       if (financeEnabled) {
         const respData = responseData?.data || responseData || {};
+        const receiptRequestNo =
+          respData?.requestNo ||
+          respData?.data?.requestNo ||
+          respData?.transport?.requestNo ||
+          respData?.data?.transport?.requestNo ||
+          "";
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
         const employeePayload = {
@@ -706,8 +712,14 @@ const TransportDetailsPage = () => {
         };
 
         const submitRespPayload = {
-          iqacNumber: respData?.requestNo || respData?.requestNo || `IQAC-${Date.now()}`,
-          employeeId: respData?.empId || employeePayload.empId || "",
+          requestNo: receiptRequestNo,
+          response: responseData,
+          employeeId:
+            respData?.employee ||
+            respData?.employeeId ||
+            employeeId ||
+            employeePayload.empId ||
+            "",
         };
 
         await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
