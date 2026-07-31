@@ -577,6 +577,7 @@ function AccommodationBlock({
             <CustomDateTimePicker
               label="Check Out Date & Time *"
               value={acc.checkOut}
+              minDate={acc.checkIn}
               onChange={(date) => onChange({ ...acc, checkOut: date })}
               placeholder="__/__/____  --:-- --"
             />

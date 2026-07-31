@@ -615,7 +615,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
           )}
           {showGlass && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker *" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker in pixels *" type='text'
                 value={data.sizeForGlass || ""}  onChange={updateSizeInput("sizeForGlass")} placeholder="e.g. 12 * 18" />
               <ErrorMsg msg={errors.sizeForGlass} />
             </div>

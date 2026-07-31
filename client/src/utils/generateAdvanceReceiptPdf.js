@@ -405,16 +405,18 @@ export default async function generateAdvanceReceiptPdf({
 }) {
   const data = {
     iqacNumber: submitResponse?.iqacNumber || "",
-    requisitionDate: formatDate(formData?.eventDays?.[0]?.date),
+    requisitionDate: dayjs().format("DD.MM.YYYY"),
     employeeName:
-      employee?.name || employee?.employeeName || formData?.employeeName || "",
+      employee?.firstName || employee?.name || employee?.employeeName || formData?.employeeName || "",
     empId: employee?.empId || employee?.employeeId || "",
     designation: employee?.designation || "",
     department: employee?.department || "",
     advanceAmount: formatAmount(formData?.advanceAmount),
     purpose: formData?.purposeOfAdvance || "",
     clearBeforeDate: add15Days(
-      formData?.eventDays?.[0]?.date,
+      formData?.eventDays?.length > 0
+        ? formData.eventDays[formData.eventDays.length - 1]?.date
+        : formData?.eventDays?.[0]?.date,
       formData?.clearanceDays || 15
     ),
     clearanceDays: formData?.clearanceDays || 15,

@@ -157,20 +157,49 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           <CustomSelect
             label="Professional Society Involved"
             required
+            multi
             searchable
-            value={eventData?.society || ""}
-            onChange={handleSelect("society")}
-            options={["IEEE", "ISTE", "CSI", "IETE", "WICYS","IGEN", "Other"]}
+            value={
+              Array.isArray(eventData?.society)
+                ? eventData.society
+                : eventData?.society
+                ? [eventData.society]
+                : []
+            }
+            onChange={(val) => {
+              setEventData((prev) => ({
+                ...prev,
+                society: val,
+              }));
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  society: "",
+                }));
+              }
+            }}
+            options={["IEEE", "ISTE", "CSI", "IETE", "WICYS", "IGEN", "Other"]}
             placeholder="Select professional society"
           />
-          {errors.society && <p className="text-red-400 text-xs mt-1">{errors.society}</p>}
+          {errors.society && (
+            <p className="text-red-400 text-xs mt-1">{errors.society}</p>
+          )}
         </div>
         <div>
           <CustomInput
             label="If professional society involved is others, please specify *"
             value={eventData?.societyOther || ""}
             onChange={handle("societyOther")}
-            disabled={eventData?.society !== "Other"}
+            disabled={
+              !(
+                Array.isArray(eventData?.society)
+                  ? eventData.society
+                  : eventData?.society
+                  ? [eventData.society]
+                  : []
+              ).includes("Other")
+            }
             placeholder="Specify society"
           />
           {errors.societyOther && <p className="text-red-400 text-xs mt-1">{errors.societyOther}</p>}
@@ -251,6 +280,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           key={i}
           dayIndex={i + 1}
           dayData={day}
+          minDate={i > 0 ? daysData[i - 1].date : ""}
           errors={(errors.days && errors.days[i]) || {}}
           updateDay={(updatedDay) => {
             const updated = [...daysData];

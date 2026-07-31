@@ -11,6 +11,8 @@ export default function CustomInput({
   readOnly = false,
   placeholder = "",
   disabled = false,
+  min,
+  max,
 }) {
   const isDarkBg = type === "date" || type === "time";
 

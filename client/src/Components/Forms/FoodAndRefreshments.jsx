@@ -889,7 +889,7 @@ export default function FoodAndRefreshments({
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
-                  Special Requirements, If any
+                  Special Requirements, If any food allergies
                 </label>
                 <textarea
                   rows={4}

@@ -21,6 +21,8 @@ export default function EventOrganizerDetails({
   setAdvanceAmount,
   purposeOfAdvance,
   setPurposeOfAdvance,
+  estimatedBudget,
+  setEstimatedBudget,
   budget,
   setBudget,
   department,
@@ -39,6 +41,7 @@ export default function EventOrganizerDetails({
   const principalInputRef = useRef();
   const [fileSizeError, setFileSizeError] = React.useState("");
   const [principalFileError, setPrincipalFileError] = React.useState("");
+  const [advanceAmountError, setAdvanceAmountError] = React.useState("");
   // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
 
@@ -452,6 +455,7 @@ export default function EventOrganizerDetails({
               setFinance(value);
 
               if (value === "No") {
+                setEstimatedBudget("");
                 setAdvanceAmount("");
                 setPurposeOfAdvance("");
               }
@@ -463,45 +467,110 @@ export default function EventOrganizerDetails({
         </div>
         {finance === "Yes" && (
           <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="relative">
-              {advanceAmount && (
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  ₹
-                </span>
-              )}
 
-              <CustomInput
-                label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."
-                value={advanceAmount}
-                onChange={(e) => {
-                  // Allow only digits
-                  const value = e.target.value.replace(/\D/g, "");
-                  setAdvanceAmount(value);
-                }}
-                placeholder="Enter amount"
-                className={advanceAmount ? "pl-8" : ""}
-              />
+            {/* Estimated Event Budget */}
+            <div>
+              <div className="relative">
+                {estimatedBudget && (
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+                    ₹
+                  </span>
+                )}
 
-              {errors.advanceAmount && (
+                <CustomInput
+                  label="Estimated Event Budget"
+                  value={estimatedBudget}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+                    setEstimatedBudget(value);
+
+                    if (
+                      advanceAmount &&
+                      value &&
+                      Number(advanceAmount) > Number(value)
+                    ) {
+                      setAdvanceAmountError(
+                        "Advance amount should be less than or equal to the estimated budget."
+                      );
+                    } else {
+                      setAdvanceAmountError("");
+                    }
+                  }}
+                  placeholder="Enter estimated budget"
+                  className={estimatedBudget ? "pl-8" : ""}
+                />
+              </div>
+
+              {errors.estimatedBudget && (
                 <p className="text-red-400 text-xs mt-1">
-                  {errors.advanceAmount}
+                  {errors.estimatedBudget}
                 </p>
               )}
             </div>
 
+            {/* Advance Amount */}
             <div>
+              <div className="relative">
+                {advanceAmount && (
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10">
+                    ₹
+                  </span>
+                )}
+
+                <CustomInput
+                  label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."
+                  value={advanceAmount}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, "");
+
+                    setAdvanceAmount(value);
+
+                    if (
+                      value &&
+                      estimatedBudget &&
+                      Number(value) > Number(estimatedBudget)
+                    ) {
+                      setAdvanceAmountError(
+                        "Advance amount should be less than or equal to the estimated budget."
+                      );
+                    } else {
+                      setAdvanceAmountError("");
+                    }
+                  }}
+                  placeholder="Enter amount"
+                  className={advanceAmount ? "pl-8" : ""}
+                />
+              </div>
+
+              {advanceAmountError ? (
+                <p className="text-red-400 text-xs mt-1">
+                  {advanceAmountError}
+                </p>
+              ) : (
+                errors.advanceAmount && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors.advanceAmount}
+                  </p>
+                )
+              )}
+            </div>
+
+            {/* Purpose of Advance */}
+            <div className="sm:col-span-2">
               <CustomInput
                 label="Purpose of Advance"
                 value={purposeOfAdvance}
                 onChange={(e) => setPurposeOfAdvance(e.target.value)}
                 placeholder="Enter purpose"
               />
+
               {errors.purposeOfAdvance && (
                 <p className="text-red-400 text-xs mt-1">
                   {errors.purposeOfAdvance}
                 </p>
               )}
             </div>
+
           </div>
         )}
       </div>
