@@ -11,7 +11,7 @@ const VenueHeader = ({ basePath = '/dashboard-venue' }) => {
     const isSectionActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`)
 
     return (
-        <section className="dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins sticky top-0 z-10">
+        <section className="dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins sticky top-0 z-50">
             <div className="first-container flex items-center gap-6">
                 <img src={smallLogo} alt="Small Logo" className="h-10 w-10" />
 

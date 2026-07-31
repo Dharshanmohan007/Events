@@ -87,7 +87,7 @@ const TransportsDashboard = () => {
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
-                <div className='header-container sticky top-0 z-10'>
+                <div className='header-container sticky top-0 z-50'>
                     <DashboardHeader basePath="/dashboard-transports" />
                 </div>
 

@@ -11,6 +11,8 @@ const EMPTY_STATS = {
     rejected: 0,
 }
 
+const individualTargetTitles = ['Food Service Overview', 'Catering Requests']
+
 const applyEventStats = (sections, eventStats) => {
     const stats = eventStats ?? EMPTY_STATS
 

@@ -15,7 +15,7 @@ const getNavLinkClassName = ({ isActive }) =>
 
 const FacultyDahsboardHeader = () => {
     return (
-        <section className='dashboard-header bg-[#0a0e18] border-b border-[#1d2638] flex items-center justify-between py-3 px-6 poppins sticky top-0 z-10'>
+        <section className='dashboard-header bg-[#0a0e18] border-b border-[#1d2638] flex items-center justify-between py-3 px-6 poppins sticky top-0 z-50'>
             <div className="first-container flex items-center gap-10">
                 <img src={smallLogo} alt="Small Logo" className='w-10 h-10' />
 
