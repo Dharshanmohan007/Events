@@ -968,6 +968,8 @@ useEffect(() => {
         advanceAmount: Number(card.advanceAmount) || 0,
         advancePurpose: card.advancePurpose.trim(),
         estimatedEventBudget: Number(card.estimatedEventBudget) || 0,
+        // Backend expects `estimatedAmount` — include it for compatibility
+        estimatedAmount: Number(card.estimatedEventBudget) || 0,
       }),
 
       status: "Pending",
@@ -1138,6 +1140,11 @@ if (payload.estimatedEventBudget !== undefined) {
   formData.append("estimatedEventBudget", payload.estimatedEventBudget);
 }
 
+// Append backend-expected field name as well to ensure server records the value
+if (payload.estimatedAmount !== undefined) {
+  formData.append("estimatedAmount", payload.estimatedAmount);
+}
+
 if (principalApprovalDocument) {
   formData.append(
     "principalApprovalForm",
@@ -1145,7 +1152,20 @@ if (principalApprovalDocument) {
   );
 }
 
-const response = await fetch(`${API_BASE}/api/foods`, {
+      // Debug: log outgoing FormData entries to verify values sent to server
+      for (const pair of formData.entries()) {
+        try {
+          if (pair[1] instanceof File) {
+            console.log("FormData ->", pair[0], "(file):", pair[1].name);
+          } else {
+            console.log("FormData ->", pair[0], ":", pair[1]);
+          }
+        } catch (e) {
+          console.log("FormData ->", pair[0], ":", pair[1]);
+        }
+      }
+
+      const response = await fetch(`${API_BASE}/api/foods`, {
 
   method: "POST",
 

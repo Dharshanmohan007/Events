@@ -43,6 +43,7 @@ const createTransportForm = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
 
@@ -549,6 +550,16 @@ const TransportDetailsPage = () => {
     formData.append("financeRequired", form.financeRequired);
     formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
     formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
+    formData.append(
+      "estimatedEventBudget",
+      form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
+    );
+
+    // Also include backend-expected `estimatedAmount` for compatibility
+    formData.append(
+      "estimatedAmount",
+      form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
+    );
 
     formData.append("status", "Pending");
 
@@ -599,12 +610,33 @@ const TransportDetailsPage = () => {
 
       // Finance validation
       if (form.financeRequired === "Yes") {
-        if (!form.advanceAmount) {
+        const advanceAmount = parseFloat(form.advanceAmount);
+        const totalBudget = parseFloat(form.estimatedEventBudget);
+
+        if (!form.advanceAmount || Number.isNaN(advanceAmount) || advanceAmount <= 0) {
           errors.push(`Form ${index + 1}: Advance amount is required.`);
         }
 
         if (!form.advancePurpose || !form.advancePurpose.trim()) {
           errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+
+        if (
+          !form.estimatedEventBudget ||
+          Number.isNaN(totalBudget) ||
+          totalBudget <= 0
+        ) {
+          errors.push(`Form ${index + 1}: Total budget amount is required.`);
+        }
+
+        if (
+          !Number.isNaN(advanceAmount) &&
+          !Number.isNaN(totalBudget) &&
+          advanceAmount > totalBudget
+        ) {
+          errors.push(
+            `Form ${index + 1}: Advance amount cannot exceed the Estimated Budget amount.`,
+          );
         }
       }
     });
@@ -627,9 +659,9 @@ const TransportDetailsPage = () => {
     }
 
     setIsSubmitting(true);
-    setSubmitSuccess(true);
 
     try {
+      let lastResponseData = null;
       for (const form of transportForms) {
         const payload = buildTransportPayload(form);
 
@@ -673,6 +705,9 @@ const TransportDetailsPage = () => {
           throw new Error(serverMessage);
         }
 
+        // Keep last parsed response so it can be used after the loop
+        lastResponseData = responseData;
+
         // Log response with IST formatting
         console.log("📥 Response received:", responseData?.data);
         console.log(
@@ -690,12 +725,13 @@ const TransportDetailsPage = () => {
       }
 
       setValidationErrors([]);
+      setSubmitSuccess(true);
 
       const firstForm = transportForms[0] || {};
       const financeEnabled = firstForm?.financeRequired === "Yes";
 
       if (financeEnabled) {
-        const respData = responseData?.data || responseData || {};
+        const respData = lastResponseData?.data || lastResponseData || {};
         const receiptRequestNo =
           respData?.requestNo ||
           respData?.data?.requestNo ||
@@ -713,7 +749,7 @@ const TransportDetailsPage = () => {
 
         const submitRespPayload = {
           requestNo: receiptRequestNo,
-          response: responseData,
+          response: lastResponseData,
           employeeId:
             respData?.employee ||
             respData?.employeeId ||
@@ -1566,11 +1602,12 @@ const TransportDetailsPage = () => {
                   <div
                     key={opt.label}
                     onClick={() =>
-                      updateTransportForm(formIndex, {
+                              updateTransportForm(formIndex, {
                         showFinanceDropdown: false,
                         financeRequired: opt.value,
                         advanceAmount: opt.value === "No" ? "" : undefined,
                         advancePurpose: opt.value === "No" ? "" : undefined,
+                        estimatedEventBudget: opt.value === "No" ? "" : undefined,
                       })
                     }
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
@@ -1589,16 +1626,15 @@ const TransportDetailsPage = () => {
           </div>
 
           {form.financeRequired === "Yes" && (
-            <>
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>
-                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
-                </label>
+            <div className="grid grid-cols-1 gap-5 mb-5">
+              <div className="relative order-first md:col-span-2">
+                <label className={formFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
 
                 <input
                   type="number"
-                  value={form.advanceAmount}
-                  onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                  min="0"
+                  value={form.estimatedEventBudget}
+                  onChange={(e) => updateFormField(formIndex, "estimatedEventBudget", e.target.value)}
                   placeholder="0"
                   className="
                     w-full
@@ -1613,27 +1649,63 @@ const TransportDetailsPage = () => {
                 />
               </div>
 
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>Purpose of Advance</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <label className={formFloatingLabelClass}>Advance Amount (Rs.)</label>
 
-                <input
-                  type="text"
-                  value={form.advancePurpose}
-                  onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
-                  placeholder="Purpose"
-                  className="
-                    w-full
-                    border
-                    border-[#2F2F47]
-                    rounded-md
-                    px-4
-                    py-3
-                    text-white
-                    outline-none
-                  "
-                />
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.advanceAmount}
+                    onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                    placeholder="0"
+                    className={`
+                      w-full
+                      border
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                      ${
+                        Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                        form.estimatedEventBudget !== ""
+                          ? "border-red-500"
+                          : "border-[#2F2F47]"
+                      }
+                    `}
+                  />
+
+                  {Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                    form.estimatedEventBudget !== "" && (
+                      <p className="mt-1 text-sm text-red-400">
+                        Advance amount cannot exceed the estimated event budget.
+                      </p>
+                    )}
+                </div>
+
+                <div className="relative">
+                  <label className={formFloatingLabelClass}>Purpose of Advance</label>
+
+                  <input
+                    type="text"
+                    value={form.advancePurpose}
+                    onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
+                    placeholder="Purpose"
+                    className="
+                      w-full
+                      border
+                      border-[#2F2F47]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* SPECIAL REQUIREMENT */}

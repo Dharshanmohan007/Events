@@ -392,6 +392,7 @@ export default function PurchaseDetails() {
     financeRequired: "No",
     advanceAmount: "",
     advancePurpose: "",
+    estimatedEventBudget: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -553,6 +554,12 @@ export default function PurchaseDetails() {
       if (!form.advancePurpose || !form.advancePurpose.trim()) {
         nextErrors.advancePurpose = "This field is required.";
       }
+
+      if (!form.estimatedEventBudget || !form.estimatedEventBudget.toString().trim()) {
+        nextErrors.estimatedEventBudget = "This field is required.";
+      } else if (Number(form.advanceAmount) > Number(form.estimatedEventBudget)) {
+        nextErrors.advanceAmount = "Advance amount cannot exceed the estimated event budget.";
+      }
     }
 
     setErrors(nextErrors);
@@ -678,6 +685,7 @@ export default function PurchaseDetails() {
       financeRequired: form.financeRequired,
       advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
       advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose || "" : "",
+      estimatedEventBudget: form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
 
       purchases: [
         {
@@ -762,6 +770,7 @@ export default function PurchaseDetails() {
     formData.append("financeRequired", payload.financeRequired);
     formData.append("advanceAmount", payload.advanceAmount);
     formData.append("advancePurpose", payload.advancePurpose);
+    formData.append("estimatedEventBudget", payload.estimatedEventBudget);
 
     // Purchases
     formData.append(
@@ -1162,23 +1171,82 @@ export default function PurchaseDetails() {
         </div>
 
         {form.financeRequired === "Yes" && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div className="grid grid-cols-1 gap-4 mt-4">
             <InputField
-              label="I require Cash / In Bank / Travel Advance / Online Payment of Rs."
+              label="Estimated Event Budget (Rs.)"
               placeholder="0"
-              value={form.advanceAmount}
-              onChange={(e) => setField("advanceAmount", e.target.value)}
+              value={form.estimatedEventBudget}
+              onChange={(e) => setField("estimatedEventBudget", e.target.value)}
               type="number"
-              error={errors.advanceAmount}
+              error={errors.estimatedEventBudget}
             />
 
-            <InputField
-              label="Purpose of Advance"
-              placeholder="Purpose"
-              value={form.advancePurpose}
-              onChange={(e) => setField("advancePurpose", e.target.value)}
-              error={errors.advancePurpose}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="relative">
+                <label className={cardFloatingLabelClass}>
+                  I require Cash / In Bank / Travel Advance / Online Payment of Rs.
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={form.advanceAmount}
+                  onChange={(e) => setField("advanceAmount", e.target.value)}
+                  placeholder="0"
+                  className={`
+                    w-full
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                    ${
+                      Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                      form.estimatedEventBudget !== ""
+                        ? "border-red-500"
+                        : "border-[#2F2F47]"
+                    }
+                    border
+                  `}
+                />
+
+                {Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                  form.estimatedEventBudget !== "" && (
+                    <p className="mt-1 text-sm text-red-400">
+                      Advance amount cannot exceed the estimated event budget.
+                    </p>
+                  )}
+
+                {errors.advanceAmount && (
+                  <p className="mt-1 text-sm text-red-400">{errors.advanceAmount}</p>
+                )}
+              </div>
+
+              <div className="relative">
+                <label className={cardFloatingLabelClass}>Purpose of Advance</label>
+
+                <input
+                  type="text"
+                  value={form.advancePurpose}
+                  onChange={(e) => setField("advancePurpose", e.target.value)}
+                  placeholder="Purpose"
+                  className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+
+                {errors.advancePurpose && (
+                  <p className="mt-1 text-sm text-red-400">{errors.advancePurpose}</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

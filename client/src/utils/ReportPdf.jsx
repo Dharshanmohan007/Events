@@ -431,10 +431,32 @@ export default async function ReportPdf({
   const requisitionDateValue =
     formData?.requisitionDate ||
     formData?.selectDate ||
+    formData?.pickupDateTime ||
     formData?.date ||
     formData?.eventDays?.[0]?.date ||
     formData?.event?.eventDays?.[0]?.date ||
     formData?.event?.date ||
+    "";
+
+  const amountValue =
+    formData?.advanceAmount ??
+    formData?.amount ??
+    formData?.requestedAmount ??
+    formData?.requestedAdvance ??
+    formData?.paymentAmount ??
+    "";
+
+  const purposeValue =
+    formData?.purposeOfAdvance ||
+    formData?.advancePurpose ||
+    formData?.purpose ||
+    formData?.requestPurpose ||
+    formData?.advanceFor ||
+    "";
+
+  const clearBeforeDateValue =
+    formData?.clearBeforeDate ||
+    formData?.clearDate ||
     "";
 
   // The request number returned by the API is the official reference that must
@@ -484,10 +506,12 @@ export default async function ReportPdf({
       formData?.department ||
       storedUser?.department ||
       "",
-    advanceAmount: formatAmount(formData?.advanceAmount),
-    purpose: formData?.purposeOfAdvance || formData?.advancePurpose || "",
-    clearBeforeDate: add15Days(requisitionDateValue, formData?.clearanceDays || 15),
-    clearanceDays: formData?.clearanceDays || 15,
+    advanceAmount: formatAmount(amountValue),
+    purpose: purposeValue,
+    clearBeforeDate:
+      clearBeforeDateValue ||
+      add15Days(requisitionDateValue, formData?.clearanceDays || 15),
+    clearanceDays: formData?.clearanceDays || formData?.days || 15,
   };
   const facultyId =
     submitResponse?.employeeId ||
