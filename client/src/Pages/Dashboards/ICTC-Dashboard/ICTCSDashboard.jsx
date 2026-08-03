@@ -49,13 +49,6 @@ const statCardData = [
     },
 ]
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
-
 const transformIctsData = (apiData) =>
     apiData.map((item) => ({
         eventId: item.eventId,
@@ -169,7 +162,7 @@ const ICTCSDashboard = () => {
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
                         <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-ictcs/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="ICTCS Request By Department" />
+                        <DepartmentRequestChart module="icts" title="ICTCS Request By Department" />
                     </div>
 
                 </div>

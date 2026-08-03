@@ -69,13 +69,6 @@ const statGroups = [
   },
 ]
 
-const chartData = [
-  { name: 'CSE', value: 25, color: '#74B9FF' },
-  { name: 'AI&ML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68DF85' },
-  { name: 'VLSI', value: 8, color: '#3352C8' },
-]
-
 // ── Sub-components ───────────────────────────────────────────────────────
 
 const DashboardHeader = () => (
@@ -543,7 +536,7 @@ const PosterDashboard = () => {
 
         <div className="mt-8 grid grid-cols-12 gap-3">
           <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
-          <DepartmentRequestChart data={chartData} title="Event Poster Request By Department" />
+          <DepartmentRequestChart module="poster" title="Event Poster Request By Department" />
         </div>
       </main>
       </section>
