@@ -80,16 +80,6 @@ const transformMediaData = (apiData) =>
     status: deriveMediaStatus(item.media),
   }))
 
-const departmentData = [
-  { name: 'CSE', value: 25, color: '#74b9ff' },
-  { name: 'AIML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68df85' },
-  { name: 'VLSI', value: 8, color: '#4169e1' },
-  { name: 'ECE', value: 15, color: '#ff7675' },
-  { name: 'ME', value: 20, color: '#fdcb6e' },
-  { name: 'IT', value: 18, color: '#00b894' },
-]
-
 const MediaDashboard = () => {
   const [events, setEvents] = useState([])
   const [rawData, setRawData] = useState([])
@@ -499,7 +489,7 @@ const MediaDashboard = () => {
           <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
             <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-media/feedback" />
             <DepartmentRequestChart
-              data={departmentData}
+              module="media"
               title="Event Media Request By Department"
             />
           </div>

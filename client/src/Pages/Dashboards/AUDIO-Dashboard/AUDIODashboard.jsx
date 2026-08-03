@@ -49,13 +49,6 @@ const statCardData = [
     },
 ]
 
-const departmentData = [
-    { name: 'Audio Eng.', value: 35, color: '#74b9ff' },
-    { name: 'Media', value: 30, color: '#159283' },
-    { name: 'Broadcasting', value: 20, color: '#68df85' },
-    { name: 'Music', value: 15, color: '#4169e1' },
-]
-
 const transformAudioData = (apiData) =>
     apiData.map((item) => ({
         eventId: item.eventId,
@@ -170,7 +163,7 @@ const AUDIODashboard = () => {
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
                         <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-audio/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Audio Request By Department" />
+                        <DepartmentRequestChart module="audio" title="Audio Request By Department" />
                     </div>
 
                 </div>
