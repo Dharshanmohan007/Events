@@ -685,7 +685,7 @@ export default function PurchaseDetails() {
       financeRequired: form.financeRequired,
       advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
       advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose || "" : "",
-      estimatedEventBudget: form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
+      estimatedAmount: form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
 
       purchases: [
         {
@@ -770,7 +770,7 @@ export default function PurchaseDetails() {
     formData.append("financeRequired", payload.financeRequired);
     formData.append("advanceAmount", payload.advanceAmount);
     formData.append("advancePurpose", payload.advancePurpose);
-    formData.append("estimatedEventBudget", payload.estimatedEventBudget);
+    formData.append("estimatedAmount", payload.estimatedAmount);
 
     // Purchases
     formData.append(

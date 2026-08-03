@@ -22,6 +22,17 @@ const pageFloatingLabelClass = `${floatingLabelClass} bg-[#141428]`;
 
 const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 
+const getFinanceComparisonError = (estimatedAmount, advanceAmount) => {
+  const estimated = Number(estimatedAmount);
+  const advance = Number(advanceAmount);
+
+  if (!Number.isNaN(estimated) && !Number.isNaN(advance) && advance > estimated) {
+    return "Advance amount cannot exceed the estimated budget amount.";
+  }
+
+  return "";
+};
+
 const MediaDetailsPage = () => {
   // =========================
   // MAIN TYPE DROPDOWN
@@ -153,6 +164,7 @@ const [trophyContent, setTrophyContent] = useState("");
   const principalInputRef = useRef(null);
   const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
   const [principalFileError, setPrincipalFileError] = useState("");
+
   const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
   const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
   const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
@@ -305,6 +317,16 @@ const [trophyContent, setTrophyContent] = useState("");
   const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
   const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
   const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+
+  const posterFinanceComparisonError =
+    posterFinanceRequired === "Yes"
+      ? getFinanceComparisonError(posterEstimatedAmount, posterAdvanceAmount)
+      : "";
+
+  const videoFinanceComparisonError =
+    videoFinanceRequired === "Yes"
+      ? getFinanceComparisonError(videoEstimatedAmount, videoAdvanceAmount)
+      : "";
 
   // =========================
   // FILE VALIDATION
@@ -1291,7 +1313,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={displaySize}
                     onChange={(e) => setDisplaySize(e.target.value)}
-                    placeholder={`Enter Flex Size`}
+                    placeholder="e.g. 2 * 2 px"
                     className="
                       w-full
                       border
@@ -1316,7 +1338,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={glassStickerSize}
                     onChange={(e) => setGlassStickerSize(e.target.value)}
-                    placeholder={`Enter Glass Sticker Size`}
+                    placeholder="e.g. 4 * 4 px"
                     className="
                       w-full
                       border
@@ -1470,6 +1492,9 @@ onChange={(e) => setPosterContent(e.target.value)}
                     placeholder="0"
                     className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
                   />
+                  {posterFinanceComparisonError && (
+                    <p className="mt-1 text-sm text-red-400">{posterFinanceComparisonError}</p>
+                  )}
                 </div>
 
                 <div className="relative w-full">
@@ -1794,6 +1819,9 @@ onChange={(e) => setPosterContent(e.target.value)}
                     placeholder="0"
                     className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
                   />
+                  {videoFinanceComparisonError && (
+                    <p className="mt-1 text-sm text-red-400">{videoFinanceComparisonError}</p>
+                  )}
                 </div>
 
                 <div className="relative w-full">
