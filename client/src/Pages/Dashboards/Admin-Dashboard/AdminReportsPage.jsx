@@ -52,7 +52,7 @@ const AdminReportsTable = ({ rows, activeTab, isLoading }) => {
                     headers: { Authorization: `Bearer ${token}` },
                 })
                 const json = await res.json()
-                console.log('[PDF Fetch] Raw response for', row.id, ':', json)
+                // console.log('[PDF Fetch] Raw response for', row.id, ':', json)
 
                 const eventData = json.data || json.event || (json.requestDetails ? json : null)
                 if (eventData) {

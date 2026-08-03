@@ -59,7 +59,7 @@ export default function Calendar() {
 
   const handleSelectEvent = (event) => {
     // Hook up to a detail drawer / modal / route as needed.
-    console.log("Selected event:", event);
+    // console.log("Selected event:", event);
   };
 
   return (

@@ -122,7 +122,7 @@ const FacultyfeedbackPage = () => {
 
       const data = await res.json()
       if (data.success) {
-        console.log('Feedback submitted successfully')
+        // console.log('Feedback submitted successfully')
       }
     } catch (err) {
       console.error('Failed to submit feedback:', err)

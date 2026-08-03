@@ -11,11 +11,11 @@ import Logo from "../assets/logo.svg";
 import LoginBackground from "../assets/login_Background.svg";
 
 async function loginApi(email, password) {
-  console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
-  console.log(
-    "LOGIN URL:",
-    `${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`
-  );
+  // console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
+  // console.log(
+  //   "LOGIN URL:",
+  //   `${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`
+  // );
   const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`, {
     method: "POST",
     headers: {
@@ -25,13 +25,13 @@ async function loginApi(email, password) {
   });
 
   const text = await res.text();
-  console.log("RAW RESPONSE:", text);
+  // console.log("RAW RESPONSE:", text);
 
   let data = {};
 
   try {
     data = text ? JSON.parse(text) : {};
-    console.log("data", data);
+    // console.log("data", data);
   } catch {
     throw new Error("Invalid server response");
   }
@@ -190,7 +190,7 @@ export default function LoginPage() {
     try {
       const data = await loginApi(email, password);
 
-      console.log("LOGIN RESPONSE:", data);
+      // console.log("LOGIN RESPONSE:", data);
 
       if (data.otpRequired) {
         showSuccessToast(data.message || "OTP sent successfully");
@@ -261,7 +261,7 @@ export default function LoginPage() {
         throw new Error("Invalid server response");
       }
 
-      console.log("VERIFY OTP RESPONSE:", data);
+      // console.log("VERIFY OTP RESPONSE:", data);
 
       if (!res.ok) {
         throw new Error(data.message || "OTP verification failed");

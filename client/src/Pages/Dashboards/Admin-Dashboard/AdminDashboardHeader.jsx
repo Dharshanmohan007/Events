@@ -10,13 +10,14 @@ const adminRoutes = {
     faculty: '/dashboard-admin/FacultyManagement',
     admins: '/dashboard-admin/AdminManagement',
     reports: '/dashboard-admin/reports',
+    // othermanagements: '/dashboard-admin/other-managements',
     calendar: '/calendar',
 }
 
 const getNavLinkClassName = ({ isActive }) =>
     `font-medium ${isActive ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80]'}`
 
-const AdminDashboardHeader = () => {
+const   AdminDashboardHeader = () => {
     return (
         <>
             <section className='dashboard-header bg-[#0a0e18] flex items-center justify-between py-4 px-4 poppins sticky top-0 z-50 '>
@@ -31,6 +32,8 @@ const AdminDashboardHeader = () => {
                         <NavLink to={adminRoutes.venues} className={getNavLinkClassName}>Venue Management</NavLink>
                         <NavLink to={adminRoutes.faculty} className={getNavLinkClassName}>Faculty Management</NavLink>
                         {/* <NavLink to={adminRoutes.admins} className={getNavLinkClassName}>Admin Management</NavLink> */}
+                        <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
+                        {/* <NavLink to={adminRoutes.othermanagements} className={getNavLinkClassName}>Other Managements</NavLink> */}
                     </div>
                 </div>
                 <div className="second-container flex items-center gap-6 ">

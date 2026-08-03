@@ -119,8 +119,9 @@ const validateEventRequisition = (data) => {
   if (!data.eventData?.eventName?.trim()) errors.eventName = "Event name is required";
   if (!data.eventData?.eventType) errors.eventType = "Event type is required";
   if (data.eventData?.eventType === "Other" && !data.eventData?.eventTypeOther?.trim()) errors.eventTypeOther = "Please specify the event type";
-  if (!data.eventData?.society) errors.society = "Society is required";
-  if (data.eventData?.society === "Other" && !data.eventData?.societyOther?.trim()) errors.societyOther = "Please specify the society";
+  const societyArr = Array.isArray(data.eventData?.society) ? data.eventData.society : data.eventData?.society ? [data.eventData.society] : [];
+  if (societyArr.length === 0) errors.society = "Society is required";
+  if (societyArr.includes("Other") && !data.eventData?.societyOther?.trim()) errors.societyOther = "Please specify the society";
   const logosArr = Array.isArray(data.eventData?.logos) ? data.eventData.logos : data.eventData?.logos ? [data.eventData.logos] : [];
   if (logosArr.length === 0) errors.logos = "Logos selection is required";
   if (logosArr.includes("Other") && !data.eventData?.logosOther?.trim()) errors.logosOther = "Please specify the logos";
@@ -153,7 +154,7 @@ const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
 let token = localStorage.getItem("token");
 let decodedToken = jwtDecode(token);
 
-  console.log("user log :",user);
+  // console.log("user log :",user);
   
   const fd = new FormData();
   fd.append("organizerId", decodedToken?.facultyId);
@@ -163,6 +164,7 @@ let decodedToken = jwtDecode(token);
       previousEventReason: eventRequisition.doc === "No" ? eventRequisition.reason : "",
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
+      estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       organizingDepartment: eventRequisition.department,
@@ -179,7 +181,11 @@ let decodedToken = jwtDecode(token);
       involvedIIC: eventRequisition.eventData.iic === "Yes" || eventRequisition.eventData.iic === true,
       eventType: eventRequisition.eventData.eventType || "",
       eventTypeOther: eventRequisition.eventData.eventTypeOther || "",
-      professionalSociety: eventRequisition.eventData.society ? [eventRequisition.eventData.society] : [],
+      professionalSociety: Array.isArray(eventRequisition.eventData.society)
+        ? eventRequisition.eventData.society
+        : eventRequisition.eventData.society
+        ? [eventRequisition.eventData.society]
+        : [],
       professionalSocietyOther: eventRequisition.eventData.societyOther || "",
       logosInPoster: Array.isArray(eventRequisition.eventData.logos)
         ? eventRequisition.eventData.logos
@@ -744,6 +750,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
+      estimatedBudget: Number(formData.event.estimatedBudget) || 0,
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
       organizingDepartment: formData.event.department,
@@ -815,9 +822,9 @@ export default function Form() {
     purchase:            { label: "Purchase Details",              component: Purchase },
     media:               { label: "Media Requirement Details",     component: MediaForm },
   };
-  console.log("selectedRequirements:", selectedRequirements);
-  console.log("type:", typeof selectedRequirements);
-  console.log("isArray:", Array.isArray(selectedRequirements));
+  // console.log("selectedRequirements:", selectedRequirements);
+  // console.log("type:", typeof selectedRequirements);
+  // console.log("isArray:", Array.isArray(selectedRequirements));
   const requirementKeys = Array.isArray(selectedRequirements)
     ? selectedRequirements
     : Object.entries(selectedRequirements || {})
@@ -906,13 +913,13 @@ export default function Form() {
     }
     setIsLoading(true);
     try {
-      console.log("api:", import.meta.env.VITE_API_BASE_URL_URL);
+      // console.log("api:", import.meta.env.VITE_API_BASE_URL_URL);
       let response;
       if (sectionKey === "event") {
         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
-        console.log("saveSection: event payload:", payload);
+        // console.log("saveSection: event payload:", payload);
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -997,7 +1004,7 @@ export default function Form() {
   };
 
   const submitEvent = async () => {
-    console.log("submitEvent started");
+    // console.log("submitEvent started");
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
     setApiError("");
@@ -1054,27 +1061,27 @@ export default function Form() {
         body: JSON.stringify(fullPayload),
       });
       const data = await response.json();
-      console.log("Reached after submit API");
+      // console.log("Reached after submit API");
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
       // Generate PDF only if finance details exist
-      console.log("Finance :", formDataRef.current.event.finance);
-      console.log("Amount :", formDataRef.current.event.advanceAmount);
-      console.log("Purpose :", formDataRef.current.event.purposeOfAdvance);
+      // console.log("Finance :", formDataRef.current.event.finance);
+      // console.log("Amount :", formDataRef.current.event.advanceAmount);
+      // console.log("Purpose :", formDataRef.current.event.purposeOfAdvance);
       if (
           formDataRef.current.event.finance === "Yes" &&
           formDataRef.current.event.advanceAmount &&
           formDataRef.current.event.purposeOfAdvance
       ) {
-          console.log("Generating PDF...");
-          console.log(formDataRef.current.event);
-          console.log(user);
-          console.log(data);
+          // console.log("Generating PDF...");
+          // console.log(formDataRef.current.event);
+          // console.log(user);
+          // console.log(data);
           const organizer =
             data.data.requestDetails.organizerDetails.organizers?.[0];
 
           let facultyDetails = {};
-          console.log("Submit Response:", data);
-          console.log("Organizer ID:", data.data.organizerId);
+          // console.log("Submit Response:", data);
+          // console.log("Organizer ID:", data.data.organizerId);
           if (data.data.organizerId) {
             facultyDetails = await getFacultyById(data.data.organizerId);
           }
@@ -1084,7 +1091,7 @@ export default function Form() {
             employee: facultyDetails,
             submitResponse: data.data,
           });
-          console.log("PDF Generated");
+          // console.log("PDF Generated");
       }
       setSubmitSuccess(true);
     } catch (error) {

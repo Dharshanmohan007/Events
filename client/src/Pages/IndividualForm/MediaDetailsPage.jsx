@@ -88,13 +88,13 @@ const MediaDetailsPage = () => {
   const [id, setId] = useState("");
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("token :", token);
+    // console.log("token :", token);
 
     if (token) {
       const decoded = jwtDecode(token);
       setId(decoded.id);
 
-      console.log("Decoded JWT:", decoded);
+      // console.log("Decoded JWT:", decoded);
     }
   }, []);
   
@@ -345,7 +345,7 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const validatePoster = () => {
-    console.log("validating poster...");
+    // console.log("validating poster...");
     const errors = [];
     if (!selectedTypes.includes("Poster")) {
       return errors;
@@ -388,7 +388,7 @@ const [trophyContent, setTrophyContent] = useState("");
       }
     }
 
-    console.log("Poster validation errors:", errors);
+    // console.log("Poster validation errors:", errors);
     return errors;
   };
 
@@ -597,8 +597,8 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const handleNext = async () => {
-    console.log('[MediaDetails] handleNext start');
-    console.log("activated function");
+    // console.log('[MediaDetails] handleNext start');
+    // console.log("activated function");
     
     if (!selectedTypes.length) {
       setValidationErrors(["Please select at least one Type of Design Required."]);
@@ -616,7 +616,7 @@ const [trophyContent, setTrophyContent] = useState("");
     setValidationErrors(errors);
     if (errors.length) return;
 
-    console.log("no errors");
+    // console.log("no errors");
 
     // Validate token before attempting submit. Show an error instead of redirecting.
     const authToken = localStorage.getItem("token");
@@ -635,9 +635,9 @@ const [trophyContent, setTrophyContent] = useState("");
       const token = localStorage.getItem("token");
       const requestUrl = `${API_BASE}/api/individual-media/create`;
       const formData = buildMediaFormData();
-      console.log('[MediaDetails] Sending POST to', requestUrl);
+      // console.log('[MediaDetails] Sending POST to', requestUrl);
       for (const entry of formData.entries()) {
-        console.log('[MediaDetails] formData entry:', entry[0], entry[1]);
+        // console.log('[MediaDetails] formData entry:', entry[0], entry[1]);
       }
       const response = await fetch(requestUrl, {
         method: "POST",
@@ -649,7 +649,7 @@ const [trophyContent, setTrophyContent] = useState("");
         body: formData,
       });
       const data = await response.json();
-      console.log("Media submit response:", data);
+      // console.log("Media submit response:", data);
       if (!response.ok) {
         throw new Error(data.message || "Media submission failed.");
       }

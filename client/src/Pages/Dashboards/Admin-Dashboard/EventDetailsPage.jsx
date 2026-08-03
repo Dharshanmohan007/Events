@@ -112,7 +112,7 @@ const EventDetailsPage = () => {
 
       const eventData = payload.data || payload
       const details = eventData.requestDetails
-      console.log('Admin event detail page data:', details)
+      // console.log('Admin event detail page data:', details)
       if (!details) throw new Error('Event requisition details are not available')
 
       setRequestDetails(details)

@@ -6,7 +6,7 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
-  console.log("auth user : ",user);
+  // console.log("auth user : ",user);
   
   const [loading, setLoading] = useState(true);
   const verifiedRef           = useRef(false);

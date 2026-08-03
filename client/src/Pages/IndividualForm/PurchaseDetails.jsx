@@ -719,7 +719,7 @@ export default function PurchaseDetails() {
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
-  console.log('[PurchaseDetails] handleSubmit start');
+  // console.log('[PurchaseDetails] handleSubmit start');
   setApiError("");
   setIsLoading(true);
 
@@ -730,7 +730,7 @@ export default function PurchaseDetails() {
 
   try {
     const payload = buildPayload();
-    console.log('[PurchaseDetails] payload built:', payload);
+    // console.log('[PurchaseDetails] payload built:', payload);
 
     // Validate token before attempting submit. Show an error instead of redirecting.
     const authToken = localStorage.getItem("token");
@@ -781,17 +781,17 @@ export default function PurchaseDetails() {
     // ===========================
     // Debug FormData
     // ===========================
-    console.log("===== FORM DATA =====");
+    // console.log("===== FORM DATA =====");
 
     for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
+      // console.log(pair[0], pair[1]);
     }
 
-    console.log("=====================");
+    // console.log("=====================");
 
     const requestUrl = `${API_BASE}/api/purchase/create`;
 
-    console.log('[PurchaseDetails] Sending POST to', requestUrl);
+    // console.log('[PurchaseDetails] Sending POST to', requestUrl);
     const response = await fetch(requestUrl, {
       method: "POST",
 
@@ -817,7 +817,7 @@ export default function PurchaseDetails() {
       data = null;
     }
 
-    console.log("Response :", data);
+    // console.log("Response :", data);
 
     if (!response.ok) {
       throw new Error(

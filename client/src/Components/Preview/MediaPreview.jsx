@@ -299,7 +299,7 @@ function PreviewModal({
               alt={title}
               className="max-h-[80vh] max-w-full object-contain rounded-lg"
               onError={(e) => {
-                console.log("Image URL:", src);
+                // console.log("Image URL:", src);
                 e.target.src =
                   "https://placehold.co/800x500?text=Image+Not+Found";
               }}

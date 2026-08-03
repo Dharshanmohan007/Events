@@ -79,6 +79,7 @@ import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
+// import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
 // Navigation after login is handled by Login.jsx itself via navigate()
@@ -136,6 +137,7 @@ function AppRoutes() {
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
+        {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
       </Route>

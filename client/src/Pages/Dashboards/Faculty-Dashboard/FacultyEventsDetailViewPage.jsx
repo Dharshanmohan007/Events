@@ -90,7 +90,7 @@ const FacultyEventsDetailViewPage = () => {
         const eventData = payload.data || payload
         const details = eventData.requestDetails
         setData(eventData);
-        console.log("event tabs data : ", details)
+        // console.log("event tabs data : ", details)
         if (!details) throw new Error('Event requisition details are not available')
 
         setRequestDetails(details)

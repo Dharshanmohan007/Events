@@ -140,22 +140,38 @@ export default function AddEventType({ isOpen, onClose }) {
         </div>
 
         {/* Search Bar */}
-        <div className="px-6 pt-6">
-            <div className="relative">
-                <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                />
+        <div className="px-6 pt-6 pb-4">
+          <div className="relative">
+            <Search
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            />
 
-                <input
-                type="text"
-                placeholder="Search event types..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent appearance-none border-none outline-none ring-0 focus:ring-0 focus:outline-none text-white text-sm placeholder-gray-500"
-                />
-            </div>
-            </div>
+            <input
+              type="text"
+              placeholder="Search event types..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="
+                w-full
+                h-11
+                pl-11
+                pr-4
+                rounded-lg
+                border border-[#3A3A5A]
+                bg-[#1E1E2F]
+                text-white
+                placeholder:text-gray-500
+                text-sm
+                outline-none
+                focus:border-[#6730C0]
+                focus:ring-1
+                focus:ring-[#6730C0]
+                transition-all
+              "
+            />
+          </div>
+        </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-3 custom-scrollbar relative">
