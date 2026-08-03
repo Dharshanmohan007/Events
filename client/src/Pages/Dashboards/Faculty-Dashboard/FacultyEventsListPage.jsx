@@ -18,7 +18,7 @@ const FacultyEventsListPage = () => {
     (async () => {
       try {
         const decoded = jwtDecode(token);
-        const facultyId = decoded.id || decoded._id || decoded.userId || decoded.facultyId;
+        const facultyId =  decoded.facultyId;
         const res = await fetch(
           `${API_BASE_URL}/api/table/faculty-dashboard-table?facultyId=${facultyId}`,
           { headers: { Authorization: `Bearer ${token}` } }
