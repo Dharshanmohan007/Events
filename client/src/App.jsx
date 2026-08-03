@@ -20,6 +20,7 @@ import TransportIndividualDetailViewPage from './Pages/Dashboards/Transports-Das
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
 import MediaEventsDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaEventsDetailViewPage'
 import MediaIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaIndividualDetailViewPage'
+import MediaReportsPage from './Pages/Dashboards/Media-Dashboard/MediaReportsPage'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
 import PosterReportsPage from './Pages/Dashboards/Media-Dashboard/PosterReportsPage'
@@ -30,6 +31,7 @@ import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
 import VideoRequestListPage from './Pages/Dashboards/Media-Dashboard/VideoRequestListPage'
 import VideoDetailView from './Pages/Dashboards/Media-Dashboard/VideoDetailView'
 import VideoIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/VideoIndividualDetailViewPage'
+import VideoReportsPage from './Pages/Dashboards/Media-Dashboard/VideoReportsPage'
 import AdminDashboard from './Pages/Dashboards/Admin-Dashboard/AdminDashboard'
 import AdminEventsListPage from './Pages/Dashboards/Admin-Dashboard/AdminEventsListPage'
 import AdminDashboardLayout from './Pages/Dashboards/Admin-Dashboard/AdminDashboardLayout'
@@ -119,6 +121,7 @@ function AppRoutes() {
       <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-media/events/detailView/:eventId" element={<ProtectedRoute><MediaEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-media/reports" element={<ProtectedRoute><MediaReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/reports" element={<ProtectedRoute><PosterReportsPage /></ProtectedRoute>} />
@@ -126,6 +129,7 @@ function AppRoutes() {
       <Route path="/dashboard-poster/detailView/:posterId" element={<ProtectedRoute><PosterDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-poster/individualDetailView/:id" element={<ProtectedRoute><PosterIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-video" element={<ProtectedRoute><VideoDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-video/reports" element={<ProtectedRoute><VideoReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-video/requests" element={<ProtectedRoute><VideoRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-video/detailView/:videoId" element={<ProtectedRoute><VideoDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-video/individualDetailView/:id" element={<ProtectedRoute><VideoIndividualDetailViewPage /></ProtectedRoute>} />
