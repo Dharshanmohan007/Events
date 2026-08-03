@@ -597,7 +597,7 @@ export default function FoodAndRefreshments({
     setApiError("");
     try {
       const payload = buildPayload(latest);
-      console.log("food payload:", payload);
+      // console.log("food payload:", payload);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
         method: "PUT",
         headers: {

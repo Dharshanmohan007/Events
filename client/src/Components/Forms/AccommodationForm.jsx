@@ -867,7 +867,7 @@ export default function AccommodationForm({
     setApiError("");
     try {
       const payload = buildPayload(latest, latestGuests);
-      console.log("Accommodation payload:", JSON.stringify(payload, null, 2));
+      // console.log("Accommodation payload:", JSON.stringify(payload, null, 2));
 
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
         method: "PUT",

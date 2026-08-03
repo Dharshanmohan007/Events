@@ -47,7 +47,7 @@ export function getRouteForRole(role, department) {
   if (normalizedRole === "head") {
     const deptRoute = DEPARTMENT_ROUTES[normalizedDept];
     if (deptRoute) {
-      console.log(`✅ head + dept "${department}" → ${deptRoute}`);
+      // console.log(`✅ head + dept "${department}" → ${deptRoute}`);
       return deptRoute;
     }
     console.warn(`⚠️ head role but unknown department "${department}" → /forms`);

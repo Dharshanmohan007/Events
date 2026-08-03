@@ -14,12 +14,12 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
       try {
         const response = await getEventTypes();
 
-        console.log("API Response:", response);
+        // console.log("API Response:", response);
 
         if (response.success) {
           const types = response.data.map(item => item.eventType);
 
-          console.log("Types:", types);
+          // console.log("Types:", types);
 
           setEventTypeOptions([...types, "Other"]);
         }

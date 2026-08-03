@@ -88,7 +88,7 @@ const FacultyEventsDetailViewPage = () => {
         const eventData = payload.data || payload
         const details = eventData.requestDetails
         setData(eventData);
-        console.log("event tabs data : ", details)
+        // console.log("event tabs data : ", details)
         if (!details) throw new Error('Event requisition details are not available')
 
         setRequestDetails(details)
@@ -538,7 +538,7 @@ const FacultyEventsDetailViewPage = () => {
               <h2 className="text-md font-medium text-[#D0BCFF]">{requestDetails?.eventDetails?.eventName}</h2>
             </div>
           </div>
-          {console.log("data : ", data)}
+          {/* {console.log("data : ", data)} */}
           {data.adminApproval == true && data.status.toLowerCase() !== "closed" ? <button
             type="button"
             onClick={openFeedbackPage}

@@ -11,7 +11,7 @@ const adminRoutes = {
     faculty: '/dashboard-admin/FacultyManagement',
     admins: '/dashboard-admin/AdminManagement',
     reports: '/dashboard-admin/reports',
-    othermanagements: '/dashboard-admin/other-managements',
+    // othermanagements: '/dashboard-admin/other-managements',
 }
 
 const getNavLinkClassName = ({ isActive }) =>
@@ -31,7 +31,7 @@ const   AdminDashboardHeader = () => {
                         <NavLink to={adminRoutes.faculty} className={getNavLinkClassName}>Faculty Management</NavLink>
                         {/* <NavLink to={adminRoutes.admins} className={getNavLinkClassName}>Admin Management</NavLink> */}
                         <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
-                        <NavLink to={adminRoutes.othermanagements} className={getNavLinkClassName}>Other Managements</NavLink>
+                        {/* <NavLink to={adminRoutes.othermanagements} className={getNavLinkClassName}>Other Managements</NavLink> */}
                     </div>
                 </div>
                 <div className="second-container flex items-center gap-6 ">

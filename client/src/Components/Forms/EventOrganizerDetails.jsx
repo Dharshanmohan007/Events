@@ -123,13 +123,13 @@ export default function EventOrganizerDetails({
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
-    console.log("Selected File:", selectedFile);
+    // console.log("Selected File:", selectedFile);
 
     if (!selectedFile) return;
 
     // PDF validation
     if (selectedFile.type !== ALLOWED_FILE_TYPE) {
-      console.log("Invalid File Type:", selectedFile.type);
+      // console.log("Invalid File Type:", selectedFile.type);
 
       setFileSizeError("Only PDF files are allowed.");
       e.target.value = "";
@@ -138,7 +138,7 @@ export default function EventOrganizerDetails({
 
     // File size validation
     if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-      console.log("File Too Large:", selectedFile.size);
+      // console.log("File Too Large:", selectedFile.size);
 
       setFileSizeError(
         `File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB.`
@@ -148,7 +148,7 @@ export default function EventOrganizerDetails({
       return;
     }
 
-    console.log("PDF Uploaded Successfully:", selectedFile.name);
+    // console.log("PDF Uploaded Successfully:", selectedFile.name);
 
     setFileSizeError("");
     setFile(selectedFile);
@@ -159,13 +159,13 @@ export default function EventOrganizerDetails({
 
     const droppedFile = e.dataTransfer.files[0];
 
-    console.log("Dropped File:", droppedFile);
+    // console.log("Dropped File:", droppedFile);
 
     if (!droppedFile) return;
 
     // PDF validation
     if (droppedFile.type !== ALLOWED_FILE_TYPE) {
-      console.log("Invalid File Type:", droppedFile.type);
+      // console.log("Invalid File Type:", droppedFile.type);
 
       setFileSizeError("Only PDF files are allowed.");
       return;
@@ -173,7 +173,7 @@ export default function EventOrganizerDetails({
 
     // File size validation
     if (droppedFile.size > MAX_FILE_SIZE_BYTES) {
-      console.log("File Too Large:", droppedFile.size);
+      // console.log("File Too Large:", droppedFile.size);
 
       setFileSizeError(
         `File size must be less than ${MAX_FILE_SIZE_MB}MB. Selected file is ${(droppedFile.size / 1024 / 1024).toFixed(2)}MB.`
@@ -182,7 +182,7 @@ export default function EventOrganizerDetails({
       return;
     }
 
-    console.log("PDF Dropped Successfully:", droppedFile.name);
+    // console.log("PDF Dropped Successfully:", droppedFile.name);
 
     setFileSizeError("");
     setFile(droppedFile);

@@ -1819,7 +1819,7 @@ export default function TransportForm({
           })),
         },
       };
-      console.log("transport payload data :", payload);
+      // console.log("transport payload data :", payload);
       const response = await fetch(
         `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`,
         {
