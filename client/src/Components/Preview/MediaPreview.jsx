@@ -33,12 +33,21 @@ function getFileLabel(file) {
   return typeof label === "string" ? label.split("/").pop() : "Document";
 }
 
+function getArrayValue(arr1, arr2) {
+  if (Array.isArray(arr1) && arr1.length > 0) return arr1;
+  if (Array.isArray(arr2) && arr2.length > 0) return arr2;
+  return Array.isArray(arr1) ? arr1 : Array.isArray(arr2) ? arr2 : [];
+}
+
 function getFileUrl(file) {
   if (!file) return "";
 
+  if (file instanceof File) {
+    return URL.createObjectURL(file);
+  }
+
   const API = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "");
 
-  // If string
   if (typeof file === "string") {
     if (
       file.startsWith("http://") ||
@@ -51,20 +60,18 @@ function getFileUrl(file) {
     return `${API}/${file.replace(/^\/+/, "")}`;
   }
 
-  // Existing URL fields
   const path =
     file.url ||
     file.fileUrl ||
     file.downloadUrl ||
     file.path ||
-    file.key ||
     file.filePath ||
+    file.key ||
     file.filename ||
     file.name;
 
   if (!path) return "";
 
-  // Already absolute
   if (
     path.startsWith("http://") ||
     path.startsWith("https://") ||
@@ -73,27 +80,25 @@ function getFileUrl(file) {
     return path;
   }
 
-  // Local uploaded file
-  if (file instanceof File) {
-    return URL.createObjectURL(file);
-  }
-
-  // Build API URL
   return `${API}/${path.replace(/^\/+/, "")}`;
 }
 
 function isImageFile(file) {
+  if (!file) return false;
+  const mime = file?.mimeType || file?.type || "";
+  if (mime.startsWith("image/")) return true;
   const name = getFileLabel(file);
   const ext = name.split(".").pop()?.toLowerCase();
-  const mime = file?.mimeType || file?.type || "";
-  return ["png", "jpg", "jpeg", "gif", "webp"].includes(ext) || mime.startsWith("image/");
+  return ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext);
 }
 
 function isVideoFile(file) {
+  if (!file) return false;
+  const mime = file?.mimeType || file?.type || "";
+  if (mime.startsWith("video/")) return true;
   const name = getFileLabel(file);
   const ext = name.split(".").pop()?.toLowerCase();
-  const mime = file?.mimeType || file?.type || "";
-  return ["mp4", "mov", "avi", "mkv"].includes(ext) || mime.startsWith("video/");
+  return ["mp4", "mov", "avi", "mkv", "webm"].includes(ext);
 }
 
 function formatDate(dateStr) {
@@ -294,7 +299,7 @@ function PreviewModal({
               alt={title}
               className="max-h-[80vh] max-w-full object-contain rounded-lg"
               onError={(e) => {
-                console.log("Image URL:", src);
+                // console.log("Image URL:", src);
                 e.target.src =
                   "https://placehold.co/800x500?text=Image+Not+Found";
               }}
@@ -422,11 +427,15 @@ function InfoRow({ label, value, icon: Icon }) {
 // Poster / Video preview sections
 // -------------------------------------------------------
 
-function PosterPreview({ data = {}, onOpen }) {
-  const showFlex = data.displayNeeded?.includes("Flex");
-  const showGlass = data.displayNeeded?.includes("Glass Sticker");
-  const referencePosterFiles = data.referencePoster || data.referencePosterFiles || [];
-  const referenceCertificateFiles = data.referenceCertificate || data.referenceCertificateFiles || [];
+function PosterPreview({ data = {}, dayData = {}, onOpen }) {
+  const flexSize = data.sizeForFlex || data.sizes?.find((s) => s.type === "Flex")?.value || "";
+  const glassSize = data.sizeForGlass || data.sizes?.find((s) => s.type === "Glass Sticker")?.value || "";
+  const showFlex = data.displayNeeded?.includes("Flex") || !!flexSize;
+  const showGlass = data.displayNeeded?.includes("Glass Sticker") || !!glassSize;
+
+  const referencePosterFiles = getArrayValue(dayData.referencePosterFiles, getArrayValue(data.referencePoster, data.referencePosterFiles));
+  const referenceCertificateFiles = getArrayValue(dayData.referenceCertificateFiles, getArrayValue(data.referenceCertificate, data.referenceCertificateFiles));
+  const specialReqs = data.specialReq || data.specialRequirements || "";
 
   return (
     <div className="space-y-4">
@@ -437,15 +446,15 @@ function PosterPreview({ data = {}, onOpen }) {
         <ContentBlock title="Content for Certificate" icon={FileText} content={data.contentCertificate || data.certificateContent} />
         <FileDisplayRow label="Reference Certificate" files={referenceCertificateFiles} onOpen={onOpen} />
 
-        <ContentBlock title="Content for Trophy" icon={FileText} content={data.contentTrophy} />
+        <ContentBlock title="Content for Trophy" icon={FileText} content={data.contentTrophy || data.trophyContent} />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
           <PillList label="Display Needed" items={data.displayNeeded} />
 
           {(showFlex || showGlass) ? (
             <div className="space-y-3">
-              {showFlex && <InfoRow label="Size for Flex" value={data.sizeForFlex} icon={Clock} />}
-              {showGlass && <InfoRow label="Size for Glass Sticker" value={data.sizeForGlass} icon={Flag} />}
+              {showFlex && <InfoRow label="Size for Flex" value={flexSize} icon={Clock} />}
+              {showGlass && <InfoRow label="Size for Glass Sticker" value={glassSize} icon={Flag} />}
             </div>
           ) : (
             <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
@@ -459,16 +468,19 @@ function PosterPreview({ data = {}, onOpen }) {
           <InfoRow label="Priority" value={data.priority} icon={Flag} />
         </div>
 
-        {data.specialReq?.trim() && (
-          <ContentBlock title="Special Requirements" icon={Paperclip} content={data.specialReq} />
+        {specialReqs?.trim() && (
+          <ContentBlock title="Special Requirements" icon={Paperclip} content={specialReqs} />
         )}
       </SectionCard>
     </div>
   );
 }
 
-function VideoPreview({ data = {}, onOpen }) {
-  const referenceVideoFiles = data.referenceVideo || data.referenceFiles || [];
+function VideoPreview({ data = {}, dayData = {}, onOpen }) {
+  const referenceVideoFiles = getArrayValue(dayData.referenceFiles, getArrayValue(data.referenceVideo, data.referenceFiles));
+  const preEvent = getArrayValue(data.preEvent, data.preEventVideos);
+  const postEvent = getArrayValue(data.postEvent, data.postEventVideos);
+  const specialReqs = data.specialReq || data.specialRequirements || "";
 
   return (
     <div className="space-y-4">
@@ -476,9 +488,9 @@ function VideoPreview({ data = {}, onOpen }) {
         <ContentBlock title="Content for Video" icon={VideoIcon} content={data.contentVideo || data.videoContent} />
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
-          <PillList label="Pre-Event Videos Needed" items={data.preEvent} />
+          <PillList label="Pre-Event Videos Needed" items={preEvent} />
           <PillList label="Event Coverage Needed" items={data.eventCoverage} />
-          <PillList label="Post-Event Videos Needed" items={data.postEvent} />
+          <PillList label="Post-Event Videos Needed" items={postEvent} />
           <PillList label="Special Videos Needed" items={data.specialVideos} />
         </div>
 
@@ -489,8 +501,8 @@ function VideoPreview({ data = {}, onOpen }) {
           <InfoRow label="Priority" value={data.priority} icon={Flag} />
         </div>
 
-        {data.specialReq?.trim() && (
-          <ContentBlock title="Special Requirements" icon={Paperclip} content={data.specialReq} />
+        {specialReqs?.trim() && (
+          <ContentBlock title="Special Requirements" icon={Paperclip} content={specialReqs} />
         )}
       </SectionCard>
     </div>
@@ -519,8 +531,14 @@ export default function MediaPreview({
   const dayCount = mediaItems.length;
 
   const current = mediaItems[activeDay] || {};
-  const showPoster = current.designType === "Poster" || current.designType === "Both";
-  const showVideo = current.designType === "Video" || current.designType === "Both";
+  const showPoster =
+    current.designType === "Poster" ||
+    current.designType === "Both" ||
+    (Array.isArray(current.typeOfMedia) && current.typeOfMedia.includes("poster"));
+  const showVideo =
+    current.designType === "Video" ||
+    current.designType === "Both" ||
+    (Array.isArray(current.typeOfMedia) && current.typeOfMedia.includes("video"));
 
   const dayLabels = useMemo(
     () =>
@@ -563,11 +581,11 @@ export default function MediaPreview({
         )}
 
         {showPoster && (
-          <PosterPreview data={current.poster || {}} onOpen={(item) => setModalData({ open: true, ...item, type: item.isImage ? "image" : item.isVideo ? "video" : "image" })} />
+          <PosterPreview data={current.poster || {}} dayData={current} onOpen={(item) => setModalData({ open: true, ...item, type: item.isImage ? "image" : item.isVideo ? "video" : "image" })} />
         )}
 
         {showVideo && (
-          <VideoPreview data={current.video || {}} onOpen={(item) => setModalData({ open: true, ...item, type: item.isImage ? "image" : item.isVideo ? "video" : "video" })} />
+          <VideoPreview data={current.video || {}} dayData={current} onOpen={(item) => setModalData({ open: true, ...item, type: item.isImage ? "image" : item.isVideo ? "video" : "video" })} />
         )}
       </div>
 

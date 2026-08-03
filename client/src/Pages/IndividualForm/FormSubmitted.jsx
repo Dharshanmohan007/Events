@@ -58,14 +58,14 @@ export default function FormSubmitted({
   const handleSubmitAnother = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-    console.log("USER:", user);
+    // console.log("USER:", user);
 
     const destination = getRouteForRole(
       user.role,
       user.department
     );
 
-    console.log("DESTINATION:", destination);
+    // console.log("DESTINATION:", destination);
 
     navigate(destination);
   };

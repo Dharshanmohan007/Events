@@ -8,7 +8,7 @@ import circleTick from '../../../assets/circle-tick.svg'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
 const applyEventStats = (sections, eventStats) => {
-    if (!eventStats) return sections
+    const stats = eventStats ?? EMPTY_STATS
 
     return sections.map((section) => {
         if (section.title !== 'Event Request') return section
@@ -19,19 +19,19 @@ const applyEventStats = (sections, eventStats) => {
                 const label = item.label.toLowerCase()
 
                 if (label.includes('total')) {
-                    return { ...item, value: eventStats.total ?? item.value }
+                    return { ...item, value: stats.total ?? 0 }
                 }
 
                 if (label.includes('approved')) {
-                    return { ...item, value: eventStats.approved ?? item.value }
+                    return { ...item, value: stats.approved ?? 0 }
                 }
 
                 if (label.includes('completed')) {
-                    return { ...item, value: eventStats.completed ?? item.value }
+                    return { ...item, value: stats.completed ?? 0 }
                 }
 
                 if (label.includes('pending')) {
-                    return { ...item, value: eventStats.pending ?? item.value }
+                    return { ...item, value: stats.pending ?? 0 }
                 }
 
                 return item
@@ -40,25 +40,68 @@ const applyEventStats = (sections, eventStats) => {
     })
 }
 
+const applyIndividualStats = (sections, individualStats) => {
+    const stats = individualStats ?? EMPTY_STATS
+
+    return sections.map((section) => {
+        if (section.title !== 'Individual Request') return section
+
+        return {
+            ...section,
+            stats: section.stats.map((item) => {
+                const label = item.label.toLowerCase()
+
+                if (label.includes('total')) {
+                    return { ...item, value: stats.total ?? 0 }
+                }
+
+                if (label.includes('approved')) {
+                    return { ...item, value: stats.approved ?? 0 }
+                }
+
+                if (label.includes('completed')) {
+                    return { ...item, value: stats.completed ?? 0 }
+                }
+
+                if (label.includes('pending')) {
+                    return { ...item, value: stats.pending ?? 0 }
+                }
+
+                return item
+            }),
+        }
+    })
+}
+
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const AdminStatcard = ({ data }) => {
     const [eventStats, setEventStats] = useState(null)
+    const [individualStats, setIndividualStats] = useState(null)
 
     useEffect(() => {
         let isMounted = true
         const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-        fetch(`${API_BASE_URL}/api/dashboard/stats?module=admin`, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error('Failed to fetch admin dashboard stats')
-                }
-                return response.json()
-            })
-            .then((responseData) => {
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=admin`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=admin`, { headers }),
+        ])
+            .then(([eventRes, individualRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+                individualRes.ok ? individualRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData, individualData]) => {
                 if (isMounted) {
-                    setEventStats(responseData.events)
+                    setEventStats(eventData.modules?.admin ?? eventData.events ?? null)
+                    setIndividualStats(individualData.stats ?? null)
                 }
             })
             .catch((error) => {
@@ -70,7 +113,11 @@ const AdminStatcard = ({ data }) => {
         }
     }, [])
 
-    const displayData = useMemo(() => applyEventStats(data, eventStats), [data, eventStats])
+    const displayData = useMemo(() => {
+        let result = applyEventStats(data, eventStats)
+        result = applyIndividualStats(result, individualStats)
+        return result
+    }, [data, eventStats, individualStats])
 
     return (
         <section className="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6">

@@ -570,7 +570,7 @@ const TransportDetailsPage = () => {
   // SUBMIT
   // =========================
   const handleSubmit = async () => {
-    console.log('[TransportDetails] handleSubmit start');
+    // console.log('[TransportDetails] handleSubmit start');
     const errors = [];
 
     // if (!principalApprovalDocument) {
@@ -667,10 +667,10 @@ const TransportDetailsPage = () => {
 
         // Log payload to verify timezone handling
         for (let pair of payload.entries()) {
-          console.log(pair[0], pair[1]);
+          // console.log(pair[0], pair[1]);
         }
-        console.log("✅ Pickup sent as:", payload.pickupDateTime);
-        console.log("✅ Drop sent as:", payload.dropDateTime);
+        // console.log("✅ Pickup sent as:", payload.pickupDateTime);
+        // console.log("✅ Drop sent as:", payload.dropDateTime);
 
         const response = await fetch(`${API_BASE}/api/transports`, {
           method: "POST",
@@ -709,19 +709,19 @@ const TransportDetailsPage = () => {
         lastResponseData = responseData;
 
         // Log response with IST formatting
-        console.log("📥 Response received:", responseData?.data);
-        console.log(
-          "⏰ Pickup stored as (UTC):",
-          responseData?.data?.pickupDateTime,
-        );
+        // console.log("📥 Response received:", responseData?.data);
+        // console.log(
+        //   "⏰ Pickup stored as (UTC):",
+        //   responseData?.data?.pickupDateTime,
+        // );
         const pickupIST = responseData?.data?.pickupDateTime
           ? formatInIST(new Date(responseData.data.pickupDateTime))
           : "N/A";
-        console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
+        // console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
         const dropIST = responseData?.data?.dropDateTime
           ? formatInIST(new Date(responseData.data.dropDateTime))
           : "N/A";
-        console.log("🇮🇳 Drop displayed as (IST):", dropIST);
+        // console.log("🇮🇳 Drop displayed as (IST):", dropIST);
       }
 
       setValidationErrors([]);

@@ -607,6 +607,7 @@ const PurchaseIndividualDetailViewPage = () => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -644,7 +645,7 @@ const PurchaseIndividualDetailViewPage = () => {
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
   const innerData = submission?.data || {};
   const employee = innerData.employee || {};
@@ -719,7 +720,7 @@ const PurchaseIndividualDetailViewPage = () => {
         if (!res.ok || !data.success)
           throw new Error(data.message || "Failed to acknowledge");
         toast.success("Acknowledge successfully");
-        window.location.reload();
+        setReloadKey((k) => k + 1);
       } catch (err) {
         toast.error(err.message || "Failed to acknowledge");
       } finally {
@@ -747,7 +748,7 @@ const PurchaseIndividualDetailViewPage = () => {
         if (!res.ok || !data.success)
           throw new Error(data.message || "Failed to complete");
         toast.success("Completed successfully");
-        window.location.reload();
+        setReloadKey((k) => k + 1);
       } catch (err) {
         toast.error(err.message || "Failed to complete");
       } finally {

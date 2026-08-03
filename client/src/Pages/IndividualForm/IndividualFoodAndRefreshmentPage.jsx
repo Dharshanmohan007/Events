@@ -981,7 +981,7 @@ useEffect(() => {
   // =========================
 
   const handleSubmit = async () => { 
-    console.log("Submitting food forms:", formCards); 
+    // console.log("Submitting food forms:", formCards); 
     const errors = [];
 
     // if (!principalApprovalDocument) {
@@ -1183,7 +1183,7 @@ if (principalApprovalDocument) {
 
         const data = await response.json();
 
-        console.log(`Food submit response ${index + 1}:`, response.status, data);
+        // console.log(`Food submit response ${index + 1}:`, response.status, data);
 
         if (response.status === 401 || response.status === 403) {
           localStorage.removeItem("token");

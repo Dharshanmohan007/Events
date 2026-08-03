@@ -54,7 +54,7 @@ const toBase64 = (src) =>
 // ── Build the full HTML string that replicates the design ────────────────────
 
 function buildReceiptHTML(logoDataUrl, data) {
-  console.log("Generating receipt HTML with data:", data);
+  // console.log("Generating receipt HTML with data:", data);
   const {
     iqacNumber,
     requisitionDate,

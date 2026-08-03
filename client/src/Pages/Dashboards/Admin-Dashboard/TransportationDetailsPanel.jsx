@@ -64,7 +64,11 @@ const TransportDetails = ({ transport }) => {
     { icon: Clock3, label: 'Drop Time', value: formatDateTime(transport.dropDateTime, { hour: '2-digit', minute: '2-digit', hour12: true }) },
   ]
   const vehicleTypes = vehicles.map((vehicle) => vehicle.type).filter(Boolean).join(' / ')
-  const vehicleCounts = vehicles.map((vehicle) => `${displayValue(vehicle.type)}: ${displayValue(vehicle.count)}`).join(' / ')
+  const vehicleCountItems = vehicles.map((vehicle) => [`Total ${displayValue(vehicle.type)} needed`, displayValue(vehicle.count)])
+  const vehicleCountPairs = []
+  for (let i = 0; i < vehicleCountItems.length; i += 2) {
+    vehicleCountPairs.push(vehicleCountItems.slice(i, i + 2))
+  }
   const staffNames = staff.map((member) => member.name).filter(Boolean).join(', ') || '-'
   const staffMobiles = staff.map((member) => member.mobile).filter(Boolean).join(', ') || '-'
 
@@ -75,8 +79,10 @@ const TransportDetails = ({ transport }) => {
       </div>
       <TransportTimeline transport={transport} />
       <SplitRow items={[['Total Number of Members', displayValue(transport.totalPassengers)], ['Types of Vehicle needed', displayValue(vehicleTypes)]]} />
-      <SplitRow items={[['Vehicle Count', displayValue(vehicleCounts)], ['Accompanying Staff Name', staffNames, User]]} />
-      <SplitRow items={[['Accompanying Mobile Number', staffMobiles, Phone], ['Total Vehicles Needed', displayValue(vehicles.reduce((total, vehicle) => total + (Number(vehicle.count) || 0), 0))]]} />
+      {vehicleCountPairs.map((pair, i) => (
+        <SplitRow key={i} items={pair} />
+      ))}
+      <SplitRow items={[['Accompanying Staff Name', staffNames, User], ['Accompanying Mobile Number', staffMobiles, Phone]]} />
       {transport.specialRequirements ? (
         <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-5">
           <div className="mb-4 flex items-center gap-2 text-base font-medium text-[#E6E2F0]"><FileText size={16} />Special Requirement</div>

@@ -422,7 +422,7 @@ function AudioVenueCard({
         <div>
           <CustomInput
             labelBg="#1E1E35"
-            label="Others (If applicable)"
+            label="Others (If required)"
             value={data.others || ""}
             onChange={(e) => updateField("others", e.target.value)}
           />

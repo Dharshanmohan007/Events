@@ -18,12 +18,20 @@ import TransportsReportsPage from './Pages/Dashboards/Transports-Dashboard/Trans
 import TransportEventsDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportEventsDetailViewPage'
 import TransportIndividualDetailViewPage from './Pages/Dashboards/Transports-Dashboard/TransportIndividualDetailViewPage'
 import MediaDashboard from './Pages/Dashboards/Media-Dashboard/MediaDashboard'
+import MediaEventsDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaEventsDetailViewPage'
+import MediaIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/MediaIndividualDetailViewPage'
+import MediaReportsPage from './Pages/Dashboards/Media-Dashboard/MediaReportsPage'
 import PosterDashboard from './Pages/Dashboards/Media-Dashboard/PosterDashboard'
 import PosterRequestListPage from './Pages/Dashboards/Media-Dashboard/PosterRequestListPage'
 import PosterReportsPage from './Pages/Dashboards/Media-Dashboard/PosterReportsPage'
 import PosterFeedbackPage from './Pages/Dashboards/Media-Dashboard/PosterFeedbackPage'
 import PosterDetailView from './Pages/Dashboards/Media-Dashboard/PosterDetailView'
+import PosterIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/PosterIndividualDetailViewPage'
 import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
+import VideoRequestListPage from './Pages/Dashboards/Media-Dashboard/VideoRequestListPage'
+import VideoDetailView from './Pages/Dashboards/Media-Dashboard/VideoDetailView'
+import VideoIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/VideoIndividualDetailViewPage'
+import VideoReportsPage from './Pages/Dashboards/Media-Dashboard/VideoReportsPage'
 import AdminDashboard from './Pages/Dashboards/Admin-Dashboard/AdminDashboard'
 import AdminEventsListPage from './Pages/Dashboards/Admin-Dashboard/AdminEventsListPage'
 import AdminDashboardLayout from './Pages/Dashboards/Admin-Dashboard/AdminDashboardLayout'
@@ -40,6 +48,7 @@ import FoodIndividualDetailViewPage from './Pages/Dashboards/Food-Dashboard/Food
 import FoodReportsPage from './Pages/Dashboards/Food-Dashboard/FoodReportsPage'
 import PurchaseDashboard from './Pages/Dashboards/Purchase-Dashboard/PurchaseDashboard'
 import PurchaseEventsDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseEventsDetailViewPage'
+import PurchaseReportsPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseReportsPage'
 import PurchaseIndividualDetailViewPage from './Pages/Dashboards/Purchase-Dashboard/PurchaseIndividualDetailViewPage'
 import VenueDashboard from './Pages/Dashboards/Venue-Dashboard/VenueDashboard'
 import VenueEventsDetailViewPage from './Pages/Dashboards/Venue-Dashboard/VenueEventsDetailViewPage'
@@ -53,6 +62,7 @@ import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/Facultyfee
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
 import FacultyIndividualRequestDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualRequestDetailViewPage"
+import FacultyIndividualFeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualFeedbackPage"
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
@@ -67,8 +77,11 @@ import FoodEventsListPage from "./Pages/Dashboards/Food-Dashboard/FoodEventsList
 import AccommodationRequestListPage from "./Pages/Dashboards/Accommodation-Dashboard/AccommodationRequestListPage"
 import MediaEventsListPage from "./Pages/Dashboards/Media-Dashboard/MediaEventsListPage"
 
+import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
+import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
+// import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
 // Navigation after login is handled by Login.jsx itself via navigate()
@@ -76,7 +89,6 @@ function PublicRoute({ children }) {
   return children;
 }
 
-console.log("Nishanth's code is comming here...")
 
 function AppRoutes() {
   return (
@@ -107,12 +119,20 @@ function AppRoutes() {
 
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
+      <Route path="/dashboard-media/events/detailView/:eventId" element={<ProtectedRoute><MediaEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-media/reports" element={<ProtectedRoute><MediaReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/reports" element={<ProtectedRoute><PosterReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/feedback" element={<ProtectedRoute><PosterFeedbackPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster/detailView/:posterId" element={<ProtectedRoute><PosterDetailView /></ProtectedRoute>} />
+      <Route path="/dashboard-poster/individualDetailView/:id" element={<ProtectedRoute><PosterIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-video" element={<ProtectedRoute><VideoDashboard /></ProtectedRoute>} />
+      <Route path="/dashboard-video/reports" element={<ProtectedRoute><VideoReportsPage /></ProtectedRoute>} />
+      <Route path="/dashboard-video/requests" element={<ProtectedRoute><VideoRequestListPage /></ProtectedRoute>} />
+      <Route path="/dashboard-video/detailView/:videoId" element={<ProtectedRoute><VideoDetailView /></ProtectedRoute>} />
+      <Route path="/dashboard-video/individualDetailView/:id" element={<ProtectedRoute><VideoIndividualDetailViewPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-admin" element={<ProtectedRoute><AdminDashboardLayout /></ProtectedRoute>}>
         <Route index element={<AdminDashboard />} />
@@ -121,6 +141,7 @@ function AppRoutes() {
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
+        {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
       </Route>
@@ -138,6 +159,10 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/individual-feedback/:requestId" element={<ProtectedRoute><FacultyIndividualFeedbackPage /></ProtectedRoute>} />
+
+      <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
+
 
       <Route path="/dashboard-accommodation" element={<ProtectedRoute><AccommodationDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/requests" element={<ProtectedRoute><AccommodationRequestListPage /></ProtectedRoute>} />
@@ -158,6 +183,8 @@ function AppRoutes() {
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events" element={<ProtectedRoute><PurchaseEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-purchase/reports" element={<ProtectedRoute><PurchaseReportsPage /></ProtectedRoute>} />
+      <Route path="/calendar" element={<Calendar />} />
       <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
@@ -166,6 +193,7 @@ function AppRoutes() {
 }
 
 function App() {
+
   return (
     <AuthProvider>
       <ToastContainer position="top-right" autoClose={1500} />
