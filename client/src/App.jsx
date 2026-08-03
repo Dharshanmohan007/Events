@@ -99,6 +99,7 @@ function AppRoutes() {
 
       {/* ── Protected routes (just need to be logged in) ── */}
       <Route path="/forms" element={<ProtectedRoute><EventsForm /></ProtectedRoute>} />
+      <Route path="/forms/:draftId" element={<ProtectedRoute><EventsForm /></ProtectedRoute>} />
 
       <Route path="/dashboard-ictcs" element={<ProtectedRoute><ICTCSDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-ictcs/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />

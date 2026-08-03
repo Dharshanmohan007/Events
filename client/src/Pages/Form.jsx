@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import EventsSidebar from "../Components/EventsSidebar";
 import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 import VenueForm from "../Components/Forms/VenueForm";
@@ -772,11 +772,317 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
   };
 };
 
+// ── Draft data hydration ──────────────────────────────────────────────────────
+
+const REQUIREMENT_KEY_MAP = {
+  venueRequired: "venue",
+  ictsRequired: "icts",
+  audioRequired: "audio",
+  transportRequired: "transport",
+  refreshmentRequired: "foodandrefreshments",
+  accommodationRequired: "accommodation",
+  purchaseRequired: "purchase",
+  mediaRequired: "media",
+};
+
+function hydrateDraftData(apiData) {
+  const rd = apiData.requestDetails || {};
+  const od = rd.organizerDetails || {};
+  const ed = rd.eventDetails || {};
+  const reqd = rd.requirementDetails || {};
+
+  // 1. Event requisition
+  const event = {
+    doc: od.previousEventDocumentation ? "Yes" : "No",
+    reason: od.previousEventReason || "",
+    budget: od.isBudgetApproved ? "Yes" : "No",
+    finance: od.financeRequired ? "Yes" : "No",
+    estimatedBudget: od.estimatedBudget ? String(od.estimatedBudget) : "",
+    advanceAmount: od.advanceAmount ? String(od.advanceAmount) : "",
+    purposeOfAdvance: od.purposeOfAdvance || "",
+    department: od.organizingDepartment || "",
+    file: null,
+    principalApprovalDocument: null,
+    numOrganizers: od.organizerCount ? String(od.organizerCount) : "",
+    organizers: (od.organizers || []).map((o) => ({
+      name: o.name || "",
+      department: o.department || "",
+      mobile: o.mobile ? String(o.mobile) : "",
+      designation: o.designation || "",
+      empEmail: o.email || "",
+      empId: o.empId || "",
+    })),
+    eventData: {
+      eventName: ed.eventName || "",
+      eventType: ed.eventType || "",
+      eventTypeOther: ed.eventTypeOther || "",
+      society: ed.professionalSociety || [],
+      societyOther: ed.professionalSocietyOther || "",
+      logos: ed.logosInPoster || [],
+      logosOther: ed.logosOther || "",
+      audience: ed.targetAudience || "",
+      iic: ed.involvedIIC ? "Yes" : ed.iic ? "Yes" : "No",
+    },
+    eventDays: (ed.eventSchedule || []).map((s) => ({
+      date: s.eventDate || null,
+      startTime: s.startTime || "",
+      endTime: s.endTime || "",
+      numGuests: s.totalGuests ? String(s.totalGuests) : "",
+      guests: (s.guests || []).map((g) => ({
+        name: g.name || "",
+        organization: g.organization || "",
+        designation: g.designation || "",
+        mobile: g.mobile ? String(g.mobile) : "",
+        gender: g.gender || "",
+      })),
+    })),
+    requirements: {},
+  };
+
+  // 2. Selected requirements
+  const selectedRequirements = [];
+  const requirementsObj = {};
+  Object.entries(REQUIREMENT_KEY_MAP).forEach(([backendKey, frontendKey]) => {
+    if (reqd[backendKey]) {
+      selectedRequirements.push(frontendKey);
+      requirementsObj[frontendKey] = "Yes";
+    } else {
+      requirementsObj[frontendKey] = "No";
+    }
+  });
+  event.requirements = requirementsObj;
+
+  // 3. Venue — group backend venues by dayIndex
+  const venueBackend = apiData.venueDetails?.venues || [];
+  const numDays = ed.numberOfDays || event.eventDays.length || 1;
+  const venue = Array.from({ length: numDays }, (_, dayIdx) => {
+    const dayVenues = venueBackend.filter((v) => v.dayIndex === dayIdx);
+    if (dayVenues.length === 0) return emptyVenueDay();
+    return {
+      participants: dayVenues[0]?.numberOfParticipants ? String(dayVenues[0].numberOfParticipants) : "",
+      selectedVenues: dayVenues.map((v) => v.venueName),
+      venueCards: dayVenues.map((v) => {
+        const card = {
+          venueName: v.venueName || "",
+          participants: v.numberOfParticipants ? String(v.numberOfParticipants) : "",
+          seatingCapacity: v.seatingCapacity ? String(v.seatingCapacity) : "",
+          hallReqs: (v.hallRequirements || []).map((h) => h.type),
+          specialReqs: v.specialRequirements || "",
+        };
+        (v.hallRequirements || []).forEach((h) => {
+          if (h.type === "Guest Chair") card.guestChairs = String(h.quantity);
+          if (h.type === "Water Bottles") card.waterBottles = String(h.quantity);
+          if (h.type === "Dias Table") card.diasTable = String(h.quantity);
+          if (h.type === "Audience Chair") card.audienceChair = String(h.quantity);
+        });
+        return card;
+      }),
+    };
+  });
+
+  // 4. ICTS — group by dayIndex + venueName
+  const ictsBackend = apiData.ictsDetails?.ictses || [];
+  const icts = {};
+  ictsBackend.forEach((item) => {
+    const dayKey = String(item.dayIndex);
+    if (!icts[dayKey]) icts[dayKey] = {};
+    const equipmentRequired = (item.desktopLaptop || []).map((d) => d.type);
+    const card = {
+      equipmentRequired,
+      desktopCount: "",
+      laptopCount: "",
+      internetFacility: item.internetFacility || "",
+      expectedInternetUsers: item.expectedInternetUsers ? String(item.expectedInternetUsers) : "",
+      proctorUsers: item.proctoringUsers ? String(item.proctoringUsers) : "",
+      guestWifi: item.guestWifiNeeded ? "Yes" : "No",
+      guestWifiExceed5: item.guestWifiExceed5 ? "Yes" : "No",
+      totalGuestCount: item.totalGuestCount ? String(item.totalGuestCount) : "",
+      requirements: item.requirements || [],
+      others: item.otherRequirements || "",
+      specialRequirements: item.specialRequirements || "",
+    };
+    (item.desktopLaptop || []).forEach((d) => {
+      if (d.type === "Desktop") card.desktopCount = String(d.count);
+      if (d.type === "Laptop") card.laptopCount = String(d.count);
+    });
+    icts[dayKey][item.venueName] = card;
+  });
+
+  // 5. Audio — stored directly
+  const audio = apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0
+    ? apiData.audioDetails
+    : defaultAudio;
+
+  // 6. Transport — stored directly
+  const transport = Array.isArray(apiData.transportDetails) && apiData.transportDetails.length > 0
+    ? apiData.transportDetails
+    : [defaultTransport()];
+
+  // 7. Food & Refreshments — stored directly
+  const foodandrefreshments = Array.isArray(apiData.foodDetails) && apiData.foodDetails.length > 0
+    ? apiData.foodDetails
+    : [emptyFoodDay()];
+
+  // 8. Accommodation — reverse from payload shape
+  const accBackend = apiData.accommodationDetails?.accommodations || [];
+  let accommodation;
+  if (accBackend.length > 0) {
+    accommodation = {
+      accommodations: accBackend.map((acc) => {
+        const entry = {
+          checkIn: acc.checkInDateTime || null,
+          checkOut: acc.checkOutDateTime || null,
+          singleRooms: "",
+          doubleRooms: "",
+          suiteRooms: "",
+          dBlockRooms: "",
+          roomType: "",
+          roomTypes: (acc.roomCategory || []).map((r) => r.type),
+          roomCounts: Object.fromEntries((acc.roomCategory || []).map((r) => [r.type, String(r.count)])),
+          dine: acc.dineInRequired ? "Yes" : "No",
+          dineTypes: (acc.dineInCounts || []).map((d) => d.type),
+          hostelGuests: String((acc.dineInCounts || []).find((d) => d.type === "Hostel")?.count || "1"),
+          amenityGuests: String((acc.dineInCounts || []).find((d) => d.type === "Amenity")?.count || "1"),
+          selectedGuestIds: [],
+          guests: acc.guests || [],
+          special: acc.specialRequirements || "",
+        };
+        (acc.roomOccupancy || []).forEach((ro) => {
+          if (ro.type === "Single") entry.singleRooms = String(ro.count);
+          if (ro.type === "Double") entry.doubleRooms = String(ro.count);
+        });
+        return entry;
+      }),
+    };
+  } else {
+    accommodation = defaultAccommodation;
+  }
+
+  // 9. Purchase — reverse gift items from backend payload
+  const reverseGiftItems = (giftItems = []) => {
+    const result = {
+      giftType: [], trophyType: [], basicTrophyQty: "", eliteTrophyQty: "",
+      cashPrizeAmount: "", voucherWorth: "", registrationKitNeeded: "",
+      registrationKitQty: "", specialRequirements: "",
+    };
+    giftItems.forEach((gi) => {
+      result.giftType.push(gi.giftType);
+      if (gi.giftType === "Trophy") {
+        result.trophyType = (gi.trophy || []).map((t) => t.trophyType);
+        (gi.trophy || []).forEach((t) => {
+          if (t.trophyType === "Basic") result.basicTrophyQty = String(t.quantity);
+          if (t.trophyType === "Elite") result.eliteTrophyQty = String(t.quantity);
+        });
+      }
+      if (gi.giftType === "Cash Prize") result.cashPrizeAmount = String(gi.cashPrizeAmount);
+      if (gi.giftType === "Voucher") {
+        const worths = (gi.voucher || []).map((v) => v.voucherWorth);
+        result.voucherWorth = worths.length === 1 ? worths[0] : worths;
+      }
+    });
+    return result;
+  };
+
+  const purchaseBackend = apiData.purchaseDetails?.purchases || [];
+  const purchase = purchaseBackend.length > 0
+    ? purchaseBackend.map((p) => {
+        const requirementNeeded = (p.requirementNeeded || []).map((r) => r.type);
+        const idCardEntry = (p.requirementNeeded || []).find((r) => r.type === "Id Card");
+        const certEntry = (p.requirementNeeded || []).find((r) => r.type === "Certificate");
+        let selectedPersons = "";
+        if (p.requiredFor?.includes("Students") && p.requiredFor?.includes("Guest")) selectedPersons = "Both";
+        else if (p.requiredFor?.includes("Students")) selectedPersons = "Students";
+        else if (p.requiredFor?.includes("Guest")) selectedPersons = "Guest";
+
+        const studentData = reverseGiftItems(p.students?.giftItems);
+        studentData.registrationKitNeeded = p.students?.registrationKitNeeded ? "Yes" : "No";
+        studentData.registrationKitQty = p.students?.registrationKitQty ? String(p.students.registrationKitQty) : "";
+        studentData.specialRequirements = p.students?.specialRequirements || "";
+
+        const guestData = reverseGiftItems(p.guests?.giftItems);
+        guestData.registrationKitNeeded = p.guests?.registrationKitNeeded ? "Yes" : "No";
+        guestData.registrationKitQty = p.guests?.registrationKitQty ? String(p.guests.registrationKitQty) : "";
+        guestData.specialRequirements = p.guests?.specialRequirements || "";
+
+        return { requirementNeeded, idCardQty: idCardEntry ? String(idCardEntry.hardCount) : "", certificateQty: certEntry ? String(certEntry.hardCount) : "", selectedPersons, studentData, guestData };
+      })
+    : [emptyPurchaseDay()];
+
+  // 10. Media — reverse poster/video per day
+  const mediaBackend = apiData.mediaRequirementDetails?.mediaRequirements || [];
+  const media = mediaBackend.length > 0
+    ? mediaBackend.map((m) => {
+        let designType = "";
+        if (m.typeOfMedia?.includes("poster") && m.typeOfMedia?.includes("video")) designType = "Both";
+        else if (m.typeOfMedia?.includes("poster")) designType = "Poster";
+        else if (m.typeOfMedia?.includes("video")) designType = "Video";
+        return {
+          designType,
+          poster: {
+            contentPoster: m.poster?.posterContent || "",
+            referencePoster: null,
+            referencePosterFiles: m.poster?.referencePosterFiles || [],
+            contentCertificate: m.poster?.certificateContent || "",
+            referenceCertificate: null,
+            referenceCertificateFiles: m.poster?.referenceCertificateFiles || [],
+            contentTrophy: m.poster?.trophyContent || "",
+            displayNeeded: m.poster?.displayNeeded || [],
+            sizeForFlex: (m.poster?.sizes || []).find((s) => s.type === "Flex")?.value || "",
+            sizeForGlass: (m.poster?.sizes || []).find((s) => s.type === "Glass Sticker")?.value || "",
+            deliveryDate: m.poster?.deliveryDate || "",
+            priority: m.poster?.priority || "",
+            specialReq: m.poster?.specialRequirements || "",
+          },
+          video: {
+            contentVideo: m.video?.videoContent || "",
+            preEvent: m.video?.preEventVideos || [],
+            eventCoverage: m.video?.eventCoverage || [],
+            postEvent: m.video?.postEventVideos || [],
+            specialVideos: m.video?.specialVideos || [],
+            referenceVideo: null,
+            referenceFiles: m.video?.referenceFiles || [],
+            deliveryDate: m.video?.deliveryDate || "",
+            priority: m.video?.priority || "",
+            specialReq: m.video?.specialRequirements || "",
+          },
+        };
+      })
+    : [emptyMediaDay()];
+
+  return {
+    formData: { event, venue, icts, audio, transport, foodandrefreshments, accommodation, purchase, media },
+    selectedRequirements,
+  };
+}
+
+function determineDraftStep(apiData, selectedRequirements) {
+  // Step 0 (event requisition) is always completed for a draft
+  const sectionHasData = {
+    venue: (apiData.venueDetails?.venues || []).length > 0,
+    icts: (apiData.ictsDetails?.ictses || []).length > 0,
+    audio: apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0,
+    transport: Array.isArray(apiData.transportDetails) && apiData.transportDetails.length > 0,
+    foodandrefreshments: Array.isArray(apiData.foodDetails) && apiData.foodDetails.length > 0,
+    accommodation: (apiData.accommodationDetails?.accommodations || []).length > 0,
+    purchase: (apiData.purchaseDetails?.purchases || []).length > 0,
+    media: (apiData.mediaRequirementDetails?.mediaRequirements || []).length > 0,
+  };
+  // Find the first requirement step that has no data
+  for (let i = 0; i < selectedRequirements.length; i++) {
+    if (!sectionHasData[selectedRequirements[i]]) {
+      return i + 1; // +1 because step 0 is "event"
+    }
+  }
+  // All steps have data — position on the last step
+  return selectedRequirements.length;
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function Form() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { draftId } = useParams();
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
@@ -799,6 +1105,7 @@ export default function Form() {
   const [isLoading, setIsLoading] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isDraftLoading, setIsDraftLoading] = useState(!!draftId);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -860,6 +1167,36 @@ export default function Form() {
   const goBackStep = useCallback(() => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
+
+  // ── Fetch and hydrate draft data when draftId is in the URL ────────────────
+  useEffect(() => {
+    if (!draftId) return;
+    const fetchDraft = async () => {
+      setIsDraftLoading(true);
+      try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${draftId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Failed to fetch draft");
+        const apiData = data.data || data;
+        const { formData: hydratedData, selectedRequirements: hydratedReqs } = hydrateDraftData(apiData);
+        setFormData(hydratedData);
+        setSelectedRequirements(hydratedReqs);
+        setEventId(apiData._id || draftId);
+        const step = determineDraftStep(apiData, hydratedReqs);
+        setCurrentStep(step);
+        setCompletedSteps(Array.from({ length: step }, (_, i) => i));
+      } catch (error) {
+        console.error("Failed to load draft:", error);
+        setApiError("Failed to load draft. Starting a fresh form.");
+      } finally {
+        setIsDraftLoading(false);
+      }
+    };
+    fetchDraft();
+  }, [draftId]);
 
   useEffect(() => {
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
@@ -1249,6 +1586,18 @@ export default function Form() {
   const progress = currentStep === 0 ? 0 : Math.min(20 + (currentStep - 1) * 10, 100);
 
   // Full-page success screen
+  // Full-page draft loading screen
+  if (isDraftLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-[#16162A]">
+        <div className="text-center">
+          <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
+          <p className="mt-4 text-white text-lg">Loading your draft...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (submitSuccess) {
     return (
       <FormSubmitted
