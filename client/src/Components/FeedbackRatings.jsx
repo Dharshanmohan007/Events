@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { clampRating, formatRelativeTime } from '../api/feedbackApi'
+import { clampRating, formatRelativeTime, mapFeedbackRow } from '../api/feedbackApi'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const defaultFeedbackRows = Array.from({ length: 13 }, () => ({
     name: 'Dr. Sarah Jenkins',
@@ -17,15 +19,80 @@ const getInitial = (name) => {
     return first ? first.toUpperCase() : 'E'
 }
 
+// ── Module resolution for the Individual tab ─────────────────────────────
+// The Individual tab fetches GET /api/feedback/individual?module=<module>.
+// The module is derived from the dashboard feedbackLink (e.g.
+// "/dashboard-food/feedback" -> "food"). Some routes differ from the API
+// module value, so aliases are normalized here.
+const MODULE_ALIASES = { transports: 'transport' }
+
+const deriveModuleFromLink = (feedbackLink = '') => {
+    const match = String(feedbackLink).match(/\/dashboard-([^/]+)\/feedback/)
+    if (!match) return ''
+    return MODULE_ALIASES[match[1]] || match[1]
+}
+
 const FeedbackRatings = ({
     rows = defaultFeedbackRows,
     individualRows = defaultFeedbackRows,
     feedbackLink,
     className = 'col-span-7',
     tabs = false,
+    module: moduleProp,
 }) => {
     const [activeTab, setActiveTab] = useState('events')
-    const displayedRows = tabs ? (activeTab === 'events' ? rows : individualRows) : rows
+
+    // ── Individual tab state (fetched from the backend) ───────────────────
+    // The module can be passed explicitly via the `module` prop or derived
+    // from the dashboard feedbackLink.
+    const moduleKey = moduleProp || deriveModuleFromLink(feedbackLink)
+    const [individualData, setIndividualData] = useState(null)
+    const [individualLoading, setIndividualLoading] = useState(false)
+    const [individualError, setIndividualError] = useState('')
+
+    // Fetch individual feedback on mount (covers page refresh), whenever the
+    // selected module changes, and keep the data ready for the Individual tab.
+    useEffect(() => {
+        if (!tabs || !moduleKey) return
+        let isMounted = true
+        setIndividualLoading(true)
+        setIndividualError('')
+        const token = localStorage.getItem('token')
+        fetch(
+            `${API_BASE_URL}/api/feedback/individual?module=${encodeURIComponent(moduleKey)}`,
+            { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        )
+            .then((res) => {
+                if (!res.ok) throw new Error(`Failed to fetch individual feedback (${res.status})`)
+                return res.json()
+            })
+            .then((json) => {
+                // Support { data: [...] }, { data: { data: [...] } }, or { results: [...] }
+                const data = json.data?.data ?? json.data ?? json.results ?? []
+                if (isMounted) {
+                    setIndividualData(Array.isArray(data) ? data.map(mapFeedbackRow) : [])
+                    setIndividualLoading(false)
+                }
+            })
+            .catch((err) => {
+                console.warn(`Failed to fetch individual feedback for ${moduleKey}:`, err)
+                if (isMounted) {
+                    setIndividualError(err.message || 'Failed to load individual feedback')
+                    setIndividualLoading(false)
+                }
+            })
+        return () => { isMounted = false }
+    }, [tabs, moduleKey])
+
+    // The Individual tab shows fetched data when a module is known; otherwise
+    // it falls back to the `individualRows` prop (non-tabbed usage).
+    const individualDisplayRows = moduleKey
+        ? (individualData ?? [])
+        : individualRows
+
+    const displayedRows = tabs
+        ? (activeTab === 'events' ? rows : individualDisplayRows)
+        : rows
 
     const content = (
         <span className="text-sm font-semibold text-[#8B3DFF]">View All -&gt;</span>
@@ -76,7 +143,11 @@ const FeedbackRatings = ({
                     )}
                 </div>
             </div>
-            {displayedRows.length === 0 ? (
+            {tabs && activeTab === 'individual' && moduleKey && individualLoading ? (
+                <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading individual feedback...</p>
+            ) : tabs && activeTab === 'individual' && moduleKey && individualError ? (
+                <p className="py-10 text-center text-sm text-[#FF4F91]">{individualError}</p>
+            ) : displayedRows.length === 0 ? (
                 <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No feedback available yet.</p>
             ) : (
                 <div className="mt-4 space-y-3 px-4">
