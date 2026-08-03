@@ -39,15 +39,29 @@ export const formatRelativeTime = (dateStr) => {
 // Maps one raw feedback API row to the row shape <FeedbackRatings /> uses.
 // The sample response has no organizer-name field, so we fall back to
 // eventName when an organizer name isn't present (without inventing data).
+// Individual feedback rows may carry the employee name instead, so those
+// fields are also considered.
 export const mapFeedbackRow = (item = {}) => {
   const organizerName =
     item.organizerName || item.organizer || item.organizer_name
-  const name = organizerName || item.eventName || 'Event Organizer'
+  const name =
+    organizerName ||
+    item.employeeName ||
+    item.employee?.name ||
+    item.employeeDetail?.name ||
+    item.name ||
+    item.eventName ||
+    'Event Organizer'
   return {
     name,
-    department: item.organizingDepartment || item.department || '-',
+    department:
+      item.organizingDepartment ||
+      item.department ||
+      item.employee?.department ||
+      item.employeeDetail?.department ||
+      '-',
     quote: item.feedback || '',
-    time: formatRelativeTime(item.submittedAt),
+    time: formatRelativeTime(item.submittedAt || item.createdAt),
     rating: clampRating(item.rating),
   }
 }
@@ -86,5 +100,40 @@ export const useDepartmentFeedback = (department) => {
       isMounted = false
     }
   }, [department])
+  return rows
+}
+
+// ── Fetch Individual feedback (scoped by the logged-in token) ─────────────
+// GET /api/feedback/individual returns the individual-module feedback for
+// the authenticated user. Returns mapped rows; [] on failure/empty so the
+// dashboards keep their existing empty/no-feedback state.
+export const fetchIndividualFeedback = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${API_BASE}/api/feedback/individual`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (!res.ok) return []
+    const json = await res.json()
+    const data = json.data ?? json.results ?? []
+    return Array.isArray(data) ? data.map(mapFeedbackRow) : []
+  } catch (err) {
+    console.warn('Failed to fetch individual feedback:', err)
+    return []
+  }
+}
+
+// ── Hook: fetch Individual feedback when the dashboard loads ─────────────
+export const useIndividualFeedback = () => {
+  const [rows, setRows] = useState([])
+  useEffect(() => {
+    let isMounted = true
+    fetchIndividualFeedback().then((mapped) => {
+      if (isMounted) setRows(mapped)
+    })
+    return () => {
+      isMounted = false
+    }
+  }, [])
   return rows
 }

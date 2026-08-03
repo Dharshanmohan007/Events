@@ -4,7 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
-import { useDepartmentFeedback } from '../../../api/feedbackApi'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -51,6 +51,7 @@ const FoodDashboard = () => {
     const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
     const feedbackRows = useDepartmentFeedback('food')
+    const individualFeedbackRows = useIndividualFeedback()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -123,7 +124,7 @@ const FoodDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings tabs rows={feedbackRows} feedbackLink="/dashboard-food/feedback" />
+                        <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-food/feedback" />
                         <DepartmentRequestChart data={departmentData} title="Catering Request By Department" />
                     </div>
                 </div>

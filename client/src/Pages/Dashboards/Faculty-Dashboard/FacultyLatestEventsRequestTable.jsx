@@ -182,6 +182,7 @@ const FacultyLatestEventsRequestTable = () => {
         const query = searchQuery.trim().toLowerCase()
         if (query) {
             result = result.filter(request => {
+                console.log("date req : ", request)
                 const status =
                     typeof request.status === 'object' && request.status !== null
                         ? Object.values(request.status).filter(Boolean).join(' ')
@@ -191,7 +192,7 @@ const FacultyLatestEventsRequestTable = () => {
                     request.employeeDetail?.name,
                     request.formType,
                     request.employeeEmail,
-                    formatDate(request.data?.date),
+                    formatDate(request.date),
                     status,
                 ].join(' ').toLowerCase().includes(query)
             })
@@ -199,6 +200,7 @@ const FacultyLatestEventsRequestTable = () => {
 
         return result
     }, [individualRequests, searchQuery])
+    console.log("req : ", filteredIndividualRequests)
 
     return (
         <section className="flex max-h-[570px] flex-col overflow-hidden rounded-lg border border-[#263044] bg-[#151d2d]">
@@ -393,7 +395,7 @@ const FacultyLatestEventsRequestTable = () => {
                             {filteredIndividualRequests.map((request) => (
                                 <tr key={request.id} className="border-b border-[#222b3d] last:border-b-0">
                                     <td className="px-4 py-3 text-[12px] text-white">
-                                        {formatDate(request.data?.date)}
+                                        {formatDate(request.date)}
                                     </td>
                                     <td className="px-4 py-3 text-[12px] font-medium text-white">
                                         {request.employee || request.employeeDetail?.name || '-'}
