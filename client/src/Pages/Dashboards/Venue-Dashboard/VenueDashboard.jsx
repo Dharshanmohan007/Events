@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import calendarFill from '../../../assets/calendarFill.svg'
 import circleTick from '../../../assets/circle-tick.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
@@ -46,13 +47,6 @@ const statCardData = [
     },
 ]
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
-
 const transformVenueData = (apiData) =>
     apiData.map((item) => ({
         eventId: item.eventId,
@@ -64,9 +58,45 @@ const transformVenueData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const VenueDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('venue')
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=venue`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=venue`, { headers }),
+        ])
+            .then(([eventRes, individualRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+                individualRes.ok ? individualRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData]) => {
+                if (isMounted) {
+                    setEventStats(eventData.modules?.venue ?? eventData.events ?? EMPTY_STATS)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+                if (isMounted) setEventStats(EMPTY_STATS)
+            })
+
+        return () => { isMounted = false }
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -100,7 +130,15 @@ const VenueDashboard = () => {
                     </h1>
                 </div>
 
-                <StatCard data={statCardData} />
+                <StatCard data={statCardData.map((item) => {
+                    const label = item.lable.toLowerCase()
+                    const stats = eventStats ?? EMPTY_STATS
+                    if (label.includes('total')) return { ...item, value: stats.total ?? 0 }
+                    if (label.includes('approved')) return { ...item, value: stats.approved ?? 0 }
+                    if (label.includes('booked') || label.includes('completed')) return { ...item, value: stats.completed ?? 0 }
+                    if (label.includes('pending')) return { ...item, value: stats.pending ?? 0 }
+                    return item
+                })} />
 
                 <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                     {loading ? (
@@ -118,8 +156,8 @@ const VenueDashboard = () => {
                 </div>
 
                 <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                    <FeedbackRatings feedbackLink="/dashboard-venue/feedback" />
-                    <DepartmentRequestChart data={departmentData} title="Venue Request By Department" />
+                    <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-venue/feedback" />
+                    <DepartmentRequestChart module="venue" title="Venue Request By Department" />
                 </div>
             </div>
         </section>

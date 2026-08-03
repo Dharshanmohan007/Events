@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
-import { Bell, CircleQuestionMark, Download, Search, Settings } from 'lucide-react'
+import { Bell, CircleQuestionMark, Download, Search, Settings,Filter } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
 
@@ -17,6 +17,40 @@ const formatDate = (dateStr) => {
     ? dateStr
     : d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
 }
+const eventReportRows = Array.from({ length: 9 }, (_, index) => ({
+    eventName: 'Welcome Freshers',
+    eventType: 'Seminar',
+    eventVenue: 'Main Board Room',
+    eventDate: '15-03-2026',
+    status: [1, 6, 7, 8].includes(index) ? 'Not Completed' : 'Completed',
+}))
+
+const individualReportRows = Array.from({ length: 9 }, (_, index) => ({
+    eventName: 'Dharsan',
+    eventType: 'Individual',
+    eventVenue: index % 2 === 0 ? 'Main Board Room' : 'Vista Hall',
+    eventDate: '15-03-2026',
+    status: [2, 5, 8].includes(index) ? 'Not Completed' : 'Completed',
+}))
+
+const PosterHeader = () => (
+    <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
+        <div className="flex items-center gap-8">
+            <img src={smallLogo} alt="Logo" className="h-11 w-11" />
+            <nav className="flex items-center gap-8 text-sm font-medium">
+                <Link to="/dashboard-poster" className="pb-2 text-[#FFFFFF80] hover:text-white">Dashboard</Link>
+                <Link to="/dashboard-poster/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
+                <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">Calendar</Link>
+                <Link to="/dashboard-poster/reports" className="border-b border-[#8B3DFF] pb-2 text-[#8B3DFF]">Reports</Link>
+                <Link to="/dashboard-poster/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
+            </nav>
+        </div>
+
+        <div className="flex items-center gap-6">
+            <LogoutButton />
+        </div>
+    </header>
+)
 
 const derivePosterStatus = (posterRequirements = []) => {
   if (!Array.isArray(posterRequirements)) return '-'

@@ -200,6 +200,9 @@ const ModuleIndividualDetailViewPage = ({
   basePath,
   breadcrumbLabel = "Dashboard",
   title = "Individual Request Details",
+  // Faculty-only opt-in: open the dedicated individual feedback page in a new
+  // tab after a successful close. Other dashboards keep their current behavior.
+  openIndividualFeedbackTabOnClose = false,
 }) => {
   const { id } = useParams();
   const [submission, setSubmission] = useState(null);
@@ -207,6 +210,7 @@ const ModuleIndividualDetailViewPage = ({
   const [error, setError] = useState("");
   const [userRole, setUserRole] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     try {
@@ -255,7 +259,7 @@ const ModuleIndividualDetailViewPage = ({
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, reloadKey]);
 
   const formTypeKey = resolveFormType(submission?.formType);
   const config = FORM_TYPE_CONFIG[formTypeKey];
@@ -291,6 +295,16 @@ const ModuleIndividualDetailViewPage = ({
       );
       if (!res.ok) throw new Error("Failed to close submission");
       await res.json();
+      toast.success("Submission closed successfully");
+      setReloadKey((k) => k + 1);
+      if (openIndividualFeedbackTabOnClose) {
+        const newTab = window.open("", "_blank");
+        if (newTab) {
+          newTab.location.href = `/dashboard-faculty/individual-feedback/${id}`;
+        } else {
+          console.error("Popup was blocked by the browser.");
+        }
+      }
       if (submission?.data) {
         setSubmission((prev) => ({
           ...prev,

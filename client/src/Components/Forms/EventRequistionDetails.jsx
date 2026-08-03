@@ -71,8 +71,20 @@ function validateOrganizerSection(state) {
   if (!state.budget) e.budget = "This field is required";
   if (!state.finance) e.finance = "This field is required";
   if (state.finance === "Yes") {
-  if (!state.advanceAmount?.trim()) {
+    if (!state.estimatedBudget?.trim()) {
+      e.estimatedBudget = "Estimated budget is required";
+    }
+
+    if (!state.advanceAmount?.trim()) {
       e.advanceAmount = "Advance amount is required";
+    }
+
+    if (
+      state.estimatedBudget?.trim() &&
+      state.advanceAmount?.trim() &&
+      Number(state.advanceAmount) >= Number(state.estimatedBudget)
+    ) {
+      e.advanceAmount = "Advance amount must be less than estimated budget";
     }
 
     if (!state.purposeOfAdvance?.trim()) {
@@ -99,8 +111,9 @@ function validateEventDetails(data = {}, days = []) {
   if (!data.eventType) e.eventType = "Event type is required";
   if (data.eventType === "Other" && !data.eventTypeOther?.trim())
     e.eventTypeOther = "Please specify the event type";
-  if (!data.society) e.society = "Society is required";
-  if (data.society === "Other" && !data.societyOther?.trim())
+  const societyArr = Array.isArray(data.society) ? data.society : data.society ? [data.society] : [];
+  if (societyArr.length === 0) e.society = "Society is required";
+  if (societyArr.includes("Other") && !data.societyOther?.trim())
     e.societyOther = "Please specify the society";
   // logos is now an array
   const logosArr = Array.isArray(data.logos) ? data.logos : data.logos ? [data.logos] : [];
@@ -162,6 +175,9 @@ export default function EventRequisitionDetails({
   const [purposeOfAdvance, setPurposeOfAdvance] = useState(
     initialEventRequisition.purposeOfAdvance || ""
   );
+  const [estimatedBudget, setEstimatedBudget] = useState(
+    initialEventRequisition.estimatedBudget || ""
+  );
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
   const [department, setDepartment] = useState(initialEventRequisition.department || "");
   const [principalApprovalDocument, setprincipalApprovalDocument] = useState(
@@ -197,12 +213,12 @@ export default function EventRequisitionDetails({
   useEffect(() => {
     if (!setEventRequisition) return;
     const next = {
-      doc, finance,advanceAmount,purposeOfAdvance, budget, department,principalApprovalDocument, file, reason,
+      doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, principalApprovalDocument, file, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
     };
     const comparable = JSON.stringify({
-      doc, finance,advanceAmount,purposeOfAdvance, budget, department, reason,
+      doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, reason,
       numOrganizers, organizers, eventData,
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
@@ -218,7 +234,7 @@ export default function EventRequisitionDetails({
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance,advanceAmount,purposeOfAdvance, budget, department, file,principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
@@ -239,7 +255,7 @@ export default function EventRequisitionDetails({
     const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = validateOrganizerSection({
-      principalApprovalDocument,doc, file, reason, budget, finance,advanceAmount,purposeOfAdvance, department, numOrganizers, organizers,
+      principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, estimatedBudget, department, numOrganizers, organizers,
     });
     const eErr = validateEventDetails(eventData, eventDaysLocal);
     const rErr = validateRequirements(currentRequirements);
@@ -280,6 +296,8 @@ export default function EventRequisitionDetails({
         setAdvanceAmount={setAdvanceAmount}
         purposeOfAdvance={purposeOfAdvance}
         setPurposeOfAdvance={setPurposeOfAdvance}
+        estimatedBudget={estimatedBudget}
+        setEstimatedBudget={setEstimatedBudget}
         budget={budget} setBudget={setBudget}
         department={department} setDepartment={setDepartment}
         file={file} setFile={setFile}

@@ -84,7 +84,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
   </div>
 );
 
-export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }) {
+export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {} }) {
   const handleGuestsChange = (e) => {
     const val = e.target.value;
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
@@ -118,6 +118,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
             type="date"
             label={`Day ${dayIndex} – Event Date *`}
             value={dayData?.date || ""}
+            min={minDate}
             onChange={(e) => updateDay({ ...dayData, date: e.target.value })}
           />
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}

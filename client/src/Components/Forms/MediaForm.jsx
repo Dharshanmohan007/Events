@@ -93,6 +93,22 @@ function validateDay(data, showCertificate = false) {
 // field ("mediaData"), and every actual File is appended as its own separate
 // top-level FormData field — the same way previousEventDocumentation and
 // principalApprovalDocument are appended outside requestDetails.
+function toIsoDate(dStr) {
+  if (!dStr) return "";
+  try {
+    const d = new Date(dStr);
+    return isNaN(d.getTime()) ? dStr : d.toISOString();
+  } catch {
+    return dStr;
+  }
+}
+
+function getArrayValue(arr1, arr2) {
+  if (Array.isArray(arr1) && arr1.length > 0) return arr1;
+  if (Array.isArray(arr2) && arr2.length > 0) return arr2;
+  return Array.isArray(arr1) ? arr1 : Array.isArray(arr2) ? arr2 : [];
+}
+
 export function buildMediaFormData(mediaData) {
   const fd = new FormData();
 
@@ -101,33 +117,62 @@ export function buildMediaFormData(mediaData) {
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
     if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
 
-    // ── helper: appends real Files as top-level FormData fields (outside the
-    //    JSON), and returns plain metadata for files already saved (edit mode)
-    //    so those references aren't lost when re-submitting.
-    const appendFiles = (files = [], fieldName) => {
+    const appendFiles = (files1, files2, fieldName) => {
       const meta = [];
 
-      (files || []).forEach((file) => {
-        if (file instanceof File) {
-          // Same pattern as: fd.append("previousEventDocumentation", eventRequisition.file)
-          fd.append(fieldName, file);
-        } else if (file) {
-          // Already-uploaded file (edit mode) — keep its saved metadata (url/publicId/etc.)
-          meta.push(file);
+      const list = [
+        ...(Array.isArray(files1) ? files1 : files1 ? [files1] : []),
+        ...(Array.isArray(files2) ? files2 : files2 ? [files2] : []),
+      ];
+
+      const uploadedFiles = new Set();
+      const uploadedMeta = new Set();
+
+      list.forEach((item) => {
+        if (!item) return;
+
+        if (item instanceof File) {
+          // unique key for each File
+          const key = `${item.name}_${item.size}_${item.lastModified}`;
+
+          if (!uploadedFiles.has(key)) {
+            uploadedFiles.add(key);
+            fd.append(fieldName, item);
+          }
+        } else {
+          const key =
+            item.publicId ||
+            item.url ||
+            JSON.stringify(item);
+
+          if (!uploadedMeta.has(key)) {
+            uploadedMeta.add(key);
+            meta.push(item);
+          }
         }
       });
 
       return meta;
     };
 
-    // Field names are day-scoped so the backend can tell which day each
-    // uploaded file belongs to, while still being flat top-level fields
-    // (same style as previousEventDocumentation / principalApprovalDocument).
-    const referencePosterFiles      = appendFiles(day.poster?.referencePoster,      `referencePosterFiles_day${dayIndex}`);
-    const referenceCertificateFiles = appendFiles(day.poster?.referenceCertificate, `referenceCertificateFiles_day${dayIndex}`);
-    const referenceFiles            = appendFiles(day.video?.referenceVideo,        `referenceFiles_day${dayIndex}`);
+    const referencePosterFiles = appendFiles(
+      day.poster?.referencePoster,
+      day.poster?.referencePosterFiles ?? day.referencePosterFiles,
+      "referencePosterFiles"
+    );
 
-    // ── Sizes: ONLY Flex / Glass Sticker carry a size value.
+    const referenceCertificateFiles = appendFiles(
+      day.poster?.referenceCertificate,
+      day.poster?.referenceCertificateFiles ?? day.referenceCertificateFiles,
+      "referenceCertificateFiles"
+    );
+
+    const referenceFiles = appendFiles(
+      day.video?.referenceVideo,
+      day.video?.referenceFiles ?? day.referenceFiles,
+      "referenceFiles"
+    );
+
     const sizes = [];
     const flexVal  = day.poster?.sizeForFlex?.trim();
     const glassVal = day.poster?.sizeForGlass?.trim();
@@ -142,33 +187,32 @@ export function buildMediaFormData(mediaData) {
       dayIndex,
       typeOfMedia,
       poster: {
-        posterContent: day.poster?.contentPoster || "",
+        posterContent: day.poster?.contentPoster || day.poster?.posterContent || "",
         referencePosterFiles,
-        certificateContent: day.poster?.contentCertificate || "",
+        certificateContent: day.poster?.contentCertificate || day.poster?.certificateContent || "",
         referenceCertificateFiles,
-        trophyContent: day.poster?.contentTrophy || "",
+        trophyContent: day.poster?.contentTrophy || day.poster?.trophyContent || "",
         displayNeeded: day.poster?.displayNeeded || [],
         sizes,
-        deliveryDate: day.poster?.deliveryDate ? new Date(day.poster.deliveryDate).toISOString() : "",
+        deliveryDate: toIsoDate(day.poster?.deliveryDate),
         priority: day.poster?.priority || "",
-        specialRequirements: day.poster?.specialReq || "",
+        specialRequirements: day.poster?.specialReq || day.poster?.specialRequirements || "",
       },
       video: {
-        videoContent: day.video?.contentVideo || "",
-        preEventVideos: day.video?.preEvent || [],
+        videoContent: day.video?.contentVideo || day.video?.videoContent || "",
+        preEventVideos: getArrayValue(day.video?.preEvent, day.video?.preEventVideos),
         eventCoverage: day.video?.eventCoverage || [],
-        postEventVideos: day.video?.postEvent || [],
+        postEventVideos: getArrayValue(day.video?.postEvent, day.video?.postEventVideos),
         specialVideos: day.video?.specialVideos || [],
         referenceFiles,
-        deliveryDate: day.video?.deliveryDate ? new Date(day.video.deliveryDate).toISOString() : "",
+        deliveryDate: toIsoDate(day.video?.deliveryDate),
         priority: day.video?.priority || "",
-        specialRequirements: day.video?.specialReq || "",
+        specialRequirements: day.video?.specialReq || day.video?.specialRequirements || "",
       },
     };
   });
 
-  // JSON metadata goes in first, exactly like fd.append("requestDetails", JSON.stringify(requestDetails))
-  fd.append("mediaData", JSON.stringify({ mediaRequirementDetails: { mediaRequirements } }));
+  fd.append("mediaRequirementDetails", JSON.stringify({ mediaRequirements }));
 
   return fd;
 }
@@ -318,7 +362,29 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
     if (oversized.length) {
       setSizeError(`${sizeErrorPrefix}File(s) exceed ${MAX_FILE_SIZE_MB}MB: ${oversized.join(", ")}`);
     }
-    if (valid.length) onChange([...value, ...valid]);
+    if (valid.length) {
+      const existing = new Set(
+        value.map(
+          (f) =>
+            f instanceof File
+              ? `${f.name}_${f.size}_${f.lastModified}`
+              : ""
+        )
+      );
+
+      const uniqueFiles = valid.filter((file) => {
+        const key = `${file.name}_${file.size}_${file.lastModified}`;
+
+        if (existing.has(key)) {
+          return false;
+        }
+
+        existing.add(key);
+        return true;
+      });
+
+      onChange([...value, ...uniqueFiles]);
+    }
   };
 
   const removeFile = (idx) => {
@@ -549,7 +615,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
           )}
           {showGlass && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker *" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker in pixels *" type='text'
                 value={data.sizeForGlass || ""}  onChange={updateSizeInput("sizeForGlass")} placeholder="e.g. 12 * 18" />
               <ErrorMsg msg={errors.sizeForGlass} />
             </div>
@@ -682,6 +748,7 @@ export default function MediaForm({
   const currentIdxRef   = useRef(currentDayIndex);
   const registerNavRef  = useRef(registerChildNavigation);
   const purchaseDataRef = useRef(purchaseData);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => { mediaDataRef.current    = mediaData;               }, [mediaData]);
   useEffect(() => { onSaveRef.current       = onSave;                  }, [onSave]);
@@ -770,6 +837,7 @@ export default function MediaForm({
 
   // handleNext
   const handleNext = useCallback(async () => {
+    if (isSubmittingRef.current) return;
     const latestData     = mediaDataRef.current;
     const latestPurchase = purchaseDataRef.current;
     const idx            = currentIdxRef.current;
@@ -796,6 +864,7 @@ export default function MediaForm({
       setCurrentDayIndex(nextIdx);
       setErrors((prev) => ({ ...prev, [nextIdx]: {} }));
       pushNavState(nextIdx, false);
+      isSubmittingRef.current = false;
       return;
     }
 
@@ -811,20 +880,36 @@ export default function MediaForm({
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors);
       setCurrentDayIndex(parseInt(Object.keys(allErrors)[0]));
-      return;
+      return false;
     }
-
+    isSubmittingRef.current = true;
     setIsLoading(true);
     pushNavState(idx, true);
     setApiError("");
     try {
       const formData = buildMediaFormData(latestData);
       if (onSaveRef.current) await onSaveRef.current(formData);
+
+      // Clear local File objects now that they've been uploaded — otherwise
+      // a later re-entry into this day would re-upload the same Files again.
+      setMediaData((prev) => {
+        const updated = [...prev];
+        const day = updated[idx];
+        if (!day) return prev;
+        updated[idx] = {
+          ...day,
+          poster: { ...day.poster, referencePoster: [], referenceCertificate: [] },
+          video:  { ...day.video,  referenceVideo: [] },
+        };
+        return updated;
+      });
       if (registerNavRef.current) {
         registerNavRef.current({ next: null, prev: null, isLoading: false, isOnLastDay: true, nextDayLabel: "Save & Next" });
       }
+      return true;
     } catch (err) {
       setApiError(err?.message || "Failed to save media details. Please try again.");
+      return false;
     } finally {
       setIsLoading(false);
       pushNavState(idx, false);

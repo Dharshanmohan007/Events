@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const getFacultyById = async (facultyId) => {
   try {
-    console.log("Calling Faculty API with ID:", facultyId);
+    // console.log("Calling Faculty API with ID:", facultyId);
 
     const token = localStorage.getItem("token");
 
@@ -15,7 +15,7 @@ export const getFacultyById = async (facultyId) => {
       }
     );
 
-    console.log("Faculty API Response:", response.data);
+    // console.log("Faculty API Response:", response.data);
 
     return response.data;
   } catch (error) {

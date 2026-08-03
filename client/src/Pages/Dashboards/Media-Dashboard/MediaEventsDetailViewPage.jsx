@@ -17,12 +17,11 @@ const getStatusClassName = (status) => {
   return 'bg-[#0e5149]/55 text-[#20D18C]'
 }
 
-
-
 const MediaEventsDetailViewPage = () => {
   const { eventId } = useParams()
   const [mediaDetails, setMediaDetails] = useState(null)
   const [eventName, setEventName] = useState('')
+  const [organizingDepartment, setOrganizingDepartment] = useState('')
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -62,6 +61,9 @@ const MediaEventsDetailViewPage = () => {
             eventData.eventName ||
             'Event Media Details'
         )
+        setOrganizingDepartment(
+          eventData.requestDetails?.eventDetails?.organizingDepartment || ''
+        )
 
         // Derive overall status from media requirements
         const requirements = detailData.mediaRequirements || []
@@ -79,60 +81,68 @@ const MediaEventsDetailViewPage = () => {
   }, [eventId])
 
   return (
-    <section className="min-h-screen bg-[#0b1326] poppins">
+    <section className="min-h-screen bg-[#0b1326] text-white poppins">
       <DashboardHeader basePath="/dashboard-media" />
 
-      <main className="px-6 pb-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 py-3 text-sm text-[#CBC3D7]/50">
-          <Link
-            to="/dashboard-media"
-            className="hover:text-white transition-colors"
-          >
-            Media Dashboard
-          </Link>
-          <ChevronRight size={14} />
-          <span className="text-[#D0BCFF]">
-            {eventName || 'Media Details'}
-          </span>
-        </div>
+      <main className="h-[93vh] px-7 pt-2">
+        <header className="mt-4 flex items-center justify-between gap-5">
+          <div className="flex items-center gap-2">
+            <Link to="/dashboard-media" className="text-md font-medium text-[#CBC3D7]/50 transition hover:text-white">Event Details</Link>
+            <ChevronRight size={16} />
+            <h1 className="text-md font-medium text-[#D0BCFF]">{eventName || 'Event Details'}</h1>
+            {organizingDepartment && (
+              <span className="ml-3 rounded-full bg-green-400/10 px-5 py-2 text-sm text-[#10B981]">{organizingDepartment}</span>
+            )}
+          </div>
+        </header>
 
-        <section className="mt-2 rounded-lg border border-[#27334c] bg-[#151d31] p-6">
-          {loading ? (
-            <p className="py-10 text-center text-sm text-[#CBC3D7]/65">
-              Loading media details...
-            </p>
-          ) : error ? (
-            <p className="py-10 text-center text-sm text-[#FF4F91]">{error}</p>
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-medium text-[#8B3DFF]">
-                    Media Details
-                  </h2>
-                  <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
-                    Lorem Ipsum is simply dummy text of the printing and
-                    typesetting industry. Lorem Ipsum has been the
-                    industry&apos;s standard dummy text ever since the 1500s
-                  </p>
+        {status && status !== '-' && (
+          <section className="mt-3">
+            <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+              <span className={`h-3 w-3 rounded-full ${status === 'Completed' ? 'bg-[#6D3BD8]' : status === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
+              {status === 'Completed' ? 'COMPLETED' : status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
+            </div>
+          </section>
+        )}
+
+        <section className="mt-3 overflow-hidden">
+          <section className="max-h-[calc(100vh-170px)] overflow-auto rounded-lg border border-[#27334c] bg-[#151d31] p-5 table-custom-scrollbar">
+            {loading ? (
+              <p className="py-10 text-center text-sm text-[#CBC3D7]/65">
+                Loading media details...
+              </p>
+            ) : error ? (
+              <p className="py-10 text-center text-sm text-[#FF4F91]">{error}</p>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-medium text-[#8B3DFF]">
+                      Media Details
+                    </h2>
+                    <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
+                      Lorem Ipsum is simply dummy text of the printing and
+                      typesetting industry. Lorem Ipsum has been the
+                      industry&apos;s standard dummy text ever since the 1500s
+                    </p>
+                  </div>
+                  {status && status !== '-' && (
+                    <span
+                      className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(
+                        status
+                      )}`}
+                    >
+                      {status}
+                    </span>
+                  )}
                 </div>
-                {status && status !== '-' && (
-                  <span
-                    className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(
-                      status
-                    )}`}
-                  >
-                    {status}
-                  </span>
-                )}
-              </div>
 
-              <div className="mt-8">
-                <MediaDetailView mediaDetails={mediaDetails} />
-              </div>
-            </>
-          )}
+                <div className="mt-8">
+                  <MediaDetailView mediaDetails={mediaDetails} />
+                </div>
+              </>
+            )}
+          </section>
         </section>
       </main>
     </section>

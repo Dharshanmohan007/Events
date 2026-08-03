@@ -330,7 +330,7 @@ const MediaStaffInterchangeModal = ({ event, mediaType: initialMediaType, onClos
             ],
           }
 
-          console.log("isIndividualInterchange : ", isIndividualInterchange)
+          // console.log("isIndividualInterchange : ", isIndividualInterchange)
       const endpoint = isIndividualInterchange
         ? `${API_BASE_URL}/api/individual-submissions/${eventId}/interchange`
         : `${API_BASE_URL}/api/media-staff-change/${eventId}/change-media-staff`

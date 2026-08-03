@@ -105,25 +105,25 @@ export default function SignUp() {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    console.log("🔥 SIGNUP BUTTON CLICKED");
+    // console.log("🔥 SIGNUP BUTTON CLICKED");
 
     setError("");
     if (!validate()) {
-      console.log("❌ Validation failed");
+      // console.log("❌ Validation failed");
       return;
     }
 
-    console.log("✅ Validation passed");
+    // console.log("✅ Validation passed");
     setLoading(true);
 
     try {
-      console.log("📡 Calling Signup API...");
+      // console.log("📡 Calling Signup API...");
       const data = await signupApi(name, email, password);
-      console.log("✅ SIGNUP RESPONSE:", data);
+      // console.log("✅ SIGNUP RESPONSE:", data);
 
       if (data.token) {
         localStorage.setItem("token", data.token);
-        console.log("💾 Token stored");
+        // console.log("💾 Token stored");
       }
 
       const userData = {
@@ -134,7 +134,7 @@ export default function SignUp() {
 
       localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
-      console.log("👤 User set in context:", userData);
+      // console.log("👤 User set in context:", userData);
       navigate("/forms");
     } catch (err) {
       console.error("❌ SIGNUP ERROR:", err.message);

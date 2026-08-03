@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import FormSubmitted from "../IndividualForm/FormSubmitted";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 import UploadIcon from "../../assets/upload.svg";
 import { useAuth } from "../../Components/AuthContext";
@@ -718,8 +719,8 @@ export default function PurchaseDetails() {
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
+  // console.log('[PurchaseDetails] handleSubmit start');
   setApiError("");
-setSubmitSuccess(true);
   setIsLoading(true);
 
   if (!validateForm()) {
@@ -729,6 +730,19 @@ setSubmitSuccess(true);
 
   try {
     const payload = buildPayload();
+    // console.log('[PurchaseDetails] payload built:', payload);
+
+    // Validate token before attempting submit. Show an error instead of redirecting.
+    const authToken = localStorage.getItem("token");
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setApiError("Session expired or invalid token. Please login again.");
+      setIsLoading(false);
+      return;
+    }
 
     if (!payload.employee) {
       throw new Error("Unable to determine employee id. Please login again.");
@@ -767,16 +781,17 @@ setSubmitSuccess(true);
     // ===========================
     // Debug FormData
     // ===========================
-    console.log("===== FORM DATA =====");
+    // console.log("===== FORM DATA =====");
 
     for (const pair of formData.entries()) {
-      console.log(pair[0], pair[1]);
+      // console.log(pair[0], pair[1]);
     }
 
-    console.log("=====================");
+    // console.log("=====================");
 
     const requestUrl = `${API_BASE}/api/purchase/create`;
 
+    // console.log('[PurchaseDetails] Sending POST to', requestUrl);
     const response = await fetch(requestUrl, {
       method: "POST",
 
@@ -802,7 +817,7 @@ setSubmitSuccess(true);
       data = null;
     }
 
-    console.log("Response :", data);
+    // console.log("Response :", data);
 
     if (!response.ok) {
       throw new Error(
@@ -811,7 +826,41 @@ setSubmitSuccess(true);
       );
     }
 
-    setSuccess(true);
+    setSubmitSuccess(true);
+
+    const financeEnabled = form?.financeRequired === "Yes";
+    if (financeEnabled) {
+      const respData = data?.data || data || {};
+      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      const employeePayload = {
+        name: storedUser?.name || storedUser?.employeeName || "",
+        empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+        designation: storedUser?.designation || "",
+        department: storedUser?.department || "",
+      };
+
+      const submitRespPayload = {
+        iqacNumber: respData?.requestNo || `IQAC-${Date.now()}`,
+        employeeId: respData?.empId || employeePayload.empId || "",
+      };
+
+      await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+        return ReportPdf({
+          formData: {
+            selectDate: form?.requiredDate || "",
+            advanceAmount: form?.advanceAmount || "",
+            advancePurpose: form?.advancePurpose || "",
+            empId: employeePayload.empId,
+            employeeName: employeePayload.name,
+            designation: employeePayload.designation,
+            department: employeePayload.department,
+          },
+          employee: employeePayload,
+          submitResponse: submitRespPayload,
+        });
+      });
+    }
   } catch (error) {
     console.error(error);
     setApiError(error.message || "Unable to send purchase data.");
@@ -889,7 +938,7 @@ setSubmitSuccess(true);
   // };
 
   if (submitSuccess) {
-  return <FormSubmitted advanceData={form} />;
+  return <FormSubmitted advanceData={form} showDownloadButton={false} />;
 }
 
   return (

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Hourglass, Search, Settings } from 'lucide-react'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { ArrowRight, Calendar, Check, ExternalLink, Hourglass } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -68,20 +69,6 @@ const statGroups = [
   },
 ]
 
-const chartData = [
-  { name: 'CSE', value: 25, color: '#74B9FF' },
-  { name: 'AI&ML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68DF85' },
-  { name: 'VLSI', value: 8, color: '#3352C8' },
-]
-
-const feedbackRows = Array.from({ length: 13 }, () => ({
-  name: 'Dr. Sarah Jenkins',
-  department: 'Dept. of Computer Science',
-  quote: '"The event poster exceeded expectations. The team captured the technical essence perfectly with modern aesthetics."',
-  time: '2 HOURS AGO',
-}))
-
 // ── Sub-components ───────────────────────────────────────────────────────
 
 const DashboardHeader = () => (
@@ -91,23 +78,14 @@ const DashboardHeader = () => (
       <nav className="flex items-center gap-8 text-sm font-medium">
         <Link to="/dashboard-poster" className="border-b border-[#8B3DFF] pb-2 text-[#8B3DFF]">Dashboard</Link>
         <Link to="/dashboard-poster/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
-        <span className="pb-2 text-[#FFFFFF80]">Calendar</span>
+        <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">Calendar</Link>
         <Link to="/dashboard-poster/reports" className="pb-2 text-[#FFFFFF80] hover:text-white">Reports</Link>
         <Link to="/dashboard-poster/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
       </nav>
     </div>
 
     <div className="flex items-center gap-6">
-      <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
-        <Search size={15} className="text-[#8b93a4]" />
-        <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
-      </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={18} />
-        <CircleQuestionMark size={18} />
-        <Settings size={18} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
-      </div>
+      <LogoutButton />
     </div>
   </header>
 )
@@ -151,6 +129,33 @@ const PosterDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const [eventStats, setEventStats] = useState(null)
+  const [individualStats, setIndividualStats] = useState(null)
+  const feedbackRows = useDepartmentFeedback('poster')
+
+  useEffect(() => {
+    let isMounted = true
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/dashboard/stats?module=poster`, { headers }),
+      fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=poster`, { headers }),
+    ])
+      .then(([eventRes, individualRes]) => Promise.all([
+        eventRes.ok ? eventRes.json() : Promise.resolve({}),
+        individualRes.ok ? individualRes.json() : Promise.resolve({}),
+      ]))
+      .then(([eventData, individualData]) => {
+        if (isMounted) {
+          setEventStats(eventData.modules?.poster ?? eventData.events ?? null)
+          setIndividualStats(individualData.stats ?? null)
+        }
+      })
+      .catch((error) => console.warn(error.message))
+
+    return () => { isMounted = false }
+  }, [])
 
   // ── Individual tab state ────────────────────────────────────────────────
   const [individualRequests, setIndividualRequests] = useState([])
@@ -200,6 +205,52 @@ const PosterDashboard = () => {
     fetchPosterEvents()
     return () => abortController.abort()
   }, [])
+
+  const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+  }
+
+  const displayStatGroups = useMemo(() => {
+    if (!eventStats && !individualStats) return statGroups
+
+    const eventValues = eventStats ?? EMPTY_STATS
+    const individualValues = individualStats ?? EMPTY_STATS
+
+    return statGroups.map((group) => {
+      const isEventSection = group.title.toLowerCase().includes('event')
+      const isIndividualSection = group.title.toLowerCase().includes('individual')
+      const stats = isEventSection ? eventValues : (isIndividualSection ? individualValues : EMPTY_STATS)
+
+      return {
+        ...group,
+        cards: group.cards.map((card) => {
+          const label = card.label.toLowerCase()
+
+          if (label.includes('total')) {
+            return { ...card, value: stats.total ?? 0 }
+          }
+
+          if (label.includes('completed')) {
+            return { ...card, value: stats.completed ?? 0 }
+          }
+
+          if (label.includes('pending')) {
+            return { ...card, value: stats.pending ?? 0 }
+          }
+
+          if (label.includes('acknowledged')) {
+            return { ...card, value: stats.approved ?? 0 }
+          }
+
+          return card
+        }),
+      }
+    })
+  }, [eventStats, individualStats])
 
   // ── Fetch individual poster requests ─────────────────────────────────────
   const fetchIndividualRequests = useCallback(async () => {
@@ -412,7 +463,7 @@ const PosterDashboard = () => {
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {statGroups.map((group) => <StatGroup key={group.title} {...group} />)}
+          {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
         </div>
 
         <div className="mt-7">
@@ -485,7 +536,7 @@ const PosterDashboard = () => {
 
         <div className="mt-8 grid grid-cols-12 gap-3">
           <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
-          <DepartmentRequestChart data={chartData} title="Event Poster Request By Department" />
+          <DepartmentRequestChart module="poster" title="Event Poster Request By Department" />
         </div>
       </main>
       </section>

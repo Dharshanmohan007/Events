@@ -119,7 +119,7 @@ function ScrollDrum({ items, value, onChange }) {
 }
 
 // ─── Main Picker ──────────────────────────────────────────────────────────────
-export default function CustomDateTimePicker({ label, value, onChange, placeholder }) {
+export default function CustomDateTimePicker({ label, value, onChange, placeholder, minDate }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("calendar");
   const [displayMonth, setDisplayMonth] = useState(() =>
@@ -289,15 +289,27 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
               <div className="grid grid-cols-7 gap-0.5">
                 {Array.from({ length: firstDay }).map((_, i) => <div key={`e-${i}`} />)}
                 {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+                  const currentDayDate = new Date(displayYear, displayMonth, day);
+                  let isDisabled = false;
+                  if (minDate) {
+                    const minD = new Date(minDate);
+                    minD.setHours(0, 0, 0, 0);
+                    if (currentDayDate < minD) isDisabled = true;
+                  }
+
                   const isSelected =
                     selectedDate &&
                     selectedDate.getDate() === day &&
                     selectedDate.getMonth() === displayMonth &&
                     selectedDate.getFullYear() === displayYear;
                   return (
-                    <button key={day} type="button" onClick={() => handleDayClick(day)}
+                    <button key={day} type="button" 
+                      onClick={() => !isDisabled && handleDayClick(day)}
+                      disabled={isDisabled}
                       className={`text-xs py-1.5 rounded-lg transition-colors ${
-                        isSelected
+                        isDisabled
+                          ? "text-gray-600 cursor-not-allowed"
+                          : isSelected
                           ? "bg-purple-600 text-white"
                           : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
                       }`}>

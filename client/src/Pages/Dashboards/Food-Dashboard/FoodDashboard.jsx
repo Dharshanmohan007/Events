@@ -4,6 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -35,20 +36,12 @@ const transformIndividualData = (apiData) =>
         eventId: item.id || item.data?._id,
     }))
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-    { name: 'ECE', value: 15, color: '#ff7675' },
-    { name: 'ME', value: 20, color: '#fdcb6e' },
-    { name: 'IT', value: 18, color: '#00b894' },
-]
-
 const FoodDashboard = () => {
     const [events, setEvents] = useState([])
     const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const feedbackRows = useDepartmentFeedback('food')
+    const individualFeedbackRows = useIndividualFeedback()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,7 +80,7 @@ const FoodDashboard = () => {
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
-                <div className='header-container sticky top-0'>
+                <div className='header-container sticky top-0 z-50'>
                     <DashboardHeader basePath="/dashboard-food" />
                 </div>
 
@@ -121,8 +114,8 @@ const FoodDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-food/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Catering Request By Department" />
+                        <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-food/feedback" />
+                        <DepartmentRequestChart module="food" title="Catering Request By Department" />
                     </div>
                 </div>
 

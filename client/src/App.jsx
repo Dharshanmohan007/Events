@@ -28,6 +28,7 @@ import PosterFeedbackPage from './Pages/Dashboards/Media-Dashboard/PosterFeedbac
 import PosterDetailView from './Pages/Dashboards/Media-Dashboard/PosterDetailView'
 import PosterIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/PosterIndividualDetailViewPage'
 import VideoDashboard from './Pages/Dashboards/Media-Dashboard/VideoDashboard'
+import VideoRequestListPage from './Pages/Dashboards/Media-Dashboard/VideoRequestListPage'
 import VideoDetailView from './Pages/Dashboards/Media-Dashboard/VideoDetailView'
 import VideoIndividualDetailViewPage from './Pages/Dashboards/Media-Dashboard/VideoIndividualDetailViewPage'
 import VideoReportsPage from './Pages/Dashboards/Media-Dashboard/VideoReportsPage'
@@ -61,6 +62,7 @@ import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/Facultyfee
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
 import FacultyIndividualRequestDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualRequestDetailViewPage"
+import FacultyIndividualFeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualFeedbackPage"
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
@@ -79,6 +81,7 @@ import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
+// import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
 // Navigation after login is handled by Login.jsx itself via navigate()
@@ -127,6 +130,7 @@ function AppRoutes() {
       <Route path="/dashboard-poster/individualDetailView/:id" element={<ProtectedRoute><PosterIndividualDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-video" element={<ProtectedRoute><VideoDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-video/reports" element={<ProtectedRoute><VideoReportsPage /></ProtectedRoute>} />
+      <Route path="/dashboard-video/requests" element={<ProtectedRoute><VideoRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-video/detailView/:videoId" element={<ProtectedRoute><VideoDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-video/individualDetailView/:id" element={<ProtectedRoute><VideoIndividualDetailViewPage /></ProtectedRoute>} />
 
@@ -137,6 +141,7 @@ function AppRoutes() {
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
+        {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
       </Route>
@@ -154,6 +159,7 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/individual-feedback/:requestId" element={<ProtectedRoute><FacultyIndividualFeedbackPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
 
@@ -187,6 +193,7 @@ function AppRoutes() {
 }
 
 function App() {
+
   return (
     <AuthProvider>
       <ToastContainer position="top-right" autoClose={1500} />
