@@ -1,5 +1,7 @@
 import dayjs from "dayjs";
 import logoSrc from "../assets/logo.png.jpeg";
+import { API_BASE } from "./apiConfig";
+import { decodeToken } from "./tokenUtils";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -10,6 +12,27 @@ const add15Days = (date, days = 15) =>
 
 const formatAmount = (amount) =>
   amount ? Number(amount).toLocaleString("en-IN") : "";
+
+const findResponseValue = (value, key) => {
+  if (!value || typeof value !== "object") return "";
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const result = findResponseValue(item, key);
+      if (result) return result;
+    }
+    return "";
+  }
+
+  if (value[key] !== undefined && value[key] !== null && value[key] !== "") {
+    return value[key];
+  }
+
+  for (const nestedValue of Object.values(value)) {
+    const result = findResponseValue(nestedValue, key);
+    if (result) return result;
+  }
+  return "";
+};
 
 // ── Convert the imported logo to a base64 data-URL so the new tab can render
 //    it without needing access to the bundler's asset pipeline.
@@ -408,26 +431,48 @@ export default async function ReportPdf({
   const requisitionDateValue =
     formData?.requisitionDate ||
     formData?.selectDate ||
+    formData?.pickupDateTime ||
     formData?.date ||
     formData?.eventDays?.[0]?.date ||
     formData?.event?.eventDays?.[0]?.date ||
     formData?.event?.date ||
     "";
 
-  // Normalize IQAC number: prefer explicit `iqacNumber`, accept `IQAC-...` if present,
-  // but do NOT display raw server `requestNo` values like "MEDIA/..." as the IQAC.
-  const rawIqac = submitResponse?.iqacNumber || submitResponse?.requestNo || "";
-  let normalizedIqac = "";
-  if (rawIqac) {
-    if (/^IQAC-/i.test(rawIqac)) {
-      normalizedIqac = rawIqac;
-    } else {
-      const found = String(rawIqac).match(/IQAC-[A-Za-z0-9_-]+/i);
-      if (found) normalizedIqac = found[0];
-    }
-  }
-  if (!normalizedIqac) normalizedIqac = `IQAC-${Date.now()}`;
+  const amountValue =
+    formData?.advanceAmount ??
+    formData?.amount ??
+    formData?.requestedAmount ??
+    formData?.requestedAdvance ??
+    formData?.paymentAmount ??
+    "";
 
+  const purposeValue =
+    formData?.purposeOfAdvance ||
+    formData?.advancePurpose ||
+    formData?.purpose ||
+    formData?.requestPurpose ||
+    formData?.advanceFor ||
+    "";
+
+  const clearBeforeDateValue =
+    formData?.clearBeforeDate ||
+    formData?.clearDate ||
+    "";
+
+  // The request number returned by the API is the official reference that must
+  // appear on the advance receipt (for example, FOOD/2026-27/000009/...).
+  const normalizedIqac =
+    submitResponse?.requestNo ||
+    submitResponse?.data?.requestNo ||
+    submitResponse?.food?.requestNo ||
+    submitResponse?.data?.food?.requestNo ||
+    findResponseValue(submitResponse?.response, "requestNo") ||
+    submitResponse?.iqacNumber ||
+    `IQAC-${Date.now()}`;
+
+  const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+  const token = localStorage.getItem("token");
+  const decodedToken = decodeToken(token);
   const data = {
     iqacNumber: normalizedIqac,
     requisitionDate: formatDate(requisitionDateValue),
@@ -437,6 +482,8 @@ export default async function ReportPdf({
       submitResponse?.employeeName ||
       submitResponse?.name ||
       formData?.employeeName ||
+      storedUser?.name ||
+      storedUser?.employeeName ||
       "",
     empId:
       employee?.empId ||
@@ -444,15 +491,88 @@ export default async function ReportPdf({
       submitResponse?.empId ||
       submitResponse?.employeeId ||
       formData?.empId ||
+      storedUser?.empId ||
+      storedUser?.employeeId ||
       "",
     designation:
-      employee?.designation || submitResponse?.designation || formData?.designation || "",
-    department: employee?.department || submitResponse?.department || formData?.department || "",
-    advanceAmount: formatAmount(formData?.advanceAmount),
-    purpose: formData?.purposeOfAdvance || formData?.advancePurpose || "",
-    clearBeforeDate: add15Days(requisitionDateValue, formData?.clearanceDays || 15),
-    clearanceDays: formData?.clearanceDays || 15,
+      employee?.designation ||
+      submitResponse?.designation ||
+      formData?.designation ||
+      storedUser?.designation ||
+      "",
+    department:
+      employee?.department ||
+      submitResponse?.department ||
+      formData?.department ||
+      storedUser?.department ||
+      "",
+    advanceAmount: formatAmount(amountValue),
+    purpose: purposeValue,
+    clearBeforeDate:
+      clearBeforeDateValue ||
+      add15Days(requisitionDateValue, formData?.clearanceDays || 15),
+    clearanceDays: formData?.clearanceDays || formData?.days || 15,
   };
+  const facultyId =
+    submitResponse?.employeeId ||
+    submitResponse?.employee ||
+    submitResponse?.data?.employee ||
+    employee?._id ||
+    formData?.empId ||
+    decodedToken?.id ||
+    decodedToken?._id ||
+    decodedToken?.facultyId ||
+    employee?.employeeId ||
+    employee?.empId ||
+    storedUser?._id ||
+    storedUser?.id ||
+    "";
+
+  // Always load the faculty profile so the receipt uses the authoritative
+  // employee details from /api/faculty/:id rather than stale form data.
+  if (facultyId) {
+    try {
+      const resp = await fetch(`${API_BASE}/api/faculty/${facultyId}`, {
+        headers: {
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+          if (resp.ok) {
+        const json = await resp.json();
+        const faculty = json?.data?.faculty || json?.faculty || json?.data || json;
+        if (faculty) {
+          data.empId =
+            faculty.empId ||
+            faculty.employeeId ||
+            faculty.employee_id ||
+            faculty.emp_id ||
+            faculty.empid ||
+            faculty.empID ||
+            data.empId;
+          data.employeeName =
+            faculty.name ||
+            faculty.employeeName ||
+            faculty.empName ||
+            faculty.username ||
+            data.employeeName;
+          data.designation =
+            faculty.designation ||
+            faculty.jobTitle ||
+            faculty.position ||
+            data.designation;
+          data.department =
+            faculty.department ||
+            faculty.dept ||
+            faculty.departmentName ||
+            data.department;
+        }
+      }
+    } catch (err) {
+      console.warn("Receipt faculty fetch failed:", err);
+    }
+  }
 
   // Convert the bundled logo to a base64 data-URL so the new tab can display it
   const logoDataUrl = await toBase64(logoSrc);

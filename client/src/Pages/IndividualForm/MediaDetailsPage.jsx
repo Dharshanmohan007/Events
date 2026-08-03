@@ -22,6 +22,17 @@ const pageFloatingLabelClass = `${floatingLabelClass} bg-[#141428]`;
 
 const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 
+const getFinanceComparisonError = (estimatedAmount, advanceAmount) => {
+  const estimated = Number(estimatedAmount);
+  const advance = Number(advanceAmount);
+
+  if (!Number.isNaN(estimated) && !Number.isNaN(advance) && advance > estimated) {
+    return "Advance amount cannot exceed the estimated budget amount.";
+  }
+
+  return "";
+};
+
 const MediaDetailsPage = () => {
   // =========================
   // MAIN TYPE DROPDOWN
@@ -91,10 +102,15 @@ const MediaDetailsPage = () => {
     // console.log("token :", token);
 
     if (token) {
-      const decoded = jwtDecode(token);
-      setId(decoded.id);
-
-      // console.log("Decoded JWT:", decoded);
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded?.id) {
+          setId(decoded.id);
+        }
+        console.log("Decoded JWT:", decoded);
+      } catch (err) {
+        console.error("Failed to decode JWT:", err);
+      }
     }
   }, []);
   
@@ -137,6 +153,7 @@ const [trophyContent, setTrophyContent] = useState("");
     setPosterRequirement,
   ] = useState("");
   const [posterFinanceRequired, setPosterFinanceRequired] = useState("No");
+  const [posterEstimatedAmount, setPosterEstimatedAmount] = useState("");
   const [posterAdvanceAmount, setPosterAdvanceAmount] = useState("");
   const [posterAdvancePurpose, setPosterAdvancePurpose] = useState("");
   const [showPosterFinanceDropdown, setShowPosterFinanceDropdown] = useState(false);
@@ -147,6 +164,7 @@ const [trophyContent, setTrophyContent] = useState("");
   const principalInputRef = useRef(null);
   const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
   const [principalFileError, setPrincipalFileError] = useState("");
+
   const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
   const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
   const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
@@ -182,10 +200,6 @@ const [trophyContent, setTrophyContent] = useState("");
     if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
       setPrincipalFileError("Only PDF files are allowed.");
       return;
-  const [videoFinanceRequired, setVideoFinanceRequired] = useState(false);
-  const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
-  const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
-  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
     }
 
     if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
@@ -299,9 +313,20 @@ const [trophyContent, setTrophyContent] = useState("");
     setVideoRequirement,
   ] = useState("");
   const [videoFinanceRequired, setVideoFinanceRequired] = useState("No");
+  const [videoEstimatedAmount, setVideoEstimatedAmount] = useState("");
   const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
   const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
   const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+
+  const posterFinanceComparisonError =
+    posterFinanceRequired === "Yes"
+      ? getFinanceComparisonError(posterEstimatedAmount, posterAdvanceAmount)
+      : "";
+
+  const videoFinanceComparisonError =
+    videoFinanceRequired === "Yes"
+      ? getFinanceComparisonError(videoEstimatedAmount, videoAdvanceAmount)
+      : "";
 
   // =========================
   // FILE VALIDATION
@@ -379,11 +404,21 @@ const [trophyContent, setTrophyContent] = useState("");
         errors.push("Special Requirements is required."); 
       }
       if (posterFinanceRequired === "Yes") {
-        if (!posterAdvanceAmount || !posterAdvanceAmount.toString().trim()) {
+        if (!posterEstimatedAmount || Number.isNaN(Number(posterEstimatedAmount)) || Number(posterEstimatedAmount) <= 0) {
+          errors.push("Poster: Estimated budget amount is required.");
+        }
+        if (!posterAdvanceAmount || posterAdvanceAmount.toString().trim() === "") {
           errors.push("Poster: Advance amount is required.");
         }
         if (!posterAdvancePurpose || !posterAdvancePurpose.trim()) {
           errors.push("Poster: Advance purpose is required.");
+        }
+        if (
+          !Number.isNaN(Number(posterEstimatedAmount)) &&
+          !Number.isNaN(Number(posterAdvanceAmount)) &&
+          Number(posterAdvanceAmount) > Number(posterEstimatedAmount)
+        ) {
+          errors.push("Poster: Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
@@ -423,11 +458,21 @@ const [trophyContent, setTrophyContent] = useState("");
         errors.push("Special Requirements is required.");
       }
       if (videoFinanceRequired === "Yes") {
-        if (!videoAdvanceAmount || !videoAdvanceAmount.toString().trim()) {
+        if (!videoEstimatedAmount || Number.isNaN(Number(videoEstimatedAmount)) || Number(videoEstimatedAmount) <= 0) {
+          errors.push("Video: Estimated budget amount is required.");
+        }
+        if (!videoAdvanceAmount || videoAdvanceAmount.toString().trim() === "") {
           errors.push("Video: Advance amount is required.");
         }
         if (!videoAdvancePurpose || !videoAdvancePurpose.trim()) {
           errors.push("Video: Advance purpose is required.");
+        }
+        if (
+          !Number.isNaN(Number(videoEstimatedAmount)) &&
+          !Number.isNaN(Number(videoAdvanceAmount)) &&
+          Number(videoAdvanceAmount) > Number(videoEstimatedAmount)
+        ) {
+          errors.push("Video: Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
@@ -536,7 +581,10 @@ const [trophyContent, setTrophyContent] = useState("");
       formData.append("financeRequired", "Yes");
       const posterAmount = posterFinanceRequired === "Yes" ? posterAdvanceAmount : 0;
       const videoAmount = videoFinanceRequired === "Yes" ? videoAdvanceAmount : 0;
+      const posterEstimate = posterFinanceRequired === "Yes" ? posterEstimatedAmount : 0;
+      const videoEstimate = videoFinanceRequired === "Yes" ? videoEstimatedAmount : 0;
       formData.append("advanceAmount", posterAmount || videoAmount || "0");
+      formData.append("estimatedAmount", posterEstimate || videoEstimate || "0");
       const posterPurpose = posterFinanceRequired === "Yes" ? posterAdvancePurpose : "";
       const videoPurpose = videoFinanceRequired === "Yes" ? videoAdvancePurpose : "";
       formData.append("advancePurpose", posterPurpose || videoPurpose || "");
@@ -658,6 +706,12 @@ const [trophyContent, setTrophyContent] = useState("");
       const financeEnabled = selectedTypes.some(() => true);
       if (financeEnabled) {
         const respData = data?.data || data || {};
+        const receiptRequestNo =
+          respData?.requestNo ||
+          respData?.data?.requestNo ||
+          respData?.media?.requestNo ||
+          respData?.data?.media?.requestNo ||
+          "";
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
         const employeePayload = {
@@ -668,8 +722,14 @@ const [trophyContent, setTrophyContent] = useState("");
         };
 
         const submitRespPayload = {
-          iqacNumber: respData?.requestNo || respData?.requestNo || `IQAC-${Date.now()}`,
-          employeeId: respData?.empId || employeePayload.empId || "",
+          requestNo: receiptRequestNo,
+          response: data,
+          employeeId:
+            respData?.employee ||
+            respData?.employeeId ||
+            id ||
+            employeePayload.empId ||
+            "",
         };
 
         await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
@@ -1253,7 +1313,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={displaySize}
                     onChange={(e) => setDisplaySize(e.target.value)}
-                    placeholder={`Enter Flex Size`}
+                    placeholder="e.g. 2 * 2 px"
                     className="
                       w-full
                       border
@@ -1278,7 +1338,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={glassStickerSize}
                     onChange={(e) => setGlassStickerSize(e.target.value)}
-                    placeholder={`Enter Glass Sticker Size`}
+                    placeholder="e.g. 4 * 4 px"
                     className="
                       w-full
                       border
@@ -1321,8 +1381,8 @@ onChange={(e) => setPosterContent(e.target.value)}
 
   {/* PRIORITY */}
   {/* PRIORITY */}
-<div className="relative w-full pt-[1px]">
-  <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+<div className="relative w-full pt-px">
+  <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
     Priority *
   </label>
 
@@ -1339,7 +1399,7 @@ onChange={(e) => setPosterContent(e.target.value)}
       border-[#2F2F3E]
       rounded-lg
       px-4
-      py-[13px]
+      py-3.25
       flex
       justify-between
       items-center
@@ -1381,13 +1441,13 @@ onChange={(e) => setPosterContent(e.target.value)}
 
           {/* Requirement */}
           {/* FINANCE REQUIRED */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1  gap-4 mb-4">
             <div className="relative w-full">
               <label className={cardFloatingLabelClass}>Finance Required *</label>
 
               <div
                 onClick={() => setShowPosterFinanceDropdown(!showPosterFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
+                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
               >
                 <span className={posterFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
                   {posterFinanceRequired === "Yes" ? "Yes" : "No"}
@@ -1405,6 +1465,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                         setPosterFinanceRequired(opt.value);
                         setShowPosterFinanceDropdown(false);
                         if (opt.value === "No") {
+                          setPosterEstimatedAmount("");
                           setPosterAdvanceAmount("");
                           setPosterAdvancePurpose("");
                         }
@@ -1420,11 +1481,27 @@ onChange={(e) => setPosterContent(e.target.value)}
             </div>
 
             {posterFinanceRequired === "Yes" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={posterEstimatedAmount}
+                    onChange={(e) => setPosterEstimatedAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                  {posterFinanceComparisonError && (
+                    <p className="mt-1 text-sm text-red-400">{posterFinanceComparisonError}</p>
+                  )}
+                </div>
+
                 <div className="relative w-full">
                   <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
                   <input
                     type="number"
+                    min="0"
                     value={posterAdvanceAmount}
                     onChange={(e) => setPosterAdvanceAmount(e.target.value)}
                     placeholder="0"
@@ -1562,7 +1639,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                 border-[#4b4b6b]
                 rounded-lg
                 p-8
-                min-h-[54px]
+                min-h-13.5
                 flex
                 justify-center
                 items-center
@@ -1636,8 +1713,8 @@ onChange={(e) => setPosterContent(e.target.value)}
               />
             </div>
 
-            <div className="relative w-full pt-[1px]">
-              <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+            <div className="relative w-full pt-px">
+              <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
                 Priority *
               </label>
 
@@ -1654,7 +1731,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                   border-[#2F2F3E]
                   rounded-lg
                   px-4
-                  py-[13px]
+                  py-3.25
                   flex
                   justify-between
                   items-center
@@ -1697,7 +1774,7 @@ onChange={(e) => setPosterContent(e.target.value)}
 
               <div
                 onClick={() => setShowVideoFinanceDropdown(!showVideoFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
+                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
               >
                 <span className={videoFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
                   {videoFinanceRequired === "Yes" ? "Yes" : "No"}
@@ -1715,6 +1792,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                         setVideoFinanceRequired(opt.value);
                         setShowVideoFinanceDropdown(false);
                         if (opt.value === "No") {
+                          setVideoEstimatedAmount("");
                           setVideoAdvanceAmount("");
                           setVideoAdvancePurpose("");
                         }
@@ -1730,11 +1808,27 @@ onChange={(e) => setPosterContent(e.target.value)}
             </div>
 
             {videoFinanceRequired === "Yes" && (
-              <>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
+                <div className="relative w-full">
+                  <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={videoEstimatedAmount}
+                    onChange={(e) => setVideoEstimatedAmount(e.target.value)}
+                    placeholder="0"
+                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                  />
+                  {videoFinanceComparisonError && (
+                    <p className="mt-1 text-sm text-red-400">{videoFinanceComparisonError}</p>
+                  )}
+                </div>
+
                 <div className="relative w-full">
                   <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
                   <input
                     type="number"
+                    min="0"
                     value={videoAdvanceAmount}
                     onChange={(e) => setVideoAdvanceAmount(e.target.value)}
                     placeholder="0"
@@ -1752,7 +1846,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
                   />
                 </div>
-              </>
+              </div>
             )}
           </div>
 
