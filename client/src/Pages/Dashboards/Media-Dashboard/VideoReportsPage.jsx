@@ -152,19 +152,26 @@ const VideoReportsPage = () => {
         const json = await res.json()
         if (json.data && isMounted) {
           setEvents(
-            (json.data || []).map((ev) => ({
-              id: ev.eventId || ev.id || ev._id,
-              eventName: ev.eventName || ev.name || '-',
-              eventType: ev.eventType || '-',
-              eventVenue: Array.isArray(ev.venues) 
-                ? ev.venues.map(v => typeof v === 'object' && v !== null ? (v.venueName || v.venue || v.name || '-') : String(v)).join(', ') 
-                : (typeof ev.venues === 'object' && ev.venues !== null ? (ev.venues.venueName || ev.venues.venue || ev.venues.name || '-') : (ev.venues || ev.venue || '-')),
-              eventDate: (Array.isArray(ev.dates) && ev.dates.length > 0) 
-                  ? `${formatDate(ev.dates[0])}${ev.dates.length > 1 ? ` +${ev.dates.length - 1}` : ''}`
-                  : formatDate(ev.dates || ev.eventDate || ev.requiredDate || ev.eventSchedule?.[0]?.eventDate),
-              department: ev.organizingDepartment || ev.department || '-',
-              status: deriveVideoStatus(ev.videoRequirements || ev.posterRequirements) || ev.eventStatus || ev.departmentStatus || ev.overallStatus || ev.status || '-',
-            }))
+            (json.data || []).map((ev) => {
+              let status = deriveVideoStatus(ev.video || ev.videoRequirements)
+              if (status === '-') {
+                status = ev.eventStatus || ev.departmentStatus || ev.overallStatus || ev.status || '-'
+              }
+
+              return {
+                id: ev.eventId || ev.id || ev._id,
+                eventName: ev.eventName || ev.name || '-',
+                eventType: ev.eventType || '-',
+                eventVenue: Array.isArray(ev.venues) 
+                  ? ev.venues.map(v => typeof v === 'object' && v !== null ? (v.venueName || v.venue || v.name || '-') : String(v)).join(', ') 
+                  : (typeof ev.venues === 'object' && ev.venues !== null ? (ev.venues.venueName || ev.venues.venue || ev.venues.name || '-') : (ev.venues || ev.venue || '-')),
+                eventDate: (Array.isArray(ev.dates) && ev.dates.length > 0) 
+                    ? `${formatDate(ev.dates[0])}${ev.dates.length > 1 ? ` +${ev.dates.length - 1}` : ''}`
+                    : formatDate(ev.dates || ev.eventDate || ev.requiredDate || ev.eventSchedule?.[0]?.eventDate),
+                department: ev.organizingDepartment || ev.department || '-',
+                status,
+              }
+            })
           )
         }
       } catch (err) {
