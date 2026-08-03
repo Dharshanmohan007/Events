@@ -3,6 +3,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import calendarFill from '../../../assets/calendarFill.svg'
 import circleTick from '../../../assets/circle-tick.svg'
 import hourglassFill from '../../../assets/hourglassFill.svg'
@@ -46,13 +47,6 @@ const statCardData = [
     },
 ]
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
-
 const transformVenueData = (apiData) =>
     apiData.map((item) => ({
         eventId: item.eventId,
@@ -76,6 +70,7 @@ const VenueDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
     const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('venue')
 
     useEffect(() => {
         let isMounted = true
@@ -161,8 +156,8 @@ const VenueDashboard = () => {
                 </div>
 
                 <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                    <FeedbackRatings feedbackLink="/dashboard-venue/feedback" />
-                    <DepartmentRequestChart data={departmentData} title="Venue Request By Department" />
+                    <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-venue/feedback" />
+                    <DepartmentRequestChart module="venue" title="Venue Request By Department" />
                 </div>
             </div>
         </section>

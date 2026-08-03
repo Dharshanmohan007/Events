@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { Bell, CircleQuestionMark, Download, Filter, Search, Settings } from 'lucide-react'
+import { Download, Filter, Search } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const eventReportRows = Array.from({ length: 9 }, (_, index) => ({
     eventName: 'Welcome Freshers',
@@ -27,23 +27,14 @@ const PosterHeader = () => (
             <nav className="flex items-center gap-8 text-sm font-medium">
                 <Link to="/dashboard-poster" className="pb-2 text-[#FFFFFF80] hover:text-white">Dashboard</Link>
                 <Link to="/dashboard-poster/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
-                <span className="pb-2 text-[#FFFFFF80]">Calendar</span>
+                <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">Calendar</Link>
                 <Link to="/dashboard-poster/reports" className="border-b border-[#8B3DFF] pb-2 text-[#8B3DFF]">Reports</Link>
                 <Link to="/dashboard-poster/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
             </nav>
         </div>
 
         <div className="flex items-center gap-6">
-            <div className="flex h-9 w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3">
-                <Search size={15} className="text-[#8b93a4]" />
-                <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
-            </div>
-            <div className="flex items-center gap-5 text-[#b7bdc8]">
-                <Bell size={16} />
-                <CircleQuestionMark size={16} />
-                <Settings size={16} />
-                <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
-            </div>
+            <LogoutButton />
         </div>
     </header>
 )

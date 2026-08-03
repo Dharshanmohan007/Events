@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Hourglass, Search, Settings } from 'lucide-react'
+import { ArrowRight, Calendar, Check, ExternalLink, Hourglass } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -68,20 +69,6 @@ const statGroups = [
   },
 ]
 
-const chartData = [
-  { name: 'CSE', value: 25, color: '#74B9FF' },
-  { name: 'AI&ML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68DF85' },
-  { name: 'VLSI', value: 8, color: '#3352C8' },
-]
-
-const feedbackRows = Array.from({ length: 13 }, () => ({
-  name: 'Dr. Sarah Jenkins',
-  department: 'Dept. of Computer Science',
-  quote: '"The event poster exceeded expectations. The team captured the technical essence perfectly with modern aesthetics."',
-  time: '2 HOURS AGO',
-}))
-
 // ── Sub-components ───────────────────────────────────────────────────────
 
 const DashboardHeader = () => (
@@ -91,23 +78,14 @@ const DashboardHeader = () => (
       <nav className="flex items-center gap-8 text-sm font-medium">
         <Link to="/dashboard-poster" className="border-b border-[#8B3DFF] pb-2 text-[#8B3DFF]">Dashboard</Link>
         <Link to="/dashboard-poster/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
-        <span className="pb-2 text-[#FFFFFF80]">Calendar</span>
+        <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">Calendar</Link>
         <Link to="/dashboard-poster/reports" className="pb-2 text-[#FFFFFF80] hover:text-white">Reports</Link>
         <Link to="/dashboard-poster/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
       </nav>
     </div>
 
     <div className="flex items-center gap-6">
-      <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
-        <Search size={15} className="text-[#8b93a4]" />
-        <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
-      </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={18} />
-        <CircleQuestionMark size={18} />
-        <Settings size={18} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
-      </div>
+      <LogoutButton />
     </div>
   </header>
 )
@@ -153,6 +131,7 @@ const PosterDashboard = () => {
   const [activeTab, setActiveTab] = useState('events')
   const [eventStats, setEventStats] = useState(null)
   const [individualStats, setIndividualStats] = useState(null)
+  const feedbackRows = useDepartmentFeedback('poster')
 
   useEffect(() => {
     let isMounted = true
@@ -557,7 +536,7 @@ const PosterDashboard = () => {
 
         <div className="mt-8 grid grid-cols-12 gap-3">
           <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
-          <DepartmentRequestChart data={chartData} title="Event Poster Request By Department" />
+          <DepartmentRequestChart module="poster" title="Event Poster Request By Department" />
         </div>
       </main>
       </section>

@@ -11,11 +11,13 @@ const EMPTY_STATS = {
     rejected: 0,
 }
 
+const individualTargetTitles = ['Purchase Overview', 'Order Status']
+
 const applyEventStats = (sections, eventStats) => {
     const stats = eventStats ?? EMPTY_STATS
 
     return sections.map((section) => {
-        if (!section.title.toLowerCase().includes('event') && individualTargetTitles.includes(section.title)) return section
+        if (!section.title.toLowerCase().includes('event')) return section
 
         return {
             ...section,
@@ -24,10 +26,6 @@ const applyEventStats = (sections, eventStats) => {
 
                 if (label.includes('total')) {
                     return { ...item, value: stats.total ?? 0 }
-                }
-
-                if (label.includes('approved')) {
-                    return { ...item, value: stats.approved ?? 0 }
                 }
 
                 if (label.includes('completed')) {

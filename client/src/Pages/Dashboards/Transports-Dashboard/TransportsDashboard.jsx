@@ -4,6 +4,7 @@ import TransportStatcard from './TransportStatcard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -14,13 +15,6 @@ const formatDate = (dateStr) => {
     ? dateStr
     : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
 }
-
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
 
 const transformTransportData = (apiData) =>
     apiData.map((item) => ({
@@ -49,6 +43,8 @@ const TransportsDashboard = () => {
     const [events, setEvents] = useState([])
     const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const feedbackRows = useDepartmentFeedback('transport')
+    const individualFeedbackRows = useIndividualFeedback()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,7 +83,7 @@ const TransportsDashboard = () => {
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
-                <div className='header-container sticky top-0 z-10'>
+                <div className='header-container sticky top-0 z-50'>
                     <DashboardHeader basePath="/dashboard-transports" />
                 </div>
 
@@ -122,8 +118,8 @@ const TransportsDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-transports/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Transport Request By Department" />
+                        <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-transports/feedback" />
+                        <DepartmentRequestChart module="transport" title="Transport Request By Department" />
                     </div>
                 </div>
 

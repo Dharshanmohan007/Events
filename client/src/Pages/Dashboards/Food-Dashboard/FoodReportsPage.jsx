@@ -276,7 +276,7 @@ const FoodReportsPage = () => {
 
     return (
         <section className="min-h-screen overflow-auto bg-[#0b1326] text-white poppins table-custom-scrollbar">
-            <div className="sticky top-0 z-10 bg-[#0b1326]">
+            <div className="sticky top-0 z-50 bg-[#0b1326]">
                 <DashboardHeader basePath="/dashboard-food" />
             </div>
             

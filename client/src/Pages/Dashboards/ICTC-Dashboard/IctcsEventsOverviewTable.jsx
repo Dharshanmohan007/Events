@@ -258,7 +258,7 @@ export default function IctcsEventsOverviewTable() {
                             </td>
                             <td className="whitespace-nowrap px-4 py-4">
                                 <Link
-                                    to={`/dashboard-ictcs/events/${event.id}`}
+                                    to={`/dashboard-ictcs/events/detailView/${event.id}`}
                                     className="flex items-center justify-center w-full"
                                     aria-label={`Open ${event.name} details`}
                                 >

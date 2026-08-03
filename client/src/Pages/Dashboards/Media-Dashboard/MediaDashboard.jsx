@@ -6,6 +6,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import MediaStatcard from './MediaStatcard'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import MediaStaffInterchangeModal from '../../../Components/MediaStaffInterchangeModal'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -79,22 +80,14 @@ const transformMediaData = (apiData) =>
     status: deriveMediaStatus(item.media),
   }))
 
-const departmentData = [
-  { name: 'CSE', value: 25, color: '#74b9ff' },
-  { name: 'AIML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68df85' },
-  { name: 'VLSI', value: 8, color: '#4169e1' },
-  { name: 'ECE', value: 15, color: '#ff7675' },
-  { name: 'ME', value: 20, color: '#fdcb6e' },
-  { name: 'IT', value: 18, color: '#00b894' },
-]
-
 const MediaDashboard = () => {
   const [events, setEvents] = useState([])
   const [rawData, setRawData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const feedbackRows = useDepartmentFeedback('media')
+  const individualFeedbackRows = useIndividualFeedback()
   const [selectedEventForInterchange, setSelectedEventForInterchange] = useState(null)
   const [interchangeMediaType, setInterchangeMediaType] = useState('')
   const abortControllerRef = useRef(null)
@@ -396,7 +389,7 @@ const MediaDashboard = () => {
     <>
       <section className="bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar">
         {/* header */}
-        <div className="header-container sticky top-0">
+        <div className="header-container sticky top-0 z-50">
           <DashboardHeader basePath="/dashboard-media" showReports={false} />
         </div>
 
@@ -494,9 +487,9 @@ const MediaDashboard = () => {
           </div>
 
           <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-            <FeedbackRatings feedbackLink="/dashboard-media/feedback" />
+            <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-media/feedback" />
             <DepartmentRequestChart
-              data={departmentData}
+              module="media"
               title="Event Media Request By Department"
             />
           </div>

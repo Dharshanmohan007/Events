@@ -60,6 +60,7 @@ import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/Facultyfee
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
 import FacultyIndividualRequestDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualRequestDetailViewPage"
+import FacultyIndividualFeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualFeedbackPage"
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
@@ -154,6 +155,7 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/individual-feedback/:requestId" element={<ProtectedRoute><FacultyIndividualFeedbackPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
 
@@ -187,6 +189,7 @@ function AppRoutes() {
 }
 
 function App() {
+
   return (
     <AuthProvider>
       <ToastContainer position="top-right" autoClose={1500} />

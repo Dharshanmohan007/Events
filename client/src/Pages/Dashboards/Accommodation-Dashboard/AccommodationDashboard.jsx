@@ -4,6 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 // Accommodation Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
@@ -58,13 +59,6 @@ const transformAccommodationData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
-
 const EMPTY_STATS = {
     total: 0,
     approved: 0,
@@ -77,6 +71,7 @@ const AccommodationDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
     const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('accommodation')
 
     useEffect(() => {
         let isMounted = true
@@ -165,8 +160,8 @@ const AccommodationDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-accommodation/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Accommodation Request By Department" />
+                        <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-accommodation/feedback" />
+                        <DepartmentRequestChart module="accommodation" title="Accommodation Request By Department" />
                     </div>
 
                 </div>

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import {
-  Bell, CalendarDays, Check, CircleQuestionMark, ClipboardList, Clock3,
-  FileText, Mail, MapPin, Network, Phone, Search, Settings, Shuffle, Sparkles, UserRound, Users, Video
+  CalendarDays, Check, ClipboardList, Clock3,
+  FileText, Mail, MapPin, Network, Phone, Shuffle, Sparkles, UserRound, Users, Video
 } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 import RequestToInterchangeModal from './RequestToInterchangeModal'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -68,24 +68,13 @@ const DetailHeader = () => (
       <img src={smallLogo} alt="Logo" className="h-10 w-10" />
       <nav className="flex items-center gap-4 text-sm font-medium">
         <Link to="/dashboard-video" className="text-[#FFFFFF80]">Dashboard</Link>
-        <span className="text-[#FFFFFF80]">Request List</span>
-        <span className="text-[#FFFFFF80]">Calendar</span>
-        <span className="text-[#FFFFFF80]">Reports</span>
-        <span className="text-[#FFFFFF80]">Feedback</span>
+        <Link to="/dashboard-video/requests" className="text-[#FFFFFF80] hover:text-white">Request List</Link>
+        <Link to="/calendar" className="text-[#FFFFFF80] hover:text-white">Calendar</Link>
       </nav>
     </div>
 
     <div className="flex items-center gap-6">
-      <div className="flex h-9 w-[289px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3">
-        <Search size={14} className="text-[#8b93a4]" />
-        <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
-      </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={16} />
-        <CircleQuestionMark size={16} />
-        <Settings size={16} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
-      </div>
+      <LogoutButton />
     </div>
   </header>
 )

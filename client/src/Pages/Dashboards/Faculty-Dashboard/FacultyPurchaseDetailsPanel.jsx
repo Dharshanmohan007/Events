@@ -10,16 +10,19 @@ const formatDate = (dateValue) => {
   return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
-const SplitInfoRow = ({ items }) => (
-  <div className="grid grid-cols-2 rounded-lg border border-[#374155]/70 bg-[#242B3D] px-4 py-5">
-    {items.map(([label, value], index) => (
-      <div key={label} className={`flex items-center justify-between gap-5 px-2 text-sm ${index === 0 ? 'border-r border-[#6b7280]/50 pr-9' : 'pl-5'}`}>
-        <span className="text-[#CBC3D7]/75">{label}</span>
-        <span className="font-semibold text-white">{displayValue(value)}</span>
-      </div>
-    ))}
-  </div>
-)
+const SplitInfoRow = ({ items }) => {
+  const single = items.length === 1
+  return (
+    <div className={`${single ? 'grid-cols-1' : 'grid-cols-2'} grid rounded-lg border border-[#374155]/70 bg-[#242B3D] px-4 py-5`}>
+      {items.map(([label, value], index) => (
+        <div key={label} className={`flex items-center justify-between gap-5 px-2 text-sm ${!single && index === 0 ? 'border-r border-[#6b7280]/50 pr-9' : !single ? 'pl-5' : ''}`}>
+          <span className="text-[#CBC3D7]/75">{label}</span>
+          <span className="font-semibold text-white">{displayValue(value)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
 
 const SpecialRequirement = ({ text }) => (
   <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-5">
@@ -31,55 +34,49 @@ const SpecialRequirement = ({ text }) => (
   </section>
 )
 
-const GiftItemCard = ({ giftItem, title }) => {
-  const trophies = giftItem.trophy || []
-  const vouchers = giftItem.voucher || []
-  const hasContent = giftItem.cashPrizeAmount > 0 || giftItem.glassCupQty > 0 || trophies.length > 0 || vouchers.length > 0
+const buildGiftRows = (data) => {
+  const giftItems = data.giftItems || []
+  const trophies = giftItems.flatMap((g) => g.trophy || [])
+  const cashPrize = giftItems.reduce((sum, g) => sum + (Number(g.cashPrizeAmount) || 0), 0)
+  const glassCup = giftItems.reduce((sum, g) => sum + (Number(g.glassCupQty) || 0), 0)
+  const vouchers = giftItems.flatMap((g) => (g.voucher || []).filter((v) => Number(v.quantity) > 0))
 
-  if (!hasContent) return null
+  const rows = []
 
-  return (
-    <div className="rounded-lg border border-[#374155]/70 bg-[#242B3D] p-4">
-      <h4 className="mb-3 text-sm font-semibold text-[#9F68FF]">{giftItem.giftType || title}</h4>
-      <div className="space-y-3">
-        {giftItem.cashPrizeAmount > 0 && (
-          <SplitInfoRow items={[['Cash Prize Amount', `₹${giftItem.cashPrizeAmount}`]]} />
-        )}
-        {giftItem.glassCupQty > 0 && (
-          <SplitInfoRow items={[['Glass Cup Quantity', giftItem.glassCupQty]]} />
-        )}
-        {trophies.map((trophy, i) => (
-          <SplitInfoRow key={i} items={[[`Trophy - ${trophy.trophyType}`, trophy.quantity]]} />
-        ))}
-        {vouchers.filter((v) => Number(v.quantity) > 0).map((voucher, i) => (
-          <SplitInfoRow key={i} items={[[`Voucher Worth (₹${voucher.voucherWorth})`, voucher.quantity]]} />
-        ))}
-      </div>
-    </div>
-  )
+  for (let i = 0; i < trophies.length; i += 2) {
+    rows.push(trophies.slice(i, i + 2).map((t) => [`${t.trophyType} Trophy Quantity`, displayValue(t.quantity)]))
+  }
+
+  const prizeItems = []
+  if (cashPrize > 0) prizeItems.push(['Cash Prize Amount', `₹${cashPrize}`])
+  if (glassCup > 0) prizeItems.push(['Glass Cup Quantity', displayValue(glassCup)])
+  if (data.registrationKitNeeded) prizeItems.push(['Registration Kit Quantity', displayValue(data.registrationKitQty)])
+  for (let i = 0; i < prizeItems.length; i += 2) {
+    rows.push(prizeItems.slice(i, i + 2))
+  }
+
+  vouchers.forEach((v) => {
+    rows.push([
+      ['Voucher Worth', displayValue(v.voucherWorth)],
+      [`Voucher Worth Quantity (${v.voucherWorth})`, displayValue(v.quantity)],
+    ])
+  })
+
+  return rows
 }
 
 const RecipientSection = ({ title, data }) => {
-  const giftItems = data.giftItems || []
-  const filteredGifts = giftItems.filter(
-    (item) => item.cashPrizeAmount > 0 || item.glassCupQty > 0 || (item.trophy || []).length > 0 || (item.voucher || []).length > 0
-  )
+  const rows = buildGiftRows(data)
 
   return (
     <section className="rounded-lg border border-[#465168] bg-[#1B2334] p-5">
       <h3 className="text-lg font-semibold text-[#8F5BFF]">{title}</h3>
       <div className="mt-5 space-y-4">
-        {data.registrationKitNeeded && (
-          <SplitInfoRow items={[['Registration Kit Required', 'Yes'], ['Registration Kit Quantity', data.registrationKitQty || 0]]} />
-        )}
-        {filteredGifts.length > 0 && (
-          <div className="grid grid-cols-2 gap-4">
-            {filteredGifts.map((item, index) => (
-              <GiftItemCard key={`${item.giftType}-${index}`} giftItem={item} title={`Gift ${index + 1}`} />
-            ))}
-          </div>
-        )}
-        {!data.registrationKitNeeded && filteredGifts.length === 0 && (
+        {rows.length > 0 ? (
+          rows.map((row, i) => (
+            <SplitInfoRow key={i} items={row} />
+          ))
+        ) : (
           <p className="py-2 text-center text-sm text-[#CBC3D7]/65">No items specified for {title.toLowerCase()}.</p>
         )}
         {data.specialRequirements && <SpecialRequirement text={data.specialRequirements} />}
@@ -94,6 +91,11 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
   const dayCount = Math.max(eventSchedule.length, purchases.length, 1)
   const selectedDay = Math.min(activeDay, dayCount - 1)
   const dayPurchase = purchases[selectedDay]
+  const requirementReqs = dayPurchase?.requirementNeeded || []
+  const requirementRows = []
+  for (let i = 0; i < requirementReqs.length; i += 2) {
+    requirementRows.push(requirementReqs.slice(i, i + 2))
+  }
 
   if (!purchaseDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No purchase details are available.</p>
 
@@ -129,17 +131,14 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
           />
 
           {/* Requirements Needed */}
-          {(dayPurchase.requirementNeeded || []).length > 0 && (
+          {requirementRows.length > 0 && (
             <section className="rounded-lg border border-[#465168] bg-[#1B2334] p-5">
               <h3 className="text-lg font-semibold text-[#8F5BFF]">Equipment Requirements</h3>
               <div className="mt-4 space-y-3">
-                {dayPurchase.requirementNeeded.map((req, index) => (
+                {requirementRows.map((row, index) => (
                   <SplitInfoRow
-                    key={`${req.type}-${index}`}
-                    items={[
-                      [`${req.type} - Hard Count`, req.hardCount || 0],
-                      [`${req.type} - Soft Count`, req.softCount || 0],
-                    ]}
+                    key={index}
+                    items={row.map((req) => [`${req.type} Hard Copy Quantity`, displayValue(req.hardCount)])}
                   />
                 ))}
               </div>
