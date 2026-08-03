@@ -21,7 +21,7 @@ const FacultyDashboard = () => {
                 if (!token) return
 
                 const decoded = jwtDecode(token)
-                const userId = decoded.id || decoded._id || decoded.userId
+                const userId = decoded.facultyId
 
                 const res = await fetch(`${API_BASE_URL}/api/events/draft/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` }
