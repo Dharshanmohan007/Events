@@ -27,7 +27,7 @@ const   AdminDashboardHeader = () => {
                     <div className="navlins text-white flex items-center gap-4 text-[13px] whitespace-nowrap 2xl:text-sm">
                         <NavLink to={adminRoutes.dashboard} end className={getNavLinkClassName}>Dashboard</NavLink>
                         <NavLink to={adminRoutes.requests} className={getNavLinkClassName}>Requests List</NavLink>
-                        <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
+                        {/* <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink> */}
                         <NavLink to={adminRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
                         <NavLink to={adminRoutes.venues} className={getNavLinkClassName}>Venue Management</NavLink>
                         <NavLink to={adminRoutes.faculty} className={getNavLinkClassName}>Faculty Management</NavLink>
