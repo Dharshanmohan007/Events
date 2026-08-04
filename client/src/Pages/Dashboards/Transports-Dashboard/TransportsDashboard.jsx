@@ -27,11 +27,12 @@ const transformTransportData = (apiData) =>
 
 const transformIndividualData = (apiData) =>
     apiData.map((item) => {
+        console.log("tp data : ", item.data.employee)
         const transport = item.data?.transports?.[0]
         const dateField = transport?.pickupDateTime || transport?.requiredDate || item.createdAt
         return {
             requiredDate: formatDate(dateField),
-            organizerName: item.employeeDetail?.name || item.employee || '-',
+            organizerName: item.data?.employee?.firstName || item.employee || '-',
             department: item.employeeDetail?.department || '-',
             organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
             acknowledgeStatus: item.data?.overallStatus || item.status || '-',
@@ -100,7 +101,7 @@ const TransportsDashboard = () => {
                     <TransportStatcard />
 
                     {/* table and charts    */}
-                    <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
+                    <div className="main-container  mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
                         {loading ? (
                             <div className="flex h-full items-center justify-center">
                                 <p className="text-sm text-[#CBC3D7]/65">Loading events...</p>

@@ -55,11 +55,11 @@ const FacultyStatcard = () => {
         const token = localStorage.getItem('token')
         const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-        fetch(`${API_BASE_URL}/api/dashboard/individual-stats`, { headers })
+        fetch(`${API_BASE_URL}/api/dashboard/individual-faculty-wise-stats`, { headers })
             .then((res) => res.ok ? res.json() : Promise.resolve({}))
             .then((data) => {
                 if (isMounted) {
-                    setIndividualStats(data.stats ?? null)
+                    setIndividualStats(data.overall ?? null)
                 }
             })
             .catch((error) => console.warn('Failed to fetch individual stats:', error.message))

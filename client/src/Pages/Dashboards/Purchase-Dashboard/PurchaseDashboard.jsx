@@ -32,7 +32,7 @@ const transformIndividualData = (apiData) =>
         const purchase = item.data?.purchases?.[0]
         return {
             requiredDate: purchase?.deliveryDate ? formatDate(purchase.deliveryDate) : formatDate(item.createdAt),
-            organizerName: emp?.name || item.employee || '-',
+            organizerName: emp?.firstName || item.employee || '-ssss',
             department: emp?.department || '-',
             organizerPhone: emp?.phone ? String(emp.phone) : '-',
             acknowledgeStatus: item.data?.overallStatus || item.status || '-',

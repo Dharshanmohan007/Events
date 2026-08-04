@@ -565,8 +565,6 @@ const PosterDashboard = () => {
           </div>
         </main>
       </section>
-
-
     </>
   )
 }

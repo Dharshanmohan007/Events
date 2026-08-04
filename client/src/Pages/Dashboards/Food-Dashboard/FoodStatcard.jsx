@@ -11,7 +11,7 @@ const EMPTY_STATS = {
     rejected: 0,
 }
 
-const individualTargetTitles = ['Food Service Overview', 'Catering Requests']
+const individualTargetTitles = ['Individual Requests']
 
 const applyEventStats = (sections, eventStats) => {
     const stats = eventStats ?? EMPTY_STATS
@@ -38,6 +38,10 @@ const applyEventStats = (sections, eventStats) => {
 
                 if (label.includes('pending')) {
                     return { ...item, value: stats.pending ?? 0 }
+                }
+
+                if (label.includes('rejected')) {
+                    return { ...item, value: stats.rejected ?? 0 }
                 }
 
                 if (label.includes('acknowledged')) {
@@ -75,6 +79,10 @@ const applyIndividualStats = (sections, individualStats) => {
 
                 if (label.includes('pending')) {
                     return { ...item, value: stats.pending ?? 0 }
+                }
+
+                if (label.includes('rejected')) {
+                    return { ...item, value: stats.rejected ?? 0 }
                 }
 
                 if (label.includes('acknowledged')) {
@@ -118,6 +126,12 @@ const HourglassIcon = () => (
     </svg>
 )
 
+const RejectedIcon = () => (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" aria-hidden="true">
+        <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+)
+
 const defaultSections = [
     {
         title: 'Food Service Overview',
@@ -153,7 +167,7 @@ const defaultSections = [
         ],
     },
     {
-        title: 'Catering Requests',
+        title: 'Individual Requests',
         stats: [
             {
                 label: 'Total Requests',
@@ -170,18 +184,18 @@ const defaultSections = [
                 icon: <CheckBadgeIcon />,
             },
             {
-                label: 'In Progress',
-                value: 50,
-                cardClass: 'from-[#252d5c] via-[#25258a] to-[#2116a5] border-l-[#7181ff]',
-                iconClass: 'bg-[#8292ff]',
-                icon: <CheckIcon />,
-            },
-            {
                 label: 'Pending Approval',
                 value: 50,
                 cardClass: 'from-[#342238] via-[#652049] to-[#9b1b59] border-l-[#eb3f99]',
                 iconClass: 'bg-[#ef68ad]',
                 icon: <HourglassIcon />,
+            },
+            {
+                label: 'Rejected Requests',
+                value: 0,
+                cardClass: 'from-[#4a1d24] via-[#7f1d2d] to-[#991b1b] border-l-[#f87171]',
+                iconClass: 'bg-[#ef4444]',
+                icon: <RejectedIcon />,
             },
         ],
     },

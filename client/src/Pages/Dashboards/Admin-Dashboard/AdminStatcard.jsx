@@ -92,7 +92,7 @@ const AdminStatcard = ({ data }) => {
 
         Promise.all([
             fetch(`${API_BASE_URL}/api/dashboard/stats?module=admin`, { headers }),
-            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=admin`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-superadmin-wise-stats`, { headers }),
         ])
             .then(([eventRes, individualRes]) => Promise.all([
                 eventRes.ok ? eventRes.json() : Promise.resolve({}),
@@ -101,7 +101,7 @@ const AdminStatcard = ({ data }) => {
             .then(([eventData, individualData]) => {
                 if (isMounted) {
                     setEventStats(eventData.modules?.admin ?? eventData.events ?? null)
-                    setIndividualStats(individualData.stats ?? null)
+                    setIndividualStats(individualData.overall ?? null)
                 }
             })
             .catch((error) => {

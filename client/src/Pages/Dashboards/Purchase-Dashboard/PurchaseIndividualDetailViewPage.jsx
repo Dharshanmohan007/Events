@@ -182,22 +182,22 @@ const EmptyState = () => (
 
 const RequestInfoGrid = memo(({ submission, data }) => (
   <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-    <InfoItem label="Request ID" value={submission.id} />
+    {/* <InfoItem label="Request ID" value={submission.id} /> */}
     <InfoItem label="Form Type" value={submission.formType} />
     <InfoItem label="Current Status" value={submission.status} />
-    <InfoItem
+    {/* <InfoItem
       label="Workflow Stage"
       value={submission.workflowStage || data.workflowStage}
-    />
+    /> */}
     <InfoItem label="Created Date" value={formatDate(submission.createdAt)} />
     <InfoItem label="Updated Date" value={formatDate(submission.updatedAt)} />
     <InfoItem label="Final Status" value={data.finalStatus} />
     <InfoItem label="Overall Status" value={data.overallStatus} />
-    <InfoItem label="Mongo ID" value={data._id} />
-    <InfoItem
+    {/* <InfoItem label="Mongo ID" value={data._id} /> */}
+    {/* <InfoItem
       label="Version"
       value={data.__v !== undefined ? `v${data.__v}` : undefined}
-    />
+    /> */}
   </div>
 ));
 
