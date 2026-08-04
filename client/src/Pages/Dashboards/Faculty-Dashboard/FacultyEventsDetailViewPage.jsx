@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import FacultyAccommodationDetailsPanel from './FacultyAccommodationDetailsPanel'
@@ -73,6 +73,10 @@ const FacultyEventsDetailViewPage = () => {
   const [purchaseLoading, setPurchaseLoading] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
   const activeTabConfig = detailTabs.find((tab) => tab.name === activeTab)
+  const [closeLoading, setCloseLoading] = useState(false)
+  const navigate = useNavigate();
+
+
 
   useEffect(() => {
     const fetchRequisitionDetails = async () => {
@@ -417,13 +421,45 @@ const FacultyEventsDetailViewPage = () => {
 
 
 
-  const openFeedbackPage = async () => {
-    // const newTab = window.open("", "_blank");
+  // const openFeedbackPage = async () => {
+  //   // const newTab = window.open("", "_blank");
 
+  //   try {
+  //     const token = localStorage.getItem("token");
+
+  //    const res =  await axios.patch(
+  //       `${API_BASE_URL}/api/events/${eventId}/status`,
+  //       { action: "close" },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     if (res.status === 200) {
+  //       toast.success('Event closed successfully')
+  //       setReloadKey((k) => k + 1)
+  //       const newTab = window.open("", "_blank");
+
+  //       if (newTab) {
+  //         newTab.location.href = `/dashboard-faculty/feedback/${eventId}`;
+  //       } else {
+  //         console.error("Popup was blocked by the browser.");
+  //       }
+  //     }
+
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+
+  // }
+
+    const openFeedbackPage = async () => {
     try {
+      setCloseLoading(true);
       const token = localStorage.getItem("token");
 
-     const res =  await axios.patch(
+      const res = await axios.patch(
         `${API_BASE_URL}/api/events/${eventId}/status`,
         { action: "close" },
         {
@@ -432,23 +468,19 @@ const FacultyEventsDetailViewPage = () => {
           },
         }
       );
+
       if (res.status === 200) {
-        toast.success('Event closed successfully')
-        setReloadKey((k) => k + 1)
-        const newTab = window.open("", "_blank");
+        toast.success("Event closed successfully");
+        setReloadKey((k) => k + 1);
 
-        if (newTab) {
-          newTab.location.href = `/dashboard-faculty/feedback/${eventId}`;
-        } else {
-          console.error("Popup was blocked by the browser.");
-        }
+        navigate(`/dashboard-faculty/feedback/${eventId}`);
       }
-
+      setCloseLoading(false);
     } catch (err) {
+      setCloseLoading(false);
       console.error(err);
     }
-
-  }
+  };
 
   const renderActivePanel = () => {
     if (activeTab === 'Event Requisition Details') {
@@ -528,6 +560,7 @@ const FacultyEventsDetailViewPage = () => {
 
     return <FacultyStaticDetailsPanel activeTab={activeTab} />
   }
+  
 
   return (
     <>
@@ -548,7 +581,7 @@ const FacultyEventsDetailViewPage = () => {
             </div>
           </div>
           {console.log("data : ", data)}
-          {data.status?.toLowerCase() === "closed" ? (
+         {data.status?.toLowerCase() === "closed" ? (
             <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
               <Check size={18} />
               Closed
@@ -556,10 +589,20 @@ const FacultyEventsDetailViewPage = () => {
           ) : data.adminApproval == true ? <button
             type="button"
             onClick={openFeedbackPage}
-            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"
+            disabled={closeLoading}
+            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            <Check size={18} />
-            Close
+            {closeLoading ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Closing...
+              </>
+            ) : (
+              <>
+                <Check size={18} />
+                Close
+              </>
+            )}
           </button> : ""}
           {/* <button
             type="button"
