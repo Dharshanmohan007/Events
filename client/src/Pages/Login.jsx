@@ -7,8 +7,9 @@ import { showSuccessToast } from "../Components/CustomToast";
 import { decodeToken } from "../utils/tokenUtils";
 import { getRouteForRole } from "../utils/roleRoutes";
 import blurImg1 from "../assets/blur-img1.svg";
-import Logo from "../assets/logo.svg";
+import Logo from "../assets/events-logo.svg";
 import LoginBackground from "../assets/login_Background.svg";
+
 
 async function loginApi(email, password) {
   // console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
@@ -312,7 +313,7 @@ export default function LoginPage() {
     <div className="h-screen overflow-hidden w-full bg-[#0f0d1a] flex items-center justify-center py-0 px-2 sm:py-1 sm:px-3 font-poppins">
       <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10 pointer-events-none" />
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <img className="absolute pointer-events-none" src={LoginBackground} alt="Login Background" />
+        <img className="absolute pointer-events-none opacity-0.6" src={LoginBackground} alt="Login Background" />
       </div>
 
       <div className="relative w-full max-w-[1380px] rounded-lg overflow-hidden h-screen">
@@ -352,6 +353,9 @@ export default function LoginPage() {
                     <p className="text-white/40 text-[10px] leading-tight">{f.desc}</p>
                   </div>
                 ))}
+              </div>
+              <div>
+                <p className="text-white">Copyright : QuantumPulse Technologies, All Right Reserved</p>
               </div>
             </div>
 
