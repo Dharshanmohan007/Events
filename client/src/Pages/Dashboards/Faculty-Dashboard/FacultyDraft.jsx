@@ -6,12 +6,22 @@ import Modal from '../../../Components/Modal'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const FacultyDraft = ({ data }) => {
+    console.log("draft data", data.data[0]._id)
     const navigate = useNavigate()
     const [isModalOpen, setIsModalOpen] = useState(false)
 
     const handleContinue = () => {
-        navigate('/')
+    const draftId = data?.data?.[0]?._id;
+
+    // console.log("draftId:", draftId);
+    // console.log("Navigating to:", `/forms/${draftId}`);
+
+    if (draftId) {
+        navigate(`/forms/${draftId}`);
+    } else {
+        navigate("/forms");
     }
+};
 
     const handleDeleteDraft = async () => {
         setIsModalOpen(false)

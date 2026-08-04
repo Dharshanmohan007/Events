@@ -3,17 +3,22 @@ import React, { useEffect, useMemo, useState } from 'react'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 import FacultyFormPopup from './FacultyFormPopup'
 import FacultyManagementTable from './FacultyManagementTable'
+import FacultyViewOffCanvas from './FacultyViewOffCanvas'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
 const normalizeFaculty = (faculty) => ({
     ...faculty,
     _id: faculty._id,
-    name: faculty.name || '-',
+    salutation: faculty.salutation || '',
+    firstName: faculty.firstName || '',
+    lastName: faculty.lastName || '',
+    role: faculty.role || 'Faculty',
     empId: faculty.empId || '-',
     email: faculty.email || '-',
     phone: faculty.phone || '-',
     department: faculty.department || '-',
+    originalDepartment: faculty.originalDepartment || '-',
     designation: faculty.designation || '-',
     employeeCategory: faculty.employeeCategory || '-',
     employmentStatus: faculty.employmentStatus ?? true,
@@ -25,6 +30,7 @@ const FacultyManagementPage = () => {
     const [popupMode, setPopupMode] = useState(null)
     const [editingFaculty, setEditingFaculty] = useState(null)
     const [deletingFaculty, setDeletingFaculty] = useState(null)
+    const [viewingFacultyId, setViewingFacultyId] = useState(null)
     const [saving, setSaving] = useState(false)
     const [deleting, setDeleting] = useState(false)
     const [apiError, setApiError] = useState('')
@@ -180,6 +186,7 @@ const FacultyManagementPage = () => {
                     faculties={faculties}
                     onEdit={handleEditClick}
                     onDelete={setDeletingFaculty}
+                    onView={(faculty) => setViewingFacultyId(faculty._id)}
                 />
             </main>
 
@@ -203,6 +210,13 @@ const FacultyManagementPage = () => {
                     deleting={deleting}
                     onCancel={() => setDeletingFaculty(null)}
                     onDelete={handleDeleteFaculty}
+                />
+            )}
+
+            {viewingFacultyId && (
+                <FacultyViewOffCanvas
+                    facultyId={viewingFacultyId}
+                    onClose={() => setViewingFacultyId(null)}
                 />
             )}
         </>

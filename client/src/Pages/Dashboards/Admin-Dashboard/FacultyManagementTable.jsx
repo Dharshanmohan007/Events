@@ -8,7 +8,7 @@ const columns = [
     'MOBILE NUMBER',
     'DEPARTMENT',
     'TYPE',
-    'DESIGNATION',
+    // 'DESIGNATION',
     'ACTION',
 ]
 
@@ -31,7 +31,7 @@ const SelectFilter = ({ value, onChange, options, label }) => (
     </div>
 )
 
-const FacultyManagementTable = ({ faculties = [], onEdit, onDelete }) => {
+const FacultyManagementTable = ({ faculties = [], onEdit, onDelete, onView }) => {
     const [searchQuery, setSearchQuery] = useState('')
     const [departmentFilter, setDepartmentFilter] = useState('all')
     const [designationFilter, setDesignationFilter] = useState('all')
@@ -109,12 +109,12 @@ const FacultyManagementTable = ({ faculties = [], onEdit, onDelete }) => {
                                     className="border-b border-[#1e2130] text-[#FFFFFF]/80 transition-colors hover:bg-[#1e2232]"
                                 >
                                     <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.empId}</td>
-                                    <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.name}</td>
+                                    <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.salutation} {faculty.firstName} {faculty.lastName}</td>
                                     <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.email}</td>
                                     <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.phone}</td>
                                     <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.department}</td>
-                                    <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.employeeCategory}</td>
-                                    <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.designation}</td>
+                                    <td className="px-5 py-3.5 text-sm whitespace-nowrap">{faculty.employeeCategory}</td>   
+                                    {/* <td className="px-5 py-3.5 text-sm whitespace-nowrap truncate w-12">{faculty.designation}</td> */}
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center justify-center gap-3 text-gray-400">
                                             <button
@@ -135,6 +135,7 @@ const FacultyManagementTable = ({ faculties = [], onEdit, onDelete }) => {
                                             </button>
                                             <button
                                                 type="button"
+                                                onClick={() => onView?.(faculty)}
                                                 className="hover:text-white"
                                                 title="Open"
                                             >

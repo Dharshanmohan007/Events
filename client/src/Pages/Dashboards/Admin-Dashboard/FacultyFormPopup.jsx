@@ -2,11 +2,14 @@ import { CalendarDays, ChevronDown, ChevronLeft, ChevronRight, X } from 'lucide-
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 const emptyForm = {
-    name: '',
+    salutation: '',
+    firstName: '',
+    lastName: '',
     empId: '',
     email: '',
     phone: '',
     department: '',
+    originalDepartment: '',
     dob: '',
     gender: '',
     doj: '',
@@ -14,6 +17,7 @@ const emptyForm = {
     employeeCategory: '',
     employmentStatus: 'true',
     location: '',
+    role: 'Faculty',
 }
 
 const DEFAULT_DEPARTMENTS = ['CSE', 'IT', 'ECE', 'EEE', 'AIDS', 'CCE', 'Placement']
@@ -37,11 +41,14 @@ const createInitialForm = (faculty) => {
     if (!faculty) return emptyForm
 
     return {
-        name: faculty.name || '',
+        salutation: faculty.salutation || '',
+        firstName: faculty.firstName || '',
+        lastName: faculty.lastName || '',
         empId: faculty.empId || '',
         email: faculty.email || '',
         phone: faculty.phone ? String(faculty.phone) : '',
         department: faculty.department || '',
+        originalDepartment: faculty.originalDepartment || '',
         dob: formatDateForInput(faculty.dob),
         gender: faculty.gender || '',
         doj: formatDateForInput(faculty.doj),
@@ -49,15 +56,19 @@ const createInitialForm = (faculty) => {
         employeeCategory: faculty.employeeCategory || '',
         employmentStatus: String(faculty.employmentStatus ?? true),
         location: faculty.location || '',
+        role: faculty.role || 'Faculty',
     }
 }
 
 const buildPayload = (form) => ({
-    name: form.name.trim(),
+    salutation: form.salutation,
+    firstName: form.firstName.trim(),
+    lastName: form.lastName.trim(),
     empId: form.empId.trim(),
     email: form.email.trim(),
     phone: Number(form.phone),
     department: form.department,
+    originalDepartment: form.originalDepartment,
     dob: form.dob,
     gender: form.gender,
     doj: form.doj,
@@ -65,16 +76,20 @@ const buildPayload = (form) => ({
     employeeCategory: form.employeeCategory,
     employmentStatus: form.employmentStatus === 'true',
     location: form.location.trim(),
+    role: form.role,
 })
 
 const validateForm = (form) => {
     const errors = {}
     const requiredFields = [
-        'name',
+        'salutation',
+        'firstName',
+        'lastName',
         'empId',
         'email',
         'phone',
         'department',
+        'originalDepartment',
         'dob',
         'gender',
         'doj',
@@ -163,139 +178,6 @@ const SelectField = ({ label, value, onChange, options, error, required = false 
     </label>
 )
 
-const DateField = ({ label, value, onChange, error, required = false }) => {
-    const selectedDate = useMemo(() => {
-        if (!value) return null
-
-        const [year, month, day] = value.split('-').map(Number)
-        return new Date(year, month - 1, day)
-    }, [value])
-
-    const [open, setOpen] = useState(false)
-    const [displayMonth, setDisplayMonth] = useState(() => selectedDate?.getMonth() ?? new Date().getMonth())
-    const [displayYear, setDisplayYear] = useState(() => selectedDate?.getFullYear() ?? new Date().getFullYear())
-    const pickerRef = useRef(null)
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-                setOpen(false)
-            }
-        }
-
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
-
-    const firstDay = new Date(displayYear, displayMonth, 1).getDay()
-    const daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate()
-
-    const goToPreviousMonth = () => {
-        if (displayMonth === 0) {
-            setDisplayMonth(11)
-            setDisplayYear((year) => year - 1)
-            return
-        }
-
-        setDisplayMonth((month) => month - 1)
-    }
-
-    const goToNextMonth = () => {
-        if (displayMonth === 11) {
-            setDisplayMonth(0)
-            setDisplayYear((year) => year + 1)
-            return
-        }
-
-        setDisplayMonth((month) => month + 1)
-    }
-
-    const handleSelectDate = (day) => {
-        onChange(getDateKey(new Date(displayYear, displayMonth, day)))
-        setOpen(false)
-    }
-
-    return (
-        <div ref={pickerRef} className="relative block pt-2">
-            <span className="absolute left-3 top-0 z-10 bg-[#111a2d] px-1 text-xs font-semibold text-white">
-                {label}{required && ' *'}
-            </span>
-            <button
-                type="button"
-                onClick={() => {
-                    if (selectedDate) {
-                        setDisplayMonth(selectedDate.getMonth())
-                        setDisplayYear(selectedDate.getFullYear())
-                    }
-                    setOpen((current) => !current)
-                }}
-                className={`flex h-10 w-full items-center justify-between rounded-lg border bg-transparent px-3 pt-1 text-left text-xs outline-none ${error ? 'border-[#ff5470]' : open ? 'border-[#853FF9]' : 'border-[#4b5568]'
-                    }`}
-            >
-                <span className={value ? 'text-white' : 'text-[#8b93a7]'}>
-                    {value ? formatDisplayDate(value) : '__/__/____'}
-                </span>
-                <CalendarDays size={14} className="text-gray-400" />
-            </button>
-            <FieldError message={error} />
-
-            {open && (
-                <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-[#303b52] bg-[#171F31] p-3 shadow-2xl">
-                    <div className="mb-3 flex items-center justify-between">
-                        <button
-                            type="button"
-                            onClick={goToPreviousMonth}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-[#232A3C] hover:text-white"
-                        >
-                            <ChevronLeft size={16} />
-                        </button>
-                        <span className="text-sm font-semibold text-white">
-                            {MONTHS[displayMonth]} {displayYear}
-                        </span>
-                        <button
-                            type="button"
-                            onClick={goToNextMonth}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-[#232A3C] hover:text-white"
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                    </div>
-
-                    <div className="mb-1 grid grid-cols-7">
-                        {WEEK_DAYS.map((day) => (
-                            <div key={day} className="py-1 text-center text-xs text-[#7f8799]">
-                                {day}
-                            </div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: firstDay }).map((_, index) => (
-                            <div key={`empty-${index}`} />
-                        ))}
-                        {Array.from({ length: daysInMonth }, (_, index) => {
-                            const day = index + 1
-                            const dateKey = getDateKey(new Date(displayYear, displayMonth, day))
-                            const isSelected = value === dateKey
-
-                            return (
-                                <button
-                                    key={dateKey}
-                                    type="button"
-                                    onClick={() => handleSelectDate(day)}
-                                    className={`h-8 rounded-lg text-xs transition-colors ${isSelected ? 'bg-[#8B3DFF] text-white' : 'text-gray-300 hover:bg-[#232A3C] hover:text-white'
-                                        }`}
-                                >
-                                    {day}
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
-        </div>
-    )
-}
 
 const FacultyFormPopup = ({
     mode = 'add',
@@ -321,13 +203,32 @@ const FacultyFormPopup = ({
         const nextErrors = validateForm(form)
         setErrors(nextErrors)
 
-        if (Object.keys(nextErrors).length > 0) return
+        if (Object.keys(nextErrors).length > 0) {
+            console.log("Validation Errors:", nextErrors);
+            return
+        }
 
         onSubmit(buildPayload(form))
     }
 
-    const departments = [...new Set([form.department, ...departmentOptions, ...DEFAULT_DEPARTMENTS].filter(Boolean))]
-    const designations = [...new Set([form.designation, ...designationOptions, ...DEFAULT_DESIGNATIONS].filter(Boolean))]
+    const SALUTATION_OPTIONS = [
+        { value: 'Mr', label: 'Mr' },
+        { value: 'Mrs', label: 'Mrs' },
+        { value: 'Ms', label: 'Ms' },
+        { value: 'Dr', label: 'Dr' },
+        { value: 'Prof', label: 'Prof' },
+        { value: 'Lt', label: 'Lt' },
+    ];
+    const DEPARTMENT_OPTIONS = [
+        "CCE", "MECH", "AIML", "CSE", "ECE", "EEE", "AI&DS", "CFRD", "IQAC", 
+        "MATHS", "S&H", "IR", "CSBS", "IT", "CYS", "PLACEMENT", "PD", 
+        "INNOVATION", "COE", "HR"
+    ].map(dep => ({ value: dep, label: dep }));
+
+    const ROLE_OPTIONS = [
+        { value: 'Faculty', label: 'Faculty' },
+        { value: 'HOD', label: 'HOD' },
+    ];
 
     return (
         <div className="fixed inset-0 z-50  bg-black/40 backdrop-blur-sm">
@@ -351,7 +252,18 @@ const FacultyFormPopup = ({
                             <p className="text-xs font-semibold text-[#ff5470]">{apiError}</p>
                         </div>
                     )}
-                    <Field label="Name" value={form.name} onChange={(value) => updateField('name', value)} error={errors.name} required />
+                    <div className="grid grid-cols-[1fr_2fr_2fr] gap-3">
+                        <SelectField
+                            label="Salutation"
+                            value={form.salutation}
+                            onChange={(value) => updateField('salutation', value)}
+                            error={errors.salutation}
+                            options={SALUTATION_OPTIONS}
+                            required
+                        />
+                        <Field label="First Name" value={form.firstName} onChange={(value) => updateField('firstName', value)} error={errors.firstName} required />
+                        <Field label="Last Name" value={form.lastName} onChange={(value) => updateField('lastName', value)} error={errors.lastName} required />
+                    </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-3">
                         <Field label="EmpId" value={form.empId} onChange={(value) => updateField('empId', value)} error={errors.empId} required />
@@ -363,18 +275,20 @@ const FacultyFormPopup = ({
                     </div>
 
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                        <DateField
+                        <Field
                             label="DOB"
                             value={form.dob}
                             onChange={(value) => updateField('dob', value)}
                             error={errors.dob}
+                            type="date"
                             required
                         />
-                        <DateField
+                        <Field
                             label="DOJ"
                             value={form.doj}
                             onChange={(value) => updateField('doj', value)}
                             error={errors.doj}
+                            type="date"
                             required
                         />
                     </div>
@@ -398,7 +312,18 @@ const FacultyFormPopup = ({
                             onChange={(value) => updateField('department', value)}
                             error={errors.department}
                             required
-                            options={departments.map((department) => ({ value: department, label: department }))}
+                            options={DEPARTMENT_OPTIONS}
+                        />
+                    </div>
+                    
+                    <div className="mt-3">
+                        <SelectField
+                            label="Original Department"
+                            value={form.originalDepartment}
+                            onChange={(value) => updateField('originalDepartment', value)}
+                            error={errors.originalDepartment}
+                            required
+                            options={DEPARTMENT_OPTIONS}
                         />
                     </div>
 
@@ -434,9 +359,9 @@ const FacultyFormPopup = ({
                         <Field label="Location" value={form.location} onChange={(value) => updateField('location', value)} error={errors.location} required />
                         <SelectField
                             label="Role"
-                            value={form.designation}
-                            onChange={(value) => updateField('designation', value)}
-                            options={designations.map((designation) => ({ value: designation, label: designation }))}
+                            value={form.role}
+                            onChange={(value) => updateField('role', value)}
+                            options={ROLE_OPTIONS}
                         />
                     </div>
                 </div>
