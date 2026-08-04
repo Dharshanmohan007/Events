@@ -703,7 +703,9 @@ const [trophyContent, setTrophyContent] = useState("");
       }
       setSubmitSuccess(true);
 
-      const financeEnabled = selectedTypes.some(() => true);
+      const financeEnabled =
+        (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") ||
+        (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
       if (financeEnabled) {
         const respData = data?.data || data || {};
         const receiptRequestNo =

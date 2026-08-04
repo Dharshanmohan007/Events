@@ -314,7 +314,7 @@ function buildReceiptHTML(logoDataUrl, data) {
 
         <!-- Title -->
         <div class="title-row">
-          <span class="title">Request for  Advance / Travel Advance</span>
+          <span class="title">Request for Advance / Travel Advance</span>
           <span class="iqac-ref">${iqacNumber || ""}</span>
         </div>
 
@@ -428,15 +428,7 @@ export default async function ReportPdf({
   employee,
   submitResponse,
 }) {
-  const requisitionDateValue =
-    formData?.requisitionDate ||
-    formData?.selectDate ||
-    formData?.pickupDateTime ||
-    formData?.date ||
-    formData?.eventDays?.[0]?.date ||
-    formData?.event?.eventDays?.[0]?.date ||
-    formData?.event?.date ||
-    "";
+  const requisitionDateValue = new Date();
 
   const amountValue =
     formData?.advanceAmount ??
