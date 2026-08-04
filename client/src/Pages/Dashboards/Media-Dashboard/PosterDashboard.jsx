@@ -10,6 +10,22 @@ import LogoutButton from '../../../Components/LogoutButton'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+const EMPTY_STATS = {
+  total: 0,
+  pending: 0,
+  acknowledged: 0,
+  approved: 0,
+  completed: 0,
+}
+
+const normalizeStats = (stats = {}) => ({
+  total: Number(stats.total) || 0,
+  pending: Number(stats.pending) || 0,
+  acknowledged: Number(stats.acknowledged) || 0,
+  approved: Number(stats.approved) || 0,
+  completed: Number(stats.completed) || 0,
+})
+
 // ── Pure helpers (outside component) ─────────────────────────────────────
 
 const formatDate = (dateStr) => {
@@ -129,7 +145,7 @@ const PosterDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
-  const [eventStats, setEventStats] = useState(null)
+  const [eventStats, setEventStats] = useState(EMPTY_STATS)
   const [individualStats, setIndividualStats] = useState(null)
   const feedbackRows = useDepartmentFeedback('poster')
 
@@ -137,22 +153,45 @@ const PosterDashboard = () => {
     let isMounted = true
     const token = localStorage.getItem('token')
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    let email = ''
 
-    Promise.all([
-      fetch(`${API_BASE_URL}/api/dashboard/stats?module=poster`, { headers }),
-      fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=poster`, { headers }),
-    ])
-      .then(([eventRes, individualRes]) => Promise.all([
-        eventRes.ok ? eventRes.json() : Promise.resolve({}),
-        individualRes.ok ? individualRes.json() : Promise.resolve({}),
-      ]))
-      .then(([eventData, individualData]) => {
-        if (isMounted) {
-          setEventStats(eventData.modules?.poster ?? eventData.events ?? null)
-          setIndividualStats(individualData.stats ?? null)
-        }
-      })
-      .catch((error) => console.warn(error.message))
+    try {
+      email = token ? jwtDecode(token)?.email : ''
+    } catch (error) {
+      console.warn('Unable to decode authentication token:', error.message)
+    }
+
+    const fetchEventPosterStats = async () => {
+      if (!email) return
+
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/api/dashboard/poster-dashboard?email=${encodeURIComponent(email)}`,
+          { headers }
+        )
+        if (!response.ok) throw new Error(`Failed to load event poster stats: ${response.status}`)
+
+        const data = await response.json()
+        if (isMounted) setEventStats(normalizeStats(data.stats))
+      } catch (error) {
+        console.warn(error.message)
+      }
+    }
+
+    const fetchIndividualPosterStats = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=poster`, { headers })
+        if (!response.ok) return
+
+        const data = await response.json()
+        if (isMounted) setIndividualStats(data.stats ?? null)
+      } catch (error) {
+        console.warn(error.message)
+      }
+    }
+
+    fetchEventPosterStats()
+    fetchIndividualPosterStats()
 
     return () => { isMounted = false }
   }, [])
@@ -206,18 +245,8 @@ const PosterDashboard = () => {
     return () => abortController.abort()
   }, [])
 
-  const EMPTY_STATS = {
-    total: 0,
-    approved: 0,
-    completed: 0,
-    pending: 0,
-    rejected: 0,
-  }
-
   const displayStatGroups = useMemo(() => {
-    if (!eventStats && !individualStats) return statGroups
-
-    const eventValues = eventStats ?? EMPTY_STATS
+    const eventValues = eventStats
     const individualValues = individualStats ?? EMPTY_STATS
 
     return statGroups.map((group) => {
@@ -243,7 +272,7 @@ const PosterDashboard = () => {
           }
 
           if (label.includes('acknowledged')) {
-            return { ...card, value: stats.approved ?? 0 }
+            return { ...card, value: stats.acknowledged ?? stats.approved ?? 0 }
           }
 
           return card
@@ -298,7 +327,7 @@ const PosterDashboard = () => {
   }, [activeTab, individualLoading, fetchIndividualRequests])
 
   const headers = ['Event Name', 'Event Date', 'Dept', 'Status', 'Action']
-  const individualHeaders = ['Request No', 'Employee', 'Emp ID', 'Dept', 'Media Type', 'Priority', 'Delivery Date', 'Status', 'Action']
+  const individualHeaders = ['Request No', 'Employee', 'Media Type', 'Priority', 'Delivery Date', 'Status', 'Action']
 
   const renderTable = () => {
     if (events.length === 0) {
@@ -337,14 +366,12 @@ const PosterDashboard = () => {
                   <td className="px-6 py-4">{event.department}</td>
                   <td className="px-6 py-4">
                     <span
-                      className={`inline-flex items-center gap-2 ${
-                        isPending ? 'text-[#F20768]' : 'text-[#20D18C]'
-                      }`}
+                      className={`inline-flex items-center gap-2 ${isPending ? 'text-[#F20768]' : 'text-[#20D18C]'
+                        }`}
                     >
                       <span
-                        className={`h-2 w-2 rounded-full ${
-                          isPending ? 'bg-[#F20768]' : 'bg-[#20D18C]'
-                        }`}
+                        className={`h-2 w-2 rounded-full ${isPending ? 'bg-[#F20768]' : 'bg-[#20D18C]'
+                          }`}
                       />
                       {event.status}
                     </span>
@@ -415,8 +442,8 @@ const PosterDashboard = () => {
                 >
                   <td className="px-6 py-4 font-medium">{requestNo}</td>
                   <td className="px-6 py-4">{empName}</td>
-                  <td className="px-6 py-4">{empId}</td>
-                  <td className="px-6 py-4">{dept}</td>
+                  {/* <td className="px-6 py-4">{empId}</td>
+                  <td className="px-6 py-4">{dept}</td> */}
                   <td className="px-6 py-4">{mediaTypes}</td>
                   <td className="px-6 py-4">
                     <span className="text-[#F20768] font-semibold">{posterPriority}</span>
@@ -455,90 +482,88 @@ const PosterDashboard = () => {
   return (
     <>
       <section className="min-h-screen overflow-auto bg-[#0b1326] pt-16.25 text-white poppins table-custom-scrollbar">
-      <DashboardHeader />
-      <main className="px-6 py-5">
-        <h1 className="text-lg font-medium">Dashboard Overview</h1>
-        <p className="mt-1 mb-1 text-sm text-[#FFFFFF80]">
-          Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-        </p>
+        <DashboardHeader />
+        <main className="px-6 py-5">
+          <h1 className="text-lg font-medium">Dashboard Overview</h1>
+          <p className="mt-1 mb-1 text-sm text-[#FFFFFF80]">
+            Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
+          </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
-        </div>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
+          </div>
 
-        <div className="mt-7">
-          <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] flex flex-col">
-            <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
-              <h2 className="text-white font-medium text-sm">Upcoming Poster Requests</h2>
+          <div className="mt-7">
+            <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] flex flex-col">
+              <div className="flex items-center justify-between px-6 py-3 flex-shrink-0">
+                <h2 className="text-white font-medium text-sm">Upcoming Poster Requests</h2>
 
-              <div className="flex items-center gap-4">
-                <nav
-                  className="flex rounded-md bg-[#1b2335] p-0.5"
-                  aria-label="Request type tabs"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('events')}
-                    className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
-                      activeTab === 'events'
+                <div className="flex items-center gap-4">
+                  <nav
+                    className="flex rounded-md bg-[#1b2335] p-0.5"
+                    aria-label="Request type tabs"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('events')}
+                      className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${activeTab === 'events'
                         ? 'bg-[#8B3DFF] text-white shadow-sm'
                         : 'text-[#8b93a7] hover:text-white'
-                    }`}
-                  >
-                    Events
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('individual')}
-                    className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
-                      activeTab === 'individual'
+                        }`}
+                    >
+                      Events
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('individual')}
+                      className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${activeTab === 'individual'
                         ? 'bg-[#8B3DFF] text-white shadow-sm'
                         : 'text-[#8b93a7] hover:text-white'
-                    }`}
+                        }`}
+                    >
+                      Individual
+                    </button>
+                  </nav>
+
+                  <Link
+                    to="/dashboard-poster/requests"
+                    className="flex items-center gap-2 text-[#853FF9] hover:text-[#a76df9] cursor-pointer text-sm font-medium"
                   >
-                    Individual
-                  </button>
-                </nav>
+                    View All
+                    <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </div>
 
-                <Link
-                  to="/dashboard-poster/requests"
-                  className="flex items-center gap-2 text-[#853FF9] hover:text-[#a76df9] cursor-pointer text-sm font-medium"
-                >
-                  View All
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </div>
+              {loading && activeTab === 'events' ? (
+                <div className="flex flex-1 items-center justify-center py-12">
+                  <p className="text-sm text-[#CBC3D7]/65">Loading poster requests...</p>
+                </div>
+              ) : error && activeTab === 'events' ? (
+                <div className="flex flex-1 items-center justify-center py-12">
+                  <p className="text-sm text-[#FF4F91]">{error}</p>
+                </div>
+              ) : activeTab === 'events' ? (
+                renderTable()
+              ) : activeTab === 'individual' && individualLoading ? (
+                <div className="flex flex-1 items-center justify-center py-12">
+                  <p className="text-sm text-[#CBC3D7]/65">Loading individual poster requests...</p>
+                </div>
+              ) : activeTab === 'individual' && individualError ? (
+                <div className="flex flex-1 items-center justify-center py-12">
+                  <p className="text-sm text-[#FF4F91]">{individualError}</p>
+                </div>
+              ) : activeTab === 'individual' ? (
+                renderIndividualTable()
+              ) : null}
+            </section>
+          </div>
 
-            {loading && activeTab === 'events' ? (
-              <div className="flex flex-1 items-center justify-center py-12">
-                <p className="text-sm text-[#CBC3D7]/65">Loading poster requests...</p>
-              </div>
-            ) : error && activeTab === 'events' ? (
-              <div className="flex flex-1 items-center justify-center py-12">
-                <p className="text-sm text-[#FF4F91]">{error}</p>
-              </div>
-            ) : activeTab === 'events' ? (
-              renderTable()
-            ) : activeTab === 'individual' && individualLoading ? (
-              <div className="flex flex-1 items-center justify-center py-12">
-                <p className="text-sm text-[#CBC3D7]/65">Loading individual poster requests...</p>
-              </div>
-            ) : activeTab === 'individual' && individualError ? (
-              <div className="flex flex-1 items-center justify-center py-12">
-                <p className="text-sm text-[#FF4F91]">{individualError}</p>
-              </div>
-            ) : activeTab === 'individual' ? (
-              renderIndividualTable()
-            ) : null}
-          </section>
-        </div>
-
-        <div className="mt-8 grid grid-cols-12 gap-3">
-          <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
-          <DepartmentRequestChart module="poster" title="Event Poster Request By Department" />
-        </div>
-      </main>
+          <div className="mt-8 grid grid-cols-12 gap-3">
+            <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-poster/feedback" />
+            <DepartmentRequestChart module="poster" title="Event Poster Request By Department" />
+          </div>
+        </main>
       </section>
 
 

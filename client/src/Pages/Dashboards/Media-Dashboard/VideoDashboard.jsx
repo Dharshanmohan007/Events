@@ -160,9 +160,11 @@ const VideoDashboard = () => {
     let isMounted = true
     const token = localStorage.getItem('token')
     const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const decoded = jwtDecode(token)
+    const email = decoded?.email
 
     Promise.all([
-      fetch(`${API_BASE_URL}/api/dashboard/stats?module=video`, { headers }),
+      fetch(`${API_BASE_URL}/api/dashboard/video-dashboard?email=${email}`, { headers }),
       fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=video`, { headers }),
     ])
       .then(([eventRes, individualRes]) => Promise.all([

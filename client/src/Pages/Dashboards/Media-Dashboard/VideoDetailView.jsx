@@ -141,6 +141,7 @@ const VideoDetailView = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [eventData, setEventData] = useState(null)
+  const [activeDayIndex, setActiveDayIndex] = useState(0)
   const [isInterchangeOpen, setIsInterchangeOpen] = useState(false)
   const [status, setStatus] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
@@ -287,9 +288,6 @@ const VideoDetailView = () => {
     return 0
   })()
 
-  // `activeDayIndex` state keyed on `videoId` so it resets when navigating
-  const [activeDayIndex, setActiveDayIndex] = useState(() => firstVideoDayIndex)
-
   // Keep in sync when data loads (firstVideoDayIndex may change)
   useEffect(() => {
     setActiveDayIndex(firstVideoDayIndex)
@@ -338,14 +336,14 @@ const VideoDetailView = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <button
+                {/* <button
                   type="button"
                   onClick={() => setIsInterchangeOpen(true)}
                   className="flex h-10 items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] hover:bg-linear-to-l hover:from-[#078B72] hover:to-[#035546] px-5 text-base font-medium text-white"
                 >
                   <Shuffle size={17} />
                   Request to Interchange
-                </button>
+                </button> */}
 
                 {/* ── Status actions (only when active video exists) ─── */}
                 {video && (
