@@ -840,7 +840,7 @@ function OtpInput({ value, onChange, error }) {
             onChange={() => {}}
             onKeyDown={(e) => handleKey(e, idx)}
             onPaste={handlePaste}
-            className={`w-11 h-12 text-center text-lg font-semibold text-white bg-transparent rounded-xl border outline-none transition-all duration-200 ${
+            className={`w-11 h-12 text-center text-lg font-semibold text-black bg-transparent rounded-xl border outline-none transition-all duration-200 ${
               d
                 ? "border-purple-500 shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
                 : error
@@ -973,10 +973,10 @@ function StepEmail({ onNext, mounted }) {
             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
           </svg>
         </div> */}
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-black` mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
           Forget Password?
         </h2>
-        <p className="text-white/40 text-xs leading-relaxed">
+        <p className="text-black text-xs leading-relaxed">
           No worries! Enter the e-mail address linked to your account and we'll send you a verification code.
         </p>
       </div>
@@ -984,21 +984,25 @@ function StepEmail({ onNext, mounted }) {
       <AlertBanner message={apiError} />
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-10">
-        <FloatingInput
-          label="E-mail Address"
-          labelBg="#0B0D29"
-          required
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setError("");
-            setApiError("");
-          }}
-          placeholder="Enter your registered e-mail"
-          error={error}
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-gray-400 text-sm font-medium">E-mail Address</label>
+          <input
+            label="E-mail Address"
+            labelBg="#0B0D29"
+            required
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setError("");
+              setApiError("");
+            }}
+            placeholder="Enter your registered e-mail"
+            error={error}
+            className="w-full rounded-xl px-4 py-3 text-sm text-gray-900 bg-white border border-gray-100 outline-none transition-all duration-200 shadow-sm focus:border-[#7C5CFF]"
+          />
+        </div>
         <SubmitButton loading={loading} label="Send Verification Code" />
       </form>
     </div>
@@ -1063,19 +1067,19 @@ function StepOtp({ email, onNext, onBack, mounted }) {
 
   return (
     <div className={`transition-all duration-700 delay-100 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-      <StepDots current={1} />
+      {/* <StepDots current={1} /> */}
       <div className="mb-7">
-        <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
+        {/* <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
           <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
           </svg>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
+        </div> */}
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-black mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
           Verify Your Identity
         </h2>
-        <p className="text-white/40 text-xs leading-relaxed">
+        <p className="text-black text-xs leading-relaxed">
           We've sent a 6-digit code to{" "}
-          <span className="text-purple-400 font-medium">{maskedEmail}</span>. Enter it below to proceed.
+          <span className="text-[#7430E2] font-medium">{maskedEmail}</span>. Enter it below to proceed.
         </p>
       </div>
 
@@ -1096,7 +1100,7 @@ function StepOtp({ email, onNext, onBack, mounted }) {
         <SubmitButton loading={false} label="Continue" />
 
         <div className="text-center">
-          <p className="text-white/40 text-xs">
+          <p className="text-black text-xs">
             Didn't receive the code?{" "}
             <button
               type="button"
@@ -1105,7 +1109,7 @@ function StepOtp({ email, onNext, onBack, mounted }) {
               className={`font-semibold transition-colors ${
                 resendCooldown > 0
                   ? "text-white/20 cursor-not-allowed"
-                  : "text-purple-400 hover:text-purple-300 hover:underline"
+                  : "text-[#6224C4] hover:text-purple-300 hover:underline"
               }`}
             >
               {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend Code"}
@@ -1220,18 +1224,18 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
 
   return (
     <div className={`transition-all duration-700 delay-100 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-      <StepDots current={2} />
+      {/* <StepDots current={2} /> */}
       <div className="mb-7">
-        <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
+        {/* <div className="w-12 h-12 rounded-2xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center mb-5">
           <svg className="w-6 h-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
             <rect x="3" y="11" width="18" height="11" rx="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-        </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-white mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
+        </div> */}
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-black mb-2" style={{ fontFamily: "'Sora', sans-serif" }}>
           Set New Password
         </h2>
-        <p className="text-white/40 text-xs leading-relaxed">
+        <p className="text-black text-xs leading-relaxed">
           Choose a strong password you haven't used before. Make it at least 8 characters long.
         </p>
       </div>
@@ -1243,12 +1247,13 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
         {/* New Password field */}
         <div>
           <div className="relative group">
-            <span
+            {/* <span
               className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
               style={{ backgroundColor: "#13111f" }}
             >
               New Password <span className="text-purple-400">*</span>
-            </span>
+            </span> */}
+            <label>New Pasword</label>
             <input
               type={showPass ? "text" : "password"}
               autoComplete="new-password"
@@ -1259,7 +1264,7 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
                 setApiError("");
               }}
               placeholder="Enter new password"
-              className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 outline-none border transition-all duration-200 ${
+              className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-black placeholder-white/20 outline-none border transition-all duration-200 ${
                 errors.password
                   ? "border-red-400/70"
                   : "border-[#3A3A5A] focus:border-purple-500 focus:shadow-[0_0_0_3px_rgba(139,92,246,0.15)]"
@@ -1269,15 +1274,15 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
               type="button"
               onClick={() => setShowPass((v) => !v)}
               tabIndex={-1}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-black hover:text-white/80 transition-colors p-1"
             >
               {showPass ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                   <line x1="1" y1="1" x2="23" y2="23" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
@@ -1307,12 +1312,13 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
         {/* Confirm Password field */}
         <div>
           <div className="relative group">
-            <span
+            {/* <span
               className="absolute left-3.5 -top-[9px] text-xs text-white/70 px-1 z-10 pointer-events-none"
               style={{ backgroundColor: "#13111f" }}
             >
               Confirm Password <span className="text-purple-400">*</span>
-            </span>
+            </span> */}
+            <label>Confirm Password</label>
             <input
               type={showConfirm ? "text" : "password"}
               autoComplete="new-password"
@@ -1323,7 +1329,7 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
                 setApiError("");
               }}
               placeholder="Re-enter new password"
-              className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/20 outline-none border transition-all duration-200 ${
+              className={`w-full bg-transparent rounded-xl px-4 py-3.5 pr-12 text-sm text-black placeholder-white/20 outline-none border transition-all duration-200 ${
                 errors.confirm
                   ? "border-red-400/70"
                   : confirm && confirm === password
@@ -1335,15 +1341,15 @@ function StepNewPassword({ email, otp, mounted, onLoginSuccess }) {
               type="button"
               onClick={() => setShowConfirm((v) => !v)}
               tabIndex={-1}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors p-1"
+              className="absolute right-3 -top -translate-y-1/2 text-black hover:text-white/80 transition-colors p-1"
             >
               {showConfirm ? (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                   <line x1="1" y1="1" x2="23" y2="23" />
                 </svg>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
                 </svg>
@@ -1407,7 +1413,7 @@ export default function ForgetPassword({ onBack, embedded = false }) {
         <button
           type="button"
           onClick={() => onBack ? onBack() : navigate("/")}
-          className="mb-6 flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs transition-colors"
+          className="mb-6 flex items-center gap-1.5 text-black  text-xs transition-colors"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path d="M19 12H5M12 19l-7-7 7-7" />

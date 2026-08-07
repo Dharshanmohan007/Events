@@ -310,226 +310,180 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="h-screen overflow-hidden w-full bg-[#0f0d1a] flex items-center justify-center py-0 px-2 sm:py-1 sm:px-3 font-poppins">
-      <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10 pointer-events-none" />
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <img className="absolute pointer-events-none opacity-0.6" src={LoginBackground} alt="Login Background" />
-      </div>
-
-      <div className="relative w-full max-w-[1380px] rounded-lg overflow-hidden h-screen">
-        <div className="relative flex flex-col justify-between lg:min-h-0">
-          <div className="flex items-stretch h-screen gap-0 overflow-hidden">
-
-            {/* ── LEFT PANEL ── */}
-            <div className="relative w-1/2 overflow-hidden h-screen bg-gradient-to-br flex flex-col justify-between py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
-              <ParticleCanvas />
-              <div className="relative z-10">
-                <div className="mb-6">
-                  <img src={Logo} alt="Logo" className="w-50" />
-                </div>
-                <div className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-                  <h1 className="playfair text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
-                    Plan faster host,
-                    <br />
-                    <span className="playfair bg-gradient-to-r from-purple-400 to-violet-300 bg-clip-text text-transparent">
-                      better
-                    </span>
-                  </h1>
-                  <p className="text-white/50 text-sm leading-relaxed max-w-xs">
-                    The all-in-one platform for academic event management,
-                    combining institutional rigor with modern technological agility.
-                  </p>
-                </div>
-              </div>
-              <div className={`relative z-10 grid grid-cols-2 gap-3 mt-8 lg:mt-0 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-                {FEATURES.map((f, i) => (
-                  <div key={i} className="rounded-xl bg-white/5 border border-white/8 backdrop-blur-sm p-3 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
-                    <div className="w-8 h-8 rounded-lg bg-purple-600/30 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-2 group-hover:bg-purple-600/50 transition-colors">
-                      {f.icon}
-                    </div>
-                    <p className="text-white text-xs font-semibold mb-0.5" style={{ fontFamily: "'Sora', sans-serif" }}>
-                      {f.title}
-                    </p>
-                    <p className="text-white/40 text-[10px] leading-tight">{f.desc}</p>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <p className="text-white">Copyright : QuantumPulse Technologies, All Right Reserved</p>
-              </div>
-            </div>
-
-            {/* ── RIGHT PANEL ── */}
-            <div className="form-container h-screen flex items-center justify-center w-1/2">
-              <div className="glassmorphism-container h-[90%] relative border border-gray-700/60 shadow-md shadow-gray-900 rounded-2xl w-full overflow-hidden">
-                <div className="absolute pointer-events-none" style={{ top: "-80px", left: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)", filter: "blur(40px)" }} />
-                <div className="absolute pointer-events-none" style={{ bottom: "-80px", right: "-80px", width: "340px", height: "340px", borderRadius: "50%", background: "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)", filter: "blur(40px)" }} />
-                <div className="absolute pointer-events-none" style={{ top: "50%", left: "50%", transform: "translate(-50%, -50%)", width: "500px", height: "300px", borderRadius: "50%", background: "radial-gradient(ellipse, rgba(72,20,160,0.18) 0%, transparent 70%)", filter: "blur(30px)" }} />
-
-                <div className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] w-full px-8">
-                  {mode === "login" ? (
-                    <>
-                      <div className="mb-10">
-                        <h2 className="playfair text-2xl sm:text-3xl font-extrabold text-white mb-2">
-                          {step === "login" ? "Welcome Back!" : "Verify OTP"}
-                        </h2>
-                        <p className="text-white/40 text-xs leading-relaxed">
-                          {step === "login"
-                            ? "The all-in-one platform for academic event management, combining institutional rigor with modern technological agility."
-                            : `We've sent a verification OTP to ${email}`}
-                        </p>
-                      </div>
-
-                      {error && (
-                        <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3">
-                          <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                          </svg>
-                          <p className="text-red-400 text-xs">{error}</p>
-                        </div>
-                      )}
-
-                      {step === "login" ? (
-                        <form onSubmit={handleLogin} noValidate className="flex flex-col gap-0">
-                          <div className="flex flex-col gap-2 mb-1">
-                            <label className="text-white text-xs font-medium">
-                              E-mail <span className="text-purple-400">*</span>
-                            </label>
-                            <input
-                              type="email"
-                              autoComplete="email"
-                              value={email}
-                              onChange={(e) => handleFieldChange("email", e.target.value)}
-                              placeholder="Enter Your E-mail id here"
-                              className={`w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.email ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
-                            />
-                            {fieldErrors.email && <p className="text-red-400 text-xs ml-1">{fieldErrors.email}</p>}
-                          </div>
-
-                          <div className="h-4" />
-
-                          <div className="flex flex-col gap-2 mb-1">
-                            <label className="text-white text-xs font-medium">
-                              Password <span className="text-purple-400">*</span>
-                            </label>
-                            <div className="relative">
-                              <input
-                                type={showPass ? "text" : "password"}
-                                value={password}
-                                onChange={(e) => handleFieldChange("password", e.target.value)}
-                                placeholder="Enter Your Password here"
-                                className={`w-full rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/25 outline-none transition-all duration-200 bg-[#0d0b1e]/60 border ${fieldErrors.password ? "border-red-500/60 focus:border-red-500" : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"}`}
-                              />
-                              <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/90 transition-colors">
-                                {showPass ? (
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                  </svg>
-                                ) : (
-                                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M10.584 10.587a2.25 2.25 0 003.182 3.182" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277" />
-                                  </svg>
-                                )}
-                              </button>
-                            </div>
-                            {fieldErrors.password && <p className="text-red-400 text-xs ml-1">{fieldErrors.password}</p>}
-                          </div>
-
-                          <div className="flex justify-end mt-3 mb-8">
-                            <button type="button" onClick={() => setMode("forgot")} className="text-purple-400 text-xs hover:text-purple-300 hover:underline transition-colors">
-                              Forgot Password?
-                            </button>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3.5 rounded-xl text-white font-medium text-sm bg-gradient-to-r from-[#4F2593] to-[#853FF9] hover:from-[#5a2ba8] hover:to-[#9550ff] disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-                          >
-                            {loading ? (
-                              <>
-                                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                                </svg>
-                                Signing in...
-                              </>
-                            ) : (
-                              <>
-                                Login to your Account
-                                <MoveRight className="w-4 h-4" />
-                              </>
-                            )}
-                          </button>
-                        </form>
-                      ) : (
-                        <form onSubmit={handleVerifyOtp} className="flex flex-col gap-0">
-                          <div className="flex flex-col gap-2">
-                            <label className="text-white text-xs font-medium">
-                              OTP <span className="text-purple-400">*</span>
-                            </label>
-
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              maxLength={6}
-                              value={otp}
-                              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                              placeholder="Enter 6-digit OTP"
-                              className="w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none bg-[#0d0b1e]/60 border border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80"
-                            />
-                          </div>
-
-                          <div className="h-6" />
-
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3.5 rounded-xl text-white font-medium text-sm bg-gradient-to-r from-[#4F2593] to-[#853FF9] hover:from-[#5a2ba8] hover:to-[#9550ff] disabled:opacity-60"
-                          >
-                            {loading ? "Verifying..." : "Verify OTP"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setStep("login");
-                              setOtp("");
-                              setError("");
-                            }}
-                            className="mt-4 text-sm text-purple-400 hover:text-purple-300"
-                          >
-                            Back to Login
-                          </button>
-                        </form>
-                      )}
-                    </>
-                  ) : (
-                    <ForgetPassword onBack={() => setMode("login")} embedded />
-                  )}
-                </div>
-              </div>
-            </div>
-
+    <div className="min-h-screen w-full flex bg-[#F3F3F3] font-sans">
+      
+      {/* ── LEFT PANEL (Form) ── */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-10 relative">
+        <div className="w-full max-w-md mx-auto">
+          {/* Logo */}
+          <div className="mb-8 flex items-center gap-2">
+            <img src={Logo} alt="Logo" className="h-10" />
+            {/* <span className="text-2xl font-bold text-[#1E293B]">Evomira</span> */}
           </div>
+
+          {/* Heading */}
+          <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Welcome to Evomira👋
+            </h1>
+            <p className="text-gray-500 text-sm mb-8">
+              Kindly fill in your details below to {step === "login" ? "Login" : "verify your OTP"}
+            </p>
+          </div>
+
+          {error && (
+            <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-100 border border-red-200 px-4 py-3">
+              <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>
+              <p className="text-red-500 text-sm">{error}</p>
+            </div>
+          )}
+
+          {mode === "login" ? (
+            step === "login" ? (
+              <form onSubmit={handleLogin} noValidate className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-gray-400 text-sm font-medium">Email Address</label>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => handleFieldChange("email", e.target.value)}
+                    placeholder="Enter your E-mail"
+                    className={`w-full rounded-sm px-4 py-3.5 text-sm text-gray-900 bg-white border outline-none transition-all duration-200 shadow-sm ${fieldErrors.email ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
+                  />
+                  {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-gray-400 text-sm font-medium">Password</label>
+                  <div className="relative">
+                    <input
+                      type={showPass ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => handleFieldChange("password", e.target.value)}
+                      placeholder="Enter Your Password"
+                      className={`w-full rounded-sm px-4 py-3.5 pr-12 text-sm text-gray-900 bg-white border outline-none transition-all duration-200 shadow-sm ${fieldErrors.password ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
+                    />
+                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
+                      {showPass ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M10.584 10.587a2.25 2.25 0 003.182 3.182" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774" />
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
+                </div>
+
+                <div className="flex justify-end">
+                  {/* Hidden for exact visual match, but keep for functional mapping if needed later. */}
+                  <button type="button" onClick={() => setMode("forgot")} className="text-red text-sm font-semibold text-[#7C5CFF] hover:underline transition-colors">
+                    Forgot Password?
+                  </button>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-4 py-3.5 rounded-xl text-white font-medium text-sm bg-[#7C5CFF] hover:bg-[#684be3] disabled:opacity-70 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  {loading ? "Loging..." : "Login"}
+                </button>
+                
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-gray-400 text-sm font-medium">OTP</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Enter 6-digit OTP"
+                    className="w-full rounded-xl px-4 py-3 text-sm text-gray-900 bg-white border border-gray-100 outline-none transition-all duration-200 shadow-sm focus:border-[#7C5CFF]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-2 py-3.5 rounded-xl text-white font-medium text-sm bg-[#7C5CFF] hover:bg-[#684be3] disabled:opacity-70 transition-all duration-200"
+                >
+                  {loading ? "Verifying..." : "Verify OTP"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStep("login");
+                    setOtp("");
+                    setError("");
+                  }}
+                  className="mt-2 text-sm text-[#7C5CFF] hover:underline"
+                >
+                  Back to Login
+                </button>
+              </form>
+            )
+          ) : (
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <ForgetPassword onBack={() => setMode("login")} embedded />
+            </div>
+          )}
         </div>
       </div>
 
+      {/* ── RIGHT PANEL (Info) ── */}
+      <div className="hidden lg:flex w-1/2 p-3">
+        <div className="w-full h-full bg-[#121021] rounded-[2rem] relative overflow-hidden flex flex-col pt-16 px-12 xl:px-16 pb-12">
+          {/* Background image & overlay */}
+          <div className="absolute inset-0 z-0">
+            <img src={LoginBackground} alt="Background" className="w-full h-full object-cover  mix-blend-screen" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#121021]/60 via-transparent to-[#121021]/90"></div>
+          </div>
+
+          {/* Heading content */}
+          <div className="relative z-10 mb-auto">
+            <h1 className="text-4xl xl:text-5xl font-normal text-white leading-tight mb-4 font-serif">
+              Plan faster, host<br />better
+            </h1>
+            <p className="text-gray-300 text-sm md:text-base max-w-md leading-relaxed opacity-80">
+              The all-in-one platform for academic event management, combining institutional rigor with modern technological agility.
+            </p>
+          </div>
+
+          {/* Features Grid */}
+          <div className="relative z-10 grid grid-cols-2 gap-4 mt-12">
+            {FEATURES.map((f, i) => (
+              <div key={i} className="bg-white/[0.03] border border-white/5 rounded-2xl p-5 backdrop-blur-xl">
+                <div className="w-10 h-10 rounded-xl bg-[#7C5CFF] flex items-center justify-center text-white mb-3 shadow-lg shadow-[#7C5CFF]/20">
+                  {f.icon}
+                </div>
+                <h3 className="text-white font-medium text-sm mb-1">{f.title}</h3>
+                <p className="text-gray-400 text-xs leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
-        * { font-family: 'DM Sans', sans-serif; }
-        input::placeholder { color: rgba(255,255,255,0.2); }
         input:-webkit-autofill,
         input:-webkit-autofill:hover,
         input:-webkit-autofill:focus {
-          -webkit-text-fill-color: white;
-          -webkit-box-shadow: 0 0 0px 1000px #0d0b1e inset;
+          -webkit-box-shadow: 0 0 0px 1000px white inset;
           transition: background-color 5000s ease-in-out 0s;
         }
       `}</style>
