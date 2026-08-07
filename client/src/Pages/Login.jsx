@@ -7,7 +7,7 @@ import { showSuccessToast } from "../Components/CustomToast";
 import { decodeToken } from "../utils/tokenUtils";
 import { getRouteForRole } from "../utils/roleRoutes";
 import blurImg1 from "../assets/blur-img1.svg";
-import Logo from "../assets/events-logo.svg";
+import Logo from "../assets/logo-black.svg";
 import LoginBackground from "../assets/login_Background.svg";
 
 
@@ -314,10 +314,10 @@ export default function LoginPage() {
       
       {/* ── LEFT PANEL (Form) ── */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-16 lg:px-24 py-10 relative">
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full mx-auto border border-gray-200 shadow-md rounded-4xl bg-white/80 p-10">
           {/* Logo */}
           <div className="mb-8 flex items-center gap-2">
-            <img src={Logo} alt="Logo" className="h-10" />
+            <img src={Logo} alt="Logo" className="h-15" />
             {/* <span className="text-2xl font-bold text-[#1E293B]">Evomira</span> */}
           </div>
 
@@ -353,7 +353,7 @@ export default function LoginPage() {
                     value={email}
                     onChange={(e) => handleFieldChange("email", e.target.value)}
                     placeholder="Enter your E-mail"
-                    className={`w-full rounded-sm px-4 py-3.5 text-sm text-gray-900 bg-white border outline-none transition-all duration-200 shadow-sm ${fieldErrors.email ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
+                    className={`w-full rounded-sm px-4 py-3.5 text-sm text-gray-900 bg-slate-50 border outline-none transition-all duration-200 shadow-sm ${fieldErrors.email ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
                   />
                   {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
                 </div>
@@ -366,7 +366,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(e) => handleFieldChange("password", e.target.value)}
                       placeholder="Enter Your Password"
-                      className={`w-full rounded-sm px-4 py-3.5 pr-12 text-sm text-gray-900 bg-white border outline-none transition-all duration-200 shadow-sm ${fieldErrors.password ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
+                      className={`w-full rounded-sm px-4 py-3.5 pr-12 text-sm text-gray-900 bg-slate-50 border outline-none transition-all duration-200 shadow-sm ${fieldErrors.password ? "border-red-300 focus:border-red-500" : "border-gray-100 focus:border-[#7C5CFF]"}`}
                     />
                     <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors">
                       {showPass ? (
@@ -443,6 +443,9 @@ export default function LoginPage() {
             </div>
           )}
         </div>
+        <div className="absolute bottom-6 left-0 w-full flex justify-center items-center">
+            <p className="text-gray-500 text-sm">@2026 Copyright : QuantumPulse Technologies Pvt Ltd, All Right Reserved</p>
+          </div>
       </div>
 
       {/* ── RIGHT PANEL (Info) ── */}
@@ -477,6 +480,7 @@ export default function LoginPage() {
             ))}
           </div>
         </div>
+        
       </div>
       
       <style>{`
