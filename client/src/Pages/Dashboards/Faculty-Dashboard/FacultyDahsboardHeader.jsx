@@ -1,7 +1,9 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import smallLogo from '../../../assets/small-logo.svg'
 import LogoutButton from '../../../Components/LogoutButton'
+import ChangePasswordModal from '../../../Components/ChangePasswordModal'
+import { Lock } from 'lucide-react'
 
 const facultyRoutes = {
     dashboard: '/dashboard-faculty',
@@ -15,6 +17,8 @@ const getNavLinkClassName = ({ isActive }) =>
     `font-medium pb-1 ${isActive ? 'border-b border-[#8B5CF6] text-[#8B5CF6]' : 'text-[#FFFFFF80] hover:text-white'}`
 
 const FacultyDahsboardHeader = () => {
+    const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false)
+
     return (
         <section className='dashboard-header bg-[#0a0e18] border-b border-[#1d2638] flex items-center justify-between py-3 px-6 poppins sticky top-0 z-50'>
             <div className="first-container flex items-center gap-10">
@@ -29,9 +33,26 @@ const FacultyDahsboardHeader = () => {
                 </nav>
             </div>
 
-            <div className="second-container flex items-center gap-6">
+            <div className="second-container flex items-center gap-2">
+                <button
+                    type="button"
+                    onClick={() => setIsChangePasswordOpen(true)}
+                    className="relative group flex items-center justify-center rounded-full p-2 transition hover:bg-[#1d2638]"
+                    aria-label="Change password"
+                >
+                    <Lock className="text-white cursor-pointer" />
+
+                    <span className="absolute top-full left-1/2 mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white group-hover:block">
+                        Change password
+                    </span>
+                </button>
                 <LogoutButton />
             </div>
+
+            <ChangePasswordModal
+                isOpen={isChangePasswordOpen}
+                onClose={() => setIsChangePasswordOpen(false)}
+            />
         </section>
     )
 }
