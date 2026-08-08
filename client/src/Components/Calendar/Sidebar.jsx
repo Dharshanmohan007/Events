@@ -1,11 +1,18 @@
+import { useNavigate } from "react-router-dom";
 import MiniCalendar from "./MiniCalendar.jsx";
 import { DEPARTMENTS } from "../../utils/departmentColors.js";
+import { MoveLeft } from "lucide-react";
 
 export default function Sidebar({ selectedDate, onSelectDate }) {
+  const navigate = useNavigate();
   return (
     <aside className="flex w-[280px] shrink-0 flex-col gap-6 border-r border-white/5  px-5 py-6">
-      
-
+      <div 
+      onClick={() => navigate(-1)}
+      className="flex items-center w-fit gap-2.5 bg-violet-500 px-3 py-2 rounded-md cursor-pointer">
+        <MoveLeft />
+        <p className="text-white font-semibold">Go Back</p>
+      </div>
       <MiniCalendar selectedDate={selectedDate} onSelect={onSelectDate} />
 
       <div className="table-custom-scrollbar  overflow-auto">
