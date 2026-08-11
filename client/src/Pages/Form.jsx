@@ -125,7 +125,8 @@ const validateEventRequisition = (data) => {
   const logosArr = Array.isArray(data.eventData?.logos) ? data.eventData.logos : data.eventData?.logos ? [data.eventData.logos] : [];
   if (logosArr.length === 0) errors.logos = "Logos selection is required";
   if (logosArr.includes("Other") && !data.eventData?.logosOther?.trim()) errors.logosOther = "Please specify the logos";
-  if (!data.eventData?.audience) errors.audience = "Target audience is required";
+  const audienceArr = Array.isArray(data.eventData?.audience) ? data.eventData.audience : data.eventData?.audience ? [data.eventData.audience] : [];
+  if (audienceArr.length === 0) errors.audience = "Target audience is required";
   if (!data.eventDays || !data.eventDays.length) errors.eventDays = "At least one event day is required";
   const dayErrors = (data.eventDays || []).map((day, idx) => {
     const e = {};
@@ -146,7 +147,10 @@ const validateEventRequisition = (data) => {
     return e;
   });
   if (dayErrors.some((de) => Object.keys(de).length > 0)) errors.days = dayErrors;
-  if (!data.requirements || data.requirements.length === 0) errors.requirements = "Select at least one requirement";
+  const reqKeys = ["venue", "icts", "audio", "transport", "foodandrefreshments", "accommodation", "purchase", "media"];
+  if (!data.requirements || reqKeys.some(k => !data.requirements[k])) {
+    errors.requirements = "Please select Yes or No for all 8 event requirements";
+  }
   return errors;
 };
 

@@ -1,8 +1,10 @@
-import React, { useRef } from "react";
+import React, { useRef,useEffect } from "react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import UploadIcon from '../../assets/upload.svg';
 import OrganizerDetails from "./OrganizerDetails";
+import { jwtDecode } from "jwt-decode";
+import { getFacultyById } from "../../services/events/facultyService";
 
 const MAX_FILE_SIZE_MB = 1;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
@@ -47,17 +49,57 @@ export default function EventOrganizerDetails({
 
   const handleOrganizersChange = (e) => {
     const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
+    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 0)) {
       setNumOrganizers(val);
       const count = parseInt(val) || 0;
-      const newOrganizers = Array.from({ length: count }, (_, i) =>
-        organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "" }
+      const newOrganizers = Array.from({ length: count + 1 }, (_, i) =>
+        organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }
       );
       setOrganizers(newOrganizers);
     }
   };
 
-  const organizerCount = parseInt(numOrganizers) > 0 ? parseInt(numOrganizers) : 0;
+  const organizerCount = parseInt(numOrganizers) >= 0 ? parseInt(numOrganizers) : 0;
+
+  useEffect(() => {
+    const fetchMainOrganizer = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          const decoded = jwtDecode(token);
+          if (decoded && decoded.facultyId) {
+            const facultyData = await getFacultyById(decoded.facultyId);
+            if (facultyData) {
+              setOrganizers((prev) => {
+                const arr = [...prev];
+                if (!arr[0]?.name) {
+                  arr[0] = {
+                    ...arr[0],
+                    name: facultyData.name || "",
+                    department: facultyData.department || "",
+                    mobile: facultyData.mobile || facultyData.phone || "",
+                    designation: facultyData.designation || "",
+                    empId: facultyData.empId || "",
+                    empEmail: facultyData.email || "",
+                  };
+                }
+                return arr;
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch main organizer details:", error);
+      }
+    };
+    
+    if (organizers && organizers.length > 0 && !organizers[0]?.name) {
+      fetchMainOrganizer();
+    } else if (!organizers || organizers.length === 0) {
+      setOrganizers([{ name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }]);
+      fetchMainOrganizer();
+    }
+  }, []);
 
   const handlePrincipalFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -335,7 +377,6 @@ export default function EventOrganizerDetails({
       <div className="mb-6">
         <CustomSelect
           label="Completion of previous Event documentation"
-          required
           value={doc}
           onChange={(val) => {
             setDoc(val);
@@ -352,7 +393,7 @@ export default function EventOrganizerDetails({
       {doc === "Yes" && (
         <div className="mb-7">
           <label className="block mb-1 text-sm text-white">
-            Upload the previous Event Documentation *
+            Upload the previous Event Documentation
           </label>
           <div
             onClick={!file ? openFilePicker : undefined}
@@ -418,7 +459,7 @@ export default function EventOrganizerDetails({
         <div className="mb-6">
           <div className="relative w-full">
             <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
-              If no enter the Reason *
+              If no enter the Reason
             </span>
             <input
               value={reason}
@@ -632,23 +673,31 @@ export default function EventOrganizerDetails({
       </div>
 
       {/* Organizer Cards */}
-      {organizerCount > 0 && (
-        <div className="flex flex-col gap-6 mt-2">
-          {Array.from({ length: organizerCount }, (_, i) => (
-            <OrganizerDetails
-              key={i}
-              dayIndex={i + 1}
-              data={organizers[i] || {}}
-              errors={(errors.organizers && errors.organizers[i]) || {}}
-              onChange={(updated) => {
-                const arr = [...organizers];
-                arr[i] = updated;
-                setOrganizers(arr);
-              }}
-            />
-          ))}
-        </div>
-      )}
+      <div className="flex flex-col gap-6 mt-2">
+        <OrganizerDetails
+          title="Main Organizer"
+          data={organizers[0] || {}}
+          errors={(errors.organizers && errors.organizers[0]) || {}}
+          onChange={(updated) => {
+            const arr = [...organizers];
+            arr[0] = updated;
+            setOrganizers(arr);
+          }}
+        />
+        {organizerCount > 0 && Array.from({ length: organizerCount }, (_, i) => (
+          <OrganizerDetails
+            key={i + 1}
+            title={`Co - Organizer ${i + 1}`}
+            data={organizers[i + 1] || {}}
+            errors={(errors.organizers && errors.organizers[i + 1]) || {}}
+            onChange={(updated) => {
+              const arr = [...organizers];
+              arr[i + 1] = updated;
+              setOrganizers(arr);
+            }}
+          />
+        ))}
+      </div>
     </div>
     // </div>
   );
