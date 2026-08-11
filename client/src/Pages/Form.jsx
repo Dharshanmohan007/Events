@@ -95,14 +95,14 @@ const ensureLength = (items, length, factory) => {
 
 const validateEventRequisition = (data) => {
   const errors = {};
-  if (!data.doc) errors.doc = "This field is required";
-  if (data.doc === "Yes" && !data.file) errors.file = "Please upload the previous event documentation";
-  if (data.doc === "No" && !data.reason?.trim()) errors.reason = "Reason is required";
+  // if (!data.doc) errors.doc = "This field is required";
+  // if (data.doc === "Yes" && !data.file) errors.file = "Please upload the previous event documentation";
+  // if (data.doc === "No" && !data.reason?.trim()) errors.reason = "Reason is required";
   if (!data.budget) errors.budget = "This field is required";
   if (!data.finance) errors.finance = "This field is required";
   if (!data.department?.trim()) errors.department = "Department name is required";
-  if (!data.numOrganizers || parseInt(data.numOrganizers) < 1)
-    errors.numOrganizers = "At least 1 organizer is required";
+  if (data.numOrganizers === "" || parseInt(data.numOrganizers) < 0)
+    errors.numOrganizers = "Enter a valid number of organizers";
   const toStr = (v) => (v === null || v === undefined ? "" : String(v));
   const organizerErrors = (data.organizers || []).map((org) => {
     const err = {};

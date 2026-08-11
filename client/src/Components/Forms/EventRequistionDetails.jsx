@@ -63,11 +63,11 @@ function validateOrganizerSection(state) {
   const e = {};
   // if (!state.principalApprovalDocument)
   // e.principalApprovalDocument = "Principal Approval Form is required";
-  if (!state.doc) e.doc = "This field is required";
-  if (state.doc === "Yes" && !state.file)
-    e.file = "Please upload the previous event documentation";
-  if (state.doc === "No" && !state.reason?.trim())
-    e.reason = "Reason is required";
+  // if (!state.doc) e.doc = "This field is required";
+  // if (state.doc === "Yes" && !state.file)
+  //   e.file = "Please upload the previous event documentation";
+  // if (state.doc === "No" && !state.reason?.trim())
+  //   e.reason = "Reason is required";
   if (!state.budget) e.budget = "This field is required";
   if (!state.finance) e.finance = "This field is required";
   if (state.finance === "Yes") {
@@ -92,8 +92,8 @@ function validateOrganizerSection(state) {
     }
   }
   if (!state.department?.trim()) e.department = "Department name is required";
-  if (!state.numOrganizers || parseInt(state.numOrganizers) < 1)
-    e.numOrganizers = "At least 1 organizer is required";
+  if (state.numOrganizers === "" || parseInt(state.numOrganizers) < 0)
+    e.numOrganizers = "Enter a valid number of organizers";
 
   const count = parseInt(state.numOrganizers) || 0;
   const orgErrors = Array.from({ length: count }, (_, i) =>
@@ -121,7 +121,12 @@ function validateEventDetails(data = {}, days = []) {
   if (logosArr.includes("Other") && !data.logosOther?.trim())
     e.logosOther = "Please specify the logos";
   if (!days.length) e.numDays = "Enter the number of days";
-  if (!data.audience) e.audience = "Target audience is required";
+  const audienceArr = Array.isArray(data.audience)
+    ? data.audience
+    : data.audience
+      ? [data.audience]
+      : [];
+  if (audienceArr.length === 0) e.audience = "Target audience is required"; 
 
   const dayErrors = days.map((d, i) => validateDay(d, i + 1));
   if (dayErrors.some((de) => Object.keys(de).length > 0))

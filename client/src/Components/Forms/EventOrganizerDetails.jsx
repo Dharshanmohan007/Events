@@ -75,12 +75,12 @@ export default function EventOrganizerDetails({
                 if (!arr[0]?.name) {
                   arr[0] = {
                     ...arr[0],
-                    name: facultyData.name || "",
-                    department: facultyData.department || "",
-                    mobile: facultyData.mobile || facultyData.phone || "",
-                    designation: facultyData.designation || "",
-                    empId: facultyData.empId || "",
-                    empEmail: facultyData.email || "",
+                    name: facultyData.firstName || facultyData.name || facultyData.facultyName || facultyData?.data?.firstName || facultyData?.data?.name || facultyData?.data?.facultyName || "",
+                    department: facultyData.department || facultyData?.data?.department || "",
+                    mobile: facultyData.mobile || facultyData.phone || facultyData?.data?.mobile || facultyData?.data?.phone || "",
+                    designation: facultyData.designation || facultyData?.data?.designation || "",
+                    empId: facultyData.empId || facultyData?.data?.empId || "",
+                    empEmail: facultyData.email || facultyData?.data?.email || "",
                   };
                 }
                 return arr;
