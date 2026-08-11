@@ -12,15 +12,12 @@ import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-
 
 // ─── Room config ───────────────────────────────────────────────────────────────
 const BASE_ROOM_OPTIONS = [
-  "Suite Room 2",
-  "Suite Room 3",
-  "Main Block III Floor",
-  "Main Block II Floor",
-  "D - Block",
-  "C - Block",
+  "Suite Room",
+  "Boys Hostel",
+  "Girls Hostel",
 ];
 const PLACEMENT_EXTRA_ROOM = "Suite Room 4";
-const SINGLE_CAPACITY_ROOMS = ["Main Block III Floor", "Main Block II Floor"];
+const SINGLE_CAPACITY_ROOMS = [];
 const DINE_OPTIONS = ["Amenity", "Hostel"];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -71,10 +68,9 @@ function emptyAccommodation() {
     checkIn: null,
     checkOut: null,
     selectedGuestIds: [],
+    accommodationNeeded: "",
     roomTypes: [],
     roomCounts: {},
-    singleRooms: "",
-    doubleRooms: "",
     dine: "",
     dineTypes: [],
     hostelGuests: "",
@@ -95,20 +91,26 @@ function validateAccommodation(acc) {
     e.selectedGuestIds = "Select at least one guest";
   }
 
-  // Room Types
-  if (!acc.roomTypes || acc.roomTypes.length === 0) {
-    e.roomTypes = "Select at least one room type";
+  // Accommodation Needed
+  if (!acc.accommodationNeeded) {
+    e.accommodationNeeded = "Please select Yes or No";
   }
 
-  // Room Counts
-  (acc.roomTypes || []).forEach((roomType) => {
-    const count = parseInt(acc.roomCounts?.[roomType]);
-
-    if (!count || count <= 0) {
-      if (!e.roomCounts) e.roomCounts = {};
-      e.roomCounts[roomType] = `Enter number of ${roomType} rooms`;
+  if (acc.accommodationNeeded === "Yes") {
+    // Room Types
+    if (!acc.roomTypes || acc.roomTypes.length === 0) {
+      e.roomTypes = "Select at least one room type";
     }
-  });
+
+    // Room Counts
+    (acc.roomTypes || []).forEach((roomType) => {
+      const count = parseInt(acc.roomCounts?.[roomType]);
+      if (!count || count <= 0) {
+        if (!e.roomCounts) e.roomCounts = {};
+        e.roomCounts[roomType] = `Enter number of ${roomType} rooms`;
+      }
+    });
+  }
 
   // Dine In Required
   if (!acc.dine) {
@@ -148,15 +150,11 @@ function buildPayload(accommodations, allGuests) {
         );
 
         const roomOccupancy = [];
-        if (parseInt(acc.singleRooms) > 0)
-          roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
-        if (parseInt(acc.doubleRooms) > 0)
-          roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
 
-        const roomCategory = (acc.roomTypes || []).map((rt) => ({
+        const roomCategory = acc.accommodationNeeded === "Yes" ? (acc.roomTypes || []).map((rt) => ({
           type: rt,
           count: parseInt(acc.roomCounts?.[rt]) || 0,
-        }));
+        })) : [];
 
         const dineInCounts = [];
         if (acc.dine === "Yes") {
@@ -506,29 +504,7 @@ function AccommodationBlock({
     });
   };
 
-  // ── Single / Double room handlers — clamp min to 0 ──
-  const handleSingleRoomsChange = (e) => {
-    const raw = e.target.value;
-    // Allow empty string while typing
-    if (raw === "") {
-      onChange({ ...acc, singleRooms: "" });
-      return;
-    }
-    const parsed = parseInt(raw, 10);
-    if (isNaN(parsed)) return;
-    onChange({ ...acc, singleRooms: String(Math.max(0, parsed)) });
-  };
-
-  const handleDoubleRoomsChange = (e) => {
-    const raw = e.target.value;
-    if (raw === "") {
-      onChange({ ...acc, doubleRooms: "" });
-      return;
-    }
-    const parsed = parseInt(raw, 10);
-    if (isNaN(parsed)) return;
-    onChange({ ...acc, doubleRooms: String(Math.max(0, parsed)) });
-  };
+  // Removed single/double rooms logic
 
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
@@ -566,6 +542,7 @@ function AccommodationBlock({
             <CustomDateTimePicker
               label="Check In Date & Time *"
               value={acc.checkIn}
+              minDate={new Date()}
               onChange={(date) => onChange({ ...acc, checkIn: date })}
               placeholder="__/__/____  --:-- --"
             />
@@ -639,40 +616,43 @@ function AccommodationBlock({
           </p>
         )}
 
-        {/* Single & Double counts — clamped to min 0 */}
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <CustomInput
-            label="No. of Single Rooms"
-            value={acc.singleRooms}
-            onChange={handleSingleRoomsChange}
-            type="number"
-            min={0}
+        {/* Accommodation Needed */}
+        <div className="mb-4">
+          <CustomSelect
+            label="Accommodation room needed? *"
+            value={acc.accommodationNeeded}
+            onChange={(val) =>
+              onChange({
+                ...acc,
+                accommodationNeeded: val,
+                roomTypes: val === "No" ? [] : acc.roomTypes,
+                roomCounts: val === "No" ? {} : acc.roomCounts,
+              })
+            }
+            options={["Yes", "No"]}
             labelBg="#1f1f38"
           />
-          <CustomInput
-            label="No. of Double Rooms"
-            value={acc.doubleRooms}
-            onChange={handleDoubleRoomsChange}
-            type="number"
-            min={0}
-            labelBg="#1f1f38"
-          />
+          {errors.accommodationNeeded && (
+            <p className="text-red-400 text-xs mt-1">{errors.accommodationNeeded}</p>
+          )}
         </div>
 
         {/* Room type multi-select — slash-joined display, search, tick on right */}
-        <div className="mb-4">
-          <RoomMultiSelect
-            label="Type of Room Wanted *"
-            options={roomOptions}
-            value={acc.roomTypes}
-            onChange={handleRoomTypeChange}
-            error={errors.roomTypes}
-            labelBg="#1f1f38"
-          />
-        </div>
+        {acc.accommodationNeeded === "Yes" && (
+          <div className="mb-4">
+            <RoomMultiSelect
+              label="Type of Room Wanted *"
+              options={roomOptions}
+              value={acc.roomTypes}
+              onChange={handleRoomTypeChange}
+              error={errors.roomTypes}
+              labelBg="#1f1f38"
+            />
+          </div>
+        )}
 
         {/* Dynamic room count inputs per selected room type */}
-        {acc.roomTypes.length > 0 && (
+        {acc.accommodationNeeded === "Yes" && acc.roomTypes.length > 0 && (
           <div className="grid md:grid-cols-2 gap-4 mb-4">
             {acc.roomTypes.map((roomType, i) => {
               const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;

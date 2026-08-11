@@ -950,11 +950,8 @@ function hydrateDraftData(apiData) {
           selectedGuestIds: [],
           guests: acc.guests || [],
           special: acc.specialRequirements || "",
+          accommodationNeeded: (acc.roomCategory && acc.roomCategory.length > 0) ? "Yes" : "No",
         };
-        (acc.roomOccupancy || []).forEach((ro) => {
-          if (ro.type === "Single") entry.singleRooms = String(ro.count);
-          if (ro.type === "Double") entry.doubleRooms = String(ro.count);
-        });
         return entry;
       }),
     };
