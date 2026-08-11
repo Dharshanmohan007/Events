@@ -2,12 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getRouteForRole } from "../../utils/roleRoutes";
 
-export default function FormSubmitted({
-  onSubmitAnother,
-  advanceData = {},
-  employee = {},
-  submitResponse = {},
-}) {
+export default function FormSubmitted() {
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 
@@ -15,45 +10,6 @@ export default function FormSubmitted({
     const t = setTimeout(() => setVisible(true), 50);
     return () => clearTimeout(t);
   }, []);
-
-  useEffect(() => {
-    if (!advanceData || Object.keys(advanceData).length === 0) return;
-
-    const timer = setTimeout(() => {
-      (async () => {
-        try {
-          const { default: ReportPdf } = await import("../../utils/ReportPdf");
-
-          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-          const effectiveEmployee =
-            employee && Object.keys(employee).length
-              ? employee
-              : storedUser || {};
-
-          const effectiveSubmitResponse =
-            submitResponse && Object.keys(submitResponse).length
-              ? submitResponse
-              : {
-                  iqacNumber:
-                    advanceData?.iqacNumber || `IQAC-${Date.now()}`,
-                  employeeId:
-                    advanceData?.empId || effectiveEmployee?.empId || "",
-                };
-
-          ReportPdf({
-            formData: advanceData,
-            employee: effectiveEmployee,
-            submitResponse: effectiveSubmitResponse,
-          });
-        } catch (err) {
-          console.warn("Receipt generation failed:", err);
-        }
-      })();
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [advanceData, employee, submitResponse]);
 
   const handleSubmitAnother = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");

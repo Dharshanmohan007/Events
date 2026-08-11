@@ -1210,58 +1210,39 @@ if (principalApprovalDocument) {
 
       setValidationErrors([]);
 
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-      const employeeDetails = {
-        name: storedUser?.name || storedUser?.employeeName || "",
-        empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
-        designation: storedUser?.designation || "",
-        department: storedUser?.department || "",
-      };
-
       const firstCard = formCards[0];
-      const financeEnabled = firstCard?.financeRequired === "Yes";
-      const receiptRequestNo =
-        firstSubmissionData?.requestNo ||
-        firstSubmissionData?.data?.requestNo ||
-        firstSubmissionData?.food?.requestNo ||
-        firstSubmissionData?.data?.food?.requestNo ||
-        "";
+      if (firstCard?.financeRequired === "Yes") {
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        const employee = {
+          name: storedUser?.name || storedUser?.employeeName || "",
+          empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+          designation: storedUser?.designation || "",
+          department: storedUser?.department || "",
+        };
+        const requestNo =
+          firstSubmissionData?.requestNo ||
+          firstSubmissionData?.data?.requestNo ||
+          firstSubmissionData?.food?.requestNo ||
+          firstSubmissionData?.data?.food?.requestNo ||
+          "";
 
-      if (financeEnabled) {
-        const receiptPayload = {
+        await ReportPdf({
           formData: {
-            selectDate: firstCard?.selectDate || "",
-            advanceAmount: firstCard?.advanceAmount || "",
-            advancePurpose: firstCard?.advancePurpose || "",
-            employeeName: employeeDetails.name,
-            empId: employeeDetails.empId,
-            designation: employeeDetails.designation,
-            department: employeeDetails.department,
-            event: {
-              organizers: [
-                {
-                  name: employeeDetails.name,
-                  empId: employeeDetails.empId,
-                  designation: employeeDetails.designation,
-                  department: employeeDetails.department,
-                },
-              ],
-            },
+            selectDate: firstCard.selectDate || "",
+            advanceAmount: firstCard.advanceAmount || "",
+            advancePurpose: firstCard.advancePurpose || "",
           },
-          employee: employeeDetails,
+          employee,
           submitResponse: {
-            requestNo: receiptRequestNo,
+            requestNo,
             response: firstSubmissionData,
             employeeId:
               firstSubmissionData?.employee ||
               firstSubmissionData?.employeeId ||
               employeeId ||
-              employeeDetails.empId,
+              employee.empId,
           },
-        };
-
-        await ReportPdf(receiptPayload);
+        });
       }
 
       setSubmitMessage(
@@ -1281,9 +1262,9 @@ if (principalApprovalDocument) {
 
 if (submitSuccess) {
   return (
-    <FormSubmitted
-      advanceData={formCards[0]}
-    />
+    // Render success modal without advanceData so FormSubmitted does
+    // not auto-generate the receipt (avoids the extra download).
+    <FormSubmitted />
   );
 }
   return (
