@@ -58,6 +58,14 @@ const DATE_PICKER_STYLES = `
   .food-datepicker-popper .react-datepicker__triangle {
     display: none !important;
   }
+  .food-datepicker-popper .react-datepicker__day--disabled {
+    color: #3a3a5a !important;
+    cursor: not-allowed !important;
+  }
+  .food-datepicker-popper .react-datepicker__day--disabled:hover {
+    background-color: transparent !important;
+    color: #3a3a5a !important;
+  }
 `;
 
 // ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
@@ -325,8 +333,16 @@ function validateFoodForms(forms) {
     if (count > 0) {
       const staffErrors = (form.staffList || []).slice(0, count).map((staff) => {
         const se = {};
-        if (!staff.name?.trim()) se.name = "Staff name is required";
-        if (!staff.mobile?.trim()) se.mobile = "Staff mobile is required";
+        if (!staff.name?.trim()) {
+          se.name = "Staff name is required";
+        } else if (!/^[a-zA-Z\s]+$/.test(staff.name)) {
+          se.name = "Name must contain only characters";
+        }
+        if (!staff.mobile?.trim()) {
+          se.mobile = "Staff mobile is required";
+        } else if (!/^\d{10}$/.test(staff.mobile)) {
+          se.mobile = "Mobile number must be exactly 10 digits";
+        }
         return se;
       });
       if (staffErrors.some((se) => Object.keys(se).length > 0)) {
@@ -435,6 +451,13 @@ export default function FoodAndRefreshments({
   };
 
   const handleStaffChange = (id, staffIndex, field, value) => {
+    if (field === "name") {
+      if (value && !/^[a-zA-Z\s]*$/.test(value)) return;
+    } else if (field === "mobile") {
+      if (value && !/^\d*$/.test(value)) return;
+      if (value && value.length > 10) return;
+    }
+
     setForms((prev) =>
       prev.map((form) => {
         if (form.id !== id) return form;
@@ -714,6 +737,7 @@ export default function FoodAndRefreshments({
                   selected={form.date}
                   onChange={(date) => handleChange(form.id, "date", date)}
                   dateFormat="dd/MM/yyyy"
+                  minDate={new Date()}
                   shouldCloseOnSelect
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
@@ -820,7 +844,7 @@ export default function FoodAndRefreshments({
                           onChange={(e) =>
                             handleStaffChange(form.id, staffIndex, "mobile", e.target.value)
                           }
-                          type="number"
+                          type="text"
                         />
                         {getStaffError(form.id, staffIndex, "mobile") && (
                           <p className="text-red-400 text-xs mt-1">
