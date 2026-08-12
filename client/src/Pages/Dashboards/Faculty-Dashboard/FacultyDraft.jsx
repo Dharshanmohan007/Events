@@ -5,7 +5,7 @@ import Modal from '../../../Components/Modal'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const FacultyDraft = ({ data }) => {
+const FacultyDraft = ({ data, setDraftData }) => {
     console.log("draft data", data.data[0]._id)
     const navigate = useNavigate()
     const [isModalOpen, setIsModalOpen] = useState(false)
@@ -24,7 +24,27 @@ const FacultyDraft = ({ data }) => {
 };
 
     const handleDeleteDraft = async () => {
-        setIsModalOpen(false)
+        try {
+            const draftId = data?.data?.[0]?._id;
+            if (!draftId) return;
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/events/${draftId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                if (setDraftData) {
+                    setDraftData(null);
+                }
+                setIsModalOpen(false);
+            } else {
+                console.error("Failed to delete draft");
+                setIsModalOpen(false);
+            }
+        } catch (error) {
+            console.error("Failed to delete draft:", error);
+            setIsModalOpen(false);
+        }
     }
 
     return (
@@ -60,19 +80,19 @@ const FacultyDraft = ({ data }) => {
                 </div>
             </section>
 
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Keep as Draft">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Delete Event">
                 <p className="text-sm text-[#FFFFFF]/90">
-                    Are you sure you want to keep this event as a draft?
+                    Are you sure want to delete this event?
                 </p>
                 <div className="mt-5 flex items-center justify-end gap-3">
                     <button
-                        onClick={() => setIsModalOpen(false)}
+                        onClick={() => handleDeleteDraft()}
                         className="cursor-pointer rounded-md bg-linear-to-r from-[#853FF9] to-[#4F2593] px-5 py-2.5 text-sm font-medium text-white transition hover:bg-linear-to-l hover:from-[#853FF9] hover:to-[#4F2593]"
                     >
                         Yes
                     </button>
                     <button
-                        onClick={() => handleDeleteDraft()}
+                        onClick={() => setIsModalOpen(false)}
                         className="cursor-pointer rounded-md border border-[#F20768] px-5 py-2.5 text-sm font-medium text-[#F20768] transition hover:bg-[#F207681A]"
                     >
                         No

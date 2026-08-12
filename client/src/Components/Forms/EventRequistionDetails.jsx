@@ -90,6 +90,9 @@ function validateOrganizerSection(state) {
     if (!state.purposeOfAdvance?.trim()) {
       e.purposeOfAdvance = "Purpose of advance is required";
     }
+    if (!state.advanceToBeReceivedWithin?.toString().trim()) {
+      e.advanceToBeReceivedWithin = "Number of days is required";
+    }
   }
   if (!state.department?.trim()) e.department = "Department name is required";
   if (state.numOrganizers === "" || parseInt(state.numOrganizers) < 0)
@@ -192,6 +195,12 @@ export default function EventRequisitionDetails({
   const [reason, setReason] = useState(initialEventRequisition.reason || "");
   const [numOrganizers, setNumOrganizers] = useState(initialEventRequisition.numOrganizers || "");
   const [organizers, setOrganizers] = useState(initialEventRequisition.organizers || []);
+  const [advanceToBeReceivedWithin, setAdvanceToBeReceivedWithin] = useState(
+    initialEventRequisition.advanceToBeReceivedWithin || ""
+  );
+  const [expectedEventOutcome, setExpectedEventOutcome] = useState(
+    initialEventRequisition.expectedEventOutcome || ""
+  );
 
   const [eventData, setEventData] = useState(initialEventRequisition.eventData || {});
   const [eventDaysLocal, setEventDaysLocal] = useState(initialEventRequisition.eventDays || []);
@@ -218,13 +227,13 @@ export default function EventRequisitionDetails({
   useEffect(() => {
     if (!setEventRequisition) return;
     const next = {
-      doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, principalApprovalDocument, file, reason,
-      numOrganizers, organizers, eventData,
+      doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, principalApprovalDocument, file, reason,
+      numOrganizers, organizers, eventData, expectedEventOutcome,
       eventDays: eventDaysLocal, requirements,
     };
     const comparable = JSON.stringify({
-      doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, reason,
-      numOrganizers, organizers, eventData,
+      doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, reason,
+      numOrganizers, organizers, eventData, expectedEventOutcome,
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
         ? {
@@ -239,7 +248,7 @@ export default function EventRequisitionDetails({
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance, advanceAmount, purposeOfAdvance, estimatedBudget, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, expectedEventOutcome, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
@@ -260,7 +269,7 @@ export default function EventRequisitionDetails({
     const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = validateOrganizerSection({
-      principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, estimatedBudget, department, numOrganizers, organizers,
+      principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, department, numOrganizers, organizers,
     });
     const eErr = validateEventDetails(eventData, eventDaysLocal);
     const rErr = validateRequirements(currentRequirements);
@@ -301,6 +310,10 @@ export default function EventRequisitionDetails({
         setAdvanceAmount={setAdvanceAmount}
         purposeOfAdvance={purposeOfAdvance}
         setPurposeOfAdvance={setPurposeOfAdvance}
+        advanceToBeReceivedWithin={advanceToBeReceivedWithin}
+        setAdvanceToBeReceivedWithin={setAdvanceToBeReceivedWithin}
+        expectedEventOutcome={expectedEventOutcome}
+        setExpectedEventOutcome={setExpectedEventOutcome}
         estimatedBudget={estimatedBudget}
         setEstimatedBudget={setEstimatedBudget}
         budget={budget} setBudget={setBudget}

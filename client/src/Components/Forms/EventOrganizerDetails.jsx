@@ -23,6 +23,10 @@ export default function EventOrganizerDetails({
   setAdvanceAmount,
   purposeOfAdvance,
   setPurposeOfAdvance,
+  advanceToBeReceivedWithin,
+  setAdvanceToBeReceivedWithin,
+  expectedEventOutcome,
+  setExpectedEventOutcome,
   estimatedBudget,
   setEstimatedBudget,
   budget,
@@ -612,7 +616,41 @@ export default function EventOrganizerDetails({
               )}
             </div>
 
+            {/* Advance To Be Received Within */}
+            <div className="sm:col-span-2">
+              <CustomInput
+                label="I will clear the advance within this days"
+                value={advanceToBeReceivedWithin}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  setAdvanceToBeReceivedWithin(value);
+                }}
+                placeholder="Enter no of days"
+              />
+
+              {errors.advanceToBeReceivedWithin && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.advanceToBeReceivedWithin}
+                </p>
+              )}
+            </div>
+
           </div>
+        )}
+      </div>
+
+      {/* Expected Event Outcome */}
+      <div className="mb-6">
+        <CustomInput
+          label="Expected Outcome"
+          value={expectedEventOutcome}
+          onChange={(e) => setExpectedEventOutcome(e.target.value)}
+          placeholder="Enter the outcome of the event"
+        />
+        {errors.expectedEventOutcome && (
+          <p className="text-red-400 text-xs mt-1">
+            {errors.expectedEventOutcome}
+          </p>
         )}
       </div>
 

@@ -1563,6 +1563,7 @@ export default function Form() {
     },
     purchase: {
       purchaseData: formData.purchase,
+      venueData: formData.venue,
       onPurchaseDataChange: handlePurchaseDataChange,
       eventId,
       eventDays: formData.event.eventDays,

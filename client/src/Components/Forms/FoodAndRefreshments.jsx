@@ -165,67 +165,56 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
 }
 
 // ─── Meal section ─────────────────────────────────────────────────────────────
-const MealSection = memo(function MealSection({ title, data, errors = {}, onChange, labelBg = "#1f1f38" }) {
+const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelBg = "#1f1f38" }) {
+  const getSectionLabel = (sectionKey) => {
+    switch (sectionKey) {
+      case "participants": return "Participants";
+      case "vipGuests": return "VIP";
+      case "trainer": return "Trainer";
+      case "placement": return "Placement";
+      default: return sectionKey;
+    }
+  };
+
   return (
     <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
       <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <CustomInput
-            label="No. of veg In Participants Menu *"
-            labelBg={labelBg}
-            type="number"
-            value={data.vegParticipants}
-            onChange={(e) => onChange("vegParticipants", Math.max(0, Number(e.target.value)))}
-          />
-          {errors.vegParticipants && (
-            <p className="text-red-400 text-xs mt-1">
-              {errors.vegParticipants}
-            </p>
-          )}
-        </div>
-        <div>
-          <CustomInput
-            label="No. of veg In Guest/VIP Menu *"
-            labelBg={labelBg}
-            type="number"
-            value={data.vegGuest}
-            onChange={(e) => onChange("vegGuest", Math.max(0, Number(e.target.value)))}
-          />
-          {errors.vegGuest && (
-            <p className="text-red-400 text-xs mt-1">
-              {errors.vegGuest}
-            </p>
-          )}
-        </div>
-        <div>
-          <CustomInput
-            label="No. of Non-veg In Participants Menu *"
-            labelBg={labelBg}
-            type="number"
-            value={data.nonVegParticipants}
-            onChange={(e) => onChange("nonVegParticipants", Math.max(0, Number(e.target.value)))}
-          />
-          {errors.nonVegParticipants && (
-            <p className="text-red-400 text-xs mt-1">
-              {errors.nonVegParticipants}
-            </p>
-          )}
-        </div>
-        <div>
-          <CustomInput
-            label="No. of Non-veg In Guest/VIP Menu *"
-            labelBg={labelBg}
-            type="number"
-            value={data.nonVegGuest}
-            onChange={(e) => onChange("nonVegGuest", Math.max(0, Number(e.target.value)))}
-          />
-          {errors.nonVegGuest && (
-            <p className="text-red-400 text-xs mt-1">
-              {errors.nonVegGuest}
-            </p>
-          )}
-        </div>
+        {activeSections.map((sectionKey) => {
+          const sectionLabel = getSectionLabel(sectionKey);
+          return (
+            <React.Fragment key={sectionKey}>
+              <div>
+                <CustomInput
+                  label={`No. of veg In ${sectionLabel} Menu *`}
+                  labelBg={labelBg}
+                  type="number"
+                  value={data[sectionKey]?.vegCount ?? ""}
+                  onChange={(e) => onChange(sectionKey, "vegCount", Math.max(0, Number(e.target.value)))}
+                />
+                {errors[sectionKey]?.vegCount && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[sectionKey].vegCount}
+                  </p>
+                )}
+              </div>
+              <div>
+                <CustomInput
+                  label={`No. of Non-veg In ${sectionLabel} Menu *`}
+                  labelBg={labelBg}
+                  type="number"
+                  value={data[sectionKey]?.nonVegCount ?? ""}
+                  onChange={(e) => onChange(sectionKey, "nonVegCount", Math.max(0, Number(e.target.value)))}
+                />
+                {errors[sectionKey]?.nonVegCount && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors[sectionKey].nonVegCount}
+                  </p>
+                )}
+              </div>
+            </React.Fragment>
+          );
+        })}
       </div>
     </div>
   );
@@ -283,9 +272,24 @@ function createForm() {
     internalCount: "",
     staffList: [],
     foodTypes: [],
-    breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-    lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-    dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+    breakfast: {
+      participants: { vegCount: "", nonVegCount: "" },
+      vipGuests: { vegCount: "", nonVegCount: "" },
+      trainer: { vegCount: "", nonVegCount: "" },
+      placement: { vegCount: "", nonVegCount: "" },
+    },
+    lunch: {
+      participants: { vegCount: "", nonVegCount: "" },
+      vipGuests: { vegCount: "", nonVegCount: "" },
+      trainer: { vegCount: "", nonVegCount: "" },
+      placement: { vegCount: "", nonVegCount: "" },
+    },
+    dinner: {
+      participants: { vegCount: "", nonVegCount: "" },
+      vipGuests: { vegCount: "", nonVegCount: "" },
+      trainer: { vegCount: "", nonVegCount: "" },
+      placement: { vegCount: "", nonVegCount: "" },
+    },
     specialRequirements: "",
   };
 }
@@ -310,17 +314,21 @@ function validateFoodForms(forms) {
         const mealData = form[meal.toLowerCase()] || {};
         const mealErr = {};
 
-        if (mealData.vegParticipants === "")
-          mealErr.vegParticipants = "Veg Participants is required";
+        const activeSections = ["participants"];
+        if (form.resourcePersonType?.includes("VIP")) activeSections.push("vipGuests");
+        if (form.resourcePersonType?.includes("Trainer")) activeSections.push("trainer");
+        if (form.resourcePersonType?.includes("Placement")) activeSections.push("placement");
 
-        if (mealData.nonVegParticipants === "")
-          mealErr.nonVegParticipants = "Non-Veg Participants is required";
-
-        if (mealData.vegGuest === "")
-          mealErr.vegGuest = "Veg Guest is required";
-
-        if (mealData.nonVegGuest === "")
-          mealErr.nonVegGuest = "Non-Veg Guest is required";
+        activeSections.forEach((sectionKey) => {
+          const sectionData = mealData[sectionKey] || {};
+          const secErrs = {};
+          if (sectionData.vegCount === "") secErrs.vegCount = "Veg count is required";
+          if (sectionData.nonVegCount === "") secErrs.nonVegCount = "Non-veg count is required";
+          
+          if (Object.keys(secErrs).length > 0) {
+            mealErr[sectionKey] = secErrs;
+          }
+        });
 
         if (Object.keys(mealErr).length > 0) {
           mealErrors[meal.toLowerCase()] = mealErr;
@@ -450,6 +458,39 @@ export default function FoodAndRefreshments({
     });
   };
 
+  const handleMealChange = (id, mealKey, sectionKey, field, value) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentMeal = form[mealKey] || {};
+        const currentSection = currentMeal[sectionKey] || { vegCount: "", nonVegCount: "" };
+        return {
+          ...form,
+          [mealKey]: {
+            ...currentMeal,
+            [sectionKey]: { ...currentSection, [field]: value },
+          },
+        };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const formErr = { ...(updated[idx] || {}) };
+      if (formErr[mealKey] && formErr[mealKey][sectionKey]) {
+        const mealErrs = { ...formErr[mealKey] };
+        const sectionErrs = { ...mealErrs[sectionKey] };
+        sectionErrs[field] = "";
+        mealErrs[sectionKey] = sectionErrs;
+        formErr[mealKey] = mealErrs;
+      }
+      updated[idx] = formErr;
+      return updated;
+    });
+  };
+
   const handleStaffChange = (id, staffIndex, field, value) => {
     if (field === "name") {
       if (value && !/^[a-zA-Z\s]*$/.test(value)) return;
@@ -572,22 +613,36 @@ export default function FoodAndRefreshments({
           const foodTypesPayload = (form.foodTypes || []).map((type) => {
             if (MEAL_KEYS.includes(type)) {
               const mealData = form[type.toLowerCase()] || {};
-              return {
+              
+              const activeSections = ["participants"];
+              if (form.resourcePersonType?.includes("VIP")) activeSections.push("vipGuests");
+              if (form.resourcePersonType?.includes("Trainer")) activeSections.push("trainer");
+              if (form.resourcePersonType?.includes("Placement")) activeSections.push("placement");
+
+              const payloadObj = {
                 type,
-                participants: {
-                  vegCount: parseInt(mealData.vegParticipants) || 0,
-                  nonVegCount: parseInt(mealData.nonVegParticipants) || 0,
-                },
-                vipGuests: {
-                  vegCount: parseInt(mealData.vegGuest) || 0,
-                  nonVegCount: parseInt(mealData.nonVegGuest) || 0,
-                },
+                participants: { vegCount: 0, nonVegCount: 0 },
+                vipGuests: { vegCount: 0, nonVegCount: 0 },
+                trainer: { vegCount: 0, nonVegCount: 0 },
+                placement: { vegCount: 0, nonVegCount: 0 }
               };
+              
+              activeSections.forEach(sectionKey => {
+                const data = mealData[sectionKey] || {};
+                payloadObj[sectionKey] = {
+                  vegCount: parseInt(data.vegCount) || 0,
+                  nonVegCount: parseInt(data.nonVegCount) || 0
+                };
+              });
+
+              return payloadObj;
             }
             return {
               type,
               participants: { vegCount: 0, nonVegCount: 0 },
               vipGuests: { vegCount: 0, nonVegCount: 0 },
+              trainer: { vegCount: 0, nonVegCount: 0 },
+              placement: { vegCount: 0, nonVegCount: 0 }
             };
           });
 
@@ -873,41 +928,29 @@ export default function FoodAndRefreshments({
             </div>
 
             {/* Conditional Meal Sections */}
-            {MEAL_SECTIONS.map((meal) =>
-              form.foodTypes.includes(meal) ? (
+            {MEAL_SECTIONS.map((meal) => {
+              if (!form.foodTypes.includes(meal)) return null;
+              
+              const activeSections = ["participants"];
+              if (form.resourcePersonType.includes("VIP")) activeSections.push("vipGuests");
+              if (form.resourcePersonType.includes("Trainer")) activeSections.push("trainer");
+              if (form.resourcePersonType.includes("Placement")) activeSections.push("placement");
+
+              const mealKey = meal.toLowerCase();
+              const mealErr = (Array.isArray(errors) ? errors[index]?.[mealKey] : null) || {};
+
+              return (
                 <MealSection
                   key={meal}
                   title={meal}
-                  data={form[meal.toLowerCase()]}
-                  errors={{
-                    vegParticipants: getMealError(
-                      form.id,
-                      meal.toLowerCase(),
-                      "vegParticipants"
-                    ),
-                    vegGuest: getMealError(
-                      form.id,
-                      meal.toLowerCase(),
-                      "vegGuest"
-                    ),
-                    nonVegParticipants: getMealError(
-                      form.id,
-                      meal.toLowerCase(),
-                      "nonVegParticipants"
-                    ),
-                    nonVegGuest: getMealError(
-                      form.id,
-                      meal.toLowerCase(),
-                      "nonVegGuest"
-                    ),
-                  }}
-                onChange={(field, value) =>
-                  handleChange(form.id, field, value, meal.toLowerCase())
-                }
-                labelBg="#2a2a4a"
-              />
-              ) : null
-            )}
+                  activeSections={activeSections}
+                  data={form[mealKey] || {}}
+                  errors={mealErr}
+                  onChange={(sectionKey, field, value) => handleMealChange(form.id, mealKey, sectionKey, field, value)}
+                  labelBg="#2a2a4a"
+                />
+              );
+            })}
 
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
