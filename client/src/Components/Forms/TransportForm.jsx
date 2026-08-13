@@ -76,6 +76,8 @@ function validateTransport(forms) {
       form.staffCount === undefined
     ) {
       err.staffCount = "Accompanying staff count is required";
+    } else if (parseInt(form.staffCount) > 10) {
+      err.staffCount = "Accompanying staff count must be 10 or less";
     }
 
     if (form.staffMembers && form.staffMembers.length > 0) {
@@ -424,6 +426,7 @@ function VehicleCountInputs({
   onChange,
   cardBg,
   vehicleInventory,
+  totalPassengers,
 }) {
   const rows = [];
   for (let i = 0; i < selectedVehicles.length; i += 2)
@@ -453,6 +456,9 @@ function VehicleCountInputs({
               enteredCount > available &&
               enteredCount > 0;
 
+            const isCar = vehicleType.toLowerCase().includes("car");
+            const passengerExceeded = isCar && totalPassengers > 0 && enteredCount > totalPassengers;
+
             return (
               <div key={vehicleType}>
                 <FloatingInput
@@ -471,6 +477,12 @@ function VehicleCountInputs({
                     <AlertTriangle size={12} />
                     Only {available} {vehicleType}
                     {available === 1 ? "" : "s"} available
+                  </p>
+                )}
+                {passengerExceeded && (
+                  <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
+                    <AlertTriangle size={12} />
+                    Max {totalPassengers} car{totalPassengers === 1 ? "" : "s"} allowed for {totalPassengers} passenger{totalPassengers === 1 ? "" : "s"}
                   </p>
                 )}
               </div>
@@ -874,8 +886,9 @@ export default function TransportForm({
   };
 
   const handleStaffCountChange = (formIndex, value) => {
-    const sanitised =
-      value === "" ? "" : String(Math.max(0, parseInt(value) || 0));
+    const parsed = parseInt(value) || 0;
+    const clamped = Math.min(Math.max(0, parsed), 10);
+    const sanitised = value === "" ? "" : String(clamped);
     setForms((prev) => {
       const updated = [...prev];
       const existing = updated[formIndex].staffMembers || [];
@@ -1305,6 +1318,7 @@ export default function TransportForm({
                   }
                   cardBg={CARD_BG}
                   vehicleInventory={resolvedInventory}
+                  totalPassengers={Number(form.totalPassengers) || 0}
                 />
               )}
 
