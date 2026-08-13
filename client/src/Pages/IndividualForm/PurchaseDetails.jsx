@@ -54,6 +54,7 @@ function DateTimePicker({
   onChange,
   placeholder,
   error,
+  minDate,
   labelBgClass = "bg-[#141428]",
 }) {
   const [open, setOpen] = useState(false);
@@ -255,6 +256,15 @@ function DateTimePicker({
               ))}
               {Array.from({ length: daysInMonth }, (_, i) => i + 1).map(
                 (day) => {
+                  const currentDayDate = new Date(displayYear, displayMonth, day);
+                  const isDisabled =
+                    minDate &&
+                    currentDayDate <
+                      new Date(
+                        minDate.getFullYear(),
+                        minDate.getMonth(),
+                        minDate.getDate(),
+                      );
                   const isSelected =
                     selectedDate &&
                     selectedDate.getDate() === day &&
@@ -264,9 +274,12 @@ function DateTimePicker({
                     <button
                       key={day}
                       type="button"
-                      onClick={() => handleDayClick(day)}
+                      onClick={() => !isDisabled && handleDayClick(day)}
+                      disabled={isDisabled}
                       className={`text-sm py-2 rounded-lg transition-colors ${
-                        isSelected
+                        isDisabled
+                          ? "text-gray-600 cursor-not-allowed"
+                          : isSelected
                           ? "bg-purple-600 text-white font-semibold"
                           : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
                       }`}
@@ -1157,6 +1170,7 @@ export default function PurchaseDetails() {
             onChange={(val) => setField("deliveryDate", val)}
             placeholder="Select Date"
             error={errors.deliveryDate}
+            minDate={new Date()}
           />
 
           {/* FINANCE REQUIRED */}

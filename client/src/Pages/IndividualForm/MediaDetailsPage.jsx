@@ -1402,6 +1402,7 @@ const [trophyContent, setTrophyContent] = useState("");
       }
       placeholder="Select Delivery Date"
       showTime={false}
+      minDate={new Date()}
     />
   </div>
 
@@ -1655,6 +1656,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 }
                 placeholder="__/__/____"
                 showTime={false}
+                minDate={new Date()}
               />
             </div>
 

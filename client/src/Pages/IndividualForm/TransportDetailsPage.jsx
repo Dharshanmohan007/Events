@@ -155,7 +155,8 @@ const TransportDetailsPage = () => {
 
   const handleUploadDragOver = (e) => e.preventDefault();
 
-  const vehicleOptions = ["Bus", "Van", "Car"];
+  const getVehicleOptions = (totalPassengers) =>
+    Number(totalPassengers) > 5 ? ["Bus"] : ["Car"];
 
   // =========================
   // ADD FORM
@@ -184,6 +185,33 @@ const TransportDetailsPage = () => {
       ...transportForms[formIndex],
       [field]: value,
     };
+
+    // Keep the pickup/drop range valid even if a date is changed after both
+    // fields have already been selected.
+    if (
+      nextForm.pickupDateTime &&
+      nextForm.dropDateTime &&
+      nextForm.pickupDateTime > nextForm.dropDateTime
+    ) {
+      if (field === "pickupDateTime") {
+        nextForm.dropDateTime = null;
+      } else {
+        nextForm.pickupDateTime = null;
+      }
+    }
+
+    if (field === "totalPassengers") {
+      const allowedVehicles = getVehicleOptions(value);
+
+      nextForm.selectedVehicles = (nextForm.selectedVehicles || []).filter(
+        (vehicle) => allowedVehicles.includes(vehicle),
+      );
+      nextForm.vehicleCounts = Object.fromEntries(
+        Object.entries(nextForm.vehicleCounts || {}).filter(([vehicle]) =>
+          allowedVehicles.includes(vehicle),
+        ),
+      );
+    }
 
     if (isDateField) {
       nextForm.availableVehicleCounts = {};
@@ -1006,6 +1034,7 @@ const TransportDetailsPage = () => {
               }
               placeholder="Select pickup date & time"
               labelBgClass="bg-[#1b1b35]"
+              maxDate={form.dropDateTime}
             />
 
             <CustomDateTimePicker
@@ -1016,6 +1045,7 @@ const TransportDetailsPage = () => {
               }
               placeholder="Select drop date & time"
               labelBgClass="bg-[#1b1b35]"
+              minDate={form.pickupDateTime}
             />
           </div>
 
@@ -1259,7 +1289,7 @@ const TransportDetailsPage = () => {
 
               {form.showVehicleDropdown && (
                 <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
-                  {vehicleOptions.map((option, index) => {
+                  {getVehicleOptions(form.totalPassengers).map((option, index) => {
                     const isSelected = (form.selectedVehicles || []).includes(
                       option,
                     );
@@ -1335,7 +1365,7 @@ const TransportDetailsPage = () => {
                     <span>Checking available vehicle counts...</span>
                   ) : Object.keys(form.availableVehicleCounts).length > 0 ? (
                     <span>
-                      Available counts: {vehicleOptions
+                      Available counts: {getVehicleOptions(form.totalPassengers)
                         .map((vehicle) => {
                           const raw = form.availableVehicleCounts[vehicle];
                           const displayed = getDisplayedAvailability(formIndex, vehicle);
