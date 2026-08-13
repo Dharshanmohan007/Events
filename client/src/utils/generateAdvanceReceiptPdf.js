@@ -417,9 +417,9 @@ export default async function generateAdvanceReceiptPdf({
       formData?.eventDays?.length > 0
         ? formData.eventDays[formData.eventDays.length - 1]?.date
         : formData?.eventDays?.[0]?.date,
-      formData?.clearanceDays || 15
+      formData?.advanceToBeReceivedWithin ? Number(formData.advanceToBeReceivedWithin) : 15
     ),
-    clearanceDays: formData?.clearanceDays || 15,
+    clearanceDays: formData?.advanceToBeReceivedWithin || 15,
   };
 
   // Convert the bundled logo to a base64 data-URL so the new tab can display it
