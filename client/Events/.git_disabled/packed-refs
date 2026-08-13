@@ -1,0 +1,13 @@
+# pack-refs with: peeled fully-peeled sorted 
+2b8bf15136d0790793c78ed7c1085c9fd850e4dd refs/remotes/origin/Admin_dashoard_module
+1794595e31b9ecbc23ee5220659b8c98d90cbf3f refs/remotes/origin/Dashboard
+140796c4ce4d9f1730eac2efc3b02131dbf0342b refs/remotes/origin/Faculty-dashboard
+5d0ee97781d83083fe5eb8d580360a1cc552db15 refs/remotes/origin/Layout-changes-dashboard
+0193f898d3e3198992a805db6dc8480f9c205b32 refs/remotes/origin/Media-Dashboard
+3bb590920b5a7d86c9b4674a6ad7bca35d4319a9 refs/remotes/origin/Transports-Dashboard
+81817ce8039c361d1fa944f347b3318551f0d078 refs/remotes/origin/admin-detail-view
+e3fb4e0bca79c6a7c730dae857c15769f81b0fd3 refs/remotes/origin/fayaz
+218c97f238ab3b734aede885a672e03e5cd6c4e4 refs/remotes/origin/formdata
+22224abc0675a17445fd0a75f632c33b480bfdf0 refs/remotes/origin/individual-form
+4cb72296422e08c580dcc38ac557a57f010b5d89 refs/remotes/origin/main
+6f0b358987d50f4d81d033afabf9b8ed669e18bf refs/remotes/origin/re-arrange_folder

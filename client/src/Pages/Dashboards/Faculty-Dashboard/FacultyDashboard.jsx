@@ -48,7 +48,7 @@ const FacultyDashboard = () => {
                     <div>
                         <h1 className="text-white text-lg font-medium">Faculty Dashboard Overview</h1>
                         <p className="text-[#FFFFFF80] text-sm">
-                            Quick access to your key insights and updates.
+                            Quick access to your key insights and updates. 
                         </p>
                     </div>
 

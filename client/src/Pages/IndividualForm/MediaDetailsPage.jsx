@@ -152,11 +152,11 @@ const [trophyContent, setTrophyContent] = useState("");
     posterRequirement,
     setPosterRequirement,
   ] = useState("");
-  const [posterFinanceRequired, setPosterFinanceRequired] = useState("No");
-  const [posterEstimatedAmount, setPosterEstimatedAmount] = useState("");
-  const [posterAdvanceAmount, setPosterAdvanceAmount] = useState("");
-  const [posterAdvancePurpose, setPosterAdvancePurpose] = useState("");
-  const [showPosterFinanceDropdown, setShowPosterFinanceDropdown] = useState(false);
+  const [financeRequired, setFinanceRequired] = useState("No");
+  const [financeEstimatedAmount, setFinanceEstimatedAmount] = useState("");
+  const [financeAdvanceAmount, setFinanceAdvanceAmount] = useState("");
+  const [financeAdvancePurpose, setFinanceAdvancePurpose] = useState("");
+  const [showFinanceDropdown, setShowFinanceDropdown] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -312,20 +312,13 @@ const [trophyContent, setTrophyContent] = useState("");
     videoRequirement,
     setVideoRequirement,
   ] = useState("");
-  const [videoFinanceRequired, setVideoFinanceRequired] = useState("No");
   const [videoEstimatedAmount, setVideoEstimatedAmount] = useState("");
   const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
   const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
-  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
 
-  const posterFinanceComparisonError =
-    posterFinanceRequired === "Yes"
-      ? getFinanceComparisonError(posterEstimatedAmount, posterAdvanceAmount)
-      : "";
-
-  const videoFinanceComparisonError =
-    videoFinanceRequired === "Yes"
-      ? getFinanceComparisonError(videoEstimatedAmount, videoAdvanceAmount)
+  const financeComparisonError =
+    financeRequired === "Yes"
+      ? getFinanceComparisonError(financeEstimatedAmount, financeAdvanceAmount)
       : "";
 
   // =========================
@@ -403,22 +396,22 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!posterRequirement.trim()) {
         errors.push("Special Requirements is required."); 
       }
-      if (posterFinanceRequired === "Yes") {
-        if (!posterEstimatedAmount || Number.isNaN(Number(posterEstimatedAmount)) || Number(posterEstimatedAmount) <= 0) {
-          errors.push("Poster: Estimated budget amount is required.");
+      if (financeRequired === "Yes") {
+        if (!financeEstimatedAmount || Number.isNaN(Number(financeEstimatedAmount)) || Number(financeEstimatedAmount) <= 0) {
+          errors.push("Estimated budget amount is required.");
         }
-        if (!posterAdvanceAmount || posterAdvanceAmount.toString().trim() === "") {
-          errors.push("Poster: Advance amount is required.");
+        if (!financeAdvanceAmount || financeAdvanceAmount.toString().trim() === "") {
+          errors.push("Advance amount is required.");
         }
-        if (!posterAdvancePurpose || !posterAdvancePurpose.trim()) {
-          errors.push("Poster: Advance purpose is required.");
+        if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
+          errors.push("Advance purpose is required.");
         }
         if (
-          !Number.isNaN(Number(posterEstimatedAmount)) &&
-          !Number.isNaN(Number(posterAdvanceAmount)) &&
-          Number(posterAdvanceAmount) > Number(posterEstimatedAmount)
+          !Number.isNaN(Number(financeEstimatedAmount)) &&
+          !Number.isNaN(Number(financeAdvanceAmount)) &&
+          Number(financeAdvanceAmount) > Number(financeEstimatedAmount)
         ) {
-          errors.push("Poster: Advance amount cannot exceed the estimated budget amount.");
+          errors.push("Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
@@ -457,22 +450,22 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!videoRequirement.trim()) {
         errors.push("Special Requirements is required.");
       }
-      if (videoFinanceRequired === "Yes") {
-        if (!videoEstimatedAmount || Number.isNaN(Number(videoEstimatedAmount)) || Number(videoEstimatedAmount) <= 0) {
-          errors.push("Video: Estimated budget amount is required.");
+      if (financeRequired === "Yes") {
+        if (!financeEstimatedAmount || Number.isNaN(Number(financeEstimatedAmount)) || Number(financeEstimatedAmount) <= 0) {
+          errors.push("Estimated budget amount is required.");
         }
-        if (!videoAdvanceAmount || videoAdvanceAmount.toString().trim() === "") {
-          errors.push("Video: Advance amount is required.");
+        if (!financeAdvanceAmount || financeAdvanceAmount.toString().trim() === "") {
+          errors.push("Advance amount is required.");
         }
-        if (!videoAdvancePurpose || !videoAdvancePurpose.trim()) {
-          errors.push("Video: Advance purpose is required.");
+        if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
+          errors.push("Advance purpose is required.");
         }
         if (
-          !Number.isNaN(Number(videoEstimatedAmount)) &&
-          !Number.isNaN(Number(videoAdvanceAmount)) &&
-          Number(videoAdvanceAmount) > Number(videoEstimatedAmount)
+          !Number.isNaN(Number(financeEstimatedAmount)) &&
+          !Number.isNaN(Number(financeAdvanceAmount)) &&
+          Number(financeAdvanceAmount) > Number(financeEstimatedAmount)
         ) {
-          errors.push("Video: Advance amount cannot exceed the estimated budget amount.");
+          errors.push("Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
@@ -575,19 +568,11 @@ const [trophyContent, setTrophyContent] = useState("");
     formData.append("status", "Pending");
     
     // Finance fields at root level (only if needed)
-    const hasFinance = (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") || 
-                       (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
-    if (hasFinance) {
+    if (financeRequired === "Yes") {
       formData.append("financeRequired", "Yes");
-      const posterAmount = posterFinanceRequired === "Yes" ? posterAdvanceAmount : 0;
-      const videoAmount = videoFinanceRequired === "Yes" ? videoAdvanceAmount : 0;
-      const posterEstimate = posterFinanceRequired === "Yes" ? posterEstimatedAmount : 0;
-      const videoEstimate = videoFinanceRequired === "Yes" ? videoEstimatedAmount : 0;
-      formData.append("advanceAmount", posterAmount || videoAmount || "0");
-      formData.append("estimatedAmount", posterEstimate || videoEstimate || "0");
-      const posterPurpose = posterFinanceRequired === "Yes" ? posterAdvancePurpose : "";
-      const videoPurpose = videoFinanceRequired === "Yes" ? videoAdvancePurpose : "";
-      formData.append("advancePurpose", posterPurpose || videoPurpose || "");
+      formData.append("advanceAmount", financeAdvanceAmount || "0");
+      formData.append("estimatedAmount", financeEstimatedAmount || "0");
+      formData.append("advancePurpose", financeAdvancePurpose || "");
     }
     
     // typeOfMedia with CAPITALIZED names - append each type separately
@@ -703,10 +688,7 @@ const [trophyContent, setTrophyContent] = useState("");
       }
       setSubmitSuccess(true);
 
-      const financeEnabled =
-        (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") ||
-        (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
-      if (financeEnabled) {
+      if (financeRequired === "Yes") {
         const respData = data?.data || data || {};
         const receiptRequestNo =
           respData?.requestNo ||
@@ -738,18 +720,8 @@ const [trophyContent, setTrophyContent] = useState("");
           return ReportPdf({
             formData: {
               selectDate: posterDeliveryDate || videoDeliveryDate || "",
-              advanceAmount:
-                posterFinanceRequired === "Yes"
-                  ? posterAdvanceAmount || ""
-                  : videoFinanceRequired === "Yes"
-                    ? videoAdvanceAmount || ""
-                    : "",
-              advancePurpose:
-                posterFinanceRequired === "Yes"
-                  ? posterAdvancePurpose || ""
-                  : videoFinanceRequired === "Yes"
-                    ? videoAdvancePurpose || ""
-                    : "",
+              advanceAmount: financeAdvanceAmount || "",
+              advancePurpose: financeAdvancePurpose || "",
             },
             employee: employeePayload,
             submitResponse: submitRespPayload,
@@ -831,18 +803,8 @@ const [trophyContent, setTrophyContent] = useState("");
       <FormSubmitted
         advanceData={{
           selectDate: posterDeliveryDate || videoDeliveryDate || "",
-          advanceAmount:
-            posterFinanceRequired === "Yes"
-              ? posterAdvanceAmount || ""
-              : videoFinanceRequired === "Yes"
-                ? videoAdvanceAmount || ""
-                : "",
-          advancePurpose:
-            posterFinanceRequired === "Yes"
-              ? posterAdvancePurpose || ""
-              : videoFinanceRequired === "Yes"
-                ? videoAdvancePurpose || ""
-                : "",
+          advanceAmount: financeAdvanceAmount || "",
+          advancePurpose: financeAdvancePurpose || "",
         }}
         showDownloadButton={false}
       />
@@ -1034,38 +996,100 @@ const [trophyContent, setTrophyContent] = useState("");
         )}
       </div>
 
-      {/* ===================================================== */}
-      {/* ================= POSTER SECTION ==================== */}
-      {/* ===================================================== */}
+      <div className="space-y-4 mb-6">
+        <div className="relative w-full">
+          <label className={pageFloatingLabelClass}>Finance Required *</label>
+
+          <div
+            onClick={() => setShowFinanceDropdown(!showFinanceDropdown)}
+            className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
+          >
+            <span className={financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              {financeRequired === "Yes" ? "Yes" : "No"}
+            </span>
+
+            <ChevronDown size={18} className="text-gray-400" />
+          </div>
+
+          {showFinanceDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
+                <div
+                  key={opt.label}
+                  onClick={() => {
+                    setFinanceRequired(opt.value);
+                    setShowFinanceDropdown(false);
+                    if (opt.value === "No") {
+                      setFinanceEstimatedAmount("");
+                      setFinanceAdvanceAmount("");
+                      setFinanceAdvancePurpose("");
+                    }
+                  }}
+                  className={`px-4 py-3 cursor-pointer flex items-center justify-between ${financeRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                >
+                  <span>{opt.label}</span>
+                  {financeRequired === opt.value && <span>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {financeRequired === "Yes" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="relative w-full md:col-span-2">
+              <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
+              <input
+                type="number"
+                min="0"
+                value={financeEstimatedAmount}
+                onChange={(e) => setFinanceEstimatedAmount(e.target.value)}
+                placeholder="0"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+              {financeComparisonError && (
+                <p className="mt-1 text-sm text-red-400">{financeComparisonError}</p>
+              )}
+            </div>
+
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
+              <input
+                type="number"
+                min="0"
+                value={financeAdvanceAmount}
+                onChange={(e) => setFinanceAdvanceAmount(e.target.value)}
+                placeholder="0"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>Purpose of Advance</label>
+              <input
+                type="text"
+                value={financeAdvancePurpose}
+                onChange={(e) => setFinanceAdvancePurpose(e.target.value)}
+                placeholder="Purpose"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {selectedTypes.includes("Poster") && (
         <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6">
-          <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
-            Poster
-          </h2>
+          <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">Poster</h2>
 
-          {/* Poster Content */}
           <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Content for Poster *
-            </label>
-
+            <label className={cardFloatingLabelClass}>Content for poster*</label>
             <textarea
               rows={4}
-
-             value={posterContent}
-onChange={(e) => setPosterContent(e.target.value)}
+              value={posterContent}
+              onChange={(e) => setPosterContent(e.target.value)}
               placeholder="reason"
-              className="
-                w-full
-             
-                border
-                border-[#2F2F3E]
-                rounded-md
-                p-4
-                text-white
-                outline-none
-              "
+              className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
             />
           </div>
 
@@ -1443,87 +1467,6 @@ onChange={(e) => setPosterContent(e.target.value)}
 
           {/* Requirement */}
           {/* FINANCE REQUIRED */}
-          <div className="grid grid-cols-1  gap-4 mb-4">
-            <div className="relative w-full">
-              <label className={cardFloatingLabelClass}>Finance Required *</label>
-
-              <div
-                onClick={() => setShowPosterFinanceDropdown(!showPosterFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
-              >
-                <span className={posterFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
-                  {posterFinanceRequired === "Yes" ? "Yes" : "No"}
-                </span>
-
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-
-              {showPosterFinanceDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
-                    <div
-                      key={opt.label}
-                      onClick={() => {
-                        setPosterFinanceRequired(opt.value);
-                        setShowPosterFinanceDropdown(false);
-                        if (opt.value === "No") {
-                          setPosterEstimatedAmount("");
-                          setPosterAdvanceAmount("");
-                          setPosterAdvancePurpose("");
-                        }
-                      }}
-                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${posterFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-                    >
-                      <span>{opt.label}</span>
-                      {posterFinanceRequired === opt.value && <span>✓</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {posterFinanceRequired === "Yes" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={posterEstimatedAmount}
-                    onChange={(e) => setPosterEstimatedAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                  {posterFinanceComparisonError && (
-                    <p className="mt-1 text-sm text-red-400">{posterFinanceComparisonError}</p>
-                  )}
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={posterAdvanceAmount}
-                    onChange={(e) => setPosterAdvanceAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
-                  <input
-                    type="text"
-                    value={posterAdvancePurpose}
-                    onChange={(e) => setPosterAdvancePurpose(e.target.value)}
-                    placeholder="Purpose"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
           <div className="relative">
             <label className={cardFloatingLabelClass}>
               Special Requirements, If any 
@@ -1770,87 +1713,6 @@ onChange={(e) => setPosterContent(e.target.value)}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="relative w-full">
-              <label className={cardFloatingLabelClass}>Finance Required *</label>
-
-              <div
-                onClick={() => setShowVideoFinanceDropdown(!showVideoFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
-              >
-                <span className={videoFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
-                  {videoFinanceRequired === "Yes" ? "Yes" : "No"}
-                </span>
-
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-
-              {showVideoFinanceDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
-                    <div
-                      key={opt.label}
-                      onClick={() => {
-                        setVideoFinanceRequired(opt.value);
-                        setShowVideoFinanceDropdown(false);
-                        if (opt.value === "No") {
-                          setVideoEstimatedAmount("");
-                          setVideoAdvanceAmount("");
-                          setVideoAdvancePurpose("");
-                        }
-                      }}
-                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${videoFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-                    >
-                      <span>{opt.label}</span>
-                      {videoFinanceRequired === opt.value && <span>✓</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {videoFinanceRequired === "Yes" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={videoEstimatedAmount}
-                    onChange={(e) => setVideoEstimatedAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                  {videoFinanceComparisonError && (
-                    <p className="mt-1 text-sm text-red-400">{videoFinanceComparisonError}</p>
-                  )}
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={videoAdvanceAmount}
-                    onChange={(e) => setVideoAdvanceAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
-                  <input
-                    type="text"
-                    value={videoAdvancePurpose}
-                    onChange={(e) => setVideoAdvancePurpose(e.target.value)}
-                    placeholder="Purpose"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
 
           <div className="relative">
             <label className={cardFloatingLabelClass}>
