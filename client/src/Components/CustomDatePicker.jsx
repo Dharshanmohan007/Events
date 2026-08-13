@@ -83,7 +83,7 @@ const CustomDropdown = ({ value, options, onChange, label, isOpen, setIsOpen }) 
     );
 };
 
-const CustomDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
+const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDate, className = "" }) => {
     const selectedDate = useMemo(() => {
         if (!value) return null;
         const [year, month, day] = value.split("-").map(Number);
@@ -147,7 +147,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
                 className={`flex h-8 items-center gap-2 rounded-md border px-2 text-[11px] transition-colors cursor-pointer ${open
                         ? "border-[#8B3DFF] text-white"
                         : "border-[#283247] text-[#FFFFFF80] hover:border-[#8B3DFF]"
-                    } bg-[#1b2435]`}
+                    } bg-[#1b2435] ${className}`}
             >
                 <Calendar size={13} className="text-[#FFFFFF80]" />
                 <span className="min-w-[70px] text-left">{value ? formatDisplayDate(value) : placeholder}</span>
@@ -238,16 +238,22 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
                                 new Date().getMonth() === displayMonth &&
                                 new Date().getFullYear() === displayYear;
 
+                            const isDisabled = minDate && dateKey < minDate;
+
                             return (
                                 <button
                                     key={dateKey}
                                     type="button"
-                                    onClick={() => handleDateSelect(day)}
-                                    className={`h-8 rounded-lg text-[11px] transition-colors cursor-pointer ${isSelected
-                                            ? "bg-[#853FF9] text-white font-semibold"
-                                            : isToday
-                                                ? "border border-[#853FF9] text-[#A78BFA]"
-                                                : "text-[#FFFFFFCC] hover:bg-[#232A3C] hover:text-white"
+                                    onClick={() => !isDisabled && handleDateSelect(day)}
+                                    disabled={isDisabled}
+                                    className={`h-8 rounded-lg text-[11px] transition-colors ${
+                                            isDisabled
+                                                ? "text-[#FFFFFF40] cursor-not-allowed bg-transparent"
+                                                : isSelected
+                                                ? "bg-[#853FF9] text-white font-semibold cursor-pointer"
+                                                : isToday
+                                                    ? "border border-[#853FF9] text-[#A78BFA] cursor-pointer"
+                                                    : "text-[#FFFFFFCC] hover:bg-[#232A3C] hover:text-white cursor-pointer"
                                         }`}
                                 >
                                     {day}

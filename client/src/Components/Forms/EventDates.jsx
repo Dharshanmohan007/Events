@@ -2,6 +2,7 @@ import React from 'react'
 import CustomInput from "../CustomInput";
 import CustomSelect from '../CustomSelect';
 import TimePickerInput from "../TimePickerInput";
+import CustomDatePicker from '../CustomDatePicker';
 
 // Indian mobile regex
 const MOBILE_REGEX = /^[6-9]\d{9}$/;
@@ -84,7 +85,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
   </div>
 );
 
-export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {} }) {
+export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {}, day1Guests = [] }) {
   const handleGuestsChange = (e) => {
     const val = e.target.value;
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
@@ -112,14 +113,19 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
 
       {/* Date / Time */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-        <div>
-          <CustomInput
-            labelBg="#1E1E35"
-            type="date"
-            label={`Day ${dayIndex} – Event Date *`}
+        <div className="relative w-full">
+          <span
+            className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+            style={{ backgroundColor: "#1E1E35" }}
+          >
+            {`Day ${dayIndex} – Event Date *`}
+          </span>
+          <CustomDatePicker
             value={dayData?.date || ""}
-            min={minDate}
-            onChange={(e) => updateDay({ ...dayData, date: e.target.value })}
+            onChange={(val) => updateDay({ ...dayData, date: val })}
+            placeholder="DD/MM/YYYY"
+            minDate={minDate}
+            className="w-full !h-[50px] !text-sm !px-3.5 !rounded-lg !border-[#3A3A5A] !bg-transparent text-white"
           />
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
         </div>
@@ -144,7 +150,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
       </div>
 
       {/* Guests count */}
-      <div className='grid grid-cols-1 sm:grid-cols-1 gap-4'>
+      {/* <div className=' items-center'> */}
         <div>
           <CustomInput
             labelBg="#1E1E35"
@@ -156,7 +162,28 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
           />
           {errors.numGuests && <p className="text-red-400 text-xs mt-1">{errors.numGuests}</p>}
         </div>
-      </div>
+      {/* </div> */}
+      {dayIndex > 1 && (
+        <div className="flex items-center mt-2 sm:mt-0">
+          <input
+            type="checkbox"
+            id={`same-as-day1-${dayIndex}`}
+            className="mr-2 w-4 h-4 cursor-pointer"
+            onChange={(e) => {
+              if (e.target.checked) {
+                updateDay({
+                  ...dayData,
+                  numGuests: day1Guests.length.toString(),
+                  guests: JSON.parse(JSON.stringify(day1Guests)),
+                });
+              }
+            }}
+          />
+          <label htmlFor={`same-as-day1-${dayIndex}`} className="text-white text-sm cursor-pointer">
+            Same as Day 1 Guests
+          </label>
+        </div>
+      )}
 
       {/* Guest fields */}
       {guestCount > 0 && (

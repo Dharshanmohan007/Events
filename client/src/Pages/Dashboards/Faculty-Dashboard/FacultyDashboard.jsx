@@ -54,6 +54,8 @@ const FacultyDashboard = () => {
 
                     <Link
                         to="/forms"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#853FF9] to-[#4F2593] hover:bg-linear-to-l hover:from-[#853FF9] hover:to-[#4F2593] px-3 py-2  font-medium text-white transition-all duration-300 "
                     >
                         <Plus size={22} />
@@ -61,7 +63,7 @@ const FacultyDashboard = () => {
                     </Link>
                 </div>
 
-                {draftData && <FacultyDraft data={draftData} />}
+                {draftData && <FacultyDraft data={draftData} setDraftData={setDraftData} />}
                 <FacultyStatcard />
                 <FacultyQuickActions />
 
