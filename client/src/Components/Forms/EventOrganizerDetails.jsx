@@ -48,6 +48,7 @@ export default function EventOrganizerDetails({
   const [fileSizeError, setFileSizeError] = React.useState("");
   const [principalFileError, setPrincipalFileError] = React.useState("");
   const [advanceAmountError, setAdvanceAmountError] = React.useState("");
+  const [advanceDaysError, setAdvanceDaysError] = React.useState("");
   // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
 
@@ -623,12 +624,21 @@ export default function EventOrganizerDetails({
                 value={advanceToBeReceivedWithin}
                 onChange={(e) => {
                   const value = e.target.value.replace(/\D/g, "");
-                  setAdvanceToBeReceivedWithin(value);
+                  if (value && Number(value) > 15) {
+                    setAdvanceDaysError("no of days need to be within 15 days");
+                  } else {
+                    setAdvanceDaysError("");
+                    setAdvanceToBeReceivedWithin(value);
+                  }
                 }}
                 placeholder="Enter no of days"
               />
 
-              {errors.advanceToBeReceivedWithin && (
+              {advanceDaysError ? (
+                <p className="text-red-400 text-xs mt-1">
+                  {advanceDaysError}
+                </p>
+              ) : errors.advanceToBeReceivedWithin && (
                 <p className="text-red-400 text-xs mt-1">
                   {errors.advanceToBeReceivedWithin}
                 </p>
