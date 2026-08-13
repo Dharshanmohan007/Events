@@ -181,7 +181,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
       <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
       {maxCount > 0 && (
         <p className="text-gray-400 text-xs mb-3">
-          Veg + Non-veg total for VIP / Trainer / Placement must equal <span className="text-purple-300 font-semibold">{maxCount}</span> (Resource persons + Accompanying persons)
+          Maximum limit for Veg and Non-veg (each) in VIP / Trainer / Placement is <span className="text-purple-300 font-semibold">{maxCount}</span> (Resource persons + Accompanying persons)
         </p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,8 +189,6 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
           const sectionLabel = getSectionLabel(sectionKey);
           const vegVal = parseInt(data[sectionKey]?.vegCount) || 0;
           const nonVegVal = parseInt(data[sectionKey]?.nonVegCount) || 0;
-          const sectionTotal = vegVal + nonVegVal;
-          const showCountHint = sectionKey !== "participants" && maxCount > 0 && data[sectionKey]?.vegCount !== "" && data[sectionKey]?.nonVegCount !== "";
           return (
             <React.Fragment key={sectionKey}>
               <div>
@@ -199,7 +197,14 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                   labelBg={labelBg}
                   type="number"
                   value={data[sectionKey]?.vegCount ?? ""}
-                  onChange={(e) => onChange(sectionKey, "vegCount", Math.max(0, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
+                    let val = strVal === "" ? "" : Math.max(0, Number(strVal));
+                    if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
+                      if (val > maxCount) val = maxCount;
+                    }
+                    onChange(sectionKey, "vegCount", val);
+                  }}
                 />
                 {errors[sectionKey]?.vegCount && (
                   <p className="text-red-400 text-xs mt-1">
@@ -213,16 +218,18 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                   labelBg={labelBg}
                   type="number"
                   value={data[sectionKey]?.nonVegCount ?? ""}
-                  onChange={(e) => onChange(sectionKey, "nonVegCount", Math.max(0, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
+                    let val = strVal === "" ? "" : Math.max(0, Number(strVal));
+                    if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
+                      if (val > maxCount) val = maxCount;
+                    }
+                    onChange(sectionKey, "nonVegCount", val);
+                  }}
                 />
                 {errors[sectionKey]?.nonVegCount && (
                   <p className="text-red-400 text-xs mt-1">
                     {errors[sectionKey].nonVegCount}
-                  </p>
-                )}
-                {showCountHint && sectionTotal !== maxCount && (
-                  <p className="text-orange-400 text-xs mt-1">
-                    Current total: {sectionTotal} — expected: {maxCount}
                   </p>
                 )}
               </div>
@@ -344,13 +351,7 @@ function validateFoodForms(forms) {
           if (sectionData.vegCount === "") secErrs.vegCount = "Veg count is required";
           if (sectionData.nonVegCount === "") secErrs.nonVegCount = "Non-veg count is required";
 
-          // Validate veg + nonVeg total for non-participant sections
-          if (sectionKey !== "participants" && sectionData.vegCount !== "" && sectionData.nonVegCount !== "") {
-            const total = (parseInt(sectionData.vegCount) || 0) + (parseInt(sectionData.nonVegCount) || 0);
-            if (total !== maxCount) {
-              secErrs.nonVegCount = `Veg + Non-veg total must equal ${maxCount} (Resource persons + Accompanying persons)`;
-            }
-          }
+          // No sum validation needed here, as inputs are capped at maxCount individually
           
           if (Object.keys(secErrs).length > 0) {
             mealErr[sectionKey] = secErrs;
