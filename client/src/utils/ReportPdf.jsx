@@ -140,7 +140,7 @@ function buildReceiptHTML(logoDataUrl, data) {
       font-size: 13pt;
       font-weight: bold;
       flex: 1;
-      text-align: center;
+      text-align: left;
     }
 
     .title-row .iqac-ref {
@@ -309,7 +309,6 @@ function buildReceiptHTML(logoDataUrl, data) {
 
         <!-- Header -->
         <div class="header">
-          <img src="${logoDataUrl}" alt="Sri Eshwar College of Engineering" />
         </div>
 
         <!-- Title -->
