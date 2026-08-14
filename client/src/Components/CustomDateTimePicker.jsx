@@ -119,7 +119,14 @@ function ScrollDrum({ items, value, onChange }) {
 }
 
 // ─── Main Picker ──────────────────────────────────────────────────────────────
-export default function CustomDateTimePicker({ label, value, onChange, placeholder, minDate }) {
+export default function CustomDateTimePicker({
+  label,
+  value,
+  onChange,
+  placeholder,
+  minDate,
+  maxDate,
+}) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("calendar");
   const [displayMonth, setDisplayMonth] = useState(() =>
@@ -295,6 +302,11 @@ export default function CustomDateTimePicker({ label, value, onChange, placehold
                     const minD = new Date(minDate);
                     minD.setHours(0, 0, 0, 0);
                     if (currentDayDate < minD) isDisabled = true;
+                  }
+                  if (maxDate) {
+                    const maxD = new Date(maxDate);
+                    maxD.setHours(0, 0, 0, 0);
+                    if (currentDayDate > maxD) isDisabled = true;
                   }
 
                   const isSelected =

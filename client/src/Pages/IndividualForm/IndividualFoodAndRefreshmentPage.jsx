@@ -100,11 +100,12 @@ const createFoodFormCard = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  advanceToBeReceviedWithin: "",
   estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
 
-function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true }) {
+function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = true, minDate }) {
   const [open, setOpen] = useState(false);
 
   const [view, setView] = useState("calendar");
@@ -468,6 +469,15 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                   },
                   (_, i) => i + 1,
                 ).map((day) => {
+                  const currentDayDate = new Date(displayYear, displayMonth, day);
+                  const isDisabled =
+                    minDate &&
+                    currentDayDate <
+                      new Date(
+                        minDate.getFullYear(),
+                        minDate.getMonth(),
+                        minDate.getDate(),
+                      );
                   const isSelected =
                     selectedDate &&
                     selectedDate.getDate() === day &&
@@ -478,9 +488,12 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                     <button
                       key={day}
                       type="button"
-                      onClick={() => handleDayClick(day)}
+                      onClick={() => !isDisabled && handleDayClick(day)}
+                      disabled={isDisabled}
                       className={`text-xs py-1.5 rounded-lg ${
-                        isSelected
+                        isDisabled
+                          ? "text-gray-600 cursor-not-allowed"
+                          : isSelected
                           ? "bg-purple-600 text-white"
                           : "text-gray-300 hover:bg-[#2a2a4a]"
                       }`}
@@ -843,6 +856,11 @@ useEffect(() => {
   const handleStaffCount = (cardId, value) => {
     const count = Number(value);
 
+    // Reject values greater than 99
+    if (count > 99) {
+      return;
+    }
+
     updateFormCard(cardId, (card) => {
       if (value === "" || !Number.isInteger(count) || count < 1) {
         return {
@@ -967,6 +985,7 @@ useEffect(() => {
       ...(card.financeRequired === "Yes" && {
         advanceAmount: Number(card.advanceAmount) || 0,
         advancePurpose: card.advancePurpose.trim(),
+        advanceToBeReceviedWithin: Number(card.advanceToBeReceviedWithin) || 0,
         estimatedEventBudget: Number(card.estimatedEventBudget) || 0,
         // Backend expects `estimatedAmount` — include it for compatibility
         estimatedAmount: Number(card.estimatedEventBudget) || 0,
@@ -984,9 +1003,10 @@ useEffect(() => {
     // console.log("Submitting food forms:", formCards); 
     const errors = [];
 
-    // if (!principalApprovalDocument) {
-    //   errors.push("Principal Approval Form is required.");
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     formCards.forEach((card, cardIndex) => {
       const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
@@ -1006,6 +1026,12 @@ useEffect(() => {
         errors.push(
           `${formLabel}Internal Accompanying Person count is required.`,
         );
+
+      if (Number(card.internalAccompanyingCount) > 99) {
+        errors.push(
+          `${formLabel}Internal Accompanying Person count cannot exceed 99.`,
+        );
+      }
 
       if (card.accompanyingStaffs.some((staff) => !staff.name.trim())) {
         errors.push(`${formLabel}Accompanying staff name is required.`);
@@ -1044,6 +1070,10 @@ useEffect(() => {
 
         if (!card.advancePurpose || !card.advancePurpose.trim()) {
           errors.push(`${formLabel}Advance purpose is required.`);
+        }
+
+        if (!card.advanceToBeReceviedWithin) {
+          errors.push(`${formLabel}Advance to be received within is required.`);
         }
 
         if (!card.estimatedEventBudget || Number(card.estimatedEventBudget) <= 0) {
@@ -1134,6 +1164,10 @@ if (payload.advanceAmount !== undefined) {
 
 if (payload.advancePurpose !== undefined) {
   formData.append("advancePurpose", payload.advancePurpose);
+}
+
+if (payload.advanceToBeReceviedWithin !== undefined) {
+  formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
 }
 
 if (payload.estimatedEventBudget !== undefined) {
@@ -1231,6 +1265,7 @@ if (principalApprovalDocument) {
             selectDate: firstCard.selectDate || "",
             advanceAmount: firstCard.advanceAmount || "",
             advancePurpose: firstCard.advancePurpose || "",
+            clearanceDays: firstCard.advanceToBeReceviedWithin || 15,
           },
           employee,
           submitResponse: {
@@ -1290,7 +1325,7 @@ if (submitSuccess) {
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot proceed further) 
+          Principal Approval Form (without uploading this document you cannot proceed further) *
         </label>
 
         <div
@@ -1460,6 +1495,7 @@ if (submitSuccess) {
             onChange={(date) => updateFormCard(card.id, { selectDate: date })}
             placeholder="Select Date"
             showTime={false}
+            minDate={new Date()}
           />
 
           {/* RESOURCE PERSON TYPE */}
@@ -1578,8 +1614,12 @@ if (submitSuccess) {
             <input
               type="number"
               min="1"
+              max="99"
               value={card.internalAccompanyingCount}
               onChange={(e) => handleStaffCount(card.id, e.target.value)}
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
               className="
                   w-full
                   border
@@ -1647,6 +1687,7 @@ if (submitSuccess) {
                         ? {
                             advanceAmount: "",
                             advancePurpose: "",
+                            advanceToBeReceviedWithin: "",
                             estimatedEventBudget: "",
                           }
                         : {}),
@@ -1719,6 +1760,32 @@ if (submitSuccess) {
                   updateFormCard(card.id, { advancePurpose: e.target.value })
                 }
                 placeholder="Purpose"
+                className="
+                w-full
+                border
+                border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-white
+                outline-none
+              "
+              />
+            </div>
+
+            <div className="relative md:col-span-2">
+              <label className={cardFloatingLabelClass}>
+                Advance To Be Received Within
+              </label>
+
+              <input
+                type="number"
+                min="0"
+                value={card.advanceToBeReceviedWithin}
+                onChange={(e) =>
+                  updateFormCard(card.id, { advanceToBeReceviedWithin: e.target.value })
+                }
+                placeholder="0"
                 className="
                 w-full
                 border

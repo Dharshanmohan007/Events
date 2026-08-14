@@ -43,6 +43,7 @@ const createTransportForm = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  advanceToBeReceviedWithin: "",
   estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
@@ -155,7 +156,8 @@ const TransportDetailsPage = () => {
 
   const handleUploadDragOver = (e) => e.preventDefault();
 
-  const vehicleOptions = ["Bus", "Van", "Car"];
+  const getVehicleOptions = (totalPassengers) =>
+    Number(totalPassengers) > 5 ? ["Bus"] : ["Car"];
 
   // =========================
   // ADD FORM
@@ -184,6 +186,33 @@ const TransportDetailsPage = () => {
       ...transportForms[formIndex],
       [field]: value,
     };
+
+    // Keep the pickup/drop range valid even if a date is changed after both
+    // fields have already been selected.
+    if (
+      nextForm.pickupDateTime &&
+      nextForm.dropDateTime &&
+      nextForm.pickupDateTime > nextForm.dropDateTime
+    ) {
+      if (field === "pickupDateTime") {
+        nextForm.dropDateTime = null;
+      } else {
+        nextForm.pickupDateTime = null;
+      }
+    }
+
+    if (field === "totalPassengers") {
+      const allowedVehicles = getVehicleOptions(value);
+
+      nextForm.selectedVehicles = (nextForm.selectedVehicles || []).filter(
+        (vehicle) => allowedVehicles.includes(vehicle),
+      );
+      nextForm.vehicleCounts = Object.fromEntries(
+        Object.entries(nextForm.vehicleCounts || {}).filter(([vehicle]) =>
+          allowedVehicles.includes(vehicle),
+        ),
+      );
+    }
 
     if (isDateField) {
       nextForm.availableVehicleCounts = {};
@@ -550,6 +579,7 @@ const TransportDetailsPage = () => {
     formData.append("financeRequired", form.financeRequired);
     formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
     formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
+    formData.append("advanceToBeReceviedWithin", form.financeRequired === "Yes" ? Number(form.advanceToBeReceviedWithin) || 0 : 0);
     formData.append(
       "estimatedEventBudget",
       form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
@@ -573,9 +603,10 @@ const TransportDetailsPage = () => {
     // console.log('[TransportDetails] handleSubmit start');
     const errors = [];
 
-    // if (!principalApprovalDocument) {
-    //   errors.push("Principal Approval Form is required.");
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     transportForms.forEach((form, index) => {
       if (!form.pickupDateTime) {
@@ -608,6 +639,11 @@ const TransportDetailsPage = () => {
         }
       });
 
+      // Staff count validation
+      if (form.staffOptionType && Number(form.staffOptionType) > 99) {
+        errors.push(`Form ${index + 1}: Number of accompanying staff cannot exceed 99.`);
+      }
+
       // Finance validation
       if (form.financeRequired === "Yes") {
         const advanceAmount = parseFloat(form.advanceAmount);
@@ -619,6 +655,10 @@ const TransportDetailsPage = () => {
 
         if (!form.advancePurpose || !form.advancePurpose.trim()) {
           errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+
+        if (!form.advanceToBeReceviedWithin) {
+          errors.push(`Form ${index + 1}: Advance to be received within is required.`);
         }
 
         if (
@@ -764,6 +804,7 @@ const TransportDetailsPage = () => {
               selectDate: firstForm?.pickupDateTime || "",
               advanceAmount: firstForm?.advanceAmount || "",
               advancePurpose: firstForm?.advancePurpose || "",
+              clearanceDays: firstForm?.advanceToBeReceviedWithin || 15,
               employeeName: employeePayload.name,
               empId: employeePayload.empId,
               designation: employeePayload.designation,
@@ -1007,6 +1048,7 @@ const TransportDetailsPage = () => {
               }
               placeholder="Select pickup date & time"
               labelBgClass="bg-[#1b1b35]"
+              maxDate={form.dropDateTime}
             />
 
             <CustomDateTimePicker
@@ -1017,6 +1059,7 @@ const TransportDetailsPage = () => {
               }
               placeholder="Select drop date & time"
               labelBgClass="bg-[#1b1b35]"
+              minDate={form.pickupDateTime}
             />
           </div>
 
@@ -1260,7 +1303,7 @@ const TransportDetailsPage = () => {
 
               {form.showVehicleDropdown && (
                 <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
-                  {vehicleOptions.map((option, index) => {
+                  {getVehicleOptions(form.totalPassengers).map((option, index) => {
                     const isSelected = (form.selectedVehicles || []).includes(
                       option,
                     );
@@ -1336,7 +1379,7 @@ const TransportDetailsPage = () => {
                     <span>Checking available vehicle counts...</span>
                   ) : Object.keys(form.availableVehicleCounts).length > 0 ? (
                     <span>
-                      Available counts: {vehicleOptions
+                      Available counts: {getVehicleOptions(form.totalPassengers)
                         .map((vehicle) => {
                           const raw = form.availableVehicleCounts[vehicle];
                           const displayed = getDisplayedAvailability(formIndex, vehicle);
@@ -1423,10 +1466,15 @@ const TransportDetailsPage = () => {
             <input
               type="number"
               min="0"
-              max="10"
+              max="99"
               value={form.staffOptionType}
               onChange={(e) => {
                 const value = e.target.value;
+
+                // Reject values greater than 99
+                if (Number(value) > 99) {
+                  return;
+                }
 
                 const updatedForms = [...transportForms];
 
@@ -1450,6 +1498,9 @@ const TransportDetailsPage = () => {
                 setTransportForms(updatedForms);
               }}
               placeholder="Enter staff count"
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
               className="
                     w-full
                    
@@ -1608,6 +1659,7 @@ const TransportDetailsPage = () => {
                         financeRequired: opt.value,
                         advanceAmount: opt.value === "No" ? "" : undefined,
                         advancePurpose: opt.value === "No" ? "" : undefined,
+                        advanceToBeReceviedWithin: opt.value === "No" ? "" : undefined,
                         estimatedEventBudget: opt.value === "No" ? "" : undefined,
                       })
                     }
@@ -1693,6 +1745,30 @@ const TransportDetailsPage = () => {
                     value={form.advancePurpose}
                     onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
                     placeholder="Purpose"
+                    className="
+                      w-full
+                      border
+                      border-[#2F2F47]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
+
+                <div className="relative md:col-span-2">
+                  <label className={formFloatingLabelClass}>
+                    Advance To Be Received Within
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.advanceToBeReceviedWithin}
+                    onChange={(e) => updateFormField(formIndex, "advanceToBeReceviedWithin", e.target.value)}
+                    placeholder="0"
                     className="
                       w-full
                       border

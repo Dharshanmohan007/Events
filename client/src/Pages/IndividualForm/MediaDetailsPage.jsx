@@ -156,6 +156,7 @@ const [trophyContent, setTrophyContent] = useState("");
   const [financeEstimatedAmount, setFinanceEstimatedAmount] = useState("");
   const [financeAdvanceAmount, setFinanceAdvanceAmount] = useState("");
   const [financeAdvancePurpose, setFinanceAdvancePurpose] = useState("");
+  const [financeAdvanceToBeReceviedWithin, setFinanceAdvanceToBeReceviedWithin] = useState("");
   const [showFinanceDropdown, setShowFinanceDropdown] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -406,6 +407,9 @@ const [trophyContent, setTrophyContent] = useState("");
         if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
           errors.push("Advance purpose is required.");
         }
+        if (!financeAdvanceToBeReceviedWithin) {
+          errors.push("Advance to be received within is required.");
+        }
         if (
           !Number.isNaN(Number(financeEstimatedAmount)) &&
           !Number.isNaN(Number(financeAdvanceAmount)) &&
@@ -459,6 +463,9 @@ const [trophyContent, setTrophyContent] = useState("");
         }
         if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
           errors.push("Advance purpose is required.");
+        }
+        if (!financeAdvanceToBeReceviedWithin) {
+          errors.push("Advance to be received within is required.");
         }
         if (
           !Number.isNaN(Number(financeEstimatedAmount)) &&
@@ -573,6 +580,7 @@ const [trophyContent, setTrophyContent] = useState("");
       formData.append("advanceAmount", financeAdvanceAmount || "0");
       formData.append("estimatedAmount", financeEstimatedAmount || "0");
       formData.append("advancePurpose", financeAdvancePurpose || "");
+      formData.append("advanceToBeReceviedWithin", financeAdvanceToBeReceviedWithin || "0");
     }
     
     // typeOfMedia with CAPITALIZED names - append each type separately
@@ -635,6 +643,12 @@ const [trophyContent, setTrophyContent] = useState("");
     
     if (!selectedTypes.length) {
       setValidationErrors(["Please select at least one Type of Design Required."]);
+      return;
+    }
+
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      setValidationErrors(["Principal Approval Form is required."]);
       return;
     }
 
@@ -722,6 +736,7 @@ const [trophyContent, setTrophyContent] = useState("");
               selectDate: posterDeliveryDate || videoDeliveryDate || "",
               advanceAmount: financeAdvanceAmount || "",
               advancePurpose: financeAdvancePurpose || "",
+              clearanceDays: financeAdvanceToBeReceviedWithin || 15,
             },
             employee: employeePayload,
             submitResponse: submitRespPayload,
@@ -805,6 +820,7 @@ const [trophyContent, setTrophyContent] = useState("");
           selectDate: posterDeliveryDate || videoDeliveryDate || "",
           advanceAmount: financeAdvanceAmount || "",
           advancePurpose: financeAdvancePurpose || "",
+          clearanceDays: financeAdvanceToBeReceviedWithin || 15,
         }}
         showDownloadButton={false}
       />
@@ -1023,6 +1039,7 @@ const [trophyContent, setTrophyContent] = useState("");
                       setFinanceEstimatedAmount("");
                       setFinanceAdvanceAmount("");
                       setFinanceAdvancePurpose("");
+                      setFinanceAdvanceToBeReceviedWithin("");
                     }
                   }}
                   className={`px-4 py-3 cursor-pointer flex items-center justify-between ${financeRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
@@ -1071,6 +1088,18 @@ const [trophyContent, setTrophyContent] = useState("");
                 value={financeAdvancePurpose}
                 onChange={(e) => setFinanceAdvancePurpose(e.target.value)}
                 placeholder="Purpose"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+
+            <div className="relative w-full md:col-span-2">
+              <label className={cardFloatingLabelClass}>Advance To Be Received Within</label>
+              <input
+                type="number"
+                min="0"
+                value={financeAdvanceToBeReceviedWithin}
+                onChange={(e) => setFinanceAdvanceToBeReceviedWithin(e.target.value)}
+                placeholder="0"
                 className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
               />
             </div>
@@ -1402,6 +1431,7 @@ const [trophyContent, setTrophyContent] = useState("");
       }
       placeholder="Select Delivery Date"
       showTime={false}
+      minDate={new Date()}
     />
   </div>
 
@@ -1655,6 +1685,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 }
                 placeholder="__/__/____"
                 showTime={false}
+                minDate={new Date()}
               />
             </div>
 
