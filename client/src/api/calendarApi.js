@@ -51,3 +51,21 @@ export async function fetchEvents({ venue, view, date }) {
 
   return data?.events || [];
 }
+
+// ----------------------------------------
+// GET /api/calendar/all-venues-events
+// Single API call to fetch all venues and their events for a month
+// Returns { venues: string[], eventsByVenue: { [venue]: Event[] } }
+// ----------------------------------------
+export async function fetchAllVenuesEvents({ date }) {
+  const { data } = await CALENDAR_API.get("/api/calendar/all-venues-events", {
+    params: {
+      date: date.toISOString(),
+    },
+  });
+
+  return {
+    venues: data?.venues || [],
+    eventsByVenue: data?.eventsByVenue || {},
+  };
+}
