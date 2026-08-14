@@ -405,6 +405,7 @@ export default function PurchaseDetails() {
     financeRequired: "No",
     advanceAmount: "",
     advancePurpose: "",
+    advanceToBeReceviedWithin: "",
     estimatedEventBudget: "",
   });
 
@@ -441,9 +442,10 @@ export default function PurchaseDetails() {
   const validateForm = () => {
     const nextErrors = {};
 
-    // if (!principalApprovalDocument) {
-    //   nextErrors.principalApprovalDocument = "Principal Approval Form is required.";
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      nextErrors.principalApprovalDocument = "Principal Approval Form is required.";
+    }
 
     if (!form.requirement.length) {
       nextErrors.requirement = "This field is required.";
@@ -566,6 +568,10 @@ export default function PurchaseDetails() {
 
       if (!form.advancePurpose || !form.advancePurpose.trim()) {
         nextErrors.advancePurpose = "This field is required.";
+      }
+
+      if (!form.advanceToBeReceviedWithin) {
+        nextErrors.advanceToBeReceviedWithin = "This field is required.";
       }
 
       if (!form.estimatedEventBudget || !form.estimatedEventBudget.toString().trim()) {
@@ -698,6 +704,7 @@ export default function PurchaseDetails() {
       financeRequired: form.financeRequired,
       advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
       advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose || "" : "",
+      advanceToBeReceviedWithin: form.financeRequired === "Yes" ? Number(form.advanceToBeReceviedWithin) || 0 : 0,
       estimatedAmount: form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
 
       purchases: [
@@ -783,6 +790,7 @@ export default function PurchaseDetails() {
     formData.append("financeRequired", payload.financeRequired);
     formData.append("advanceAmount", payload.advanceAmount);
     formData.append("advancePurpose", payload.advancePurpose);
+    formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
     formData.append("estimatedAmount", payload.estimatedAmount);
 
     // Purchases
@@ -884,6 +892,7 @@ export default function PurchaseDetails() {
             selectDate: form?.deliveryDate || "",
             advanceAmount: form?.advanceAmount || "",
             advancePurpose: form?.advancePurpose || "",
+            clearanceDays: form?.advanceToBeReceviedWithin || 15,
             empId: employeePayload.empId,
             employeeName: employeePayload.name,
             designation: employeePayload.designation,
@@ -1258,6 +1267,34 @@ export default function PurchaseDetails() {
 
                 {errors.advancePurpose && (
                   <p className="mt-1 text-sm text-red-400">{errors.advancePurpose}</p>
+                )}
+              </div>
+
+              <div className="relative md:col-span-2">
+                <label className={cardFloatingLabelClass}>
+                  Advance To Be Received Within
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={form.advanceToBeReceviedWithin}
+                  onChange={(e) => setField("advanceToBeReceviedWithin", e.target.value)}
+                  placeholder="0"
+                  className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                  "
+                />
+
+                {errors.advanceToBeReceviedWithin && (
+                  <p className="mt-1 text-sm text-red-400">{errors.advanceToBeReceviedWithin}</p>
                 )}
               </div>
             </div>

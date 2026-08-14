@@ -856,6 +856,11 @@ useEffect(() => {
   const handleStaffCount = (cardId, value) => {
     const count = Number(value);
 
+    // Reject values greater than 99
+    if (count > 99) {
+      return;
+    }
+
     updateFormCard(cardId, (card) => {
       if (value === "" || !Number.isInteger(count) || count < 1) {
         return {
@@ -998,9 +1003,10 @@ useEffect(() => {
     // console.log("Submitting food forms:", formCards); 
     const errors = [];
 
-    // if (!principalApprovalDocument) {
-    //   errors.push("Principal Approval Form is required.");
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     formCards.forEach((card, cardIndex) => {
       const formLabel = formCards.length > 1 ? `Form ${cardIndex + 1}: ` : "";
@@ -1020,6 +1026,12 @@ useEffect(() => {
         errors.push(
           `${formLabel}Internal Accompanying Person count is required.`,
         );
+
+      if (Number(card.internalAccompanyingCount) > 99) {
+        errors.push(
+          `${formLabel}Internal Accompanying Person count cannot exceed 99.`,
+        );
+      }
 
       if (card.accompanyingStaffs.some((staff) => !staff.name.trim())) {
         errors.push(`${formLabel}Accompanying staff name is required.`);
@@ -1313,7 +1325,7 @@ if (submitSuccess) {
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot proceed further) 
+          Principal Approval Form (without uploading this document you cannot proceed further) *
         </label>
 
         <div
@@ -1602,8 +1614,12 @@ if (submitSuccess) {
             <input
               type="number"
               min="1"
+              max="99"
               value={card.internalAccompanyingCount}
               onChange={(e) => handleStaffCount(card.id, e.target.value)}
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
               className="
                   w-full
                   border

@@ -43,6 +43,7 @@ const createTransportForm = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  advanceToBeReceviedWithin: "",
   estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
@@ -578,6 +579,7 @@ const TransportDetailsPage = () => {
     formData.append("financeRequired", form.financeRequired);
     formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
     formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
+    formData.append("advanceToBeReceviedWithin", form.financeRequired === "Yes" ? Number(form.advanceToBeReceviedWithin) || 0 : 0);
     formData.append(
       "estimatedEventBudget",
       form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
@@ -601,9 +603,10 @@ const TransportDetailsPage = () => {
     // console.log('[TransportDetails] handleSubmit start');
     const errors = [];
 
-    // if (!principalApprovalDocument) {
-    //   errors.push("Principal Approval Form is required.");
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     transportForms.forEach((form, index) => {
       if (!form.pickupDateTime) {
@@ -636,6 +639,11 @@ const TransportDetailsPage = () => {
         }
       });
 
+      // Staff count validation
+      if (form.staffOptionType && Number(form.staffOptionType) > 99) {
+        errors.push(`Form ${index + 1}: Number of accompanying staff cannot exceed 99.`);
+      }
+
       // Finance validation
       if (form.financeRequired === "Yes") {
         const advanceAmount = parseFloat(form.advanceAmount);
@@ -647,6 +655,10 @@ const TransportDetailsPage = () => {
 
         if (!form.advancePurpose || !form.advancePurpose.trim()) {
           errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+
+        if (!form.advanceToBeReceviedWithin) {
+          errors.push(`Form ${index + 1}: Advance to be received within is required.`);
         }
 
         if (
@@ -792,6 +804,7 @@ const TransportDetailsPage = () => {
               selectDate: firstForm?.pickupDateTime || "",
               advanceAmount: firstForm?.advanceAmount || "",
               advancePurpose: firstForm?.advancePurpose || "",
+              clearanceDays: firstForm?.advanceToBeReceviedWithin || 15,
               employeeName: employeePayload.name,
               empId: employeePayload.empId,
               designation: employeePayload.designation,
@@ -1452,10 +1465,15 @@ const TransportDetailsPage = () => {
             <input
               type="number"
               min="0"
-              max="10"
+              max="99"
               value={form.staffOptionType}
               onChange={(e) => {
                 const value = e.target.value;
+
+                // Reject values greater than 99
+                if (Number(value) > 99) {
+                  return;
+                }
 
                 const updatedForms = [...transportForms];
 
@@ -1479,6 +1497,9 @@ const TransportDetailsPage = () => {
                 setTransportForms(updatedForms);
               }}
               placeholder="Enter staff count"
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
               className="
                     w-full
                    
@@ -1637,6 +1658,7 @@ const TransportDetailsPage = () => {
                         financeRequired: opt.value,
                         advanceAmount: opt.value === "No" ? "" : undefined,
                         advancePurpose: opt.value === "No" ? "" : undefined,
+                        advanceToBeReceviedWithin: opt.value === "No" ? "" : undefined,
                         estimatedEventBudget: opt.value === "No" ? "" : undefined,
                       })
                     }
@@ -1722,6 +1744,30 @@ const TransportDetailsPage = () => {
                     value={form.advancePurpose}
                     onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
                     placeholder="Purpose"
+                    className="
+                      w-full
+                      border
+                      border-[#2F2F47]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
+
+                <div className="relative md:col-span-2">
+                  <label className={formFloatingLabelClass}>
+                    Advance To Be Received Within
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.advanceToBeReceviedWithin}
+                    onChange={(e) => updateFormField(formIndex, "advanceToBeReceviedWithin", e.target.value)}
+                    placeholder="0"
                     className="
                       w-full
                       border
