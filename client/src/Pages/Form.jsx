@@ -171,6 +171,8 @@ let decodedToken = jwtDecode(token);
       estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
+      advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
+      ExpectedEventOutcome: eventRequisition.expectedEventOutcome || "",
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
@@ -626,7 +628,20 @@ const validateTransportData = (transportData) => {
     if (!form.dropDate) err.dropDate = "Drop date is required";
     if (!form.pickupLocation?.trim()) err.pickupLocation = "Pickup location is required";
     if (!form.dropLocation?.trim()) err.dropLocation = "Drop location is required";
-    if (!form.vistaTransport) err.vistaTransport = "Transport type is required";
+    if (!form.vistaTransport || form.vistaTransport.length === 0) err.vistaTransport = "Transport type is required";
+    
+    if (form.vistaTransport && form.vistaTransport.length > 0) {
+      form.vistaTransport.forEach(type => {
+        if (type.toLowerCase().includes("car")) {
+          const count = Number(form.vehicleCounts?.[type]) || 0;
+          const passengers = Number(form.totalPassengers) || 0;
+          if (count > passengers && passengers > 0) {
+            err.vistaTransport = "Vehicle count exceeds allowed limit based on total passengers.";
+          }
+        }
+      });
+    }
+
     return err;
   });
   if (errors.some((e) => Object.keys(e).length > 0)) return errors;
@@ -757,6 +772,8 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       estimatedBudget: Number(formData.event.estimatedBudget) || 0,
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
+      advanceToBeReceviedWithin: Number(formData.event.advanceToBeReceivedWithin) || 0,
+      ExpectedEventOutcome: formData.event.expectedEventOutcome || "",
       organizingDepartment: formData.event.department,
       organizerCount: parseInt(formData.event.numOrganizers) || 0,
       organizers: (formData.event.organizers || []).map((o) => ({
@@ -804,6 +821,8 @@ function hydrateDraftData(apiData) {
     estimatedBudget: od.estimatedBudget ? String(od.estimatedBudget) : "",
     advanceAmount: od.advanceAmount ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
+    advanceToBeReceivedWithin: od.advanceToBeReceviedWithin ? String(od.advanceToBeReceviedWithin) : "",
+    expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: null,
     principalApprovalDocument: null,

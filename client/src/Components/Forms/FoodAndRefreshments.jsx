@@ -165,7 +165,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
 }
 
 // ─── Meal section ─────────────────────────────────────────────────────────────
-const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelBg = "#1f1f38" }) {
+const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelBg = "#1f1f38", maxCount = 0 }) {
   const getSectionLabel = (sectionKey) => {
     switch (sectionKey) {
       case "participants": return "Participants";
@@ -179,9 +179,16 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
   return (
     <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
       <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
+      {maxCount > 0 && (
+        <p className="text-gray-400 text-xs mb-3">
+          Maximum limit for Veg and Non-veg (each) in VIP / Trainer / Placement is <span className="text-purple-300 font-semibold">{maxCount}</span> (Resource persons + Accompanying persons)
+        </p>
+      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {activeSections.map((sectionKey) => {
           const sectionLabel = getSectionLabel(sectionKey);
+          const vegVal = parseInt(data[sectionKey]?.vegCount) || 0;
+          const nonVegVal = parseInt(data[sectionKey]?.nonVegCount) || 0;
           return (
             <React.Fragment key={sectionKey}>
               <div>
@@ -190,7 +197,14 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                   labelBg={labelBg}
                   type="number"
                   value={data[sectionKey]?.vegCount ?? ""}
-                  onChange={(e) => onChange(sectionKey, "vegCount", Math.max(0, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
+                    let val = strVal === "" ? "" : Math.max(0, Number(strVal));
+                    if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
+                      if (val > maxCount) val = maxCount;
+                    }
+                    onChange(sectionKey, "vegCount", val);
+                  }}
                 />
                 {errors[sectionKey]?.vegCount && (
                   <p className="text-red-400 text-xs mt-1">
@@ -204,7 +218,14 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                   labelBg={labelBg}
                   type="number"
                   value={data[sectionKey]?.nonVegCount ?? ""}
-                  onChange={(e) => onChange(sectionKey, "nonVegCount", Math.max(0, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
+                    let val = strVal === "" ? "" : Math.max(0, Number(strVal));
+                    if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
+                      if (val > maxCount) val = maxCount;
+                    }
+                    onChange(sectionKey, "nonVegCount", val);
+                  }}
                 />
                 {errors[sectionKey]?.nonVegCount && (
                   <p className="text-red-400 text-xs mt-1">
@@ -303,10 +324,15 @@ function validateFoodForms(forms) {
     if (!form.resourcePersonType || form.resourcePersonType.length === 0)
       err.resourcePersonType = "Resource person type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
-    if (!form.internalCount?.trim()) err.internalCount = "Internal count is required";
+    if (!form.internalCount?.trim()) {
+      err.internalCount = "Internal count is required";
+    } else if (parseInt(form.internalCount) > 10) {
+      err.internalCount = "Accompanying persons count must be 10 or less";
+    }
     if (!form.foodTypes || form.foodTypes.length === 0)
       err.foodTypes = "Food type is required";
 
+    const maxCount = (parseInt(form.resourcePersons) || 0) + (parseInt(form.internalCount) || 0);
     const mealErrors = {};
 
     ["Breakfast", "Lunch", "Dinner"].forEach((meal) => {
@@ -324,6 +350,8 @@ function validateFoodForms(forms) {
           const secErrs = {};
           if (sectionData.vegCount === "") secErrs.vegCount = "Veg count is required";
           if (sectionData.nonVegCount === "") secErrs.nonVegCount = "Non-veg count is required";
+
+          // No sum validation needed here, as inputs are capped at maxCount individually
           
           if (Object.keys(secErrs).length > 0) {
             mealErr[sectionKey] = secErrs;
@@ -439,10 +467,11 @@ export default function FoodAndRefreshments({
         if (form.id !== id) return form;
         if (section) return { ...form, [section]: { ...form[section], [field]: value } };
         if (field === "internalCount") {
+          const clamped = value === "" ? "" : String(Math.min(Math.max(0, parseInt(value) || 0), 10));
           return {
             ...form,
-            internalCount: value,
-            staffList: syncStaffList(form.staffList || [], value),
+            internalCount: clamped,
+            staffList: syncStaffList(form.staffList || [], clamped),
           };
         }
         return { ...form, [field]: value };
@@ -939,6 +968,8 @@ export default function FoodAndRefreshments({
               const mealKey = meal.toLowerCase();
               const mealErr = (Array.isArray(errors) ? errors[index]?.[mealKey] : null) || {};
 
+              const maxCount = (parseInt(form.resourcePersons) || 0) + (parseInt(form.internalCount) || 0);
+
               return (
                 <MealSection
                   key={meal}
@@ -948,6 +979,7 @@ export default function FoodAndRefreshments({
                   errors={mealErr}
                   onChange={(sectionKey, field, value) => handleMealChange(form.id, mealKey, sectionKey, field, value)}
                   labelBg="#2a2a4a"
+                  maxCount={maxCount}
                 />
               );
             })}
