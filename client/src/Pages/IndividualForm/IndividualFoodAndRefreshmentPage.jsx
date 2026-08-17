@@ -1830,7 +1830,6 @@ if (submitSuccess) {
         )}
 
         {/* DYNAMIC STAFF INPUTS */}
-        {/* DYNAMIC STAFF INPUTS */}
         {Number(card.internalAccompanyingCount) > 0 &&
           card.accompanyingStaffs.map((staff, index) => (
             <div
@@ -2187,7 +2186,6 @@ if (submitSuccess) {
             placeholder="Enter any special requirements"
             className="
               w-full
-           
               border
               border-[#383847]
               rounded-md
