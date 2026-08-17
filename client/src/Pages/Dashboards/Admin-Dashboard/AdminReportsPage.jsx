@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Download, Filter, Search } from 'lucide-react'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
+import { buildIndividualRequestTemplate } from '../../../templates/individualRequestTemplate'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -86,17 +87,41 @@ const AdminReportsTable = ({ rows, activeTab, isLoading }) => {
             return
         }
 
-        const csv = [
-            'Event Name,Event Type,Event Venue,Event Date,Status',
-            [row.eventName, row.eventType, row.eventVenue, row.eventDate, row.status].join(','),
-        ].join('\n')
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `admin-${activeTab}-${row.eventName.replaceAll(' ', '-')}-report.csv`
-        link.click()
-        URL.revokeObjectURL(url)
+        try {
+            const token = localStorage.getItem('token')
+            const res = await fetch(`${API_BASE_URL}/api/individual-submissions/getrequest/${row.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            const json = await res.json()
+            const data = Array.isArray(json.data) ? json.data[0] : (json.data || json);
+            if (data && (data.id || data._id || data.formType)) {
+                const html = buildIndividualRequestTemplate(data)
+                const iframe = document.createElement('iframe')
+                iframe.style.display = 'none'
+                document.body.appendChild(iframe)
+                
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+                iframeDoc.open()
+                iframeDoc.write(html)
+                iframeDoc.close()
+        
+                iframe.onload = () => {
+                    iframe.contentWindow.focus()
+                    iframe.contentWindow.print()
+                    setTimeout(() => {
+                        if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe)
+                        }
+                    }, 1000)
+                }
+            } else {
+                console.error('[PDF Fetch] Failed to find individual request data in response:', json)
+                alert(`Failed to fetch individual request details. See console for API response.`)
+            }
+        } catch (err) {
+            console.error('[PDF Fetch] Error generating PDF:', err)
+            alert('Error connecting to API to generate PDF.')
+        }
     }
 
     return (
