@@ -13,18 +13,23 @@ const eventsData = [
     { id: 9, eventName: "Welcome Freshers", eventType: "Seminar", eventVenue: "Main Board Room", eventDate: "15-03-2026", department: "CSE", approvedStatus: "Pending Approval", acknowledgementStatus: "Pending Approval" },
 ];
 
+const getStatusColor = (status = "") => {
+    const normalizedStatus = String(status).toLowerCase();
+
+    if (normalizedStatus.includes("rejected")) return { text: "text-red-400", dot: "bg-red-400" };
+    if (normalizedStatus.includes("acknowledged")) return { text: "text-emerald-400", dot: "bg-emerald-400" };
+    if (normalizedStatus.includes("approved")) return { text: "text-emerald-400", dot: "bg-emerald-400" };
+    if (normalizedStatus.includes("pending")) return { text: "text-pink-600", dot: "bg-pink-600" };
+    if (normalizedStatus.includes("submitted")) return { text: "text-yellow-400", dot: "bg-yellow-400" };
+    return { text: "text-white", dot: "bg-white" };
+};
+
 const StatusBadge = ({ status }) => {
-    const isApproved = status === "Approved" || status === "Acknowledged";
+    const { text, dot } = getStatusColor(status);
     return (
         <span className="flex items-center gap-1.5">
-            <span
-                className={`w-2 h-2 rounded-full flex-shrink-0 ${isApproved ? "bg-[#34D399]" : "bg-[#B32058]"
-                    }`}
-            />
-            <span
-                className={`text-sm font-medium ${isApproved ? "text-[#34D399]" : "text-[#B32058]"
-                    }`}
-            >
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${dot}`} />
+            <span className={`text-sm font-medium ${text}`}>
                 {status}
             </span>
         </span>

@@ -45,41 +45,25 @@ const normalizeIndividualRequest = (request) => ({
     status: typeof request.status === 'string' ? request.status : '-',
 })
 
-const getStatusClassName = (status = '') => {
-    const normalizedStatus = status.toLowerCase()
+const getStatusColor = (status = '') => {
+    const normalizedStatus = String(status).toLowerCase()
 
-    if (normalizedStatus.includes('rejected')) {
-        return 'text-[#B32058]'
-    }
-
-    if (normalizedStatus.includes('admin') && normalizedStatus.includes('approved')) {
-        return 'text-[#34D399]'
-    }
-
-    if (normalizedStatus.includes('hod') && normalizedStatus.includes('approved')) {
-        return 'text-[#60A5FA]'
-    }
-
-    if (normalizedStatus.includes('submitted')) {
-        return 'text-[#fdcb6e]'
-    }
-
-    return 'text-white'
+    if (normalizedStatus.includes('rejected')) return { text: 'text-red-400', dot: 'bg-red-400' }
+    if (normalizedStatus.includes('acknowledged')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('approved')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('pending')) return { text: 'text-pink-600', dot: 'bg-pink-600' }
+    if (normalizedStatus.includes('submitted')) return { text: 'text-yellow-400', dot: 'bg-yellow-400' }
+    return { text: 'text-white', dot: 'bg-white' }
 }
 
+const getStatusClassName = (status = '') => getStatusColor(status).text
+
 const StatusBadge = ({ status }) => {
-    const normalizedStatus = typeof status === 'string' ? status.toLowerCase() : ''
-    const isPositive = normalizedStatus.includes('approved') || normalizedStatus.includes('acknowledged')
+    const { text, dot } = getStatusColor(status)
 
     return (
-        <span
-            className={`inline-flex items-center gap-2 ${isPositive ? 'text-[#34D399]' : 'text-[#B32058]'
-                }`}
-        >
-            <span
-                className={`h-2 w-2 rounded-full ${isPositive ? 'bg-[#34D399]' : 'bg-[#B32058]'
-                    }`}
-            />
+        <span className={`inline-flex items-center gap-2 ${text}`}>
+            <span className={`h-2 w-2 rounded-full ${dot}`} />
             {status}
         </span>
     )
