@@ -24,24 +24,23 @@ const EventDetailsSidePanel = ({ tabs = [], activeTab, onTabChange }) => {
       <nav className="space-y-3">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.name
+          const statusColor = getStatusBadgeColor(tab.status)
 
           return (
             <button
               key={tab.name}
               type="button"
               onClick={() => onTabChange(tab.name)}
-              className={`flex min-h-11 w-full items-center justify-between rounded-md px-3 text-left text-xs font-semibold text-white transition ${
+              className={`relative flex min-h-11 w-full items-center justify-between overflow-hidden rounded-md px-3 text-left text-xs font-semibold text-white transition ${
                 isActive
                   ? 'bg-gradient-to-r from-[#7C3AE7] to-[#4E2593] shadow-[0_10px_22px_rgba(124,58,231,0.24)]'
                   : 'bg-[#232b3f] hover:bg-[#2b344b]'
               }`}
             >
-              <span className="flex items-center gap-2">
-                <span>{tab.name}</span>
-                {tab.status && (
-                  <span className={`inline-block h-2 w-2 rounded-full ${getStatusBadgeColor(tab.status)}`} />
-                )}
-              </span>
+              {statusColor && (
+                <span className={`absolute left-0 top-0 h-full w-1 ${statusColor}`} />
+              )}
+              <span>{tab.name}</span>
               <ChevronRight size={14} />
             </button>
           )

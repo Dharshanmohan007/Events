@@ -1,4 +1,4 @@
-import { Check, ChevronRight, X } from 'lucide-react'
+import { Check, ChevronRight, Pencil, Trash, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
@@ -54,6 +54,8 @@ const EventDetailsPage = () => {
   const [requisitionError, setRequisitionError] = useState('')
   const [data, setData] = useState([])
 
+
+
   // ── Venue state ─────────────────────────────────────────────────────
   const [venueDetails, setVenueDetails] = useState(null)
   const [venueLoading, setVenueLoading] = useState(false)
@@ -95,7 +97,7 @@ const EventDetailsPage = () => {
   const [purchaseError, setPurchaseError] = useState('')
 
   // ── Loading state for actions ─────────────────────────────────────
-  const [actionLoading, setActionLoading] = useState(false)
+  const [actionLoading, setActionLoading] = useState(null)
 
   // ── Fetch requisition details (extracted for reuse) ────────────────
   const fetchRequisitionDetails = async () => {
@@ -452,7 +454,7 @@ const EventDetailsPage = () => {
 
   // ── Generic status update handler ─────────────────────────────────
   const updateStatus = async (action) => {
-    setActionLoading(true)
+    setActionLoading(action)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}/status`, {
@@ -471,7 +473,7 @@ const EventDetailsPage = () => {
     } catch (err) {
       toast.error(err.message || `Failed to ${action} event`)
     } finally {
-      setActionLoading(false)
+      setActionLoading(null)
     }
   }
 
@@ -558,6 +560,7 @@ const EventDetailsPage = () => {
           </div> */}
 
         {/* Header with Approve / Reject */}
+        {console.log("event details : ", data)}
         <header className="flex items-center justify-between mt-2 ">
           <div className="mt-2 flex items-center gap-2">
             <h1 className="text-md font-medium text-[#CBC3D7]/50">Event Details</h1>
@@ -565,6 +568,18 @@ const EventDetailsPage = () => {
             <h2 className="text-md font-medium text-[#D0BCFF]">
               {requestDetails?.eventDetails?.eventName || 'Loading...'}
             </h2>
+            <ChevronRight size={14} className="text-white" />
+            {/* edit button  */}
+
+            {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
+              <Pencil size={14} className="text-[#34D399]  " />
+            </Link>}
+            <button className="bg-[#2e3c5cce] px-2 py-2 rounded-lg cursor-pointer hover:bg-[#263352ce]">
+              <Trash size={14} className="text-red-500" />
+            </button>
+
+
+
             {requestDetails?.eventDetails?.organizingDepartment && (
               <div className="ml-3 bg-green-400/10 text-sm text-[#10B981] px-5 py-2 rounded-full">
                 <h1>{requestDetails.eventDetails.organizingDepartment}</h1>
@@ -576,20 +591,20 @@ const EventDetailsPage = () => {
               <Check size={16} className="text-white" />
               Closed
             </div>
-          ) : data?.adminApproval == false ?  <div className="btn-container flex items-center gap-2">
+          ) : data?.adminApproval == false ? <div className="btn-container flex items-center gap-2">
             <button
               onClick={handleApprove}
-              disabled={actionLoading}
+              disabled={actionLoading !== null}
               className="flex items-center gap-1 bg-gradient-to-r from-[#07785D] to-[#07785D] text-white px-4 py-1 rounded-md hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span><Check size={16} className="text-white" /></span> {actionLoading ? 'Processing...' : 'Approve'}
+              <span><Check size={16} className="text-white" /></span> {actionLoading === 'adminApprove' ? 'Processing...' : 'Approve'}
             </button>
             <button
               onClick={handleReject}
-              disabled={actionLoading}
+              disabled={actionLoading !== null}
               className="flex items-center gap-2 text-[#FF0063] px-4 py-1 rounded-md border border-[#FF0063] hover:bg-[#FF0063]/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span><X size={14} className="text-[#FF0063]" /></span> {actionLoading ? 'Processing...' : 'Reject'}
+              <span><X size={14} className="text-[#FF0063]" /></span> {actionLoading === 'reject' ? 'Processing...' : 'Reject'}
             </button>
           </div> : ""}
 

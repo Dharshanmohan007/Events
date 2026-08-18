@@ -21,7 +21,7 @@ export default function VenueCard({ venues = [], onEdit, onDelete }) {
                         <div className="first-container">
                             <div className="flex items-center gap-3">
                                 <h2 className="text-white text-lg font-medium">{venue.name}</h2>
-                                <img src={infoIcon} className="Info translate-y-[3px]" />
+                                {/* <img src={infoIcon} className="Info translate-y-[3px]" /> */}
                             </div>
 
                             {/* Location */}
