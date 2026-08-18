@@ -2,6 +2,16 @@ import React from 'react'
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+const getStatusColor = (status = '') => {
+    const normalizedStatus = String(status).toLowerCase()
+
+    if (normalizedStatus.includes('rejected')) return { text: 'text-red-400', dot: 'bg-red-400' }
+    if (normalizedStatus.includes('acknowledged')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('approved')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('pending')) return { text: 'text-pink-600', dot: 'bg-pink-600' }
+    if (normalizedStatus.includes('submitted')) return { text: 'text-yellow-400', dot: 'bg-yellow-400' }
+    return { text: 'text-white', dot: 'bg-white' }
+}
 
 const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
     return (
@@ -30,8 +40,7 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
 
                     <tbody>
                         {events.map((event, index) => {
-                            const isAcknowledged =
-                                event.acknowledgeStatus === 'Acknowledged'
+                            const statusColor = getStatusColor(event.acknowledgeStatus)
 
                             return (
                                 <tr
@@ -44,12 +53,10 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                     <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <span
-                                            className={`inline-flex items-center gap-2 ${isAcknowledged ? 'text-[#34D399]' : 'text-[#B32058]'
-                                            }`}
+                                            className={`inline-flex items-center gap-2 ${statusColor.text}`}
                                         >
                                             <span
-                                                className={`h-2 w-2 rounded-full ${isAcknowledged ? 'bg-[#34D399]' : 'bg-[#B32058]'
-                                                }`}
+                                                className={`h-2 w-2 rounded-full ${statusColor.dot}`}
                                             />
                                             {event.acknowledgeStatus}
                                         </span>

@@ -63,21 +63,21 @@ const normalizeIndividualRequest = (request) => ({
     status: typeof request.status === "string" ? request.status : "-",
 });
 
-const getEventStatusClassName = (status = "") => {
-    const normalizedStatus = status.toLowerCase();
+const getStatusColor = (status = "") => {
+    const normalizedStatus = String(status).toLowerCase();
 
-    if (normalizedStatus.includes("rejected")) return "text-[#B32058]";
-    if (normalizedStatus.includes("admin") && normalizedStatus.includes("approved")) return "text-[#34D399]";
-    if (normalizedStatus.includes("hod") && normalizedStatus.includes("approved")) return "text-[#60A5FA]";
-    if (normalizedStatus.includes("submitted")) return "text-[#fdcb6e]";
-
-    return "text-white";
+    if (normalizedStatus.includes("rejected")) return { text: "text-red-400", dot: "bg-red-400" };
+    if (normalizedStatus.includes("acknowledged")) return { text: "text-emerald-400", dot: "bg-emerald-400" };
+    if (normalizedStatus.includes("approved")) return { text: "text-emerald-400", dot: "bg-emerald-400" };
+    if (normalizedStatus.includes("pending")) return { text: "text-pink-600", dot: "bg-pink-600" };
+    if (normalizedStatus.includes("submitted")) return { text: "text-yellow-400", dot: "bg-yellow-400" };
+    return { text: "text-white", dot: "bg-white" };
 };
 
+const getEventStatusClassName = (status = "") => getStatusColor(status).text;
+
 const StatusBadge = ({ status, className }) => {
-    const normalizedStatus = status.toLowerCase();
-    const isPositive = normalizedStatus.includes("approved") || normalizedStatus.includes("acknowledged");
-    const colorClass = className || (isPositive ? "text-[#34D399]" : "text-[#B32058]");
+    const colorClass = className || getStatusColor(status).text;
     const dotClass = colorClass.replace("text-", "bg-");
 
     return (

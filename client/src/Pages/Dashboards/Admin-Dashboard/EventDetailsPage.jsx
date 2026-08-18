@@ -1,6 +1,6 @@
 import { Check, ChevronRight, Pencil, Trash, X } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import EventRequisitionDetailsPanel from './EventRequisitionDetailsPanel'
 import EventDetailsSidePanel from './EventDetailsSidePanel'
@@ -12,6 +12,8 @@ import FoodRefreshmentDetailsPanel from './FoodRefreshmentDetailsPanel'
 import AccommodationDetailsPanel from './AccommodationDetailsPanel'
 import PurchaseDetailsPanel from './PurchaseDetailsPanel'
 import MediaDetailsPanel from './MediaDetailsPanel'
+import RejectionReasonPopup from './RejectionReasonPopup'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
@@ -35,13 +37,16 @@ const getStatusClassName = (status) => {
   if (s === 'pending for acknowledge') return 'bg-[#5D1438]/50 text-[#FF4F91]'
   if (s === 'acknowledged') return 'bg-gradient-to-r from-emerald-700 to-emerald-900 text-[#ffffff]/80'
   if (s === 'admin canceled') return 'bg-yellow-700 text-[#FF4F91]'
-  if (s === 'approved') return 'bg-[#0e5149]/55 text-[#20D18C]'
-  if (s === 'pending') return 'bg-[#5D1438]/50 text-[#FF4F91]'
+  if (s.includes('rejected')) return 'bg-red-500/20 text-red-400'
+  if (s.includes('approved')) return 'bg-emerald-500/20 text-emerald-400'
+  if (s.includes('submitted')) return 'bg-yellow-500/20 text-yellow-400'
+  if (s.includes('pending')) return 'bg-pink-600/20 text-pink-600'
   return 'bg-[#0e5149]/55 text-[#20D18C]'
 }
 
 const EventDetailsPage = () => {
   const { eventId } = useParams()
+  const navigate = useNavigate()
 
   // ── Tabs state ──────────────────────────────────────────────────────
   const [detailTabs, setDetailTabs] = useState([])
@@ -98,6 +103,14 @@ const EventDetailsPage = () => {
 
   // ── Loading state for actions ─────────────────────────────────────
   const [actionLoading, setActionLoading] = useState(null)
+
+  // ── Reject popup state ────────────────────────────────────────────
+  const [showRejectPopup, setShowRejectPopup] = useState(false)
+  const [rejectReason, setRejectReason] = useState('')
+
+  // ── Delete confirmation state ─────────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   // ── Fetch requisition details (extracted for reuse) ────────────────
   const fetchRequisitionDetails = async () => {
@@ -453,7 +466,7 @@ const EventDetailsPage = () => {
   }, [activeTab, eventId])
 
   // ── Generic status update handler ─────────────────────────────────
-  const updateStatus = async (action) => {
+  const updateStatus = async (action, reason = '') => {
     setActionLoading(action)
     try {
       const token = localStorage.getItem('token')
@@ -463,22 +476,62 @@ const EventDetailsPage = () => {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action, ...(reason ? { reason } : {}) }),
       })
       const responseData = await res.json()
       if (!res.ok || !responseData.success) throw new Error(responseData.message || `Failed to ${action} event`)
       toast.success(`Event ${action === 'adminApprove' ? 'approved' : 'rejected'} successfully`)
       // Refetch the data to reflect the updated status
       fetchRequisitionDetails()
+      return true
     } catch (err) {
       toast.error(err.message || `Failed to ${action} event`)
+      return false
     } finally {
       setActionLoading(null)
     }
   }
 
   const handleApprove = () => updateStatus('adminApprove')
-  const handleReject = () => updateStatus('reject')
+
+  // Reject opens a popup to collect the rejection reason
+  const handleReject = () => setShowRejectPopup(true)
+
+  // ── Delete event handler ──────────────────────────────────────────
+  const handleDeleteEvent = async () => {
+    setDeleting(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const responseData = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(responseData.message || 'Failed to delete event')
+      toast.success('Event deleted successfully')
+      setShowDeleteConfirm(false)
+      // Go back to the previous page after deletion
+      navigate(-1)
+    } catch (err) {
+      toast.error(err.message || 'Failed to delete event')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  const handleRejectConfirm = async () => {
+    if (!rejectReason.trim()) {
+      toast.error('Please enter a reason')
+      return
+    }
+    const ok = await updateStatus('reject', rejectReason.trim())
+    if (ok) {
+      setShowRejectPopup(false)
+      setRejectReason('')
+      // Reload the page so the UI reflects the updated status
+      window.location.reload()
+    }
+  }
 
   // ── Render active panel based on tab ────────────────────────────────
   const renderActivePanel = () => {
@@ -571,10 +624,22 @@ const EventDetailsPage = () => {
             <ChevronRight size={14} className="text-white" />
             {/* edit button  */}
 
+          <div className="status-container">
+              {activeTabConfig?.status && (
+                    <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(activeTabConfig.status)}`}>
+                      {activeTabConfig?.status}
+                    </span>
+                  )}
+          </div>
+
             {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
               <Pencil size={14} className="text-[#34D399]  " />
             </Link>}
-            <button className="bg-[#2e3c5cce] px-2 py-2 rounded-lg cursor-pointer hover:bg-[#263352ce]">
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              title="Delete event"
+              className="bg-[#2e3c5cce] px-2 py-2 rounded-lg cursor-pointer hover:bg-[#263352ce]"
+            >
               <Trash size={14} className="text-red-500" />
             </button>
 
@@ -663,11 +728,7 @@ const EventDetailsPage = () => {
                       Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                     </p>
                   </div>
-                  {activeTabConfig.status && (
-                    <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(activeTabConfig.status)}`}>
-                      {activeTabConfig.status}
-                    </span>
-                  )}
+                
                 </div>
                 <div className="mt-8">{renderActivePanel()}</div>
               </>
@@ -678,7 +739,30 @@ const EventDetailsPage = () => {
         </section>
       </main>
 
-      {/* RejectionReasonPopup removed - reject now calls API directly */}
+      {/* Rejection reason popup */}
+      {showRejectPopup && (
+        <RejectionReasonPopup
+          value={rejectReason}
+          onChange={setRejectReason}
+          onSubmit={handleRejectConfirm}
+          submitting={actionLoading === 'reject'}
+          onClose={() => {
+            setShowRejectPopup(false)
+            setRejectReason('')
+          }}
+        />
+      )}
+
+      {/* Delete confirmation popup */}
+      {showDeleteConfirm && (
+        <DeleteConfirmationPopup
+          title="Delete Event"
+          message="Are you sure you want to delete this event? This action cannot be undone."
+          deleting={deleting}
+          onCancel={() => setShowDeleteConfirm(false)}
+          onDelete={handleDeleteEvent}
+        />
+      )}
     </>
   )
 }
