@@ -19,7 +19,7 @@ export const DEPARTMENT_ROUTES = {
 // Role → dashboard route (for non-head roles)
 export const ROLE_ROUTES = {
   faculty:         "/dashboard-faculty",
-  hod:             "/dashboard-faculty",   // HODs use faculty dashboard
+  hod:             "/dashboard-hod",   // HODs use dedicated HOD dashboard
   "super admin 1": "/dashboard-admin",
   "super admin 2": "/dashboard-admin",
   "super admin":   "/dashboard-admin",

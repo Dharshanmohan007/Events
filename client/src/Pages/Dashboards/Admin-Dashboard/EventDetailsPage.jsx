@@ -14,6 +14,7 @@ import PurchaseDetailsPanel from './PurchaseDetailsPanel'
 import MediaDetailsPanel from './MediaDetailsPanel'
 import RejectionReasonPopup from './RejectionReasonPopup'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
+import { jwtDecode } from 'jwt-decode'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
@@ -465,6 +466,11 @@ const EventDetailsPage = () => {
     fetchPurchaseDetails()
   }, [activeTab, eventId])
 
+  // decoding token 
+  const token = localStorage.getItem('token');
+  let decodedToken = jwtDecode(token);
+  let role = decodedToken?.role;
+
   // ── Generic status update handler ─────────────────────────────────
   const updateStatus = async (action, reason = '') => {
     setActionLoading(action)
@@ -492,7 +498,13 @@ const EventDetailsPage = () => {
     }
   }
 
-  const handleApprove = () => updateStatus('adminApprove')
+
+  const handleApprove = () => {
+    let action = role?.toLowerCase() == "admin" ? 'adminApprove' : "hodApprove"
+    updateStatus(action)
+  }
+
+
 
   // Reject opens a popup to collect the rejection reason
   const handleReject = () => setShowRejectPopup(true)
@@ -594,6 +606,10 @@ const EventDetailsPage = () => {
     return null
   }
 
+
+
+
+  // jsx 
   return (
     <>
       <main className="px-6 pb-8 ">
@@ -613,7 +629,7 @@ const EventDetailsPage = () => {
           </div> */}
 
         {/* Header with Approve / Reject */}
-        {console.log("event details : ", data)}
+        {/* {console.log("event details : ", data)} */}
         <header className="flex items-center justify-between mt-2 ">
           <div className="mt-2 flex items-center gap-2">
             <h1 className="text-md font-medium text-[#CBC3D7]/50">Event Details</h1>
@@ -624,24 +640,28 @@ const EventDetailsPage = () => {
             <ChevronRight size={14} className="text-white" />
             {/* edit button  */}
 
-          <div className="status-container">
+            <div className="status-container">
               {activeTabConfig?.status && (
-                    <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(activeTabConfig.status)}`}>
-                      {activeTabConfig?.status}
-                    </span>
-                  )}
-          </div>
+                <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(activeTabConfig.status)}`}>
+                  {activeTabConfig?.status}
+                </span>
+              )}
+            </div>
 
-            {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
-              <Pencil size={14} className="text-[#34D399]  " />
-            </Link>}
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              title="Delete event"
-              className="bg-[#2e3c5cce] px-2 py-2 rounded-lg cursor-pointer hover:bg-[#263352ce]"
-            >
-              <Trash size={14} className="text-red-500" />
-            </button>
+            {role.toLowerCase() == "hod" ? "" : <>
+
+              {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
+                <Pencil size={14} className="text-[#34D399]  " />
+              </Link>}
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                title="Delete event"
+                className="bg-[#2e3c5cce] px-2 py-2 rounded-lg cursor-pointer hover:bg-[#263352ce]"
+              >
+                <Trash size={14} className="text-red-500" />
+              </button>
+            </>}
+
 
 
 
@@ -728,7 +748,7 @@ const EventDetailsPage = () => {
                       Lorem Ipsum is simply dummy text of the printing and typesetting industry.
                     </p>
                   </div>
-                
+
                 </div>
                 <div className="mt-8">{renderActivePanel()}</div>
               </>
