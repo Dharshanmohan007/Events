@@ -150,7 +150,7 @@ function AppRoutes() {
 
       <Route path="/dashboard/IndividualEvents/:id" element={<ProtectedRoute><IndividualEventDetailPage /></ProtectedRoute>} />
 
-       <Route path="/transports" element={<TransportDetailsPage />} />
+      <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/media" element={<MediaDetailsPage />} />
       <Route path="/IndividualFoodAndRefreshment" element={<IndividualFoodAndRefreshmentPage />} />
       <Route path="/purchase" element={<PurchaseDetails />} />
