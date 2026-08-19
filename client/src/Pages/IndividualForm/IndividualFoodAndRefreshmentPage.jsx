@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 
 import {
   ChevronDown,
@@ -692,6 +692,13 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
 // ======================================================
 
 const IndividualFoodAndRefreshment = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+
   // =========================
   // DROPDOWNS
   // =========================
@@ -807,6 +814,140 @@ const IndividualFoodAndRefreshment = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const navigate = useNavigate();
+
+  const mapFoodApiToForm = (data) => {
+    const food = data?.data || data?.food || data;
+    const foodDetailsObj = {
+      Breakfast: { vegParticipants: "", nonVegParticipants: "", vegGuest: "", nonVegGuest: "" },
+      Lunch: { vegParticipants: "", nonVegParticipants: "", vegGuest: "", nonVegGuest: "" },
+      Dinner: { vegParticipants: "", nonVegParticipants: "", vegGuest: "", nonVegGuest: "" },
+    };
+    const selectedFoodTypesObj = {
+      Breakfast: false,
+      Lunch: false,
+      Dinner: false,
+      "Morning Refreshment": false,
+      "Evening Refreshment": false,
+    };
+
+    if (Array.isArray(food.foodTypes)) {
+      food.foodTypes.forEach((item) => {
+        const typeName = item.type || (item.foodTypes && item.foodTypes[0]?.type) || (typeof item === "string" ? item : null);
+        if (typeName && selectedFoodTypesObj.hasOwnProperty(typeName)) {
+          selectedFoodTypesObj[typeName] = true;
+        }
+        if (typeName && foodDetailsObj[typeName]) {
+          foodDetailsObj[typeName] = {
+            vegParticipants: item.participants?.vegCount !== undefined ? String(item.participants.vegCount) : "",
+            nonVegParticipants: item.participants?.nonVegCount !== undefined ? String(item.participants.nonVegCount) : "",
+            vegGuest: item.vipGuests?.vegCount !== undefined ? String(item.vipGuests.vegCount) : "",
+            nonVegGuest: item.vipGuests?.nonVegCount !== undefined ? String(item.vipGuests.nonVegCount) : "",
+          };
+        }
+      });
+    }
+
+    const resourceTypes = Array.isArray(food.resourcePersonType)
+      ? food.resourcePersonType
+      : typeof food.resourcePersonType === "string"
+        ? [food.resourcePersonType]
+        : [];
+
+    const accompanyingStaffsList = Array.isArray(food.accompanyingStaff) && food.accompanyingStaff.length > 0
+      ? food.accompanyingStaff.map((s) => ({ name: s.name || "", mobile: String(s.mobile || "") }))
+      : [{ name: "", mobile: "" }];
+
+    let parsedDate = null;
+    if (food.date) {
+      parsedDate = new Date(food.date);
+      if (Number.isNaN(parsedDate.getTime())) parsedDate = null;
+    }
+
+    return {
+      id: food._id || food.id || Date.now(),
+      showResourceDropdown: false,
+      showFoodDropdown: false,
+      resourceType: resourceTypes,
+      selectedFoodTypes: selectedFoodTypesObj,
+      foodDetails: foodDetailsObj,
+      selectDate: parsedDate,
+      totalResourcePerson: String(food.numberOfResourcePersons ?? ""),
+      internalAccompanyingCount: String(food.numberOfInternalAccompanyingStaff ?? "1"),
+      accompanyingStaffs: accompanyingStaffsList,
+      specialRequirement: food.specialRequirements || "",
+      financeRequired: (food.financeRequired || food.financeRequested || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+      advanceAmount: String(food.advanceAmount ?? ""),
+      advancePurpose: food.advancePurpose || "",
+      advanceToBeReceviedWithin: String(food.advanceToBeReceviedWithin ?? ""),
+      estimatedEventBudget: String(food.estimatedEventBudget ?? food.estimatedAmount ?? ""),
+      showFinanceDropdown: false,
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchFoodDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token");
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/foods/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load food request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualFood = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mappedCard = mapFoodApiToForm(actualFood);
+          setFormCards([mappedCard]);
+          const existingDoc =
+            actualFood?.principalApprovalForm ||
+            actualFood?.principalApprovalFormName ||
+            actualFood?.principalApprovalDocument ||
+            actualFood?.principalDocument ||
+            actualFood?.approvalDocument ||
+            actualFood?.approvalForm ||
+            actualFood?.files?.principalApprovalForm ||
+            actualFood?.files?.principalApprovalFormName ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            rawData?.principalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument ||
+            resData?.principalDocument;
+          if (existingDoc) {
+            setExistingPrincipalDocument(existingDoc);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load food request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchFoodDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
 
   const updateFormCard = (cardId, updater) => {
     setFormCards((prev) =>
@@ -1004,7 +1145,7 @@ useEffect(() => {
     const errors = [];
 
     // Principal approval validation
-    if (!principalApprovalDocument) {
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
       errors.push("Principal Approval Form is required.");
     }
 
@@ -1101,194 +1242,231 @@ useEffect(() => {
       const decodedAuthToken = decodeToken(authToken);
 
       if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
-        // Do not force a navigation to the login page from here; instead
-        // surface a validation error so the user stays on the form and can
-        // re-authenticate without losing context.
         setValidationErrors(["Session expired or invalid token. Please login again."]);
         setIsSubmitting(false);
         return;
       }
 
-      let submittedCount = 0;
-      let firstSubmissionData = null;
+      if (isEditMode) {
+        // Edit mode: single Food request update via PUT /api/foods/:id
+        const card = formCards[0];
+        const payload = buildFoodPayload(card);
 
-      for (const [index, card] of formCards.entries()) {
-       const payload = buildFoodPayload(card);
+        const formData = new FormData();
+        formData.append("employee", payload.employee);
+        formData.append("date", payload.date);
+        formData.append("resourcePersonType", JSON.stringify(payload.resourcePersonType));
+        formData.append("numberOfResourcePersons", payload.numberOfResourcePersons);
+        formData.append("numberOfInternalAccompanyingStaff", payload.numberOfInternalAccompanyingStaff);
+        formData.append("accompanyingStaff", JSON.stringify(payload.accompanyingStaff));
+        formData.append("foodTypes", JSON.stringify(payload.foodTypes));
+        formData.append("specialRequirements", payload.specialRequirements);
+        formData.append("status", payload.status || "Pending");
+        formData.append("financeRequired", payload.financeRequested);
 
-const formData = new FormData();
-
-formData.append("employee", payload.employee);
-
-formData.append("date", payload.date);
-
-formData.append(
-  "resourcePersonType",
-  JSON.stringify(payload.resourcePersonType)
-);
-
-formData.append(
-  "numberOfResourcePersons",
-  payload.numberOfResourcePersons
-);
-
-formData.append(
-  "numberOfInternalAccompanyingStaff",
-  payload.numberOfInternalAccompanyingStaff
-);
-
-formData.append(
-  "accompanyingStaff",
-  JSON.stringify(payload.accompanyingStaff)
-);
-
-formData.append(
-  "foodTypes",
-  JSON.stringify(payload.foodTypes)
-);
-
-formData.append(
-  "specialRequirements",
-  payload.specialRequirements
-);
-
-formData.append(
-  "status",
-  payload.status
-);
-
-formData.append("financeRequired", payload.financeRequested);
-
-if (payload.advanceAmount !== undefined) {
-  formData.append("advanceAmount", payload.advanceAmount);
-}
-
-if (payload.advancePurpose !== undefined) {
-  formData.append("advancePurpose", payload.advancePurpose);
-}
-
-if (payload.advanceToBeReceviedWithin !== undefined) {
-  formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
-}
-
-if (payload.estimatedEventBudget !== undefined) {
-  formData.append("estimatedEventBudget", payload.estimatedEventBudget);
-}
-
-// Append backend-expected field name as well to ensure server records the value
-if (payload.estimatedAmount !== undefined) {
-  formData.append("estimatedAmount", payload.estimatedAmount);
-}
-
-if (principalApprovalDocument) {
-  formData.append(
-    "principalApprovalForm",
-    principalApprovalDocument
-  );
-}
-
-      // Debug: log outgoing FormData entries to verify values sent to server
-      for (const pair of formData.entries()) {
-        try {
-          if (pair[1] instanceof File) {
-            console.log("FormData ->", pair[0], "(file):", pair[1].name);
-          } else {
-            console.log("FormData ->", pair[0], ":", pair[1]);
-          }
-        } catch (e) {
-          console.log("FormData ->", pair[0], ":", pair[1]);
+        if (payload.advanceAmount !== undefined) {
+          formData.append("advanceAmount", payload.advanceAmount);
         }
-      }
-
-      const response = await fetch(`${API_BASE}/api/foods`, {
-
-  method: "POST",
-
-  headers: {
-    ...(authToken
-      ? {
-          Authorization: `Bearer ${authToken}`,
+        if (payload.advancePurpose !== undefined) {
+          formData.append("advancePurpose", payload.advancePurpose);
         }
-      : {}),
-  },
+        if (payload.advanceToBeReceviedWithin !== undefined) {
+          formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
+        }
+        if (payload.estimatedEventBudget !== undefined) {
+          formData.append("estimatedEventBudget", payload.estimatedEventBudget);
+        }
+        if (payload.estimatedAmount !== undefined) {
+          formData.append("estimatedAmount", payload.estimatedAmount);
+        }
 
-  body: formData,
-});
-      
+        if (principalApprovalDocument) {
+          formData.append("principalApprovalForm", principalApprovalDocument);
+        }
+
+        let response = await fetch(`${API_BASE}/api/foods/${id}`, {
+          method: "PUT",
+          headers: {
+            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          },
+          body: formData,
+        });
+
+        if (!response.ok && response.status === 404) {
+          response = await fetch(`${API_BASE}/api/foods/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+            },
+            body: formData,
+          });
+        }
 
         const data = await response.json();
-
-        // console.log(`Food submit response ${index + 1}:`, response.status, data);
 
         if (response.status === 401 || response.status === 403) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
-          throw new Error(
-            data?.message ||
-              "Invalid or expired token. Please login again.",
-          );
+          throw new Error(data?.message || "Invalid or expired token. Please login again.");
         }
 
         if (!response.ok) {
-          throw new Error(
-            data?.message ||
-              `Food submission failed for form ${index + 1}: ${response.status}`,
-          );
+          throw new Error(data?.message || `Food update failed: ${response.status}`);
         }
 
-        if (index === 0) {
-          firstSubmissionData = data.data || data;
+        setValidationErrors([]);
+        setSubmitMessage("Food request updated successfully.");
+        
+        const firstCard = formCards[0];
+        if (String(firstCard?.financeRequired).toLowerCase() === "yes") {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const employee = {
+            name: storedUser?.name || storedUser?.employeeName || "",
+            empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+            designation: storedUser?.designation || "",
+            department: storedUser?.department || "",
+          };
+          const requestNo =
+            data?.requestNo ||
+            data?.data?.requestNo ||
+            data?.food?.requestNo ||
+            data?.data?.food?.requestNo ||
+            "";
+
+          await ReportPdf({
+            formData: {
+              selectDate: firstCard.selectDate || "",
+              advanceAmount: firstCard.advanceAmount || "",
+              advancePurpose: firstCard.advancePurpose || "",
+              clearanceDays: firstCard.advanceToBeReceviedWithin || 15,
+            },
+            employee,
+            submitResponse: {
+              requestNo,
+              response: data,
+              employeeId:
+                data?.employee ||
+                data?.employeeId ||
+                employeeId ||
+                employee.empId,
+            },
+          });
         }
 
-        submittedCount += 1;
+        setSubmitSuccess(true);
+      } else {
+        // Create mode: submit all formCards
+        let submittedCount = 0;
+        let firstSubmissionData = null;
+
+        for (const [index, card] of formCards.entries()) {
+          const payload = buildFoodPayload(card);
+
+          const formData = new FormData();
+          formData.append("employee", payload.employee);
+          formData.append("date", payload.date);
+          formData.append("resourcePersonType", JSON.stringify(payload.resourcePersonType));
+          formData.append("numberOfResourcePersons", payload.numberOfResourcePersons);
+          formData.append("numberOfInternalAccompanyingStaff", payload.numberOfInternalAccompanyingStaff);
+          formData.append("accompanyingStaff", JSON.stringify(payload.accompanyingStaff));
+          formData.append("foodTypes", JSON.stringify(payload.foodTypes));
+          formData.append("specialRequirements", payload.specialRequirements);
+          formData.append("status", payload.status);
+          formData.append("financeRequired", payload.financeRequested);
+
+          if (payload.advanceAmount !== undefined) {
+            formData.append("advanceAmount", payload.advanceAmount);
+          }
+          if (payload.advancePurpose !== undefined) {
+            formData.append("advancePurpose", payload.advancePurpose);
+          }
+          if (payload.advanceToBeReceviedWithin !== undefined) {
+            formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
+          }
+          if (payload.estimatedEventBudget !== undefined) {
+            formData.append("estimatedEventBudget", payload.estimatedEventBudget);
+          }
+          if (payload.estimatedAmount !== undefined) {
+            formData.append("estimatedAmount", payload.estimatedAmount);
+          }
+
+          if (principalApprovalDocument) {
+            formData.append("principalApprovalForm", principalApprovalDocument);
+          }
+
+          const response = await fetch(`${API_BASE}/api/foods`, {
+            method: "POST",
+            headers: {
+              ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+            },
+            body: formData,
+          });
+
+          const data = await response.json();
+
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            throw new Error(data?.message || "Invalid or expired token. Please login again.");
+          }
+
+          if (!response.ok) {
+            throw new Error(data?.message || `Food submission failed for form ${index + 1}: ${response.status}`);
+          }
+
+          if (index === 0) {
+            firstSubmissionData = data.data || data;
+          }
+
+          submittedCount += 1;
+        }
+
+        setValidationErrors([]);
+
+        const firstCard = formCards[0];
+        if (String(firstCard?.financeRequired).toLowerCase() === "yes") {
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+          const employee = {
+            name: storedUser?.name || storedUser?.employeeName || "",
+            empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+            designation: storedUser?.designation || "",
+            department: storedUser?.department || "",
+          };
+          const requestNo =
+            firstSubmissionData?.requestNo ||
+            firstSubmissionData?.data?.requestNo ||
+            firstSubmissionData?.food?.requestNo ||
+            firstSubmissionData?.data?.food?.requestNo ||
+            "";
+
+          await ReportPdf({
+            formData: {
+              selectDate: firstCard.selectDate || "",
+              advanceAmount: firstCard.advanceAmount || "",
+              advancePurpose: firstCard.advancePurpose || "",
+              clearanceDays: firstCard.advanceToBeReceviedWithin || 15,
+            },
+            employee,
+            submitResponse: {
+              requestNo,
+              response: firstSubmissionData,
+              employeeId:
+                firstSubmissionData?.employee ||
+                firstSubmissionData?.employeeId ||
+                employeeId ||
+                employee.empId,
+            },
+          });
+        }
+
+        setSubmitMessage(
+          `${submittedCount} food request${submittedCount > 1 ? "s" : ""} submitted successfully.`,
+        );
+
+        setSubmitSuccess(true);
       }
-
-      setValidationErrors([]);
-
-      const firstCard = formCards[0];
-      if (firstCard?.financeRequired === "Yes") {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const employee = {
-          name: storedUser?.name || storedUser?.employeeName || "",
-          empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
-          designation: storedUser?.designation || "",
-          department: storedUser?.department || "",
-        };
-        const requestNo =
-          firstSubmissionData?.requestNo ||
-          firstSubmissionData?.data?.requestNo ||
-          firstSubmissionData?.food?.requestNo ||
-          firstSubmissionData?.data?.food?.requestNo ||
-          "";
-
-        await ReportPdf({
-          formData: {
-            selectDate: firstCard.selectDate || "",
-            advanceAmount: firstCard.advanceAmount || "",
-            advancePurpose: firstCard.advancePurpose || "",
-            clearanceDays: firstCard.advanceToBeReceviedWithin || 15,
-          },
-          employee,
-          submitResponse: {
-            requestNo,
-            response: firstSubmissionData,
-            employeeId:
-              firstSubmissionData?.employee ||
-              firstSubmissionData?.employeeId ||
-              employeeId ||
-              employee.empId,
-          },
-        });
-      }
-
-      setSubmitMessage(
-        `${submittedCount} food request${
-          submittedCount > 1 ? "s" : ""
-        } submitted successfully.`,
-      );
-
-      setSubmitSuccess(true);
     } catch (error) {
-      setValidationErrors([error.message || "Unable to send food data."]);
+      setValidationErrors([error.message || "Unable to save food data."]);
     } finally {
       setIsSubmitting(false);
     }
@@ -1297,11 +1475,35 @@ if (principalApprovalDocument) {
 
 if (submitSuccess) {
   return (
-    // Render success modal without advanceData so FormSubmitted does
-    // not auto-generate the receipt (avoids the extra download).
     <FormSubmitted />
   );
 }
+
+if (isLoadingDetails) {
+  return (
+    <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+      <p className="text-gray-300 text-sm">Loading Food request details...</p>
+    </div>
+  );
+}
+
+if (loadError) {
+  return (
+    <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
+        <p className="text-red-300 text-sm mb-4">{loadError}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
+        >
+          Go Back
+        </button>
+      </div>
+    </div>
+  );
+}
+
   return (
     <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">
       <style>{`
@@ -1319,14 +1521,62 @@ if (submitSuccess) {
         }
       `}</style>
       {/* TITLE */}
-      <h1 className="text-white text-3xl font-bold mb-6">
-        Food And Refreshment Form
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-white text-3xl font-bold">
+            {isEditMode ? "Edit Food And Refreshment Request" : "Food And Refreshment Form"}
+          </h1>
+          {isEditMode && (
+            <p className="text-gray-400 text-xs mt-1">Editing Food Request ID: <span className="text-purple-400 font-mono">{id}</span></p>
+          )}
+        </div>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot proceed further) *
+          Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
         </label>
+
+        {/* Show existing principal document in edit mode */}
+        {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-300">Current file:</span>
+            <a
+              href={
+                typeof existingPrincipalDocument === "string"
+                  ? (existingPrincipalDocument.startsWith("http")
+                      ? existingPrincipalDocument
+                      : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                  : (existingPrincipalDocument?.url
+                      ? existingPrincipalDocument.url
+                      : (existingPrincipalDocument?.path
+                          ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                          : "#"))
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-purple-400 underline truncate max-w-xs"
+            >
+              {typeof existingPrincipalDocument === "string"
+                ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                : (existingPrincipalDocument?.name ||
+                   existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.originalName ||
+                   "View existing document")}
+            </a>
+            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+          </div>
+        )}
 
         <div
           onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
@@ -1434,28 +1684,30 @@ if (submitSuccess) {
       </div>
 
       {/* HEADER */}
-      <div className="flex justify-end mb-6">
-        <button
-          type="button"
-          onClick={handleAddForm}
-          className="
-            bg-[#7c3aed]
-            hover:bg-[#6d28d9]
-            px-5
-            py-2
-            rounded-md
-            font-medium
-            flex
-            items-center
-            gap-2
-            transition-all
-            duration-300
-          "
-        >
-          <Plus size={16} />
-          Add
-        </button>
-      </div>
+      {!isEditMode && (
+        <div className="flex justify-end mb-6">
+          <button
+            type="button"
+            onClick={handleAddForm}
+            className="
+              bg-[#7c3aed]
+              hover:bg-[#6d28d9]
+              px-5
+              py-2
+              rounded-md
+              font-medium
+              flex
+              items-center
+              gap-2
+              transition-all
+              duration-300
+            "
+          >
+            <Plus size={16} />
+            Add
+          </button>
+        </div>
+      )}
 
       {formCards.map((card, cardIndex) => (
       <div key={card.id} className="mb-6">
@@ -2246,7 +2498,7 @@ if (submitSuccess) {
       duration-300
     "
     >
-      {isSubmitting ? "Submitting..." : "Submit"}
+      {isSubmitting ? (isEditMode ? "Updating..." : "Submitting...") : (isEditMode ? "Update Food Request" : "Submit")}
 
       <ArrowRight size={16} />
     </button>

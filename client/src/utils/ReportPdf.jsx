@@ -631,11 +631,16 @@ export default async function ReportPdf({
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
 
+  const sanitizedIqac = String(data.iqacNumber || "Receipt").replace(/[/\\?%*:|"<>]/g, "_");
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Advance_Receipt_${data.iqacNumber || "Receipt"}.html`;
+  link.setAttribute("download", `Advance_Receipt_${sanitizedIqac}.html`);
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (_) {}
+  }, 1000);
 }

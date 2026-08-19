@@ -401,6 +401,24 @@ const ModuleIndividualDetailViewPage = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Edit Request — faculty only, links to the corresponding edit form */}
+            {userRole.toLowerCase() === "faculty" && formTypeKey && (() => {
+              const editRouteMap = {
+                food: `/IndividualFoodAndRefreshment/edit/${id}`,
+                transport: `/transports/edit/${id}`,
+                purchase: `/purchase/edit/${id}`,
+                media: `/media/edit/${id}`,
+              };
+              const editPath = editRouteMap[formTypeKey];
+              return editPath ? (
+                <Link
+                  to={editPath}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#8B3DFF]/15 hover:bg-[#8B3DFF]/30 text-[#8B3DFF] text-sm font-medium border border-[#8B3DFF]/25 hover:border-[#8B3DFF]/50 transition-all"
+                >
+                  Edit Request
+                </Link>
+              ) : null;
+            })()}
             {showHeadControls && safeHeadStatus === "completed" && (
               <button
                 disabled

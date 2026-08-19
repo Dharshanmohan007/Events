@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import FormSubmitted from "./FormSubmitted";
 
@@ -11,6 +12,7 @@ import {
   X,
   ChevronDown,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 
 import { jwtDecode } from "jwt-decode";
@@ -56,6 +58,14 @@ const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
 
 const TransportDetailsPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+
   const [transportForms, setTransportForms] = useState([createTransportForm()]);
 
   const [employeeId, setEmployeeId] = useState("");
@@ -74,6 +84,130 @@ const TransportDetailsPage = () => {
   const [principalApprovalDocument, setPrincipalApprovalDocument] =
     useState(null);
   const [principalFileError, setPrincipalFileError] = useState("");
+
+  const mapTransportApiToForm = (data) => {
+    const transport = data?.data || data?.transport || data;
+
+    let pickupDate = null;
+    if (transport.pickupDateTime) {
+      pickupDate = new Date(transport.pickupDateTime);
+      if (Number.isNaN(pickupDate.getTime())) pickupDate = null;
+    }
+
+    let dropDate = null;
+    if (transport.dropDateTime) {
+      dropDate = new Date(transport.dropDateTime);
+      if (Number.isNaN(dropDate.getTime())) dropDate = null;
+    }
+
+    const checkpointsList = Array.isArray(transport.checkpoints)
+      ? transport.checkpoints.map((cp) => (typeof cp === "string" ? cp : cp.location || "")).filter(Boolean)
+      : [];
+
+    const vehiclesList = Array.isArray(transport.vehicles) ? transport.vehicles : [];
+    const selectedVehicles = vehiclesList.map((v) => v.type).filter(Boolean);
+    const vehicleCounts = vehiclesList.reduce((acc, v) => {
+      if (v.type) acc[v.type] = String(v.count ?? 1);
+      return acc;
+    }, {});
+
+    const accompanyingStaffList = Array.isArray(transport.accompanyingStaff) && transport.accompanyingStaff.length > 0
+      ? transport.accompanyingStaff.map((s) => ({ name: s.name || "", mobile: String(s.mobile || "") }))
+      : [];
+
+    return {
+      pickupDateTime: pickupDate,
+      dropDateTime: dropDate,
+      pickupLocation: transport.pickupLocation || "",
+      dropLocation: transport.dropLocation || "",
+      checkpoints: checkpointsList,
+      draggedIndex: null,
+      totalPassengers: String(transport.totalPassengers ?? ""),
+
+      selectedVehicles: selectedVehicles,
+      vehicleCounts: vehicleCounts,
+      availableVehicleCounts: {},
+      inventoryLoading: false,
+      showVehicleDropdown: false,
+
+      staffOptionType: String(transport.numberOfAccompanyingStaff ?? (accompanyingStaffList.length || "")),
+      showStaffDropdown: false,
+      staffDetails: accompanyingStaffList,
+
+      specialRequirement: transport.specialRequirements || "",
+      financeRequired: (transport.financeRequired || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+      advanceAmount: String(transport.advanceAmount ?? ""),
+      advancePurpose: transport.advancePurpose || "",
+      advanceToBeReceviedWithin: String(transport.advanceToBeReceviedWithin ?? ""),
+      estimatedEventBudget: String(transport.estimatedEventBudget ?? transport.estimatedAmount ?? ""),
+      showFinanceDropdown: false,
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchTransportDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token") || token;
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/transports/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load transport request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualTransport = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mappedForm = mapTransportApiToForm(actualTransport);
+          setTransportForms([mappedForm]);
+          const existingDoc =
+            actualTransport?.principalApprovalForm ||
+            actualTransport?.principalApprovalFormName ||
+            actualTransport?.principalApprovalDocument ||
+            actualTransport?.principalDocument ||
+            actualTransport?.approvalDocument ||
+            actualTransport?.approvalForm ||
+            actualTransport?.files?.principalApprovalForm ||
+            actualTransport?.files?.principalApprovalFormName ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            rawData?.principalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument ||
+            resData?.principalDocument;
+          if (existingDoc) {
+            setExistingPrincipalDocument(existingDoc);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load transport request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchTransportDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -604,7 +738,7 @@ const TransportDetailsPage = () => {
     const errors = [];
 
     // Principal approval validation
-    if (!principalApprovalDocument) {
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
       errors.push("Principal Approval Form is required.");
     }
 
@@ -701,31 +835,35 @@ const TransportDetailsPage = () => {
     setIsSubmitting(true);
 
     try {
-      let lastResponseData = null;
-      for (const form of transportForms) {
+      if (isEditMode) {
+        // Edit mode: single Transport update via PUT /api/transports/:id
+        const form = transportForms[0];
         const payload = buildTransportPayload(form);
 
-        // Log payload to verify timezone handling
-        for (let pair of payload.entries()) {
-          // console.log(pair[0], pair[1]);
-        }
-        // console.log("✅ Pickup sent as:", payload.pickupDateTime);
-        // console.log("✅ Drop sent as:", payload.dropDateTime);
-
-        const response = await fetch(`${API_BASE}/api/transports`, {
-          method: "POST",
+        let response = await fetch(`${API_BASE}/api/transports/${id}`, {
+          method: "PUT",
           headers: {
-            ...(token && {
-              Authorization: `Bearer ${token}`,
+            ...(authToken && {
+              Authorization: `Bearer ${authToken}`,
             }),
           },
           body: payload,
         });
 
-        
+        if (!response.ok && response.status === 404) {
+          response = await fetch(`${API_BASE}/api/transports/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...(authToken && {
+                Authorization: `Bearer ${authToken}`,
+              }),
+            },
+            body: payload,
+          });
+        }
+
         const responseText = await response.text();
         let responseData;
-
         try {
           responseData = responseText ? JSON.parse(responseText) : null;
         } catch {
@@ -736,89 +874,157 @@ const TransportDetailsPage = () => {
           const serverMessage =
             responseData?.message ||
             responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
-            `Transport submission failed (HTTP ${response.status}).`;
-
-          console.error("Transport API error:", {
-            status: response.status,
-            response: responseData || responseText,
-          });
+            `Transport update failed (HTTP ${response.status}).`;
           throw new Error(serverMessage);
         }
 
-        // Keep last parsed response so it can be used after the loop
-        lastResponseData = responseData;
+        setValidationErrors([]);
+        setSubmitMessage("Transport request updated successfully.");
+        setSubmitSuccess(true);
 
-        // Log response with IST formatting
-        // console.log("📥 Response received:", responseData?.data);
-        // console.log(
-        //   "⏰ Pickup stored as (UTC):",
-        //   responseData?.data?.pickupDateTime,
-        // );
-        const pickupIST = responseData?.data?.pickupDateTime
-          ? formatInIST(new Date(responseData.data.pickupDateTime))
-          : "N/A";
-        // console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
-        const dropIST = responseData?.data?.dropDateTime
-          ? formatInIST(new Date(responseData.data.dropDateTime))
-          : "N/A";
-        // console.log("🇮🇳 Drop displayed as (IST):", dropIST);
-      }
+        const financeEnabled = String(form?.financeRequired).toLowerCase() === "yes";
+        if (financeEnabled) {
+          const respData = responseData?.data || responseData || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.transport?.requestNo ||
+            respData?.data?.transport?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-      setValidationErrors([]);
-      setSubmitSuccess(true);
+          const employeePayload = {
+            name: form?.employeeName || storedUser?.name || respData?.employeeName || "",
+            empId: form?.empId || respData?.empId || storedUser?.empId || "",
+            designation: form?.designation || storedUser?.designation || respData?.designation || "",
+            department: form?.department || storedUser?.department || respData?.department || "",
+          };
 
-      const firstForm = transportForms[0] || {};
-      const financeEnabled = firstForm?.financeRequired === "Yes";
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            response: responseData,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              employeeId ||
+              employeePayload.empId ||
+              "",
+          };
 
-      if (financeEnabled) {
-        const respData = lastResponseData?.data || lastResponseData || {};
-        const receiptRequestNo =
-          respData?.requestNo ||
-          respData?.data?.requestNo ||
-          respData?.transport?.requestNo ||
-          respData?.data?.transport?.requestNo ||
-          "";
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-        const employeePayload = {
-          name: firstForm?.employeeName || storedUser?.name || respData?.employeeName || "",
-          empId: firstForm?.empId || respData?.empId || storedUser?.empId || "",
-          designation: firstForm?.designation || storedUser?.designation || respData?.designation || "",
-          department: firstForm?.department || storedUser?.department || respData?.department || "",
-        };
-
-        const submitRespPayload = {
-          requestNo: receiptRequestNo,
-          response: lastResponseData,
-          employeeId:
-            respData?.employee ||
-            respData?.employeeId ||
-            employeeId ||
-            employeePayload.empId ||
-            "",
-        };
-
-        await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
-          return ReportPdf({
-            formData: {
-              selectDate: firstForm?.pickupDateTime || "",
-              advanceAmount: firstForm?.advanceAmount || "",
-              advancePurpose: firstForm?.advancePurpose || "",
-              clearanceDays: firstForm?.advanceToBeReceviedWithin || 15,
-              employeeName: employeePayload.name,
-              empId: employeePayload.empId,
-              designation: employeePayload.designation,
-              department: employeePayload.department,
-            },
-            employee: employeePayload,
-            submitResponse: submitRespPayload,
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: form?.pickupDateTime || "",
+                advanceAmount: form?.advanceAmount || "",
+                advancePurpose: form?.advancePurpose || "",
+                clearanceDays: form?.advanceToBeReceviedWithin || 15,
+                employeeName: employeePayload.name,
+                empId: employeePayload.empId,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
           });
-        });
+        }
+      } else {
+        // Create mode: loop through transportForms
+        let lastResponseData = null;
+        for (const form of transportForms) {
+          const payload = buildTransportPayload(form);
+
+          const response = await fetch(`${API_BASE}/api/transports`, {
+            method: "POST",
+            headers: {
+              ...(token && {
+                Authorization: `Bearer ${token}`,
+              }),
+            },
+            body: payload,
+          });
+
+          const responseText = await response.text();
+          let responseData;
+
+          try {
+            responseData = responseText ? JSON.parse(responseText) : null;
+          } catch {
+            responseData = null;
+          }
+
+          if (!response.ok) {
+            const serverMessage =
+              responseData?.message ||
+              responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
+              `Transport submission failed (HTTP ${response.status}).`;
+
+            console.error("Transport API error:", {
+              status: response.status,
+              response: responseData || responseText,
+            });
+            throw new Error(serverMessage);
+          }
+
+          lastResponseData = responseData;
+        }
+
+        setValidationErrors([]);
+        setSubmitSuccess(true);
+
+        const firstForm = transportForms[0] || {};
+        const financeEnabled = firstForm?.financeRequired === "Yes";
+
+        if (financeEnabled) {
+          const respData = lastResponseData?.data || lastResponseData || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.transport?.requestNo ||
+            respData?.data?.transport?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const employeePayload = {
+            name: firstForm?.employeeName || storedUser?.name || respData?.employeeName || "",
+            empId: firstForm?.empId || respData?.empId || storedUser?.empId || "",
+            designation: firstForm?.designation || storedUser?.designation || respData?.designation || "",
+            department: firstForm?.department || storedUser?.department || respData?.department || "",
+          };
+
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            response: lastResponseData,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              employeeId ||
+              employeePayload.empId ||
+              "",
+          };
+
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: firstForm?.pickupDateTime || "",
+                advanceAmount: firstForm?.advanceAmount || "",
+                advancePurpose: firstForm?.advancePurpose || "",
+                clearanceDays: firstForm?.advanceToBeReceviedWithin || 15,
+                employeeName: employeePayload.name,
+                empId: employeePayload.empId,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
+          });
+        }
       }
     } catch (error) {
       console.error("Transport submission failed:", error);
       setValidationErrors([
-        error.message || "Unable to submit transport forms.",
+        error.message || "Unable to save transport data.",
       ]);
     } finally {
       setIsSubmitting(false);
@@ -827,6 +1033,31 @@ const TransportDetailsPage = () => {
 
   if (submitSuccess) {
     return <FormSubmitted advanceData={transportForms[0] || {}} showDownloadButton={false} />;
+  }
+
+  if (isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-gray-300 text-sm">Loading Transport request details...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
+          <p className="text-red-300 text-sm mb-4">{loadError}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -842,13 +1073,63 @@ const TransportDetailsPage = () => {
           }
         `}</style>
 
-      <h1 className="text-3xl font-bold mb-6">Transport Details Form</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {isEditMode ? "Edit Transport Details" : "Transport Details Form"}
+          </h1>
+          {isEditMode && (
+            <p className="text-gray-400 text-xs mt-1">
+              Editing Transport Request ID: <span className="text-purple-400 font-mono">{id}</span>
+            </p>
+          )}
+        </div>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot
-          proceed further)
+          Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
         </label>
+        {/* Show existing principal document in edit mode */}
+        {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-300">Current file:</span>
+            <a
+              href={
+                typeof existingPrincipalDocument === "string"
+                  ? (existingPrincipalDocument.startsWith("http")
+                      ? existingPrincipalDocument
+                      : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                  : (existingPrincipalDocument?.url
+                      ? existingPrincipalDocument.url
+                      : (existingPrincipalDocument?.path
+                          ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                          : "#"))
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-purple-400 underline truncate max-w-xs"
+            >
+              {typeof existingPrincipalDocument === "string"
+                ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                : (existingPrincipalDocument?.name ||
+                   existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.originalName ||
+                   "View existing document")}
+            </a>
+            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+          </div>
+        )}
 
         <div
           onClick={
@@ -931,7 +1212,7 @@ const TransportDetailsPage = () => {
             </div>
           ) : (
             <p className="z-10">
-              Drag and drop files here or{" "}
+              Drag and drop files here{" "}
               <span className="text-purple-400 underline">choose file</span>
               <span className="block text-xs text-gray-500 mt-0.5">
                 Only PDF files supported • Max file size: 1MB
@@ -954,26 +1235,28 @@ const TransportDetailsPage = () => {
       </div>
 
       {/* ADD BUTTON */}
-      <div className="flex justify-end mb-5">
-        <button
-          type="button"
-          onClick={addTransportForm}
-          className="
-              flex
-              items-center
-              gap-2
-              bg-[#8b5cf6]
-              hover:bg-[#7c3aed]
-              px-5
-              py-2.5
-              rounded-md
-              transition-all
-            "
-        >
-          <Plus size={18} />
-          Add
-        </button>
-      </div>
+      {!isEditMode && (
+        <div className="flex justify-end mb-5">
+          <button
+            type="button"
+            onClick={addTransportForm}
+            className="
+                flex
+                items-center
+                gap-2
+                bg-[#8b5cf6]
+                hover:bg-[#7c3aed]
+                px-5
+                py-2.5
+                rounded-md
+                transition-all
+              "
+          >
+            <Plus size={18} />
+            Add
+          </button>
+        </div>
+      )}
 
       {/* FORMS */}
       {transportForms.map((form, formIndex) => (
@@ -1857,8 +2140,8 @@ const TransportDetailsPage = () => {
               items-center
               gap-2
             "
-        >
-          {isSubmitting ? "Submitting..." : "Submit"}
+          >
+          {isSubmitting ? (isEditMode ? "Updating..." : "Submitting...") : (isEditMode ? "Update Transport Request" : "Submit")}
 
           <ArrowRight size={18} />
         </button>
