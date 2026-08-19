@@ -67,6 +67,7 @@ import FacultyVenueListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyVe
 import FacultyfeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyfeedbackPage"
 import FacultyEventsListPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsListPage"
 import FacultyEventsDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyEventsDetailViewPage"
+import FacultyDocumentUploadPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyDocumentUploadPage"
 import FacultyIndividualRequestDetailViewPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualRequestDetailViewPage"
 import FacultyIndividualFeedbackPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyIndividualFeedbackPage"
 import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
@@ -172,6 +173,7 @@ function AppRoutes() {
       <Route path="/dashboard-faculty" element={<ProtectedRoute><FacultyDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events" element={<ProtectedRoute><FacultyEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events/detailView/:eventId" element={<ProtectedRoute><FacultyEventsDetailViewPage /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/events/detailView/:eventId/documentUpload" element={<ProtectedRoute><FacultyDocumentUploadPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
