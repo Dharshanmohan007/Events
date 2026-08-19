@@ -36,20 +36,76 @@ const findResponseValue = (value, key) => {
 
 // ── Convert the imported logo to a base64 data-URL so the new tab can render
 //    it without needing access to the bundler's asset pipeline.
-const toBase64 = (src) =>
-  new Promise((resolve) => {
+const toBase64 = async (imagePath) => {
+  if (!imagePath) return "";
+  
+  try {
+    // Try using fetch first
+    const response = await fetch(imagePath);
+    if (response.ok) {
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => {
+          console.error("FileReader error");
+          reject(new Error("FileReader error"));
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (fetchError) {
+    console.warn("Fetch failed, trying Image fallback:", fetchError.message);
+  }
+
+  // Fallback: Use Image and Canvas
+  return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    let loaded = false;
+    
+    const timeout = setTimeout(() => {
+      if (!loaded) {
+        console.warn("Image load timeout");
+        resolve("");
+      }
+    }, 5000);
+
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
+      if (loaded) return;
+      loaded = true;
+      clearTimeout(timeout);
+      
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx && canvas.width > 0 && canvas.height > 0) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          resolve(dataUrl);
+        } else {
+          console.warn("Canvas context not available");
+          resolve("");
+        }
+      } catch (canvasError) {
+        console.error("Canvas conversion error:", canvasError);
+        resolve("");
+      }
     };
-    img.onerror = () => resolve(src); // fallback to original URL
-    img.src = src;
+
+    img.onerror = () => {
+      if (loaded) return;
+      loaded = true;
+      clearTimeout(timeout);
+      console.error("Image failed to load:", imagePath);
+      resolve("");
+    };
+
+    img.src = imagePath;
   });
+};
 
 // ── Build the full HTML string that replicates the design ────────────────────
 
@@ -309,6 +365,7 @@ function buildReceiptHTML(logoDataUrl, data) {
 
         <!-- Header -->
         <div class="header">
+          ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Logo" style="max-height: 60px; max-width: 200px;" />` : '<div style="height: 60px;"></div>'}
         </div>
 
         <!-- Title -->

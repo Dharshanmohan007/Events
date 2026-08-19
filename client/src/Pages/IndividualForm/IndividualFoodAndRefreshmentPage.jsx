@@ -1955,7 +1955,7 @@ if (submitSuccess) {
               {Object.keys(card.selectedFoodTypes)
                 .filter((type) => card.selectedFoodTypes[type])
                 .join(" / ") || "Select Food Type"}
-            </span>
+            </span> 
 
             <ChevronDown
                 size={18}
