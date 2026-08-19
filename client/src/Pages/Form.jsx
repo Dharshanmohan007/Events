@@ -1127,6 +1127,7 @@ export default function Form() {
   const [isDraftLoading, setIsDraftLoading] = useState(!!recordId);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
