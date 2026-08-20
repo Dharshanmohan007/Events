@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import {
   ChevronDown,
@@ -34,6 +35,17 @@ const getFinanceComparisonError = (estimatedAmount, advanceAmount) => {
 };
 
 const MediaDetailsPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+  const [existingPosterFile, setExistingPosterFile] = useState(null);
+  const [existingCertificateFile, setExistingCertificateFile] = useState(null);
+  const [existingVideoFile, setExistingVideoFile] = useState(null);
+
   // =========================
   // MAIN TYPE DROPDOWN
   // =========================
@@ -96,23 +108,217 @@ const MediaDetailsPage = () => {
   ];
 
   // Auth 
-  const [id, setId] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   useEffect(() => {
     const token = localStorage.getItem("token");
-    // console.log("token :", token);
-
     if (token) {
       try {
         const decoded = jwtDecode(token);
         if (decoded?.id) {
-          setId(decoded.id);
+          setEmployeeId(decoded.id);
         }
-        console.log("Decoded JWT:", decoded);
       } catch (err) {
         console.error("Failed to decode JWT:", err);
       }
     }
   }, []);
+
+  const mapMediaApiToForm = (data) => {
+    const mediaDoc = data?.data || data?.media || data;
+
+    let types = [];
+    if (Array.isArray(mediaDoc.typeOfMedia)) {
+      types = mediaDoc.typeOfMedia.map((t) => {
+        const lower = String(t).toLowerCase();
+        if (lower === "poster") return "Poster";
+        if (lower === "video") return "Video";
+        return t;
+      });
+    } else if (mediaDoc.typeOfMedia) {
+      const lower = String(mediaDoc.typeOfMedia).toLowerCase();
+      if (lower.includes("poster")) types.push("Poster");
+      if (lower.includes("video")) types.push("Video");
+    }
+
+    if (types.length === 0) {
+      if (mediaDoc.poster && (mediaDoc.poster.posterContent || mediaDoc.poster.displayNeeded?.length)) {
+        types.push("Poster");
+      }
+      if (mediaDoc.video && (mediaDoc.video.videoContent || mediaDoc.video.eventCoverage?.length)) {
+        types.push("Video");
+      }
+    }
+
+    const poster = mediaDoc.poster || {};
+    const selectedDisplaysList = Array.isArray(poster.displayNeeded) ? poster.displayNeeded : [];
+    let flexSizeVal = "";
+    let glassSizeVal = "";
+    if (Array.isArray(poster.sizes)) {
+      poster.sizes.forEach((s) => {
+        if (s.type === "Flex") flexSizeVal = s.value || "";
+        if (s.type === "Glass Sticker") glassSizeVal = s.value || "";
+      });
+    }
+
+    let pDelivery = "";
+    if (poster.deliveryDate) {
+      const d = new Date(poster.deliveryDate);
+      if (!Number.isNaN(d.getTime())) {
+        pDelivery = poster.deliveryDate;
+      }
+    }
+
+    const video = mediaDoc.video || {};
+    let vDelivery = "";
+    if (video.deliveryDate) {
+      const d = new Date(video.deliveryDate);
+      if (!Number.isNaN(d.getTime())) {
+        vDelivery = video.deliveryDate;
+      }
+    }
+
+    return {
+      types,
+      poster: {
+        selectedDisplays: selectedDisplaysList,
+        posterContent: poster.posterContent || "",
+        certificateContent: poster.certificateContent || "",
+        trophyContent: poster.trophyContent || "",
+        displaySize: flexSizeVal,
+        glassStickerSize: glassSizeVal,
+        posterDeliveryDate: pDelivery,
+        posterPriority: poster.priority || "High",
+        posterRequirement: poster.specialRequirements || "",
+      },
+      video: {
+        videoContent: video.videoContent || "",
+        selectedPreEvent: Array.isArray(video.preEventVideos) ? video.preEventVideos : [],
+        selectedCoverage: Array.isArray(video.eventCoverage) ? video.eventCoverage : [],
+        selectedPostEvent: Array.isArray(video.postEventVideos) ? video.postEventVideos : [],
+        selectedSpecialVideo: Array.isArray(video.specialVideos) ? video.specialVideos : [],
+        videoDeliveryDate: vDelivery,
+        videoPriority: video.priority || "High",
+        videoRequirement: video.specialRequirements || "",
+      },
+      finance: {
+        financeRequired: (mediaDoc.financeRequired || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+        financeAdvanceAmount: String(mediaDoc.advanceAmount ?? ""),
+        financeEstimatedAmount: String(mediaDoc.estimatedAmount ?? mediaDoc.estimatedEventBudget ?? ""),
+        financeAdvancePurpose: mediaDoc.advancePurpose || "",
+        financeAdvanceToBeReceviedWithin: String(mediaDoc.advanceToBeReceviedWithin ?? ""),
+      },
+      files: {
+        principalApprovalForm:
+          mediaDoc.principalApprovalForm ||
+          mediaDoc.principalApprovalFormName ||
+          mediaDoc.principalApprovalDocument ||
+          mediaDoc.principalDocument ||
+          mediaDoc.approvalDocument ||
+          mediaDoc.approvalForm ||
+          null,
+        referencePosterFiles: mediaDoc.referencePosterFiles || null,
+        referenceCertificateFiles: mediaDoc.referenceCertificateFiles || null,
+        referenceFiles: mediaDoc.referenceFiles || null,
+      },
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchMediaDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token");
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/individual-media/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load media request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualMedia = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mapped = mapMediaApiToForm(actualMedia);
+          setSelectedTypes(mapped.types);
+          // Poster
+          setSelectedDisplays(mapped.poster.selectedDisplays);
+          setPosterContent(mapped.poster.posterContent);
+          setCertificateContent(mapped.poster.certificateContent);
+          setTrophyContent(mapped.poster.trophyContent);
+          setDisplaySize(mapped.poster.displaySize);
+          setGlassStickerSize(mapped.poster.glassStickerSize);
+          setPosterDeliveryDate(mapped.poster.posterDeliveryDate);
+          setPosterPriority(mapped.poster.posterPriority);
+          setPosterRequirement(mapped.poster.posterRequirement);
+          // Video
+          setVideoContent(mapped.video.videoContent);
+          setSelectedPreEvent(mapped.video.selectedPreEvent);
+          setSelectedCoverage(mapped.video.selectedCoverage);
+          setSelectedPostEvent(mapped.video.selectedPostEvent);
+          setSelectedSpecialVideo(mapped.video.selectedSpecialVideo);
+          setVideoDeliveryDate(mapped.video.videoDeliveryDate);
+          setVideoPriority(mapped.video.videoPriority);
+          setVideoRequirement(mapped.video.videoRequirement);
+          // Finance
+          setFinanceRequired(mapped.finance.financeRequired);
+          setFinanceAdvanceAmount(mapped.finance.financeAdvanceAmount);
+          setFinanceEstimatedAmount(mapped.finance.financeEstimatedAmount);
+          setFinanceAdvancePurpose(mapped.finance.financeAdvancePurpose);
+          setFinanceAdvanceToBeReceviedWithin(mapped.finance.financeAdvanceToBeReceviedWithin);
+          // Files
+          const existingPrincipal =
+            mapped.files?.principalApprovalForm ||
+            actualMedia?.principalApprovalForm ||
+            actualMedia?.principalApprovalFormName ||
+            actualMedia?.principalApprovalDocument ||
+            actualMedia?.principalDocument ||
+            actualMedia?.approvalDocument ||
+            actualMedia?.approvalForm ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument;
+          if (existingPrincipal) {
+            setExistingPrincipalDocument(existingPrincipal);
+          }
+          if (mapped.files.referencePosterFiles) {
+            setExistingPosterFile(mapped.files.referencePosterFiles);
+          }
+          if (mapped.files.referenceCertificateFiles) {
+            setExistingCertificateFile(mapped.files.referenceCertificateFiles);
+          }
+          if (mapped.files.referenceFiles) {
+            setExistingVideoFile(mapped.files.referenceFiles);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load media request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchMediaDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
   
 
 
@@ -570,7 +776,7 @@ const [trophyContent, setTrophyContent] = useState("");
     const formData = new FormData();
     
     // Root level fields
-    formData.append("employee", id || "6a0411af4579d3137b255e71");
+    formData.append("employee", employeeId || "6a0411af4579d3137b255e71");
     formData.append("dayIndex", "1");
     formData.append("status", "Pending");
     
@@ -646,8 +852,8 @@ const [trophyContent, setTrophyContent] = useState("");
       return;
     }
 
-    // Principal approval validation
-    if (!principalApprovalDocument) {
+    // Principal approval validation — allow existing document in edit mode
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
       setValidationErrors(["Principal Approval Form is required."]);
       return;
     }
@@ -680,29 +886,40 @@ const [trophyContent, setTrophyContent] = useState("");
     setSubmitSuccess(false);
     try {
       const token = localStorage.getItem("token");
-      const requestUrl = `${API_BASE}/api/individual-media/create`;
       const formData = buildMediaFormData();
-      // console.log('[MediaDetails] Sending POST to', requestUrl);
-      for (const entry of formData.entries()) {
-        // console.log('[MediaDetails] formData entry:', entry[0], entry[1]);
+      const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
+
+      let response;
+      if (isEditMode) {
+        // PUT to update existing media request
+        response = await fetch(`${API_BASE}/api/individual-media/${id}`, {
+          method: "PUT",
+          headers,
+          body: formData,
+        });
+        if (!response.ok) {
+          // fallback route
+          response = await fetch(`${API_BASE}/api/individual-media/update/${id}`, {
+            method: "PUT",
+            headers,
+            body: formData,
+          });
+        }
+      } else {
+        response = await fetch(`${API_BASE}/api/individual-media/create`, {
+          method: "POST",
+          headers,
+          body: formData,
+        });
       }
-      const response = await fetch(requestUrl, {
-        method: "POST",
-        headers: {
-          ...(token && {
-            Authorization: `Bearer ${token}`,
-          }),
-        },
-        body: formData,
-      });
+
       const data = await response.json();
-      // console.log("Media submit response:", data);
       if (!response.ok) {
-        throw new Error(data.message || "Media submission failed.");
+        throw new Error(data.message || (isEditMode ? "Media update failed." : "Media submission failed."));
       }
       setSubmitSuccess(true);
 
-      if (financeRequired === "Yes") {
+      if (String(financeRequired).toLowerCase() === "yes") {
         const respData = data?.data || data || {};
         const receiptRequestNo =
           respData?.requestNo ||
@@ -725,7 +942,7 @@ const [trophyContent, setTrophyContent] = useState("");
           employeeId:
             respData?.employee ||
             respData?.employeeId ||
-            id ||
+            employeeId ||
             employeePayload.empId ||
             "",
         };
@@ -827,12 +1044,45 @@ const [trophyContent, setTrophyContent] = useState("");
     );
   }
 
+  if (isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white flex items-center justify-center">
+        <p className="text-lg text-purple-300 animate-pulse">Loading media request...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white flex flex-col items-center justify-center gap-4">
+        <p className="text-red-400 text-lg">{loadError}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2 rounded-lg bg-[#8b3dff] hover:bg-[#9a52ff] text-white text-sm transition-all"
+        >
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
-      {/* TITLE */}
-      <h1 className="text-3xl font-bold mb-6">
-        Media Form
-      </h1>
+      {/* TITLE + CANCEL */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">
+          {isEditMode ? "Edit Media Request" : "Media Form"}
+        </h1>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2 rounded-lg border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-purple-500 text-sm transition-all"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {validationErrors.length > 0 && (
         <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
@@ -848,6 +1098,37 @@ const [trophyContent, setTrophyContent] = useState("");
         <label className="block mb-2 text-sm text-white">
           Principal Approval Form (without uploading this document you cannot proceed further)
         </label>
+        {/* Show existing principal document in edit mode */}
+        {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-300">Current file:</span>
+            <a
+              href={
+                typeof existingPrincipalDocument === "string"
+                  ? (existingPrincipalDocument.startsWith("http")
+                      ? existingPrincipalDocument
+                      : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                  : (existingPrincipalDocument?.url
+                      ? existingPrincipalDocument.url
+                      : (existingPrincipalDocument?.path
+                          ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                          : "#"))
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-purple-400 underline truncate max-w-xs"
+            >
+              {typeof existingPrincipalDocument === "string"
+                ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                : (existingPrincipalDocument?.name ||
+                   existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.originalName ||
+                   "View existing document")}
+            </a>
+            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+          </div>
+        )}
 
         <div
           onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
@@ -1773,14 +2054,17 @@ const [trophyContent, setTrophyContent] = useState("");
         </div>
       )}
 
-      {/* NEXT BUTTON */}
+      {/* SUBMIT BUTTON */}
       <div className="flex justify-end mt-8">
         <button
           type="button"
           onClick={handleNext}
+          disabled={isSubmitting}
           className="
             bg-[#8b3dff]
             hover:bg-[#9a52ff]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
             transition-all
             duration-300
             text-white
@@ -1795,7 +2079,9 @@ const [trophyContent, setTrophyContent] = useState("");
             shadow-purple-900/30
           "
         >
-          Submit
+          {isSubmitting
+            ? (isEditMode ? "Updating..." : "Submitting...")
+            : (isEditMode ? "Update Media Request" : "Submit")}
 
           <ArrowRight size={18} />
         </button>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import {
   ChevronDown,
   ArrowRight,
@@ -7,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Check,
+  FileText,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
 import FormSubmitted from "../IndividualForm/FormSubmitted";
@@ -298,6 +300,14 @@ function DateTimePicker({
 }
 
 export default function PurchaseDetails() {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+
   const { user } = useAuth();
   const [employeeId, setEmployeeId] = useState("");
   const principalInputRef = useRef(null);
@@ -409,6 +419,208 @@ export default function PurchaseDetails() {
     estimatedEventBudget: "",
   });
 
+  const mapSection = (sectionData) => {
+    if (!sectionData) {
+      return {
+        giftType: [],
+        registrationKitNeeded: "No",
+        trophyType: [],
+        basicTrophyQty: "",
+        eliteTrophyQty: "",
+        cashPrizeAmount: "",
+        voucherQty: {},
+        voucherWorth: [],
+        registrationKitQty: "",
+        specialRequirements: "",
+      };
+    }
+
+    const giftTypes = [];
+    const trophyTypes = [];
+    let basicQty = "";
+    let eliteQty = "";
+    let cashPrize = "";
+    const voucherWorths = [];
+    const voucherQtys = {};
+
+    if (Array.isArray(sectionData.giftItems)) {
+      sectionData.giftItems.forEach((gift) => {
+        if (gift.giftType === "Trophy" || gift.trophy) {
+          if (!giftTypes.includes("Trophy")) giftTypes.push("Trophy");
+          const trophies = Array.isArray(gift.trophy) ? gift.trophy : [];
+          trophies.forEach((t) => {
+            if (t.trophyType === "Basic") {
+              if (!trophyTypes.includes("Basic")) trophyTypes.push("Basic");
+              basicQty = String(t.quantity || "");
+            }
+            if (t.trophyType === "Elite") {
+              if (!trophyTypes.includes("Elite")) trophyTypes.push("Elite");
+              eliteQty = String(t.quantity || "");
+            }
+          });
+        }
+
+        if (gift.giftType === "Cash Prize" || gift.cashPrizeAmount !== undefined) {
+          if (!giftTypes.includes("Cash Prize")) giftTypes.push("Cash Prize");
+          cashPrize = String(gift.cashPrizeAmount || "");
+        }
+
+        if (gift.giftType === "voucherWorth" || gift.voucher || gift.giftType === "Voucher") {
+          if (!giftTypes.includes("Voucher")) giftTypes.push("Voucher");
+          const vouchers = Array.isArray(gift.voucher) ? gift.voucher : [];
+          vouchers.forEach((v) => {
+            const w = String(v.voucherWorth || "");
+            if (w) {
+              if (!voucherWorths.includes(w)) voucherWorths.push(w);
+              voucherQtys[w] = String(v.quantity || "");
+            }
+          });
+        }
+      });
+    }
+
+    const regKitNeeded = sectionData.registrationKitNeeded === true || sectionData.registrationKitNeeded === "Yes" ? "Yes" : "No";
+
+    return {
+      giftType: giftTypes,
+      registrationKitNeeded: regKitNeeded,
+      trophyType: trophyTypes,
+      basicTrophyQty: basicQty,
+      eliteTrophyQty: eliteQty,
+      cashPrizeAmount: cashPrize,
+      voucherQty: voucherQtys,
+      voucherWorth: voucherWorths,
+      registrationKitQty: String(sectionData.registrationKitQty ?? ""),
+      specialRequirements: sectionData.specialRequirements || "",
+    };
+  };
+
+  const mapPurchaseApiToForm = (data) => {
+    const purchaseDoc = data?.data || data?.purchase || data;
+    const purchasesList = Array.isArray(purchaseDoc.purchases) ? purchaseDoc.purchases : [];
+    const primaryPurchase = purchasesList[0] || purchaseDoc;
+
+    const reqs = [];
+    let idCardCount = "";
+    let certCount = "";
+
+    const reqNeeded = primaryPurchase.requirementNeeded || primaryPurchase.requirement || [];
+    if (Array.isArray(reqNeeded)) {
+      reqNeeded.forEach((r) => {
+        const type = (r.type || r).toLowerCase();
+        if (type.includes("id card") || type.includes("idcard")) {
+          if (!reqs.includes("ID card")) reqs.push("ID card");
+          idCardCount = String(r.hardCount ?? r.quantity ?? r.count ?? "");
+        }
+        if (type.includes("certificate")) {
+          if (!reqs.includes("Certificate")) reqs.push("Certificate");
+          certCount = String(r.hardCount ?? r.quantity ?? r.count ?? "");
+        }
+      });
+    }
+
+    let delivDate = null;
+    if (primaryPurchase.deliveryDate) {
+      delivDate = new Date(primaryPurchase.deliveryDate);
+      if (Number.isNaN(delivDate.getTime())) delivDate = null;
+    }
+
+    const requiredFor = Array.isArray(primaryPurchase.requiredFor)
+      ? primaryPurchase.requiredFor
+      : primaryPurchase.requiredFor
+        ? [primaryPurchase.requiredFor]
+        : [];
+
+    let persons = [];
+    if (requiredFor.includes("Students") && (requiredFor.includes("Guest") || requiredFor.includes("Guests"))) {
+      persons = ["Both"];
+    } else if (requiredFor.includes("Students")) {
+      persons = ["Students"];
+    } else if (requiredFor.includes("Guest") || requiredFor.includes("Guests")) {
+      persons = ["Guest"];
+    }
+
+    return {
+      requirement: reqs,
+      idCardQty: idCardCount,
+      certificateQty: certCount,
+      persons: persons,
+      deliveryDate: delivDate,
+      students: mapSection(primaryPurchase.students),
+      guests: mapSection(primaryPurchase.guests),
+      financeRequired: (purchaseDoc.financeRequired || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+      advanceAmount: String(purchaseDoc.advanceAmount ?? ""),
+      advancePurpose: purchaseDoc.advancePurpose || "",
+      advanceToBeReceviedWithin: String(purchaseDoc.advanceToBeReceviedWithin ?? ""),
+      estimatedEventBudget: String(purchaseDoc.estimatedAmount ?? purchaseDoc.estimatedEventBudget ?? ""),
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchPurchaseDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token");
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/purchase/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load purchase request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualPurchase = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mapped = mapPurchaseApiToForm(actualPurchase);
+          setForm(mapped);
+          const existingDoc =
+            actualPurchase?.principalApprovalForm ||
+            actualPurchase?.principalApprovalFormName ||
+            actualPurchase?.principalApprovalDocument ||
+            actualPurchase?.principalDocument ||
+            actualPurchase?.approvalDocument ||
+            actualPurchase?.approvalForm ||
+            actualPurchase?.files?.principalApprovalForm ||
+            actualPurchase?.files?.principalApprovalFormName ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            rawData?.principalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument ||
+            resData?.principalDocument;
+          if (existingDoc) {
+            setExistingPrincipalDocument(existingDoc);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load purchase request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchPurchaseDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const [apiError, setApiError] = useState("");
@@ -443,7 +655,7 @@ export default function PurchaseDetails() {
     const nextErrors = {};
 
     // Principal approval validation
-    if (!principalApprovalDocument) {
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
       nextErrors.principalApprovalDocument = "Principal Approval Form is required.";
     }
 
@@ -747,241 +959,254 @@ export default function PurchaseDetails() {
   /* ================= SUBMIT ================= */
 
   const handleSubmit = async () => {
-  // console.log('[PurchaseDetails] handleSubmit start');
-  setApiError("");
-  setIsLoading(true);
+    setApiError("");
+    setIsLoading(true);
 
-  if (!validateForm()) {
-    setIsLoading(false);
-    return;
-  }
-
-  try {
-    const payload = buildPayload();
-    // console.log('[PurchaseDetails] payload built:', payload);
-
-    // Validate token before attempting submit. Show an error instead of redirecting.
-    const authToken = localStorage.getItem("token");
-    const decodedAuthToken = decodeToken(authToken);
-
-    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      setApiError("Session expired or invalid token. Please login again.");
+    if (!validateForm()) {
       setIsLoading(false);
       return;
     }
 
-    if (!payload.employee) {
-      throw new Error("Unable to determine employee id. Please login again.");
-    }
-
-    const token = localStorage.getItem("token");
-
-    // ===========================
-    // Create FormData
-    // ===========================
-    const formData = new FormData();
-
-    // Employee
-    formData.append("employee", payload.employee);
-
-    // Finance fields (MUST be before purchases)
-    formData.append("financeRequired", payload.financeRequired);
-    formData.append("advanceAmount", payload.advanceAmount);
-    formData.append("advancePurpose", payload.advancePurpose);
-    formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
-    formData.append("estimatedAmount", payload.estimatedAmount);
-
-    // Purchases
-    formData.append(
-      "purchases",
-      JSON.stringify(payload.purchases)
-    );
-
-    // Principal approval PDF (MUST be last)
-    if (principalApprovalDocument) {
-      formData.append(
-        "principalApprovalForm",
-        principalApprovalDocument,
-        principalApprovalDocument.name
-      );
-    }
-
-    // ===========================
-    // Debug FormData
-    // ===========================
-    // console.log("===== FORM DATA =====");
-
-    for (const pair of formData.entries()) {
-      // console.log(pair[0], pair[1]);
-    }
-
-    // console.log("=====================");
-
-    const requestUrl = `${API_BASE}/api/purchase/create`;
-
-    // console.log('[PurchaseDetails] Sending POST to', requestUrl);
-    const response = await fetch(requestUrl, {
-      method: "POST",
-
-      headers: {
-        ...(token
-          ? {
-              Authorization: `Bearer ${token}`,
-            }
-          : {}),
-      },
-
-      // DO NOT JSON.stringify
-      // DO NOT add Content-Type
-      body: formData,
-    });
-
-    let data;
-
     try {
-      data = await response.json();
-    } catch (err) {
-      console.warn(err);
-      data = null;
-    }
+      const payload = buildPayload();
 
-    // console.log("Response :", data);
+      // Validate token before attempting submit. Show an error instead of redirecting.
+      const authToken = localStorage.getItem("token");
+      const decodedAuthToken = decodeToken(authToken);
 
-    if (!response.ok) {
-      throw new Error(
-        data?.message ||
-          `Purchase submission failed (${response.status})`
+      if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        setApiError("Session expired or invalid token. Please login again.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!payload.employee) {
+        throw new Error("Unable to determine employee id. Please login again.");
+      }
+
+      const token = localStorage.getItem("token");
+
+      // ===========================
+      // Create FormData
+      // ===========================
+      const formData = new FormData();
+
+      // Employee
+      formData.append("employee", payload.employee);
+
+      // Finance fields (MUST be before purchases)
+      formData.append("financeRequired", payload.financeRequired);
+      formData.append("advanceAmount", payload.advanceAmount);
+      formData.append("advancePurpose", payload.advancePurpose);
+      formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
+      formData.append("estimatedAmount", payload.estimatedAmount);
+
+      // Purchases
+      formData.append(
+        "purchases",
+        JSON.stringify(payload.purchases)
       );
-    }
 
-    setSubmitSuccess(true);
+      // Principal approval PDF
+      if (principalApprovalDocument) {
+        formData.append(
+          "principalApprovalForm",
+          principalApprovalDocument,
+          principalApprovalDocument.name
+        );
+      }
 
-    const financeEnabled = form?.financeRequired === "Yes";
-    if (financeEnabled) {
-      const respData = data?.data || data || {};
-      const receiptRequestNo =
-        respData?.requestNo ||
-        respData?.data?.requestNo ||
-        respData?.purchase?.requestNo ||
-        respData?.data?.purchase?.requestNo ||
-        "";
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-      const employeePayload = {
-        name: storedUser?.name || storedUser?.employeeName || "",
-        empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
-        designation: storedUser?.designation || "",
-        department: storedUser?.department || "",
-      };
-
-      const submitRespPayload = {
-        requestNo: receiptRequestNo,
-        employeeId:
-          respData?.employee ||
-          respData?.employeeId ||
-          payload.employee ||
-          employeePayload.empId ||
-          "",
-      };
-
-      await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
-        return ReportPdf({
-          formData: {
-            selectDate: form?.deliveryDate || "",
-            advanceAmount: form?.advanceAmount || "",
-            advancePurpose: form?.advancePurpose || "",
-            clearanceDays: form?.advanceToBeReceviedWithin || 15,
-            empId: employeePayload.empId,
-            employeeName: employeePayload.name,
-            designation: employeePayload.designation,
-            department: employeePayload.department,
+      if (isEditMode) {
+        // Edit mode: send PUT to /api/purchase/:id (or fallback /api/purchase/update/:id)
+        let requestUrl = `${API_BASE}/api/purchase/${id}`;
+        let response = await fetch(requestUrl, {
+          method: "PUT",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          employee: employeePayload,
-          submitResponse: submitRespPayload,
+          body: formData,
         });
-      });
+
+        if (!response.ok && (response.status === 404 || response.status === 405)) {
+          requestUrl = `${API_BASE}/api/purchase/update/${id}`;
+          response = await fetch(requestUrl, {
+            method: "PUT",
+            headers: {
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: formData,
+          });
+        }
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (err) {
+          console.warn(err);
+          data = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(data?.message || `Purchase update failed (${response.status})`);
+        }
+
+        setSubmitSuccess(true);
+
+        const financeEnabled = String(form?.financeRequired).toLowerCase() === "yes";
+        if (financeEnabled) {
+          const respData = data?.data || data || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.purchase?.requestNo ||
+            respData?.data?.purchase?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const employeePayload = {
+            name: storedUser?.name || storedUser?.employeeName || "",
+            empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+            designation: storedUser?.designation || "",
+            department: storedUser?.department || "",
+          };
+
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              payload.employee ||
+              employeePayload.empId ||
+              "",
+          };
+
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: form?.deliveryDate || "",
+                advanceAmount: form?.advanceAmount || "",
+                advancePurpose: form?.advancePurpose || "",
+                clearanceDays: form?.advanceToBeReceviedWithin || 15,
+                empId: employeePayload.empId,
+                employeeName: employeePayload.name,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
+          });
+        }
+      } else {
+        // Create mode: send POST to /api/purchase/create
+        const requestUrl = `${API_BASE}/api/purchase/create`;
+
+        const response = await fetch(requestUrl, {
+          method: "POST",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: formData,
+        });
+
+        let data;
+        try {
+          data = await response.json();
+        } catch (err) {
+          console.warn(err);
+          data = null;
+        }
+
+        if (!response.ok) {
+          throw new Error(data?.message || `Purchase submission failed (${response.status})`);
+        }
+
+        setSubmitSuccess(true);
+
+        const financeEnabled = form?.financeRequired === "Yes";
+        if (financeEnabled) {
+          const respData = data?.data || data || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.purchase?.requestNo ||
+            respData?.data?.purchase?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const employeePayload = {
+            name: storedUser?.name || storedUser?.employeeName || "",
+            empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+            designation: storedUser?.designation || "",
+            department: storedUser?.department || "",
+          };
+
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              payload.employee ||
+              employeePayload.empId ||
+              "",
+          };
+
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: form?.deliveryDate || "",
+                advanceAmount: form?.advanceAmount || "",
+                advancePurpose: form?.advancePurpose || "",
+                clearanceDays: form?.advanceToBeReceviedWithin || 15,
+                empId: employeePayload.empId,
+                employeeName: employeePayload.name,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
+          });
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setApiError(error.message || "Unable to save purchase data.");
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error) {
-    console.error(error);
-    setApiError(error.message || "Unable to send purchase data.");
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-  // const handleSubmit = async () => {
-  //   setApiError("");
-  //   setSuccess(false);
-  //   setIsLoading(true);
-
-  //   if (!validateForm()) {
-  //     setIsLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     const payload = buildPayload();
-
-  //     console.log("[PurchaseDetails] Payload:", payload);
-
-  //     if (!payload.employee) {
-  //       throw new Error("Unable to determine employee id. Please login again.");
-  //     }
-
-  //     const token = localStorage.getItem("token");
-
-  //     const requestUrl = `${API_BASE}/api/purchase/create`;
-
-  //     console.log("[PurchaseDetails] Sending POST to:", requestUrl);
-
-  //     const response = await fetch(requestUrl, {
-  //       method: "POST",
-
-  //       headers: {
-  //         "Content-Type": "application/json",
-
-  //         ...(token
-  //           ? {
-  //               Authorization: `Bearer ${token}`,
-  //             }
-  //           : {}),
-  //       },
-
-  //       body: JSON.stringify(payload),
-  //     });
-
-  //     let data;
-
-  //     try {
-  //       data = await response.json();
-  //     } catch (err) {
-  //       console.warn("[PurchaseDetails] Response parse failed:", err);
-  //       data = null;
-  //     }
-
-  //     console.log("[PurchaseDetails] Response status:", response.status, "data:", data);
-
-  //     if (!response.ok) {
-  //       throw new Error(
-  //         (data && data.message) ||
-  //           `Purchase submission failed with status ${response.status}`,
-  //       );
-  //     }
-
-  //     setSuccess(true);
-  //   } catch (error) {
-  //     console.error("[PurchaseDetails] submit error:", error);
-  //     setApiError(error.message || "Unable to send purchase data.");
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  };
 
   if (submitSuccess) {
-  return <FormSubmitted advanceData={form} showDownloadButton={false} />;
-}
+    return <FormSubmitted advanceData={form} showDownloadButton={false} />;
+  }
+
+  if (isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-gray-300 text-sm">Loading Purchase request details...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
+          <p className="text-red-300 text-sm mb-4">{loadError}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -994,17 +1219,68 @@ export default function PurchaseDetails() {
           border: 1px dashed #3A3A5A;
           background: transparent;
           border-radius: 10px;
-          min-height: 90px;git push -u origin 
+          min-height: 90px;
         }
       `}</style>
 
-      <h1 className="text-white text-3xl font-bold mb-6">Purchase Form</h1>
-
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-white text-3xl font-bold">
+            {isEditMode ? "Edit Purchase Request" : "Purchase Form"}
+          </h1>
+          {isEditMode && (
+            <p className="text-gray-400 text-xs mt-1">
+              Editing Purchase Request ID: <span className="text-purple-400 font-mono">{id}</span>
+            </p>
+          )}
+        </div>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
       <div className="w-full space-y-5 mt-4">
         <div className="mb-2">
           <label className="block mb-2 text-sm text-white">
-            Principal Approval Form (without uploading this document you cannot proceed further)
+            Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
           </label>
+
+          {/* Show existing principal document in edit mode */}
+          {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+            <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+              <FileText size={16} className="text-purple-400 shrink-0" />
+              <span className="text-sm text-purple-300">Current file:</span>
+              <a
+                href={
+                  typeof existingPrincipalDocument === "string"
+                    ? (existingPrincipalDocument.startsWith("http")
+                        ? existingPrincipalDocument
+                        : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                    : (existingPrincipalDocument?.url
+                        ? existingPrincipalDocument.url
+                        : (existingPrincipalDocument?.path
+                            ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                            : "#"))
+                }
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-purple-400 underline truncate max-w-xs"
+              >
+                {typeof existingPrincipalDocument === "string"
+                  ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                  : (existingPrincipalDocument?.name ||
+                     existingPrincipalDocument?.filename ||
+                     existingPrincipalDocument?.originalName ||
+                     "View existing document")}
+              </a>
+              <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+            </div>
+          )}
 
           <div
             onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
@@ -1361,7 +1637,7 @@ export default function PurchaseDetails() {
             px-10 py-3 rounded-lg
             flex items-center gap-2"
           >
-            {isLoading ? "Sending..." : "Submit"}
+            {isLoading ? (isEditMode ? "Updating..." : "Sending...") : (isEditMode ? "Update Purchase Request" : "Submit")}
 
             <ArrowRight size={18} />
           </button>

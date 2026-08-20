@@ -36,20 +36,76 @@ const findResponseValue = (value, key) => {
 
 // ── Convert the imported logo to a base64 data-URL so the new tab can render
 //    it without needing access to the bundler's asset pipeline.
-const toBase64 = (src) =>
-  new Promise((resolve) => {
+const toBase64 = async (imagePath) => {
+  if (!imagePath) return "";
+  
+  try {
+    // Try using fetch first
+    const response = await fetch(imagePath);
+    if (response.ok) {
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => {
+          console.error("FileReader error");
+          reject(new Error("FileReader error"));
+        };
+        reader.readAsDataURL(blob);
+      });
+    }
+  } catch (fetchError) {
+    console.warn("Fetch failed, trying Image fallback:", fetchError.message);
+  }
+
+  // Fallback: Use Image and Canvas
+  return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = "anonymous";
+    let loaded = false;
+    
+    const timeout = setTimeout(() => {
+      if (!loaded) {
+        console.warn("Image load timeout");
+        resolve("");
+      }
+    }, 5000);
+
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      canvas.getContext("2d").drawImage(img, 0, 0);
-      resolve(canvas.toDataURL("image/png"));
+      if (loaded) return;
+      loaded = true;
+      clearTimeout(timeout);
+      
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width || 100;
+        canvas.height = img.naturalHeight || img.height || 100;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx && canvas.width > 0 && canvas.height > 0) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+          resolve(dataUrl);
+        } else {
+          console.warn("Canvas context not available");
+          resolve("");
+        }
+      } catch (canvasError) {
+        console.error("Canvas conversion error:", canvasError);
+        resolve("");
+      }
     };
-    img.onerror = () => resolve(src); // fallback to original URL
-    img.src = src;
+
+    img.onerror = () => {
+      if (loaded) return;
+      loaded = true;
+      clearTimeout(timeout);
+      console.error("Image failed to load:", imagePath);
+      resolve("");
+    };
+
+    img.src = imagePath;
   });
+};
 
 // ── Build the full HTML string that replicates the design ────────────────────
 
@@ -140,7 +196,7 @@ function buildReceiptHTML(logoDataUrl, data) {
       font-size: 13pt;
       font-weight: bold;
       flex: 1;
-      text-align: center;
+      text-align: left;
     }
 
     .title-row .iqac-ref {
@@ -309,7 +365,7 @@ function buildReceiptHTML(logoDataUrl, data) {
 
         <!-- Header -->
         <div class="header">
-          <img src="${logoDataUrl}" alt="Sri Eshwar College of Engineering" />
+          ${logoDataUrl ? `<img src="${logoDataUrl}" alt="Logo" style="max-height: 60px; max-width: 200px;" />` : '<div style="height: 60px;"></div>'}
         </div>
 
         <!-- Title -->
@@ -505,7 +561,18 @@ export default async function ReportPdf({
       add15Days(requisitionDateValue, formData?.clearanceDays || 15),
     clearanceDays: formData?.clearanceDays || formData?.days || 15,
   };
-  const facultyId =
+  const isMongoId = (val) => typeof val === "string" && /^[0-9a-fA-F]{24}$/.test(val);
+
+  // If initial empId is a raw Mongo ObjectID, clear it so it doesn't display raw hex
+  if (isMongoId(data.empId)) {
+    data.empId = "";
+  }
+
+  const facultyIdCandidate =
+    submitResponse?.facultyId ||
+    storedUser?.facultyId ||
+    decodedToken?.facultyId ||
+    employee?.facultyId ||
     submitResponse?.employeeId ||
     submitResponse?.employee ||
     submitResponse?.data?.employee ||
@@ -513,56 +580,135 @@ export default async function ReportPdf({
     formData?.empId ||
     decodedToken?.id ||
     decodedToken?._id ||
-    decodedToken?.facultyId ||
     employee?.employeeId ||
     employee?.empId ||
     storedUser?._id ||
     storedUser?.id ||
     "";
 
-  // Always load the faculty profile so the receipt uses the authoritative
-  // employee details from /api/faculty/:id rather than stale form data.
-  if (facultyId) {
-    try {
-      const resp = await fetch(`${API_BASE}/api/faculty/${facultyId}`, {
-        headers: {
-          Accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
+  const searchQueries = [
+    storedUser?.email,
+    decodedToken?.email,
+    data.employeeName,
+    storedUser?.name,
+    employee?.name,
+  ].filter((q) => typeof q === "string" && q.trim().length > 1);
 
-          if (resp.ok) {
+  const applyFacultyData = (faculty) => {
+    if (!faculty) return;
+    const resolvedEmpId =
+      faculty.empId ||
+      faculty.employeeId ||
+      faculty.employee_id ||
+      faculty.emp_id ||
+      faculty.empid ||
+      faculty.empID;
+    if (resolvedEmpId && !isMongoId(resolvedEmpId)) {
+      data.empId = resolvedEmpId;
+    } else if (resolvedEmpId && !data.empId) {
+      data.empId = resolvedEmpId;
+    }
+
+    const resolvedName =
+      faculty.name ||
+      (faculty.firstName ? `${faculty.firstName} ${faculty.lastName || ""}`.trim() : "") ||
+      faculty.employeeName ||
+      faculty.empName ||
+      faculty.username;
+    if (resolvedName) {
+      data.employeeName = resolvedName;
+    }
+
+    const resolvedDesignation =
+      faculty.designation ||
+      faculty.jobTitle ||
+      faculty.position;
+    if (resolvedDesignation) {
+      data.designation = resolvedDesignation;
+    }
+
+    const resolvedDept =
+      faculty.department ||
+      faculty.dept ||
+      faculty.departmentName;
+    if (resolvedDept) {
+      data.department = resolvedDept;
+    }
+  };
+
+  const headers = {
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+
+  let facultyFound = false;
+
+  // 1. Try direct fetch by facultyIdCandidate
+  if (facultyIdCandidate) {
+    try {
+      const resp = await fetch(`${API_BASE}/api/faculty/${facultyIdCandidate}`, { headers });
+      if (resp.ok) {
         const json = await resp.json();
         const faculty = json?.data?.faculty || json?.faculty || json?.data || json;
-        if (faculty) {
-          data.empId =
-            faculty.empId ||
-            faculty.employeeId ||
-            faculty.employee_id ||
-            faculty.emp_id ||
-            faculty.empid ||
-            faculty.empID ||
-            data.empId;
-          data.employeeName =
-            faculty.name ||
-            faculty.employeeName ||
-            faculty.empName ||
-            faculty.username ||
-            data.employeeName;
-          data.designation =
-            faculty.designation ||
-            faculty.jobTitle ||
-            faculty.position ||
-            data.designation;
-          data.department =
-            faculty.department ||
-            faculty.dept ||
-            faculty.departmentName ||
-            data.department;
+        if (faculty && (faculty.empId || faculty.name || faculty.firstName || faculty.designation)) {
+          applyFacultyData(faculty);
+          facultyFound = true;
         }
       }
     } catch (err) {
-      console.warn("Receipt faculty fetch failed:", err);
+      console.warn("Direct faculty fetch failed:", err);
+    }
+  }
+
+  // 2. If not found or details incomplete, search by query
+  if (!facultyFound || !data.designation || !data.empId) {
+    for (const q of searchQueries) {
+      if (facultyFound && data.designation && data.empId) break;
+      try {
+        const searchResp = await fetch(`${API_BASE}/api/faculty/search?q=${encodeURIComponent(q)}`, { headers });
+        if (searchResp.ok) {
+          const searchJson = await searchResp.json();
+          const list = searchJson?.data || searchJson?.faculties || (Array.isArray(searchJson) ? searchJson : []);
+          if (Array.isArray(list) && list.length > 0) {
+            const matched =
+              list.find((f) =>
+                (storedUser?.email && f.email?.toLowerCase() === storedUser.email.toLowerCase()) ||
+                (data.employeeName && (f.name?.toLowerCase() === data.employeeName.toLowerCase() || `${f.firstName || ""} ${f.lastName || ""}`.trim().toLowerCase() === data.employeeName.toLowerCase())) ||
+                (facultyIdCandidate && f._id === facultyIdCandidate)
+              ) || list[0];
+            if (matched) {
+              applyFacultyData(matched);
+              facultyFound = true;
+              break;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Faculty search query failed:", err);
+      }
+    }
+  }
+
+  // 3. If still missing designation or empId, fetch /api/faculty list
+  if (!facultyFound || !data.designation || !data.empId) {
+    try {
+      const allResp = await fetch(`${API_BASE}/api/faculty`, { headers });
+      if (allResp.ok) {
+        const allJson = await allResp.json();
+        const list = Array.isArray(allJson) ? allJson : (allJson?.data || []);
+        if (Array.isArray(list) && list.length > 0) {
+          const matched = list.find((f) =>
+            (storedUser?.email && f.email?.toLowerCase() === storedUser.email.toLowerCase()) ||
+            (data.employeeName && (f.name?.toLowerCase() === data.employeeName.toLowerCase() || `${f.firstName || ""} ${f.lastName || ""}`.trim().toLowerCase() === data.employeeName.toLowerCase())) ||
+            (facultyIdCandidate && (f._id === facultyIdCandidate || f.empId === facultyIdCandidate))
+          );
+          if (matched) {
+            applyFacultyData(matched);
+          }
+        }
+      }
+    } catch (err) {
+      console.warn("All faculty fetch fallback failed:", err);
     }
   }
 
@@ -575,11 +721,16 @@ export default async function ReportPdf({
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);
 
+  const sanitizedIqac = String(data.iqacNumber || "Receipt").replace(/[/\\?%*:|"<>]/g, "_");
   const link = document.createElement("a");
   link.href = url;
-  link.download = `Advance_Receipt_${data.iqacNumber || "Receipt"}.html`;
+  link.setAttribute("download", `Advance_Receipt_${sanitizedIqac}.html`);
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  setTimeout(() => {
+    try {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (_) {}
+  }, 1000);
 }

@@ -164,10 +164,21 @@ function AppRoutes() {
 
       <Route path="/dashboard/IndividualEvents/:id" element={<ProtectedRoute><IndividualEventDetailPage /></ProtectedRoute>} />
 
-      <Route path="/transports" element={<TransportDetailsPage />} />
+       <Route path="/transports" element={<TransportDetailsPage />} />
+      <Route path="/transports/edit/:id" element={<TransportDetailsPage />} />
+      <Route path="/individual-transport/edit/:id" element={<TransportDetailsPage />} />
+
       <Route path="/media" element={<MediaDetailsPage />} />
+      <Route path="/media/edit/:id" element={<MediaDetailsPage />} />
+      <Route path="/individual-media/edit/:id" element={<MediaDetailsPage />} />
+
       <Route path="/IndividualFoodAndRefreshment" element={<IndividualFoodAndRefreshmentPage />} />
+      <Route path="/IndividualFoodAndRefreshment/edit/:id" element={<IndividualFoodAndRefreshmentPage />} />
+      <Route path="/individual-food/edit/:id" element={<IndividualFoodAndRefreshmentPage />} />
+
       <Route path="/purchase" element={<PurchaseDetails />} />
+      <Route path="/purchase/edit/:id" element={<PurchaseDetails />} />
+      <Route path="/individual-purchase/edit/:id" element={<PurchaseDetails />} />
 
       <Route path="/dashboard-faculty" element={<ProtectedRoute><FacultyDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events" element={<ProtectedRoute><FacultyEventsListPage /></ProtectedRoute>} />
