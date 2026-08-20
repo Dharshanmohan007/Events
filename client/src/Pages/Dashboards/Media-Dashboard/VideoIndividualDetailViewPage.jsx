@@ -365,18 +365,29 @@ const VideoIndividualDetailViewPage = () => {
   const hasVideo = mediaTypes.some((t) => String(t).toLowerCase() === "video");
 
   return (
-    <section className="min-h-screen bg-[#0b1326] poppins">
+    <section className="min-h-screen bg-[#0b1326] text-white poppins">
       <DashboardHeader basePath="/dashboard-video" />
-      <main className="px-4 pb-8 sm:px-6">
-        <div className="flex items-center justify-between gap-2 py-3 text-sm text-[#CBC3D7]/50">
+      <main className="h-[93vh] px-7 pt-2">
+        <header className="mt-4 flex items-center justify-between gap-5">
           <div className="flex items-center gap-2">
-            <Link to="/dashboard-video" className="hover:text-white transition-colors">Video Dashboard</Link>
-            <ChevronRight size={14} />
-            <span className="text-[#D0BCFF]">Individual Video Details</span>
-            {employee.name && (<><ChevronRight size={14} /><span className="text-[#D0BCFF]">{employee.name}</span></>)}
+            <Link to="/dashboard-video" className="text-md font-medium text-[#CBC3D7]/50 transition hover:text-white">Video Dashboard</Link>
+            <ChevronRight size={16} />
+            <h1 className="text-md font-medium text-[#D0BCFF]">Individual Video Request</h1>
+            {employee.name && (
+              <span className="ml-3 rounded-full bg-green-400/10 px-5 py-2 text-sm text-[#10B981]">{employee.name}</span>
+            )}
           </div>
-        </div>
-        <section className="mt-2 rounded-xl border border-[#27334c] bg-[#151d31] p-5 sm:p-6">
+        </header>
+
+        <section className="mt-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+            <span className={`h-3 w-3 rounded-full ${topStatus === 'Completed' ? 'bg-[#6D3BD8]' : topStatus === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
+            {topStatus === 'Completed' ? 'COMPLETED' : topStatus === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
+          </div>
+        </section>
+
+        <section className="mt-3 overflow-hidden">
+          <section className="max-h-[calc(100vh-170px)] overflow-auto rounded-lg border border-[#27334c] bg-[#151d31] p-5 table-custom-scrollbar">
           {loading ? <SkeletonLoader /> : error ? <ErrorState message={error} /> : !submission ? <EmptyState /> : (
             <>
               <div className="flex flex-wrap items-start justify-between gap-4">
@@ -400,6 +411,7 @@ const VideoIndividualDetailViewPage = () => {
               <ApprovalHistoryTimeline history={innerData.approvalHistory} />
             </>
           )}
+          </section>
         </section>
       </main>
 
