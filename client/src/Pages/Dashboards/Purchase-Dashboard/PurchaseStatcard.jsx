@@ -50,7 +50,7 @@ const applyIndividualStats = (sections, individualStats) => {
     const stats = individualStats ?? EMPTY_STATS
 
     return sections.map((section) => {
-        if (!individualTargetTitles.includes(section.title)) return section
+        if (!individualTargetTitles.some((t) => section.title.includes(t))) return section
 
         return {
             ...section,
@@ -67,14 +67,12 @@ const applyIndividualStats = (sections, individualStats) => {
 
                 if (label.includes('approved')) {
                     return { ...item, value: stats.approved ?? 0 }
-                }
-
-                if (label.includes('pending')) {
+                }                if (label.includes('pending')) {
                     return { ...item, value: stats.pending ?? 0 }
                 }
 
-                if (label.includes('acknowledged')) {
-                    return { ...item, value: stats.approved ?? 0 }
+                if (label.includes('rejected')) {
+                    return { ...item, value: stats.rejected ?? 0 }
                 }
 
                 return item
@@ -82,6 +80,7 @@ const applyIndividualStats = (sections, individualStats) => {
         }
     })
 }
+
 
 const ShoppingCartIcon = () => (
     <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" aria-hidden="true">
@@ -151,7 +150,7 @@ const defaultSections = [
         ],
     },
     {
-        title: 'Order Status',
+        title: 'Individual Order Status',
         stats: [
             {
                 label: 'Total Requests',
@@ -168,11 +167,11 @@ const defaultSections = [
                 icon: <CheckBadgeIcon />,
             },
             {
-                label: 'Processing',
-                value: 50,
-                cardClass: 'from-[#252d5c] via-[#25258a] to-[#2116a5] border-l-[#7181ff]',
-                iconClass: 'bg-[#8292ff]',
-                icon: <CheckIcon />,
+                label: 'Rejected Requests',
+                value: 0,
+                cardClass: 'from-[#342238] via-[#652049] to-[#9b1b59] border-l-[#eb3f99]',
+                iconClass: 'bg-[#ef68ad]',
+                icon: <HourglassIcon />,
             },
             {
                 label: 'Pending Approval',
@@ -211,7 +210,7 @@ const PurchaseStatcard = ({ sections = defaultSections }) => {
                 console.warn(error.message)
             })
 
-        fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=purchase`, {
+        fetch(`${API_BASE_URL}/api/dashboard/individual-head-wise-stats?module=purchase`, {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
             .then((response) => {
@@ -222,7 +221,7 @@ const PurchaseStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setIndividualStats(responseData.stats ?? null)
+                    setIndividualStats(responseData.stats ?? responseData ?? null)
                 }
             })
             .catch((error) => {

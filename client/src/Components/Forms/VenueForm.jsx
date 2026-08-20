@@ -862,17 +862,51 @@ export default function VenueForm({
   };
 
   const handleVenueSelection = (selectedVenues) => {
-    const existingCards = currentDay.venueCards || [];
-    const updatedCards  = selectedVenues.map((name) => {
+    const existingCards  = currentDay.venueCards || [];
+    // Auto-fill only applies when exactly ONE venue is selected.
+    const isSingleVenue  = selectedVenues.length === 1;
+    const totalParticipantsValue = currentDay.participants
+      ? String(currentDay.participants)
+      : "";
+
+    const updatedCards = selectedVenues.map((name) => {
       const existing = existingCards.find((c) => c.venueName === name);
-      return (
-        existing || {
-          venueName: name, participants: "", seatingCapacity: "",
-          hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
-          audienceChair: "", specialReqs: "",
+
+      if (existing) {
+        if (isSingleVenue) {
+          // Sole selected venue → keep it synced with the total, mark as auto-filled.
+          return {
+            ...existing,
+            participants: totalParticipantsValue,
+            seatingCapacity: totalParticipantsValue,
+            autoFilled: true,
+          };
         }
-      );
+        // Multiple venues selected → if this card's values came from the
+        // earlier single-venue auto-fill, clear them so the user enters
+        // per-venue counts manually. Manually-entered values are preserved.
+        if (existing.autoFilled) {
+          return {
+            ...existing,
+            participants: "",
+            seatingCapacity: "",
+            autoFilled: false,
+          };
+        }
+        return existing;
+      }
+
+      // New card
+      return {
+        venueName: name,
+        participants: isSingleVenue ? totalParticipantsValue : "",
+        seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
+        hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
+        audienceChair: "", specialReqs: "",
+        autoFilled: isSingleVenue,
+      };
     });
+
     setVenueData((prev) => {
       const updated = [...prev];
       updated[currentDayIndex] = {
@@ -896,7 +930,19 @@ export default function VenueForm({
     setVenueData((prev) => {
       const data  = [...prev];
       const cards = [...(data[currentDayIndex].venueCards || [])];
-      cards[cardIndex] = updated;
+      const prevCard = cards[cardIndex] || {};
+
+      // If the user manually changed participants/seatingCapacity, this card
+      // is no longer considered "auto-filled" — future selection changes
+      // won't wipe out what they typed.
+      const userEditedCounts =
+        updated.participants !== prevCard.participants ||
+        updated.seatingCapacity !== prevCard.seatingCapacity;
+
+      cards[cardIndex] = userEditedCounts
+        ? { ...updated, autoFilled: false }
+        : updated;
+
       data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
       return data;
     });
@@ -1152,7 +1198,39 @@ export default function VenueForm({
           label="Total Number of Participants *"
           type="number"
           value={currentDay.participants}
-          onChange={(e) => updateCurrentDay({ participants: Math.max(0, Number(e.target.value))})}
+          onChange={(e) => {
+            const newParticipants = Math.max(0, Number(e.target.value));
+
+            setVenueData((prev) => {
+              const updated = [...prev];
+              const day = { ...updated[currentDayIndex], participants: newParticipants };
+
+              // Auto-fill only when exactly ONE venue is selected.
+              if (day.selectedVenues && day.selectedVenues.length === 1) {
+                const cards = [...(day.venueCards || [])];
+                if (cards[0]) {
+                  cards[0] = {
+                    ...cards[0],
+                    participants: String(newParticipants),
+                    seatingCapacity: String(newParticipants),
+                    autoFilled: true,
+                  };
+                }
+                day.venueCards = cards;
+              }
+
+              updated[currentDayIndex] = day;
+              return updated;
+            });
+
+            setErrors((prev) => {
+              const updatedErrors    = { ...prev };
+              const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
+              delete currentDayErrors.participants;
+              updatedErrors[currentDayIndex] = currentDayErrors;
+              return updatedErrors;
+            });
+          }}
         />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

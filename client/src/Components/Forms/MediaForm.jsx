@@ -608,14 +608,14 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         <div className="flex gap-4">
           {showFlex && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Flex in pixels*" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Flex in feet*" type='text'
                 value={data.sizeForFlex || ""} onChange={updateSizeInput("sizeForFlex")} placeholder="e.g. 4 * 6" />
               <ErrorMsg msg={errors.sizeForFlex} />
             </div>
           )}
           {showGlass && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker in pixels *" type='text'
+              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker in inches *" type='text'
                 value={data.sizeForGlass || ""}  onChange={updateSizeInput("sizeForGlass")} placeholder="e.g. 12 * 18" />
               <ErrorMsg msg={errors.sizeForGlass} />
             </div>

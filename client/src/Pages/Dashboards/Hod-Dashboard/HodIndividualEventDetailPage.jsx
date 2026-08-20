@@ -2,10 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronRight, FileText, Check, X } from "lucide-react";
 import { toast } from "react-toastify";
-import DashboardHeader from "../ICTC-Dashboard/DashboardHeader";
 import Modal from "../../../Components/Modal";
 
-// Faculty detail panels — polished design matching Venue/Food/Transport detail views
+// Faculty detail panels
 import FacultyPurchaseDetailsPanel from "../Faculty-Dashboard/FacultyPurchaseDetailsPanel";
 import FacultyMediaDetailsPanel from "../Faculty-Dashboard/FacultyMediaDetailsPanel";
 import FacultyAccommodationDetailsPanel from "../Faculty-Dashboard/FacultyAccommodationDetailsPanel";
@@ -159,35 +158,21 @@ const TransportDetailsSection = ({ data }) => {
 
   return (
     <div className="mt-6 space-y-5">
-      {/* Transport Details card */}
       <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
         <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
           Transport Details
         </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <InfoGridItem
-            label="Pickup Date & Time"
-            value={formatDateTime(data.pickupDateTime)}
-          />
-          <InfoGridItem
-            label="Drop Date & Time"
-            value={formatDateTime(data.dropDateTime)}
-          />
+          <InfoGridItem label="Pickup Date & Time" value={formatDateTime(data.pickupDateTime)} />
+          <InfoGridItem label="Drop Date & Time" value={formatDateTime(data.dropDateTime)} />
           <InfoGridItem label="Pickup Location" value={data.pickupLocation} />
           <InfoGridItem label="Drop Location" value={data.dropLocation} />
           <InfoGridItem label="Total Passengers" value={data.totalPassengers} />
-          <InfoGridItem
-            label="Number of Buses Needed"
-            value={data.numberOfBusNeeded}
-          />
-          <InfoGridItem
-            label="Number of Accompanying Staff"
-            value={data.numberOfAccompanyingStaff}
-          />
+          <InfoGridItem label="Number of Buses Needed" value={data.numberOfBusNeeded} />
+          <InfoGridItem label="Number of Accompanying Staff" value={data.numberOfAccompanyingStaff} />
         </div>
       </div>
 
-      {/* Checkpoints */}
       {checkpoints.length > 0 && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
@@ -195,28 +180,18 @@ const TransportDetailsSection = ({ data }) => {
           </h3>
           <div className="space-y-2">
             {checkpoints.map((cp, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 rounded-md bg-[#242B3D] px-4 py-3 border border-[#374155]/50"
-              >
+              <div key={i} className="flex items-center gap-3 rounded-md bg-[#242B3D] px-4 py-3 border border-[#374155]/50">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#8B3DFF]/20 text-[10px] font-bold text-[#8B3DFF]">
                   {i + 1}
                 </span>
-                <span className="text-sm font-medium text-white">
-                  {cp.location || "-"}
-                </span>
-                {cp.time && (
-                  <span className="ml-auto text-xs text-[#CBC3D7]/50">
-                    {cp.time}
-                  </span>
-                )}
+                <span className="text-sm font-medium text-white">{cp.location || "-"}</span>
+                {cp.time && <span className="ml-auto text-xs text-[#CBC3D7]/50">{cp.time}</span>}
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Vehicles */}
       {vehicles.length > 0 && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
@@ -224,13 +199,8 @@ const TransportDetailsSection = ({ data }) => {
           </h3>
           <div className="space-y-2">
             {vehicles.map((v, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between rounded-md bg-[#242B3D] px-4 py-3 border border-[#374155]/50"
-              >
-                <span className="text-sm font-medium text-white capitalize">
-                  {v.type || "-"}
-                </span>
+              <div key={i} className="flex items-center justify-between rounded-md bg-[#242B3D] px-4 py-3 border border-[#374155]/50">
+                <span className="text-sm font-medium text-white capitalize">{v.type || "-"}</span>
                 <span className="rounded-full bg-[#8B3DFF]/15 px-3 py-1 text-xs font-semibold text-[#8B3DFF]">
                   Count: {v.count || 0}
                 </span>
@@ -240,7 +210,6 @@ const TransportDetailsSection = ({ data }) => {
         </div>
       )}
 
-      {/* Accompanying Staff */}
       {accompanyingStaff.length > 0 && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
@@ -257,14 +226,9 @@ const TransportDetailsSection = ({ data }) => {
               </thead>
               <tbody>
                 {accompanyingStaff.map((staff, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-[#30384d]/40 text-white"
-                  >
+                  <tr key={i} className="border-b border-[#30384d]/40 text-white">
                     <td className="px-4 py-2.5 text-[#CBC3D7]/50">{i + 1}</td>
-                    <td className="px-4 py-2.5 font-medium">
-                      {staff.name || "-"}
-                    </td>
+                    <td className="px-4 py-2.5 font-medium">{staff.name || "-"}</td>
                     <td className="px-4 py-2.5">{staff.mobile || "-"}</td>
                   </tr>
                 ))}
@@ -274,48 +238,32 @@ const TransportDetailsSection = ({ data }) => {
         </div>
       )}
 
-      {/* Special Requirements */}
       {data.specialRequirements && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
             Special Requirements
           </h3>
-          <p className="text-sm leading-6 text-[#CBC3D7]/80">
-            {data.specialRequirements}
-          </p>
+          <p className="text-sm leading-6 text-[#CBC3D7]/80">{data.specialRequirements}</p>
         </div>
       )}
 
-      {/* Principal Approval Document */}
       {data.principalApprovalForm?.url && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
             Principal Approval Document
           </h3>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={data.principalApprovalForm.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
-            >
+            <a href={data.principalApprovalForm.url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors">
               <FileText size={16} className="text-[#8B3DFF]" />
               <span>View Document</span>
             </a>
-            <a
-              href={data.principalApprovalForm.url}
-              download
-              className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors"
-            >
+            <a href={data.principalApprovalForm.url} download
+              className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors">
               <FileText size={16} />
               <span>Download</span>
             </a>
           </div>
-          {data.principalApprovalForm.publicId && (
-            <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-              Public ID: {data.principalApprovalForm.publicId}
-            </span>
-          )}
         </div>
       )}
     </div>
@@ -335,10 +283,7 @@ const FoodDetailsSection = ({ data }) => {
   }
 
   const resourcePersonTypes = Array.isArray(data.resourcePersonType)
-    ? data.resourcePersonType
-        .map((r) => r?.type || r)
-        .filter(Boolean)
-        .join(", ")
+    ? data.resourcePersonType.map((r) => r?.type || r).filter(Boolean).join(", ")
     : data.resourcePersonType || "-";
 
   const accompanyingStaff = data.accompanyingStaff || [];
@@ -346,29 +291,18 @@ const FoodDetailsSection = ({ data }) => {
 
   return (
     <div className="mt-6 space-y-5">
-      {/* Food Details card */}
       <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
         <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
           Food Details
         </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <InfoGridItem label="Required Date" value={formatDate(data.date)} />
-          <InfoGridItem
-            label="Resource Person Types"
-            value={resourcePersonTypes}
-          />
-          <InfoGridItem
-            label="Number of Resource Persons"
-            value={data.numberOfResourcePersons}
-          />
-          <InfoGridItem
-            label="Number of Internal Accompanying Staff"
-            value={data.numberOfInternalAccompanyingStaff}
-          />
+          <InfoGridItem label="Resource Person Types" value={resourcePersonTypes} />
+          <InfoGridItem label="Number of Resource Persons" value={data.numberOfResourcePersons} />
+          <InfoGridItem label="Number of Internal Accompanying Staff" value={data.numberOfInternalAccompanyingStaff} />
         </div>
       </div>
 
-      {/* Accompanying Staff */}
       {accompanyingStaff.length > 0 && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
@@ -385,14 +319,9 @@ const FoodDetailsSection = ({ data }) => {
               </thead>
               <tbody>
                 {accompanyingStaff.map((staff, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-[#30384d]/40 text-white"
-                  >
+                  <tr key={i} className="border-b border-[#30384d]/40 text-white">
                     <td className="px-4 py-2.5 text-[#CBC3D7]/50">{i + 1}</td>
-                    <td className="px-4 py-2.5 font-medium">
-                      {staff.name || "-"}
-                    </td>
+                    <td className="px-4 py-2.5 font-medium">{staff.name || "-"}</td>
                     <td className="px-4 py-2.5">{staff.mobile || "-"}</td>
                   </tr>
                 ))}
@@ -402,74 +331,48 @@ const FoodDetailsSection = ({ data }) => {
         </div>
       )}
 
-      {/* Food Types */}
       {foodTypes.length > 0 && (
         <div className="space-y-4">
           {foodTypes.map((group, gIdx) => {
             const mealTypes = group.foodTypes || [];
             return (
-              <div
-                key={gIdx}
-                className="rounded-lg border border-[#374155] bg-[#1B2334] p-4"
-              >
+              <div key={gIdx} className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
                 <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                   Meal Requirement {gIdx + 1}
                 </h3>
-
                 {mealTypes.length > 0 && (
                   <div className="mb-3 flex flex-wrap gap-2">
                     {mealTypes.map((mealType, mIdx) => (
-                      <span
-                        key={mIdx}
-                        className="rounded-full bg-[#8B3DFF]/15 px-3 py-1 text-xs font-medium text-[#8B3DFF]"
-                      >
+                      <span key={mIdx} className="rounded-full bg-[#8B3DFF]/15 px-3 py-1 text-xs font-medium text-[#8B3DFF]">
                         {mealType?.type || mealType}
                       </span>
                     ))}
                   </div>
                 )}
-
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div className="rounded-md border border-[#374155]/50 bg-[#242B3D] p-3">
-                    <p className="mb-2 text-[10px] font-semibold uppercase text-[#CBC3D7]/45">
-                      Participants
-                    </p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Participants</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-[#CBC3D7]/65">Vegetarian</span>
-                        <span className="font-medium text-white">
-                          {group.participants?.vegCount ?? "-"}
-                        </span>
+                        <span className="font-medium text-white">{group.participants?.vegCount ?? "-"}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#CBC3D7]/65">
-                          Non-Vegetarian
-                        </span>
-                        <span className="font-medium text-white">
-                          {group.participants?.nonVegCount ?? "-"}
-                        </span>
+                        <span className="text-[#CBC3D7]/65">Non-Vegetarian</span>
+                        <span className="font-medium text-white">{group.participants?.nonVegCount ?? "-"}</span>
                       </div>
                     </div>
                   </div>
-
                   <div className="rounded-md border border-[#374155]/50 bg-[#242B3D] p-3">
-                    <p className="mb-2 text-[10px] font-semibold uppercase text-[#CBC3D7]/45">
-                      VIP Guests
-                    </p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase text-[#CBC3D7]/45">VIP Guests</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-[#CBC3D7]/65">Vegetarian</span>
-                        <span className="font-medium text-white">
-                          {group.vipGuests?.vegCount ?? "-"}
-                        </span>
+                        <span className="font-medium text-white">{group.vipGuests?.vegCount ?? "-"}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-[#CBC3D7]/65">
-                          Non-Vegetarian
-                        </span>
-                        <span className="font-medium text-white">
-                          {group.vipGuests?.nonVegCount ?? "-"}
-                        </span>
+                        <span className="text-[#CBC3D7]/65">Non-Vegetarian</span>
+                        <span className="font-medium text-white">{group.vipGuests?.nonVegCount ?? "-"}</span>
                       </div>
                     </div>
                   </div>
@@ -480,61 +383,38 @@ const FoodDetailsSection = ({ data }) => {
         </div>
       )}
 
-      {/* Special Requirements */}
       {data.specialRequirements && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
             Special Requirements
           </h3>
-          <p className="text-sm leading-6 text-[#CBC3D7]/80">
-            {data.specialRequirements}
-          </p>
+          <p className="text-sm leading-6 text-[#CBC3D7]/80">{data.specialRequirements}</p>
         </div>
       )}
 
-      {/* Uploaded Document */}
       {data.uploadedFile?.url && (
         <div className="rounded-lg border border-[#374155] bg-[#1B2334] p-4">
           <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
             Uploaded Document
           </h3>
           <div className="flex flex-wrap items-center gap-3">
-            <a
-              href={data.uploadedFile.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
-            >
+            <a href={data.uploadedFile.url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors">
               <FileText size={16} className="text-[#8B3DFF]" />
               <span>View Document</span>
             </a>
-            <a
-              href={data.uploadedFile.url}
-              download
-              className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors"
-            >
+            <a href={data.uploadedFile.url} download
+              className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors">
               <FileText size={16} />
               <span>Download</span>
             </a>
           </div>
-          {data.uploadedFile.fileName && (
-            <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-              File: {data.uploadedFile.fileName}
-            </span>
-          )}
-          {data.uploadedFile.publicId && (
-            <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-              Public ID: {data.uploadedFile.publicId}
-            </span>
-          )}
         </div>
       )}
     </div>
   );
 };
 
-// Map individual submission form types to their Faculty panel components
-// and prepare the data in the shape the panels expect.
 const FORM_TYPE_CONFIG = {
   purchase: {
     component: FacultyPurchaseDetailsPanel,
@@ -601,7 +481,7 @@ const resolveFormType = (formType) => {
   return null;
 };
 
-const IndividualEventDetailPage = () => {
+const HodIndividualEventDetailPage = () => {
   const { id } = useParams();
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -648,12 +528,13 @@ const IndividualEventDetailPage = () => {
     };
   }, [id, reloadKey]);
 
+  // ── HOD Approve ──────────────────────────────────────────────────────
   const handleApprove = async () => {
     setActionLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `${API_BASE_URL}/api/individual-submissions/${id}/super-admin-approval`,
+        `${API_BASE_URL}/api/individual-submissions/${id}/hod-approval`,
         {
           method: "PUT",
           headers: {
@@ -671,8 +552,8 @@ const IndividualEventDetailPage = () => {
         ...prev,
         data: {
           ...prev?.data,
-          superAdminApproval: {
-            ...prev?.data?.superAdminApproval,
+          hodApproval: {
+            ...prev?.data?.hodApproval,
             status: "Approved",
             updatedAt: new Date().toISOString(),
           },
@@ -685,69 +566,14 @@ const IndividualEventDetailPage = () => {
     }
   };
 
-  // head acknowlwdge
-  const handleAcknowledge = async () => {
-    setActionLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${API_BASE_URL}/api/individual-submissions/${id}/head-approval`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ action: "acknowledge" }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Failed to acknowledge");
-      toast.success("Acknowledge successfully");
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      toast.error(err.message || "Failed to acknowledge");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  // head complete
-  const handleHeadComplete = async () => {
-    setActionLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `${API_BASE_URL}/api/individual-submissions/${id}/head-approval`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ action: "complete" }),
-        },
-      );
-      const data = await res.json();
-      if (!res.ok || !data.success)
-        throw new Error(data.message || "Failed to complete");
-      toast.success("Completed successfully");
-      setReloadKey((k) => k + 1);
-    } catch (err) {
-      toast.error(err.message || "Failed to complete");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
+  // ── HOD Reject ───────────────────────────────────────────────────────
   const handleReject = async () => {
     if (!rejectReason.trim()) return toast.error("Please enter a reason");
     setActionLoading(true);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(
-        `${API_BASE_URL}/api/individual-submissions/${id}/super-admin-approval`,
+        `${API_BASE_URL}/api/individual-submissions/${id}/hod-reject`,
         {
           method: "PUT",
           headers: {
@@ -755,7 +581,6 @@ const IndividualEventDetailPage = () => {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
           body: JSON.stringify({
-            action: "reject",
             reason: rejectReason.trim(),
           }),
         },
@@ -768,8 +593,8 @@ const IndividualEventDetailPage = () => {
         ...prev,
         data: {
           ...prev?.data,
-          superAdminApproval: {
-            ...prev?.data?.superAdminApproval,
+          hodApproval: {
+            ...prev?.data?.hodApproval,
             status: "Rejected",
             reason: rejectReason.trim(),
             updatedAt: new Date().toISOString(),
@@ -795,36 +620,17 @@ const IndividualEventDetailPage = () => {
   const employeeName = employee.name || submission?.employee || "-";
   const employeeEmail = employee.email || submission?.employeeEmail || "-";
 
-  const [isHead, setIsHead] = useState(false);
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const decode = jwtDecode(token);
-    if (decode.role == "head") {
-      setIsHead(true);
-    }
-    // console.log("decoded token : ", decode)
-  }, []);
-
-  // console.log("is head : ", isHead)
   return (
-    <section className="min-h-screen bg-[#0b1326] text-white poppins">
-      <DashboardHeader basePath="/dashboard-admin" />
-
-      <main className="h-[93vh] px-7 pt-2">
-        <header className="mt-4 flex items-center justify-between gap-5">
+    <>
+      <main className="px-6 pb-8">
+        <div className="flex items-center gap-2 justify-between py-3 text-sm text-[#CBC3D7]/50">
           <div className="flex items-center gap-2">
-            <Link
-              to="/dashboard-admin"
-              className="text-md font-medium text-[#CBC3D7]/50 transition hover:text-white"
-            >
-              Admin Dashboard
-            </Link>
-            <ChevronRight size={16} />
-            <h1 className="text-md font-medium text-[#D0BCFF]">Individual Request Details</h1>
+            <span className="text-[#D0BCFF]">Individual Request Details</span>
             {employee.name && (
-              <span className="ml-3 rounded-full bg-green-400/10 px-5 py-2 text-sm text-[#10B981]">
-                {employee.name}
-              </span>
+              <>
+                <ChevronRight size={14} />
+                <span className="text-[#D0BCFF]">{employee.name}</span>
+              </>
             )}
             {submission?.formType && (
               <span className="ml-1 rounded-full bg-[#8B3DFF]/15 px-3 py-0.5 text-[11px] font-semibold text-[#8B3DFF]">
@@ -832,51 +638,9 @@ const IndividualEventDetailPage = () => {
               </span>
             )}
           </div>
-          {/* approval button   */}
+        </div>
 
-          {isHead &&
-            submission?.data?.headApproval?.status.toLowerCase() ==
-              "completed" && (
-              <button className="bg-emerald-800 flex items-center gap-2 text-white px-4 py-2 text-sm rounded-lg">
-                <span><Check size={16} className="text-white" /></span> Completed
-              </button>
-            )}
-          {isHead &&
-            submission?.data?.headApproval?.status.toLowerCase() ==
-              "pending" && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleAcknowledge}
-                  className="bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg"
-                >
-                  Acknowledge <span>{actionLoading && "...."}</span>
-                </button>
-              </div>
-            )}
-          {/* Complete button for Head  */}
-          {isHead &&
-            submission?.data?.headApproval?.status.toLowerCase() ==
-              "acknowledged" && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleHeadComplete}
-                  className="bg-emerald-800 text-white px-4 py-2 text-sm rounded-lg"
-                >
-                  Complete <span>{actionLoading && "...."}</span>
-                </button>
-              </div>
-            )}
-        </header>
-
-        <section className="mt-3">
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
-            <span className={`h-3 w-3 rounded-full ${status === 'Completed' ? 'bg-[#6D3BD8]' : status === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
-            {status === 'Completed' ? 'COMPLETED' : status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
-          </div>
-        </section>
-
-        <section className="mt-3 overflow-hidden">
-          <section className="max-h-[calc(100vh-170px)] overflow-auto rounded-lg border border-[#27334c] bg-[#151d31] p-5 table-custom-scrollbar">
+        <section className="mt-2 rounded-lg border border-[#27334c] bg-[#151d31] p-6">
           {loading ? (
             <p className="py-10 text-center text-sm text-[#CBC3D7]/65">
               Loading submission details...
@@ -889,7 +653,6 @@ const IndividualEventDetailPage = () => {
             </p>
           ) : (
             <>
-              {/* Header with title, description, and status badge */}
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h2 className="text-lg font-medium text-[#8B3DFF]">
@@ -897,20 +660,16 @@ const IndividualEventDetailPage = () => {
                   </h2>
                   <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
                     Lorem Ipsum is simply dummy text of the printing and
-                    typesetting industry. Lorem Ipsum has been the
-                    industry&apos;s standard dummy text ever since the 1500s
+                    typesetting industry.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
                   {status && status !== "-" && (
-                    <span
-                      className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(status)}`}
-                    >
+                    <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(status)}`}>
                       {status}
                     </span>
                   )}
-                  {data.superAdminApproval?.status?.toLowerCase() ===
-                  "pending" ? (
+                  {data.hodApproval?.status?.toLowerCase() === "pending" ? (
                     <div className="flex items-center gap-2">
                       <button
                         onClick={handleApprove}
@@ -930,98 +689,76 @@ const IndividualEventDetailPage = () => {
                       </button>
                     </div>
                   ) : (
-                    data.superAdminApproval?.status && (
-                      <span
-                        className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(data.superAdminApproval.status)}`}
-                      >
-                        Super Admin: {data.superAdminApproval.status}
+                    data.hodApproval?.status && (
+                      <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(data.hodApproval.status)}`}>
+                        HOD: {data.hodApproval.status}
                       </span>
                     )
                   )}
                 </div>
               </div>
 
-              {/* Submission Info Grid */}
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                <InfoGridItem label="Request ID" value={submission.id} />
+                <InfoGridItem label="Organizer" value={employeeName} />
+                <InfoGridItem label="Email" value={employeeEmail} />
                 <InfoGridItem label="Form Type" value={submission.formType} />
                 <InfoGridItem label="Status" value={submission.status || "-"} />
-                {data.finalStatus && (
-                  <InfoGridItem label="Final Status" value={data.finalStatus} />
+                <InfoGridItem label="Workflow Stage" value={submission.workflowStage || "-"} />
+                <InfoGridItem label="Submitted" value={formatDate(submission.createdAt)} />
+                <InfoGridItem label="Last Updated" value={formatDate(submission.updatedAt)} />
+                {data.finalStatus && <InfoGridItem label="Final Status" value={data.finalStatus} />}
+                {data.overallStatus && <InfoGridItem label="Overall Status" value={data.overallStatus} />}
+                {data._id && <InfoGridItem label="Data ID" value={data._id} />}
+                {data.status && typeof data.status !== "object" && (
+                  <InfoGridItem label="Inner Status" value={data.status} />
                 )}
-                {data.overallStatus && (
-                  <InfoGridItem
-                    label="Overall Status"
-                    value={data.overallStatus}
-                  />
-                )}
+                {data.workflowStage && <InfoGridItem label="Inner Workflow Stage" value={data.workflowStage} />}
+                {data.createdAt && <InfoGridItem label="Data Created" value={formatDate(data.createdAt)} />}
+                {data.updatedAt && <InfoGridItem label="Data Updated" value={formatDate(data.updatedAt)} />}
               </div>
 
-              {/* Employee Detail */}
               {employee && Object.keys(employee).length > 0 && (
-                <div className="mt-5 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
-                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                <div className="mt-5 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
+                  <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Employee Details
                   </h3>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <InfoGridItem label="Record ID" value={employee._id || "-"} />
                     <InfoGridItem label="Name" value={employee.name || "-"} />
-                    <InfoGridItem
-                      label="Employee Number"
-                      value={employee.empId || "-"}
-                    />
+                    <InfoGridItem label="Employee Code" value={employee.empId || "-"} />
                     <InfoGridItem label="Email" value={employee.email || "-"} />
                     <InfoGridItem label="Phone" value={employee.phone || "-"} />
+                    <InfoGridItem label="Department" value={employee.department || "-"} />
+                    <InfoGridItem label="Designation" value={employee.designation || "-"} />
+                    <InfoGridItem label="Category" value={employee.employeeCategory || "-"} />
+                    <InfoGridItem label="Gender" value={employee.gender || "-"} />
+                    <InfoGridItem label="Date of Birth" value={formatDate(employee.dob)} />
+                    <InfoGridItem label="Date of Joining" value={formatDate(employee.doj)} />
                     <InfoGridItem
-                      label="Department"
-                      value={employee.department || "-"}
+                      label="Employment Status"
+                      value={employee.employmentStatus !== undefined ? (employee.employmentStatus ? "Active" : "Inactive") : "-"}
                     />
-                    <InfoGridItem
-                      label="Designation"
-                      value={employee.designation || "-"}
-                    />
-                    {employee.employeeCategory && (
-                      <InfoGridItem
-                        label="Category"
-                        value={employee.employeeCategory}
-                      />
-                    )}
-                    {employee.location && (
-                      <InfoGridItem
-                        label="Location"
-                        value={employee.location}
-                      />
-                    )}
+                    <InfoGridItem label="Location" value={employee.location || "-"} />
+                    <InfoGridItem label="Employee Created" value={formatDate(employee.createdAt)} />
+                    <InfoGridItem label="Employee Updated" value={formatDate(employee.updatedAt)} />
                   </div>
                 </div>
               )}
 
-              {/* Finance Details — for Purchase & Transport */}
-              {(data.financeRequired ||
-                data.advanceAmount ||
-                data.advancePurpose) && (
+              {(data.financeRequired || data.advanceAmount || data.advancePurpose) && (
                 <div className="mt-5 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
                   <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Finance Details
                   </h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <InfoGridItem
-                      label="Finance Required"
-                      value={data.financeRequired}
-                    />
-                    <InfoGridItem
-                      label="Advance Amount"
-                      value={
-                        data.advanceAmount ? `₹${data.advanceAmount}` : "-"
-                      }
-                    />
-                    <InfoGridItem
-                      label="Advance Purpose"
-                      value={data.advancePurpose || "-"}
-                    />
+                    <InfoGridItem label="Finance Required" value={data.financeRequired} />
+                    <InfoGridItem label="Advance Amount" value={data.advanceAmount ? `₹${data.advanceAmount}` : "-"} />
+                    <InfoGridItem label="Advance Purpose" value={data.advancePurpose || "-"} />
                   </div>
                 </div>
               )}
 
-              {/* Approval Stages — dynamically render all approval levels present in the response */}
               {(() => {
                 const APPROVAL_STAGES = [
                   { key: "adminApproval", label: "Admin Approval" },
@@ -1030,58 +767,34 @@ const IndividualEventDetailPage = () => {
                   { key: "superAdminApproval", label: "Super Admin Approval" },
                   { key: "headApproval", label: "Head Approval" },
                 ];
-                const availableStages = APPROVAL_STAGES.filter(
-                  (s) => data[s.key],
-                );
-                const hasMultiStatus =
-                  data.status && typeof data.status === "object";
+                const availableStages = APPROVAL_STAGES.filter((s) => data[s.key]);
+                const hasMultiStatus = data.status && typeof data.status === "object";
 
-                if (availableStages.length === 0 && !hasMultiStatus)
-                  return null;
+                if (availableStages.length === 0 && !hasMultiStatus) return null;
 
                 return (
                   <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {availableStages.map((stage) => (
-                      <ApprovalStageCard
-                        key={stage.key}
-                        stage={stage}
-                        approval={data[stage.key]}
-                      />
+                      <ApprovalStageCard key={stage.key} stage={stage} approval={data[stage.key]} />
                     ))}
-                    {hasMultiStatus && (
-                      <ModuleStatusCard statuses={data.status} />
-                    )}
+                    {hasMultiStatus && <ModuleStatusCard statuses={data.status} />}
                   </div>
                 );
               })()}
 
-              {/* Uploaded Documents */}
               {(data.principalApprovalForm?.url || data.uploadedFile?.url) && (
-                <div className="mt-5 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
-                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                <div className="mt-5 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
+                  <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Uploaded Documents
                   </h3>
                   <div className="flex flex-wrap items-center gap-3">
-                    <a
-                      href={
-                        data.principalApprovalForm?.url ||
-                        data.uploadedFile?.url
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
-                    >
+                    <a href={data.principalApprovalForm?.url || data.uploadedFile?.url} target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#1B2334] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors">
                       <FileText size={16} className="text-[#8B3DFF]" />
                       <span>View Document</span>
                     </a>
-                    <a
-                      href={
-                        data.principalApprovalForm?.url ||
-                        data.uploadedFile?.url
-                      }
-                      download
-                      className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors"
-                    >
+                    <a href={data.principalApprovalForm?.url || data.uploadedFile?.url} download
+                      className="inline-flex items-center gap-2 rounded-lg bg-[#8B3DFF]/20 px-4 py-3 text-sm font-medium text-[#8B3DFF] hover:bg-[#8B3DFF]/30 transition-colors">
                       <FileText size={16} />
                       <span>Download</span>
                     </a>
@@ -1089,7 +802,6 @@ const IndividualEventDetailPage = () => {
                 </div>
               )}
 
-              {/* Reference Files — download links */}
               {data.referenceFiles?.length > 0 && (
                 <div className="mt-5">
                   <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
@@ -1099,13 +811,8 @@ const IndividualEventDetailPage = () => {
                     {data.referenceFiles.map((file, index) => {
                       const fileUrl = file?.url || file;
                       return (
-                        <a
-                          key={index}
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#1B2334] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
-                        >
+                        <a key={index} href={fileUrl} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#1B2334] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors">
                           <FileText size={16} className="text-[#8B3DFF]" />
                           <span>File {index + 1}</span>
                         </a>
@@ -1115,7 +822,6 @@ const IndividualEventDetailPage = () => {
                 </div>
               )}
 
-              {/* Module-specific detail panel */}
               <div className="mt-8">
                 {DetailComponent ? (
                   <DetailComponent {...detailProps} />
@@ -1123,8 +829,7 @@ const IndividualEventDetailPage = () => {
                   <div className="flex flex-col items-center justify-center py-16 rounded-lg border border-[#374155] bg-[#1B2334]">
                     <FileText size={40} className="mb-3 text-[#CBC3D7]/30" />
                     <p className="text-sm font-medium text-[#CBC3D7]/50">
-                      No detail view available for &quot;{submission.formType}
-                      &quot;
+                      No detail view available for &quot;{submission.formType}&quot;
                     </p>
                     <p className="mt-1 text-xs text-[#CBC3D7]/35">
                       This form type does not have a configured detail panel.
@@ -1133,18 +838,14 @@ const IndividualEventDetailPage = () => {
                 )}
               </div>
 
-              {/* Approval History */}
               {data.approvalHistory?.length > 0 && (
-                <div className="mt-6 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
-                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                <div className="mt-6">
+                  <h3 className="mb-4 text-sm font-semibold text-[#CBC3D7]/65 uppercase tracking-wider">
                     Approval History
                   </h3>
                   <div className="space-y-3">
                     {data.approvalHistory.map((entry, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-4 rounded-lg border border-[#374155]/50 bg-[#242B3D] p-4"
-                      >
+                      <div key={index} className="flex items-start gap-4 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8B3DFF]/20">
                           <span className="text-xs font-bold text-[#8B3DFF]">
                             {index + 1}
@@ -1184,7 +885,6 @@ const IndividualEventDetailPage = () => {
               )}
             </>
           )}
-          </section>
         </section>
       </main>
 
@@ -1225,8 +925,8 @@ const IndividualEventDetailPage = () => {
           </button>
         </div>
       </Modal>
-    </section>
+    </>
   );
 };
 
-export default IndividualEventDetailPage;
+export default HodIndividualEventDetailPage;

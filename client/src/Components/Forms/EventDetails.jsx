@@ -244,52 +244,64 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           />
           {errors.numDays && <p className="text-red-400 text-xs mt-1">{errors.numDays}</p>}
         </div>
-        <CustomSelect
-          label="Target Audience"
-          required
-          multi
-          searchable
-          value={audienceValue}
-          onChange={(val) => {
-            setEventData((prev) => ({
-              ...prev,
-              audience: val,
-            }));
-
-            if (setErrors) {
-              setErrors((prev) => ({
+        <div>
+          <CustomSelect
+            label="Target Audience"
+            required
+            multi
+            searchable
+            value={audienceValue}
+            onChange={(val) => {
+              setEventData((prev) => ({
                 ...prev,
-                audience: "",
+                audience: val,
               }));
-            }
-          }}
-          options={[
-            "Internal Students",
-            "Internal Faculty",
-            "External Students",
-            "External Faculty",
-            "Industry Person",
-          ]}
-          placeholder="Select target audience"
-        />
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  audience: "",
+                }));
+              }
+            }}
+            options={[
+              "Internal Students",
+              "Internal Faculty",
+              "External Students",
+              "External Faculty",
+              "Industry Person",
+            ]}
+            placeholder="Select target audience"
+          />
+          {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
+        </div>
       </div>
 
       {/* Day Cards */}
-      {daysData.map((day, i) => (
-        <EventDates
-          key={i}
-          dayIndex={i + 1}
-          dayData={day}
-          minDate={i > 0 ? daysData[i - 1].date : ""}
-          errors={(errors.days && errors.days[i]) || {}}
-          updateDay={(updatedDay) => {
-            const updated = [...daysData];
-            updated[i] = updatedDay;
-            setEventDays(updated);
-            setEventData((prev) => ({ ...prev, eventDays: updated }));
-          }}
-        />
-      ))}
+      {daysData.map((day, i) => {
+        const today = new Date().toISOString().split("T")[0];
+        let calculatedMinDate = today;
+        if (i > 0 && daysData[i - 1].date) {
+          calculatedMinDate = daysData[i - 1].date > today ? daysData[i - 1].date : today;
+        }
+
+        return (
+          <EventDates
+            key={i}
+            dayIndex={i + 1}
+            dayData={day}
+            day1Guests={i > 0 ? daysData[0].guests : []}
+            minDate={calculatedMinDate}
+            errors={(errors.days && errors.days[i]) || {}}
+            updateDay={(updatedDay) => {
+              const updated = [...daysData];
+              updated[i] = updatedDay;
+              setEventDays(updated);
+              setEventData((prev) => ({ ...prev, eventDays: updated }));
+            }}
+          />
+        );
+      })}
       </div>
     </div>
   );

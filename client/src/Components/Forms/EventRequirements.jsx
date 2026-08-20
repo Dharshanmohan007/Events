@@ -96,7 +96,7 @@ export default function EventRequirements({
           {Object.keys(values).map((key) => (
             <div key={key}>
               <CustomSelect
-                label={`${LABEL_MAP[key] || key} Required`}
+                label={`${LABEL_MAP[key] || key} Required *`}
                 value={values[key]}
                 onChange={(val) => handleChange(key, val)}
                 options={["Yes", "No"]}

@@ -1325,6 +1325,7 @@ const TransportDetailsPage = () => {
             <CustomDateTimePicker
               label="Pickup Date & Time *"
               value={form.pickupDateTime}
+              minDate={new Date()}
               onChange={(date) =>
                 updateFormField(formIndex, "pickupDateTime", date)
               }

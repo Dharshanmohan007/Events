@@ -1,11 +1,32 @@
 import { ExternalLink, ListFilter, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { jwtDecode } from "jwt-decode";
 import ThemedDatePicker from "../../../Components/ThemedDatePicker";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
-const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`;
-const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
+
+const getDepartment = () => {
+    try {
+        const token = localStorage.getItem("token");
+        return token ? jwtDecode(token).department || "" : "";
+    } catch {
+        return "";
+    }
+}
+
+const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/hod-dashboard-table?department=${encodeURIComponent(getDepartment().toUpperCase())}`;
+
+const normalizeIndividualSubmission = (item) => ({
+    id: item.id,
+    date: item.date,
+    dateKeys: item.date ? [toDateKey(item.date)] : [],
+    formType: item.formType || "-",
+    employee: item.employee || "-",
+    employeeEmail: item.employeeEmail || "-",
+    status: item.status || "-",
+    workflowStage: item.workflowStage || "-",
+})
 
 const formatDate = (dateValue) => {
     if (!dateValue) return "-";
@@ -50,17 +71,7 @@ const normalizeEventRequest = (event) => ({
         : [event.eventDate || event.requiredDate].filter(Boolean).map(toDateKey),
     department: event.organizingDepartment || event.department || "-",
     approvedStatus: event.adminApproval ? "Approved" : "Pending",
-    eventStatus: event.overallStatus || event.eventStatus || "-",
-});
-
-const normalizeIndividualRequest = (request) => ({
-    id: request.id,
-    organizerName: request.employee || "-",
-    organizerEmail: request.employeeEmail || "-",
-    eventType: request.formType || "-",
-    date: request.createdAt ? formatDate(request.createdAt) : "-",
-    dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
-    status: typeof request.status === "string" ? request.status : "-",
+    eventStatus: event.overallStatus || event.eventStatus || event.status || "-",
 });
 
 const getStatusColor = (status = "") => {
@@ -157,7 +168,7 @@ const SelectFilter = ({ icon, value, onChange, options, ariaLabel }) => (
     </div>
 );
 
-export default function AdminEventsRequestTable() {
+export default function HodEventsRequestTable() {
     const [activeTab, setActiveTab] = useState("event");
     const [eventRows, setEventRows] = useState([]);
     const [individualRows, setIndividualRows] = useState([]);
@@ -184,15 +195,26 @@ export default function AdminEventsRequestTable() {
                 console.warn(error.message);
             });
 
-        fetch(INDIVIDUAL_REQUEST_URL, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    useEffect(() => {
+        let isMounted = true;
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+        fetch(`${API_BASE_URL}/api/individual-submissions`, { headers })
             .then((response) => {
-                if (!response.ok) throw new Error("Failed to fetch individual requests");
+                if (!response.ok) throw new Error("Failed to fetch individual submissions");
                 return response.json();
             })
             .then((responseData) => {
-                if (isMounted) setIndividualRows((responseData.data || []).map(normalizeIndividualRequest));
+                if (isMounted) {
+                    const items = responseData.data || responseData || [];
+                    setIndividualRows(items.map(normalizeIndividualSubmission));
+                }
             })
             .catch((error) => {
                 console.warn(error.message);
@@ -222,8 +244,8 @@ export default function AdminEventsRequestTable() {
             .toLowerCase();
         const matchesSearch = searchableText.includes(query);
         const matchesEventType = !isEventTab || eventTypeFilter === "all" || row.eventType === eventTypeFilter;
-        const matchesApproval = approvalFilter === "all" || row.approvedStatus.toLowerCase() === approvalFilter;
-        const matchesDate = !dateFilter || row.dateKeys.includes(dateFilter);
+        const matchesApproval = approvalFilter === "all" || String(row.approvedStatus || row.status || "").toLowerCase() === approvalFilter;
+        const matchesDate = !dateFilter || (row.dateKeys || []).includes(dateFilter);
 
         return matchesSearch && matchesEventType && matchesApproval && matchesDate;
     });
@@ -315,7 +337,7 @@ export default function AdminEventsRequestTable() {
                 {isEventTab ? (
                     <EventRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
                 ) : (
-                    <IndividualRequestTable rows={filteredRows} selectedDateKey={dateFilter} />
+                    <IndividualRequestTable rows={filteredRows} />
                 )}
             </div>
         </section>
@@ -332,7 +354,7 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
                 <th className="px-6 py-4 font-semibold">Event Date</th>
                 <th className="px-6 py-4 font-semibold">Dpt</th>
                 <th className="px-6 py-4 font-semibold">Event Status</th>
-                <th className="px-6 py-4 font-semibold">Approved Status</th>
+                {/* <th className="px-6 py-4 font-semibold">Approved Status</th> */}
                 <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
         </thead>
@@ -351,12 +373,12 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
                     <td className="px-6 py-4 whitespace-nowrap">
                         <span className={getEventStatusClassName(event.eventStatus)}>{event.eventStatus}</span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    {/* <td className="px-6 py-4 whitespace-nowrap">
                         <StatusBadge status={event.approvedStatus} />
-                    </td>
+                    </td> */}
                     <td className="px-6 py-4">
                         <Link
-                            to={`/dashboard-admin/AdminEventsRequests/${event.id}`}
+                            to={`/dashboard-hod/AdminEventsRequests/${event.id}`}
                             className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
                             title="Open event details"
                         >
@@ -371,37 +393,39 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
     </table>
 );
 
-const IndividualRequestTable = ({ rows, selectedDateKey }) => (
+const IndividualRequestTable = ({ rows }) => (
     <table className="w-full text-left">
         <thead className="sticky top-0 bg-[#151c2c]">
             <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
                 <th className="px-6 py-4 font-semibold">Date</th>
-                <th className="px-6 py-4 font-semibold">Organizer Name</th>
-                <th className="px-6 py-4 font-semibold">Event Type</th>
-                <th className="px-6 py-4 font-semibold">Organizer Email</th>
+                <th className="px-6 py-4 font-semibold">Employee Name</th>
+                <th className="px-6 py-4 font-semibold">Form Type</th>
+                <th className="px-6 py-4 font-semibold">Employee Email</th>
                 <th className="px-6 py-4 font-semibold">Status</th>
+                <th className="px-6 py-4 font-semibold">Workflow Stage</th>
                 <th className="px-6 py-4 font-semibold text-center">Action</th>
             </tr>
         </thead>
         <tbody>
             {rows.length > 0 ? rows.map((request, index) => (
                 <tr key={request.id || index} className="border-t border-[#20283a] text-sm text-white align-top">
-                    <td className="px-6 py-4 whitespace-nowrap">{request.date}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(request.date)}</td>
                     <td className="px-6 py-4 font-medium whitespace-nowrap">
-                        <div className="max-w-34 truncate" title={request.organizerName}>
-                            {request.organizerName}
+                        <div className="max-w-34 truncate" title={request.employee}>
+                            {request.employee}
                         </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{request.eventType}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{request.formType}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="max-w-40 truncate" title={request.organizerEmail}>
-                            {request.organizerEmail}
+                        <div className="max-w-40 truncate" title={request.employeeEmail}>
+                            {request.employeeEmail}
                         </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={request.status} /></td>
+                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={request.workflowStage} /></td>
                     <td className="px-6 py-4">
                         <Link
-                            to={`/dashboard/IndividualEvents/${request.id}`}
+                            to={`/dashboard-hod/individual-submissions/${request.id}`}
                             className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
                             title="Open request details"
                         >
@@ -410,7 +434,7 @@ const IndividualRequestTable = ({ rows, selectedDateKey }) => (
                     </td>
                 </tr>
             )) : (
-                <EmptyRow colSpan={6} />
+                <EmptyRow colSpan={7} />
             )}
         </tbody>
     </table>

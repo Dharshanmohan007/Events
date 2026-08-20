@@ -31,7 +31,7 @@ const FacultyStatcard = () => {
                 if (!token) return
 
                 const decoded = jwtDecode(token)
-                const facultyId = decoded.id || decoded._id || decoded.userId
+                const facultyId = decoded.facultyId
 
                 const res = await fetch(
                     `${API_BASE_URL}/api/dashboard/faculty-dashboard-events-count?facultyId=${facultyId}`,

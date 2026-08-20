@@ -95,14 +95,14 @@ const ensureLength = (items, length, factory) => {
 
 const validateEventRequisition = (data) => {
   const errors = {};
-  if (!data.doc) errors.doc = "This field is required";
-  if (data.doc === "Yes" && !data.file) errors.file = "Please upload the previous event documentation";
-  if (data.doc === "No" && !data.reason?.trim()) errors.reason = "Reason is required";
+  // if (!data.doc) errors.doc = "This field is required";
+  // if (data.doc === "Yes" && !data.file) errors.file = "Please upload the previous event documentation";
+  // if (data.doc === "No" && !data.reason?.trim()) errors.reason = "Reason is required";
   if (!data.budget) errors.budget = "This field is required";
   if (!data.finance) errors.finance = "This field is required";
   if (!data.department?.trim()) errors.department = "Department name is required";
-  if (!data.numOrganizers || parseInt(data.numOrganizers) < 1)
-    errors.numOrganizers = "At least 1 organizer is required";
+  if (data.numOrganizers === "" || parseInt(data.numOrganizers) < 0)
+    errors.numOrganizers = "Enter a valid number of organizers";
   const toStr = (v) => (v === null || v === undefined ? "" : String(v));
   const organizerErrors = (data.organizers || []).map((org) => {
     const err = {};
@@ -125,7 +125,8 @@ const validateEventRequisition = (data) => {
   const logosArr = Array.isArray(data.eventData?.logos) ? data.eventData.logos : data.eventData?.logos ? [data.eventData.logos] : [];
   if (logosArr.length === 0) errors.logos = "Logos selection is required";
   if (logosArr.includes("Other") && !data.eventData?.logosOther?.trim()) errors.logosOther = "Please specify the logos";
-  if (!data.eventData?.audience) errors.audience = "Target audience is required";
+  const audienceArr = Array.isArray(data.eventData?.audience) ? data.eventData.audience : data.eventData?.audience ? [data.eventData.audience] : [];
+  if (audienceArr.length === 0) errors.audience = "Target audience is required";
   if (!data.eventDays || !data.eventDays.length) errors.eventDays = "At least one event day is required";
   const dayErrors = (data.eventDays || []).map((day, idx) => {
     const e = {};
@@ -146,18 +147,22 @@ const validateEventRequisition = (data) => {
     return e;
   });
   if (dayErrors.some((de) => Object.keys(de).length > 0)) errors.days = dayErrors;
-  if (!data.requirements || data.requirements.length === 0) errors.requirements = "Select at least one requirement";
+  const reqKeys = ["venue", "icts", "audio", "transport", "foodandrefreshments", "accommodation", "purchase", "media"];
+  if (!data.requirements || reqKeys.some(k => !data.requirements[k])) {
+    errors.requirements = "Please select Yes or No for all 8 event requirements";
+  }
   return errors;
 };
 
-const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
+const buildEventRequisitionPayload = ({ eventRequisition, user, existingOrganizerId }) => {
 let token = localStorage.getItem("token");
 let decodedToken = jwtDecode(token);
 
   // console.log("user log :",user);
   
   const fd = new FormData();
-  fd.append("organizerId", decodedToken?.facultyId);
+  const organizerId = decodedToken?.facultyId || existingOrganizerId || decodedToken?.id || decodedToken?._id || user?._id;
+  fd.append("organizerId", organizerId);
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
@@ -167,6 +172,8 @@ let decodedToken = jwtDecode(token);
       estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
+      advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
+      ExpectedEventOutcome: eventRequisition.expectedEventOutcome || "",
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
@@ -622,7 +629,20 @@ const validateTransportData = (transportData) => {
     if (!form.dropDate) err.dropDate = "Drop date is required";
     if (!form.pickupLocation?.trim()) err.pickupLocation = "Pickup location is required";
     if (!form.dropLocation?.trim()) err.dropLocation = "Drop location is required";
-    if (!form.vistaTransport) err.vistaTransport = "Transport type is required";
+    if (!form.vistaTransport || form.vistaTransport.length === 0) err.vistaTransport = "Transport type is required";
+    
+    if (form.vistaTransport && form.vistaTransport.length > 0) {
+      form.vistaTransport.forEach(type => {
+        if (type.toLowerCase().includes("car")) {
+          const count = Number(form.vehicleCounts?.[type]) || 0;
+          const passengers = Number(form.totalPassengers) || 0;
+          if (count > passengers && passengers > 0) {
+            err.vistaTransport = "Vehicle count exceeds allowed limit based on total passengers.";
+          }
+        }
+      });
+    }
+
     return err;
   });
   if (errors.some((e) => Object.keys(e).length > 0)) return errors;
@@ -753,6 +773,8 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       estimatedBudget: Number(formData.event.estimatedBudget) || 0,
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
+      advanceToBeReceviedWithin: Number(formData.event.advanceToBeReceivedWithin) || 0,
+      ExpectedEventOutcome: formData.event.expectedEventOutcome || "",
       organizingDepartment: formData.event.department,
       organizerCount: parseInt(formData.event.numOrganizers) || 0,
       organizers: (formData.event.organizers || []).map((o) => ({
@@ -785,7 +807,7 @@ const REQUIREMENT_KEY_MAP = {
   mediaRequired: "media",
 };
 
-function hydrateDraftData(apiData) {
+function hydrateEventData(apiData) {
   const rd = apiData.requestDetails || {};
   const od = rd.organizerDetails || {};
   const ed = rd.eventDetails || {};
@@ -800,6 +822,8 @@ function hydrateDraftData(apiData) {
     estimatedBudget: od.estimatedBudget ? String(od.estimatedBudget) : "",
     advanceAmount: od.advanceAmount ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
+    advanceToBeReceivedWithin: od.advanceToBeReceviedWithin ? String(od.advanceToBeReceviedWithin) : "",
+    expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: null,
     principalApprovalDocument: null,
@@ -946,11 +970,8 @@ function hydrateDraftData(apiData) {
           selectedGuestIds: [],
           guests: acc.guests || [],
           special: acc.specialRequirements || "",
+          accommodationNeeded: (acc.roomCategory && acc.roomCategory.length > 0) ? "Yes" : "No",
         };
-        (acc.roomOccupancy || []).forEach((ro) => {
-          if (ro.type === "Single") entry.singleRooms = String(ro.count);
-          if (ro.type === "Double") entry.doubleRooms = String(ro.count);
-        });
         return entry;
       }),
     };
@@ -1082,11 +1103,14 @@ function determineDraftStep(apiData, selectedRequirements) {
 export default function Form() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { draftId } = useParams();
+  const { draftId, id } = useParams();
+  const isEditMode = Boolean(id);
+  const recordId = id || draftId;
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
   const [eventId, setEventId] = useState("");
+  const [originalOrganizerId, setOriginalOrganizerId] = useState("");
   const [formData, setFormData] = useState({
     event: {
       doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
@@ -1102,10 +1126,10 @@ export default function Form() {
   });
   const [formErrors, setFormErrors] = useState({});
   const [apiError, setApiError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDraftLoading, setIsDraftLoading] = useState(!!recordId);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
-  const [isDraftLoading, setIsDraftLoading] = useState(!!draftId);
+  const [isLoading, setIsLoading] = useState(false);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -1129,9 +1153,6 @@ export default function Form() {
     purchase:            { label: "Purchase Details",              component: Purchase },
     media:               { label: "Media Requirement Details",     component: MediaForm },
   };
-  // console.log("selectedRequirements:", selectedRequirements);
-  // console.log("type:", typeof selectedRequirements);
-  // console.log("isArray:", Array.isArray(selectedRequirements));
   const requirementKeys = Array.isArray(selectedRequirements)
     ? selectedRequirements
     : Object.entries(selectedRequirements || {})
@@ -1168,35 +1189,35 @@ export default function Form() {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   }, []);
 
-  // ── Fetch and hydrate draft data when draftId is in the URL ────────────────
+  // ── Fetch and hydrate draft data when draftId or id is in the URL ────────────────
   useEffect(() => {
-    if (!draftId) return;
+    if (!recordId) return;
     const fetchDraft = async () => {
       setIsDraftLoading(true);
       try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${draftId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${recordId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch draft");
+        if (!res.ok) throw new Error(data.message || "Failed to fetch event data");
         const apiData = data.data || data;
-        const { formData: hydratedData, selectedRequirements: hydratedReqs } = hydrateDraftData(apiData);
+        const { formData: hydratedData, selectedRequirements: hydratedReqs } = hydrateEventData(apiData);
         setFormData(hydratedData);
         setSelectedRequirements(hydratedReqs);
-        setEventId(apiData._id || draftId);
-        const step = determineDraftStep(apiData, hydratedReqs);
+        setEventId(apiData._id || recordId);
+        if (apiData.organizerId) setOriginalOrganizerId(apiData.organizerId);
+        const step = isEditMode ? 0 : determineDraftStep(apiData, hydratedReqs);
         setCurrentStep(step);
         setCompletedSteps(Array.from({ length: step }, (_, i) => i));
       } catch (error) {
-        console.error("Failed to load draft:", error);
-        setApiError("Failed to load draft. Starting a fresh form.");
+        console.error("Failed to load event data:", error);
+        setApiError("Failed to load event data. Starting a fresh form.");
       } finally {
         setIsDraftLoading(false);
       }
     };
     fetchDraft();
-  }, [draftId]);
+  }, [recordId, isEditMode]);
 
   useEffect(() => {
     if (scrollContainerRef.current) scrollContainerRef.current.scrollTop = 0;
@@ -1250,13 +1271,11 @@ export default function Form() {
     }
     setIsLoading(true);
     try {
-      // console.log("api:", import.meta.env.VITE_API_BASE_URL_URL);
       let response;
       if (sectionKey === "event") {
-        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
+        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user, existingOrganizerId: originalOrganizerId });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
-        // console.log("saveSection: event payload:", payload);
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1341,7 +1360,6 @@ export default function Form() {
   };
 
   const submitEvent = async () => {
-    // console.log("submitEvent started");
     if (!eventId) { setApiError("No event ID available for submit."); return; }
     setIsLoading(true);
     setApiError("");
@@ -1392,33 +1410,27 @@ export default function Form() {
         selectedRequirements,
         user
       );
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/submit`, {
-        method: "PATCH",
+      const url = isEditMode 
+        ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` 
+        : `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/submit`;
+      const method = isEditMode ? "PUT" : "PATCH";
+      
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
         body: JSON.stringify(fullPayload),
       });
       const data = await response.json();
-      // console.log("Reached after submit API");
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
-      // Generate PDF only if finance details exist
-      // console.log("Finance :", formDataRef.current.event.finance);
-      // console.log("Amount :", formDataRef.current.event.advanceAmount);
-      // console.log("Purpose :", formDataRef.current.event.purposeOfAdvance);
       if (
           formDataRef.current.event.finance === "Yes" &&
           formDataRef.current.event.advanceAmount &&
           formDataRef.current.event.purposeOfAdvance
       ) {
-          // console.log("Generating PDF...");
-          // console.log(formDataRef.current.event);
-          // console.log(user);
-          // console.log(data);
           const organizer =
             data.data.requestDetails.organizerDetails.organizers?.[0];
 
           let facultyDetails = {};
-          // console.log("Submit Response:", data);
-          // console.log("Organizer ID:", data.data.organizerId);
           if (data.data.organizerId) {
             facultyDetails = await getFacultyById(data.data.organizerId);
           }
@@ -1428,7 +1440,6 @@ export default function Form() {
             employee: facultyDetails,
             submitResponse: data.data,
           });
-          // console.log("PDF Generated");
       }
       setSubmitSuccess(true);
     } catch (error) {
@@ -1439,9 +1450,6 @@ export default function Form() {
   };
 
   // ── registerChildNavigation ───────────────────────────────────────────────
-  // Accepts the extended nav object from MediaForm:
-  //   { next, prev, isLoading, isOnLastDay, nextDayLabel }
-  // For all other forms, isOnLastDay defaults to true (no day tabs to track).
   const registerChildNavigation = useCallback((nav = {}) => {
     setChildNav({
       next:         nav.next         || null,
@@ -1490,17 +1498,11 @@ export default function Form() {
   };
 
   // ── Button logic ──────────────────────────────────────────────────────────
-  // isLastParentStep: true when we are on the last step in the parent's step list.
-  // showSubmit:       true only when it's the last parent step AND the child
-  //                   signals it is also on its last day (isOnLastDay).
-  //                   This prevents Submit appearing on Day 1 of a 2-day MediaForm.
   const isLastParentStep = currentStep === steps.length - 1;
   const showSubmit       = isLastParentStep && childNav.isOnLastDay;
 
-  // Label for the forward button when it's "Save & Next" territory
   const forwardLabel = () => {
     if (isLoading || childNav.isLoading) return "Saving...";
-    // Child is on a non-last day → show the day label it gave us (e.g. "Day 2 →")
     if (childNav.next && !childNav.isOnLastDay) return childNav.nextDayLabel || "Next Day →";
     return "Save & Next";
   };
@@ -1562,6 +1564,7 @@ export default function Form() {
     },
     purchase: {
       purchaseData: formData.purchase,
+      venueData: formData.venue,
       onPurchaseDataChange: handlePurchaseDataChange,
       eventId,
       eventDays: formData.event.eventDays,
@@ -1573,9 +1576,6 @@ export default function Form() {
       eventId,
       eventDays: formData.event.eventDays,
       errors: formErrors.media || {},
-      // onSave receives a FormData built by MediaForm (includes File objects).
-      // We pass it directly to saveSection which detects FormData and skips
-      // JSON serialisation, sending it as multipart so files reach the backend.
       onSave: async (formDataPayload) => {
         const ok = await saveSection("media", formDataPayload);
         if (ok) advanceStep();
@@ -1585,14 +1585,13 @@ export default function Form() {
 
   const progress = currentStep === 0 ? 0 : Math.min(20 + (currentStep - 1) * 10, 100);
 
-  // Full-page success screen
   // Full-page draft loading screen
   if (isDraftLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#16162A]">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
-          <p className="mt-4 text-white text-lg">Loading your draft...</p>
+          <p className="mt-4 text-white text-lg">Loading event...</p>
         </div>
       </div>
     );
