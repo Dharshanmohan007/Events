@@ -807,26 +807,24 @@ const IndividualEventDetailPage = () => {
 
   // console.log("is head : ", isHead)
   return (
-    <section className="min-h-screen bg-[#0b1326] poppins">
+    <section className="min-h-screen bg-[#0b1326] text-white poppins">
       <DashboardHeader basePath="/dashboard-admin" />
 
-      <main className="px-6 pb-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 justify-between py-3 text-sm text-[#CBC3D7]/50">
-          <div className="flex items-center gap-2 ">
-            {/* <Link
+      <main className="h-[93vh] px-7 pt-2">
+        <header className="mt-4 flex items-center justify-between gap-5">
+          <div className="flex items-center gap-2">
+            <Link
               to="/dashboard-admin"
-              className="hover:text-white transition-colors"
+              className="text-md font-medium text-[#CBC3D7]/50 transition hover:text-white"
             >
               Admin Dashboard
-            </Link> */}
-            {/* <ChevronRight size={14} /> */}
-            <span className="text-[#D0BCFF]">Individual Request Details</span>
+            </Link>
+            <ChevronRight size={16} />
+            <h1 className="text-md font-medium text-[#D0BCFF]">Individual Request Details</h1>
             {employee.name && (
-              <>
-                <ChevronRight size={14} />
-                <span className="text-[#D0BCFF]">{employee.name}</span>
-              </>
+              <span className="ml-3 rounded-full bg-green-400/10 px-5 py-2 text-sm text-[#10B981]">
+                {employee.name}
+              </span>
             )}
             {submission?.formType && (
               <span className="ml-1 rounded-full bg-[#8B3DFF]/15 px-3 py-0.5 text-[11px] font-semibold text-[#8B3DFF]">
@@ -868,9 +866,17 @@ const IndividualEventDetailPage = () => {
                 </button>
               </div>
             )}
-        </div>
+        </header>
 
-        <section className="mt-2 rounded-lg border border-[#27334c] bg-[#151d31] p-6">
+        <section className="mt-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+            <span className={`h-3 w-3 rounded-full ${status === 'Completed' ? 'bg-[#6D3BD8]' : status === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
+            {status === 'Completed' ? 'COMPLETED' : status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
+          </div>
+        </section>
+
+        <section className="mt-3 overflow-hidden">
+          <section className="max-h-[calc(100vh-170px)] overflow-auto rounded-lg border border-[#27334c] bg-[#151d31] p-5 table-custom-scrollbar">
           {loading ? (
             <p className="py-10 text-center text-sm text-[#CBC3D7]/65">
               Loading submission details...
@@ -935,25 +941,10 @@ const IndividualEventDetailPage = () => {
                 </div>
               </div>
 
-              {/* Submission Info Grid — ALL top-level fields */}
+              {/* Submission Info Grid */}
               <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <InfoGridItem label="Request ID" value={submission.id} />
-                <InfoGridItem label="Organizer" value={employeeName} />
-                <InfoGridItem label="Email" value={employeeEmail} />
                 <InfoGridItem label="Form Type" value={submission.formType} />
                 <InfoGridItem label="Status" value={submission.status || "-"} />
-                <InfoGridItem
-                  label="Workflow Stage"
-                  value={submission.workflowStage || "-"}
-                />
-                <InfoGridItem
-                  label="Submitted"
-                  value={formatDate(submission.createdAt)}
-                />
-                <InfoGridItem
-                  label="Last Updated"
-                  value={formatDate(submission.updatedAt)}
-                />
                 {data.finalStatus && (
                   <InfoGridItem label="Final Status" value={data.finalStatus} />
                 )}
@@ -963,44 +954,18 @@ const IndividualEventDetailPage = () => {
                     value={data.overallStatus}
                   />
                 )}
-                {data._id && <InfoGridItem label="Data ID" value={data._id} />}
-                {data.status && typeof data.status !== "object" && (
-                  <InfoGridItem label="Inner Status" value={data.status} />
-                )}
-                {data.workflowStage && (
-                  <InfoGridItem
-                    label="Inner Workflow Stage"
-                    value={data.workflowStage}
-                  />
-                )}
-                {data.createdAt && (
-                  <InfoGridItem
-                    label="Data Created"
-                    value={formatDate(data.createdAt)}
-                  />
-                )}
-                {data.updatedAt && (
-                  <InfoGridItem
-                    label="Data Updated"
-                    value={formatDate(data.updatedAt)}
-                  />
-                )}
               </div>
 
-              {/* Employee Detail — all fields */}
+              {/* Employee Detail */}
               {employee && Object.keys(employee).length > 0 && (
-                <div className="mt-5 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
-                  <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                <div className="mt-5 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Employee Details
                   </h3>
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    <InfoGridItem
-                      label="Record ID"
-                      value={employee._id || "-"}
-                    />
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <InfoGridItem label="Name" value={employee.name || "-"} />
                     <InfoGridItem
-                      label="Employee Code"
+                      label="Employee Number"
                       value={employee.empId || "-"}
                     />
                     <InfoGridItem label="Email" value={employee.email || "-"} />
@@ -1013,44 +978,18 @@ const IndividualEventDetailPage = () => {
                       label="Designation"
                       value={employee.designation || "-"}
                     />
-                    <InfoGridItem
-                      label="Category"
-                      value={employee.employeeCategory || "-"}
-                    />
-                    <InfoGridItem
-                      label="Gender"
-                      value={employee.gender || "-"}
-                    />
-                    <InfoGridItem
-                      label="Date of Birth"
-                      value={formatDate(employee.dob)}
-                    />
-                    <InfoGridItem
-                      label="Date of Joining"
-                      value={formatDate(employee.doj)}
-                    />
-                    <InfoGridItem
-                      label="Employment Status"
-                      value={
-                        employee.employmentStatus !== undefined
-                          ? employee.employmentStatus
-                            ? "Active"
-                            : "Inactive"
-                          : "-"
-                      }
-                    />
-                    <InfoGridItem
-                      label="Location"
-                      value={employee.location || "-"}
-                    />
-                    <InfoGridItem
-                      label="Employee Created"
-                      value={formatDate(employee.createdAt)}
-                    />
-                    <InfoGridItem
-                      label="Employee Updated"
-                      value={formatDate(employee.updatedAt)}
-                    />
+                    {employee.employeeCategory && (
+                      <InfoGridItem
+                        label="Category"
+                        value={employee.employeeCategory}
+                      />
+                    )}
+                    {employee.location && (
+                      <InfoGridItem
+                        label="Location"
+                        value={employee.location}
+                      />
+                    )}
                   </div>
                 </div>
               )}
@@ -1116,10 +1055,10 @@ const IndividualEventDetailPage = () => {
                 );
               })()}
 
-              {/* Principal Approval Form / Uploaded File — view + download links with metadata */}
+              {/* Uploaded Documents */}
               {(data.principalApprovalForm?.url || data.uploadedFile?.url) && (
-                <div className="mt-5 rounded-lg border border-[#374155] bg-[#1B2334] p-4">
-                  <h3 className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+                <div className="mt-5 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Uploaded Documents
                   </h3>
                   <div className="flex flex-wrap items-center gap-3">
@@ -1130,7 +1069,7 @@ const IndividualEventDetailPage = () => {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#1B2334] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[#374155] bg-[#242B3D] px-4 py-3 text-sm text-[#CBC3D7]/80 hover:text-white hover:border-[#8B3DFF]/50 transition-colors"
                     >
                       <FileText size={16} className="text-[#8B3DFF]" />
                       <span>View Document</span>
@@ -1147,21 +1086,6 @@ const IndividualEventDetailPage = () => {
                       <span>Download</span>
                     </a>
                   </div>
-                  {data.principalApprovalForm?.publicId && (
-                    <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-                      Public ID: {data.principalApprovalForm.publicId}
-                    </span>
-                  )}
-                  {data.uploadedFile?.publicId && (
-                    <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-                      Public ID: {data.uploadedFile.publicId}
-                    </span>
-                  )}
-                  {data.uploadedFile?.fileName && (
-                    <span className="mt-2 inline-block text-[10px] text-[#CBC3D7]/50">
-                      File: {data.uploadedFile.fileName}
-                    </span>
-                  )}
                 </div>
               )}
 
@@ -1191,7 +1115,7 @@ const IndividualEventDetailPage = () => {
                 </div>
               )}
 
-              {/* Form-specific detail panel — using Faculty panels for consistent polished design */}
+              {/* Module-specific detail panel */}
               <div className="mt-8">
                 {DetailComponent ? (
                   <DetailComponent {...detailProps} />
@@ -1209,17 +1133,17 @@ const IndividualEventDetailPage = () => {
                 )}
               </div>
 
-              {/* Approval History — timeline of all approval actions */}
+              {/* Approval History */}
               {data.approvalHistory?.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="mb-4 text-sm font-semibold text-[#CBC3D7]/65 uppercase tracking-wider">
+                <div className="mt-6 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+                  <h3 className="mb-4 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
                     Approval History
                   </h3>
                   <div className="space-y-3">
                     {data.approvalHistory.map((entry, index) => (
                       <div
                         key={index}
-                        className="flex items-start gap-4 rounded-lg border border-[#374155] bg-[#1B2334] p-4"
+                        className="flex items-start gap-4 rounded-lg border border-[#374155]/50 bg-[#242B3D] p-4"
                       >
                         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#8B3DFF]/20">
                           <span className="text-xs font-bold text-[#8B3DFF]">
@@ -1260,6 +1184,7 @@ const IndividualEventDetailPage = () => {
               )}
             </>
           )}
+          </section>
         </section>
       </main>
 
