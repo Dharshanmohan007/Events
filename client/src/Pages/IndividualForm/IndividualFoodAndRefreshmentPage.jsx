@@ -10,6 +10,7 @@ import {
   Plus,
   Trash2,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 
 import UploadIcon from "../../assets/upload.svg";
@@ -913,22 +914,44 @@ const IndividualFoodAndRefreshment = () => {
           setFormCards([mappedCard]);
           const existingDoc =
             actualFood?.principalApprovalForm ||
+            actualFood?.data?.principalApprovalForm ||
             actualFood?.principalApprovalFormName ||
+            actualFood?.data?.principalApprovalFormName ||
             actualFood?.principalApprovalDocument ||
+            actualFood?.data?.principalApprovalDocument ||
             actualFood?.principalDocument ||
+            actualFood?.data?.principalDocument ||
             actualFood?.approvalDocument ||
+            actualFood?.data?.approvalDocument ||
             actualFood?.approvalForm ||
+            actualFood?.data?.approvalForm ||
+            actualFood?.uploadedFile ||
+            actualFood?.data?.uploadedFile ||
+            actualFood?.document ||
+            actualFood?.data?.document ||
+            actualFood?.file ||
+            actualFood?.data?.file ||
             actualFood?.files?.principalApprovalForm ||
             actualFood?.files?.principalApprovalFormName ||
             rawData?.principalApprovalForm ||
+            rawData?.data?.principalApprovalForm ||
             rawData?.principalApprovalFormName ||
+            rawData?.data?.principalApprovalFormName ||
             rawData?.principalApprovalDocument ||
+            rawData?.data?.principalApprovalDocument ||
             rawData?.principalDocument ||
+            rawData?.data?.principalDocument ||
+            rawData?.approvalDocument ||
+            rawData?.data?.approvalDocument ||
+            rawData?.uploadedFile ||
+            rawData?.data?.uploadedFile ||
             resData?.principalApprovalForm ||
+            resData?.data?.principalApprovalForm ||
             resData?.principalApprovalFormName ||
             resData?.principalApprovalDocument ||
-            resData?.principalDocument;
-          if (existingDoc) {
+            resData?.principalDocument ||
+            resData?.uploadedFile;
+          if (existingDoc && (typeof existingDoc === "string" ? existingDoc.trim().length > 0 : Object.keys(existingDoc).length > 0)) {
             setExistingPrincipalDocument(existingDoc);
           }
         }
@@ -1127,8 +1150,6 @@ useEffect(() => {
         advanceAmount: Number(card.advanceAmount) || 0,
         advancePurpose: card.advancePurpose.trim(),
         advanceToBeReceviedWithin: Number(card.advanceToBeReceviedWithin) || 0,
-        estimatedEventBudget: Number(card.estimatedEventBudget) || 0,
-        // Backend expects `estimatedAmount` — include it for compatibility
         estimatedAmount: Number(card.estimatedEventBudget) || 0,
       }),
 
@@ -1273,9 +1294,6 @@ useEffect(() => {
         if (payload.advanceToBeReceviedWithin !== undefined) {
           formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
         }
-        if (payload.estimatedEventBudget !== undefined) {
-          formData.append("estimatedEventBudget", payload.estimatedEventBudget);
-        }
         if (payload.estimatedAmount !== undefined) {
           formData.append("estimatedAmount", payload.estimatedAmount);
         }
@@ -1322,9 +1340,10 @@ useEffect(() => {
           const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
           const employee = {
             name: storedUser?.name || storedUser?.employeeName || "",
-            empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+            empId: storedUser?.empId || storedUser?.employeeId || "",
             designation: storedUser?.designation || "",
             department: storedUser?.department || "",
+            facultyId: storedUser?.facultyId || "",
           };
           const requestNo =
             data?.requestNo ||
@@ -1344,11 +1363,12 @@ useEffect(() => {
             submitResponse: {
               requestNo,
               response: data,
+              facultyId: storedUser?.facultyId || "",
               employeeId:
+                storedUser?.facultyId ||
                 data?.employee ||
                 data?.employeeId ||
-                employeeId ||
-                employee.empId,
+                employeeId,
             },
           });
         }
@@ -1382,9 +1402,6 @@ useEffect(() => {
           }
           if (payload.advanceToBeReceviedWithin !== undefined) {
             formData.append("advanceToBeReceviedWithin", payload.advanceToBeReceviedWithin);
-          }
-          if (payload.estimatedEventBudget !== undefined) {
-            formData.append("estimatedEventBudget", payload.estimatedEventBudget);
           }
           if (payload.estimatedAmount !== undefined) {
             formData.append("estimatedAmount", payload.estimatedAmount);
@@ -1428,9 +1445,10 @@ useEffect(() => {
           const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
           const employee = {
             name: storedUser?.name || storedUser?.employeeName || "",
-            empId: storedUser?.empId || storedUser?.employeeId || employeeId || "",
+            empId: storedUser?.empId || storedUser?.employeeId || "",
             designation: storedUser?.designation || "",
             department: storedUser?.department || "",
+            facultyId: storedUser?.facultyId || "",
           };
           const requestNo =
             firstSubmissionData?.requestNo ||
@@ -1450,11 +1468,12 @@ useEffect(() => {
             submitResponse: {
               requestNo,
               response: firstSubmissionData,
+              facultyId: storedUser?.facultyId || "",
               employeeId:
+                storedUser?.facultyId ||
                 firstSubmissionData?.employee ||
                 firstSubmissionData?.employeeId ||
-                employeeId ||
-                employee.empId,
+                employeeId,
             },
           });
         }
@@ -1557,8 +1576,8 @@ if (loadError) {
                   ? (existingPrincipalDocument.startsWith("http")
                       ? existingPrincipalDocument
                       : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
-                  : (existingPrincipalDocument?.url
-                      ? existingPrincipalDocument.url
+                  : (existingPrincipalDocument?.url || existingPrincipalDocument?.secure_url
+                      ? (existingPrincipalDocument.url || existingPrincipalDocument.secure_url)
                       : (existingPrincipalDocument?.path
                           ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
                           : "#"))
@@ -1569,10 +1588,12 @@ if (loadError) {
             >
               {typeof existingPrincipalDocument === "string"
                 ? existingPrincipalDocument.split("/").pop() || "View existing document"
-                : (existingPrincipalDocument?.name ||
+                : (existingPrincipalDocument?.fileName ||
                    existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.name ||
                    existingPrincipalDocument?.originalName ||
-                   "View existing document")}
+                   existingPrincipalDocument?.originalname ||
+                   (existingPrincipalDocument?.url ? existingPrincipalDocument.url.split("/").pop() : "View existing document"))}
             </a>
             <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
           </div>
