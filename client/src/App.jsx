@@ -39,6 +39,12 @@ import VenueManagementPage from './Pages/Dashboards/Admin-Dashboard/VenueManagem
 import AdminManagementPage from './Pages/Dashboards/Admin-Dashboard/AdminManagementPage'
 import FacultyManagementPage from './Pages/Dashboards/Admin-Dashboard/FacultyManagementPage'
 import AdminReportsPage from './Pages/Dashboards/Admin-Dashboard/AdminReportsPage'
+import HodDashboard from './Pages/Dashboards/Hod-Dashboard/HodDashboard'
+import HodEventsListPage from './Pages/Dashboards/Hod-Dashboard/HodEventsListPage'
+import HodDashboardLayout from './Pages/Dashboards/Hod-Dashboard/HodDashboardLayout'
+import HodReportsPage from './Pages/Dashboards/Hod-Dashboard/HodReportsPage'
+import HodEventDetailsPage from './Pages/Dashboards/Hod-Dashboard/HodEventDetailsPage'
+import HodIndividualEventDetailPage from './Pages/Dashboards/Hod-Dashboard/HodIndividualEventDetailPage'
 import AccommodationDashboard from './Pages/Dashboards/Accommodation-Dashboard/AccommodationDashboard'
 import AccommodationEventsDetailViewPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationEventsDetailViewPage'
 import AccommodationReportsPage from './Pages/Dashboards/Accommodation-Dashboard/AccommodationReportsPage'
@@ -148,9 +154,17 @@ function AppRoutes() {
 
       </Route>
 
+      <Route path="/dashboard-hod" element={<ProtectedRoute><HodDashboardLayout /></ProtectedRoute>}>
+        <Route index element={<HodDashboard />} />
+        <Route path="AdminEventsRequests" element={<HodEventsListPage />} />
+        <Route path="reports" element={<HodReportsPage />} />
+        <Route path="AdminEventsRequests/:eventId" element={<HodEventDetailsPage />} />
+        <Route path="individual-submissions/:id" element={<HodIndividualEventDetailPage />} />
+      </Route>
+
       <Route path="/dashboard/IndividualEvents/:id" element={<ProtectedRoute><IndividualEventDetailPage /></ProtectedRoute>} />
 
-       <Route path="/transports" element={<TransportDetailsPage />} />
+      <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/media" element={<MediaDetailsPage />} />
       <Route path="/IndividualFoodAndRefreshment" element={<IndividualFoodAndRefreshmentPage />} />
       <Route path="/purchase" element={<PurchaseDetails />} />

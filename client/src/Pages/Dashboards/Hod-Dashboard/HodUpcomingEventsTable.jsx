@@ -1,10 +1,22 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { jwtDecode } from 'jwt-decode'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
-const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`
-const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`
+
+const getDepartment = () => {
+    try {
+        const token = localStorage.getItem('token')
+        return token ? jwtDecode(token).department || '' : ''
+    } catch {
+        return ''
+    }
+}
+
+const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/hod-dashboard-table?department=${encodeURIComponent(getDepartment().toUpperCase())}`
+
+
 
 const formatDate = (dateValue) => {
     if (!dateValue) return '-'
@@ -30,19 +42,8 @@ const normalizeEvent = (event) => ({
         ? event.venues
         : [event.eventVenue || event.venue].filter(Boolean),
     department: event.organizingDepartment || event.department,
-    status: event.overallStatus || event.acknowledgeStatus,
+    status: event.overallStatus || event.acknowledgeStatus || event.status,
     approvedStatus: event.adminApproval ? 'Approved' : 'Pending',
-})
-
-const normalizeIndividualRequest = (request) => ({
-    id: request.id,
-    organizerName: request.employee || '-',
-    organizerEmail: request.employeeEmail || '-',
-    eventType: request.formType || '-',
-    date: request.createdAt
-        ? formatDate(request.createdAt)
-        : '-',
-    status: typeof request.status === 'string' ? request.status : '-',
 })
 
 const getStatusColor = (status = '') => {
@@ -99,14 +100,24 @@ const ExpandableListCell = ({ values }) => {
     )
 }
 
-const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
+const normalizeIndividualSubmission = (item) => ({
+    id: item.id,
+    date: item.date,
+    formType: item.formType || '-',
+    employee: item.employee || '-',
+    employeeEmail: item.employeeEmail || '-',
+    status: item.status || '-',
+    workflowStage: item.workflowStage || '-',
+})
+
+const HodUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Events" }) => {
     const [requestType, setRequestType] = useState('event')
     const [fetchedEvents, setFetchedEvents] = useState([])
-    const [fetchedIndividualRequests, setFetchedIndividualRequests] = useState([])
+    const [individualRequests, setIndividualRequests] = useState([])
     const propEvents = useMemo(() => events?.map(normalizeEvent), [events])
     const tableEvents = propEvents || fetchedEvents
     const isEventRequest = requestType === 'event'
-    const tableRows = isEventRequest ? tableEvents : fetchedIndividualRequests
+    const tableRows = isEventRequest ? tableEvents : individualRequests
 
     useEffect(() => {
         if (events) {
@@ -121,7 +132,7 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
         })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error('Failed to fetch admin upcoming events')
+                    throw new Error('Failed to fetch hod upcoming events')
                 }
                 return response.json()
             })
@@ -142,19 +153,19 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
     useEffect(() => {
         let isMounted = true
         const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
 
-        fetch(INDIVIDUAL_REQUEST_URL, {
-            headers: token ? { Authorization: `Bearer ${token}` } : {},
-        })
+        fetch(`${API_BASE_URL}/api/individual-submissions`, { headers })
             .then((response) => {
                 if (!response.ok) {
-                    throw new Error('Failed to fetch individual requests')
+                    throw new Error('Failed to fetch individual submissions')
                 }
                 return response.json()
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setFetchedIndividualRequests((responseData.data || []).map(normalizeIndividualRequest))
+                    const items = responseData.data || responseData || []
+                    setIndividualRequests(items.map(normalizeIndividualSubmission))
                 }
             })
             .catch((error) => {
@@ -215,16 +226,17 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                 <th className="px-6 py-4 font-semibold">Event Date</th>
                                 <th className="px-6 py-4 font-semibold">Dpt</th>
                                 <th className="px-6 py-4 font-semibold">Event Status</th>
-                                <th className="px-6 py-4 font-semibold">Approved Status</th>
+                                {/* <th className="px-6 py-4 font-semibold">Approved Status</th> */}
                                 <th className="px-6 py-4 font-semibold text-center">Action</th>
                             </tr>
                         ) : (
                             <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
                                 <th className="px-6 py-4 font-semibold">Date</th>
-                                <th className="px-6 py-4 font-semibold">Organizer Name</th>
-                                <th className="px-6 py-4 font-semibold">Event Type</th>
-                                <th className="px-6 py-4 font-semibold">Organizer Email</th>
+                                <th className="px-6 py-4 font-semibold">Employee Name</th>
+                                <th className="px-6 py-4 font-semibold">Form Type</th>
+                                <th className="px-6 py-4 font-semibold">Employee Email</th>
                                 <th className="px-6 py-4 font-semibold">Status</th>
+                                <th className="px-6 py-4 font-semibold">Workflow Stage</th>
                                 <th className="px-6 py-4 font-semibold text-center">Action</th>
                             </tr>
                         )}
@@ -234,7 +246,7 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                         {tableRows.length > 0 ? (
                             isEventRequest ? tableRows.map((event, index) => {
                                 const rowId = event.eventId || index
-
+                                console.log("event : ", event)
                                 return (
                                     <tr
                                         key={rowId}
@@ -262,18 +274,18 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                                 {event.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
+                                        {/* <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={event.approvedStatus} />
+                                        </td> */}
+                                        <td className="px-6 py-4">
+                                            <Link
+                                                to={`/dashboard-hod/AdminEventsRequests/${event.eventId}`}
+                                                className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                                title="Open event details"
+                                            >
+                                                <ExternalLink size={17} />
+                                            </Link>
                                         </td>
-                                    <td className="px-6 py-4">
-                                        <Link
-                                            to={`/dashboard-admin/AdminEventsRequests/${event.eventId}`}
-                                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
-                                            title="Open event details"
-                                        >
-                                            <ExternalLink size={17} />
-                                        </Link>
-                                    </td>
                                     </tr>
                                 )
                             }) : tableRows.map((row, index) => {
@@ -284,36 +296,39 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         key={rowId}
                                         className="border-t border-[#20283a] text-sm text-white align-top"
                                     >
-                                        <td className="px-6 py-4 whitespace-nowrap">{row.date}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{formatDate(row.date)}</td>
                                         <td className="px-6 py-4 font-medium whitespace-nowrap">
-                                            <div className="max-w-34 truncate" title={row.organizerName}>
-                                                {row.organizerName}
+                                            <div className="max-w-34 truncate" title={row.employee}>
+                                                {row.employee}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">{row.eventType}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap">{row.formType}</td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="max-w-40 truncate" title={row.organizerEmail}>
-                                                {row.organizerEmail}
+                                            <div className="max-w-40 truncate" title={row.employeeEmail}>
+                                                {row.employeeEmail}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={row.status} />
                                         </td>
-                                    <td className="px-6 py-4">
-                                        <Link
-                                            to={`/dashboard/IndividualEvents/${row.id}`}
-                                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
-                                            title="Open request details"
-                                        >
-                                            <ExternalLink size={17} />
-                                        </Link>
-                                    </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <StatusBadge status={row.workflowStage} />
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <Link
+                                                to={`/dashboard-hod/individual-submissions/${row.id}`}
+                                                className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                                title="Open request details"
+                                            >
+                                                <ExternalLink size={17} />
+                                            </Link>
+                                        </td>
                                     </tr>
                                 )
                             })
                         ) : (
                             <tr className="border-t border-[#20283a] text-sm text-[#8b93a7]">
-                                <td className="px-6 py-8 text-center" colSpan={isEventRequest ? 8 : 6}>
+                                <td className="px-6 py-8 text-center" colSpan={isEventRequest ? 7 : 7}>
                                     No requests available
                                 </td>
                             </tr>
@@ -325,4 +340,4 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
     )
 }
 
-export default AdminUpcomingEventsTable
+export default HodUpcomingEventsTable
