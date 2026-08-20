@@ -154,14 +154,15 @@ const validateEventRequisition = (data) => {
   return errors;
 };
 
-const buildEventRequisitionPayload = ({ eventRequisition, user }) => {
+const buildEventRequisitionPayload = ({ eventRequisition, user, existingOrganizerId }) => {
 let token = localStorage.getItem("token");
 let decodedToken = jwtDecode(token);
 
   // console.log("user log :",user);
   
   const fd = new FormData();
-  fd.append("organizerId", decodedToken?.facultyId);
+  const organizerId = decodedToken?.facultyId || existingOrganizerId || decodedToken?.id || decodedToken?._id || user?._id;
+  fd.append("organizerId", organizerId);
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes",
@@ -1109,6 +1110,7 @@ export default function Form() {
   const [completedSteps, setCompletedSteps] = useState([]);
   const [selectedRequirements, setSelectedRequirements] = useState([]);
   const [eventId, setEventId] = useState("");
+  const [originalOrganizerId, setOriginalOrganizerId] = useState("");
   const [formData, setFormData] = useState({
     event: {
       doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
@@ -1127,6 +1129,7 @@ export default function Form() {
   const [isDraftLoading, setIsDraftLoading] = useState(!!recordId);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -1197,11 +1200,12 @@ export default function Form() {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Failed to fetch event data");
-        const apiData = data.data;
-        const { formData: hydratedData, selectedRequirements: hydratedReqs } = hydrateDraftData(apiData);
+        const apiData = data.data || data;
+        const { formData: hydratedData, selectedRequirements: hydratedReqs } = hydrateEventData(apiData);
         setFormData(hydratedData);
         setSelectedRequirements(hydratedReqs);
         setEventId(apiData._id || recordId);
+        if (apiData.organizerId) setOriginalOrganizerId(apiData.organizerId);
         const step = isEditMode ? 0 : determineDraftStep(apiData, hydratedReqs);
         setCurrentStep(step);
         setCompletedSteps(Array.from({ length: step }, (_, i) => i));
@@ -1269,7 +1273,7 @@ export default function Form() {
     try {
       let response;
       if (sectionKey === "event") {
-        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user });
+        const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user, existingOrganizerId: originalOrganizerId });
         const method  = eventId ? "PUT" : "POST";
         const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
         response = await fetch(url, {
