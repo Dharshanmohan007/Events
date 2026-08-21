@@ -12,6 +12,7 @@ const EXPENDITURE_CATEGORIES = [
 ]
 
 const createEmptyBill = () => ({
+  expenseName: '',
   billNo: '',
   billDate: '',
   vendorGuestName: '',
@@ -181,6 +182,11 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData }) => {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <FloatingInput
+                      label="Expense Name *"
+                      value={bill.expenseName || ''}
+                      onChange={(e) => handleBillChange(categoryKey, index, 'expenseName', e.target.value)}
+                    />
                     <FloatingInput
                       label="Bill No *"
                       value={bill.billNo || ''}

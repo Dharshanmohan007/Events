@@ -49,7 +49,7 @@ const initialOtherData = {
     female: { total: '', withinState: '', outsideState: '' },
   },
   primarySdg: '',
-  secondarySdg: '',
+  secondarySdg: [],
   aboutProgram: '',
 }
 
@@ -114,6 +114,7 @@ const validateExpenditure = (expenditureData) => {
     if (bills.length > 0) {
       hasAny = true
       bills.forEach((bill, idx) => {
+        if (!bill.expenseName) errors.push(`${cat} bill ${idx + 1}: Expense Name is required`)
         if (!bill.billNo) errors.push(`${cat} bill ${idx + 1}: Bill No is required`)
         if (!bill.billDate) errors.push(`${cat} bill ${idx + 1}: Bill Date is required`)
         if (!bill.vendorGuestName && cat !== 'kits' && cat !== 'miscellaneous') {
@@ -150,10 +151,13 @@ const validateOtherDetails = (otherData) => {
 }
 
 const FacultyDocumentUploadPage = () => {
+  console.log("correction branch")
+
+
   const { eventId } = useParams()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState('documentUpload')
+  const [step, setStep] = useState('incomeSource')
   const [documents, setDocuments] = useState([])
   const [eventName, setEventName] = useState('')
   const [loading, setLoading] = useState(true)
@@ -282,46 +286,48 @@ const FacultyDocumentUploadPage = () => {
       const income = []
       const { registrationFees, scholarship, institutionalAmount, departmentFund, others } = incomeData
 
+      // Helper to build income details by concatenating details, calculations, requirements
+      const buildIncomeDetails = (data) => {
+        const parts = []
+        if (data.details) parts.push(data.details)
+        if (data.calculations) parts.push(data.calculations)
+        if (data.requirements) parts.push(data.requirements)
+        return parts.join(', ')
+      }
+
       if (registrationFees.amount) {
         income.push({
           type: 'Registration Fees',
-          details: registrationFees.details || '',
           amount: Number(registrationFees.amount) || 0,
-          requirements: Number(registrationFees.requirements) || 0,
-          calculations: Number(registrationFees.calculations) || 0,
+          details: buildIncomeDetails(registrationFees),
         })
       }
       if (scholarship.amount) {
         income.push({
           type: 'Scholarship',
-          details: scholarship.details || '',
           amount: Number(scholarship.amount) || 0,
-          requirements: Number(scholarship.requirements) || 0,
-          calculations: Number(scholarship.calculations) || 0,
+          details: buildIncomeDetails(scholarship),
         })
       }
       if (institutionalAmount.amount) {
         income.push({
           type: 'Institutional Amount',
-          details: institutionalAmount.details || '',
           amount: Number(institutionalAmount.amount) || 0,
-          selectRequired: institutionalAmount.selectRequired || '',
+          details: buildIncomeDetails(institutionalAmount),
         })
       }
       if (departmentFund.amount) {
         income.push({
           type: 'Department Fund',
-          details: departmentFund.details || '',
           amount: Number(departmentFund.amount) || 0,
+          details: buildIncomeDetails(departmentFund),
         })
       }
       if (others.amount) {
         income.push({
           type: 'Others',
-          details: others.details || '',
           amount: Number(others.amount) || 0,
-          requirements: Number(others.requirements) || 0,
-          calculations: Number(others.calculations) || 0,
+          details: buildIncomeDetails(others),
         })
       }
 
@@ -332,11 +338,11 @@ const FacultyDocumentUploadPage = () => {
       const buildExpenditureItems = (items) =>
         (items || []).map((b) => {
           const entry = {
+            name: b.expenseName || '',
             billNo: b.billNo || '',
             date: b.billDate || '',
             guestName: b.vendorGuestName || '',
             billAmount: Number(b.amount) || 0,
-            details: b.details || '',
           }
           if (b.file) {
             const ref = `expenditure_file_${fileCounter++}`
@@ -369,22 +375,35 @@ const FacultyDocumentUploadPage = () => {
         },
       }
 
+      // Build basicDetails - only send organizerId from organizerDetails
+      const builtBasicDetails = basicDetails
+        ? {
+            eventName: basicDetails.eventName || eventName,
+            organizerId: basicDetails.organizerDetails?.facultyId || '',
+            iqacNumber: basicDetails.iqacNumber || '',
+            advanceAmount: basicDetails.advanceAmount || 0,
+            dateOfAdvanceTaken: basicDetails.dateAdvanceTaken || '',
+            purposeOfAdvanceTaken: basicDetails.purposeOfAdvance || '',
+            guestDetails: basicDetails.guestNames || [],
+          }
+        : {
+            eventName,
+            organizerId: '',
+            iqacNumber: '',
+            advanceAmount: 0,
+            dateOfAdvanceTaken: '',
+            purposeOfAdvanceTaken: '',
+            guestDetails: [],
+          }
+
       // Build final payload
       const payload = {
         eventId,
-        basicDetails: basicDetails || {
-          eventName,
-          organizerId: '',
-          iqacNumber: '',
-          advanceAmount: 0,
-          dateOfAdvanceTaken: '',
-          purposeOfAdvanceTaken: '',
-          guestDetails: [],
-        },
+        basicDetails: builtBasicDetails,
         income,
         expenditure,
         primarySdg: otherData.primarySdg || '',
-        secondarySdg: otherData.secondarySdg ? [otherData.secondarySdg] : [],
+        secondarySdg: otherData.secondarySdg || [],
         aboutProgram: otherData.aboutProgram || '',
         participants,
       }

@@ -80,6 +80,16 @@ const OtherDetailsForm = ({ otherData, setOtherData }) => {
     }))
   }
 
+  const handleSecondarySdgToggle = (sdg) => {
+    setOtherData((prev) => {
+      const current = prev.secondarySdg || []
+      const updated = current.includes(sdg)
+        ? current.filter((s) => s !== sdg)
+        : [...current, sdg]
+      return { ...prev, secondarySdg: updated }
+    })
+  }
+
   const handleAboutProgramChange = (value) => {
     setOtherData((prev) => ({
       ...prev,
@@ -162,16 +172,41 @@ const OtherDetailsForm = ({ otherData, setOtherData }) => {
               ))}
             </FloatingSelect>
 
-            <FloatingSelect
-              label="Secondary SDG *"
-              value={otherData.secondarySdg || ''}
-              onChange={(e) => handleSdgChange('secondarySdg', e.target.value)}
-            >
-              <option value="" className="bg-[#151d31]">Select</option>
-              {SDG_OPTIONS.map((sdg) => (
-                <option key={sdg} value={sdg} className="bg-[#151d31]">{sdg}</option>
-              ))}
-            </FloatingSelect>
+            <div>
+              <label className="block text-[11px] text-[#CBC3D7]/60 mb-2">Secondary SDG *</label>
+              <div className="flex flex-wrap gap-2">
+                {SDG_OPTIONS.map((sdg) => (
+                  <button
+                    key={sdg}
+                    type="button"
+                    onClick={() => handleSecondarySdgToggle(sdg)}
+                    className={`px-3 py-1 rounded-md text-xs border transition-colors ${
+                      (otherData.secondarySdg || []).includes(sdg)
+                        ? 'bg-[#8B5CF6] border-[#8B5CF6] text-white'
+                        : 'bg-transparent border-gray-700 text-[#CBC3D7]/60 hover:border-[#8B5CF6]/50'
+                    }`}
+                  >
+                    {sdg}
+                  </button>
+                ))}
+              </div>
+              {(otherData.secondarySdg || []).length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {(otherData.secondarySdg || []).map((sdg) => (
+                    <span key={sdg} className="flex items-center gap-1 px-2 py-0.5 bg-[#8B5CF6]/20 text-[#8B5CF6] rounded text-xs">
+                      {sdg}
+                      <button
+                        type="button"
+                        onClick={() => handleSecondarySdgToggle(sdg)}
+                        className="hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
