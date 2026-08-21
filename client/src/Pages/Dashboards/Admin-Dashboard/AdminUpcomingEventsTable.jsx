@@ -265,15 +265,15 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={event.approvedStatus} />
                                         </td>
-                                    <td className="px-6 py-4">
-                                        <Link
-                                            to={`/dashboard-admin/AdminEventsRequests/${event.eventId}`}
-                                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
-                                            title="Open event details"
-                                        >
-                                            <ExternalLink size={17} />
-                                        </Link>
-                                    </td>
+                                        <td className="px-6 py-4">
+                                            <Link
+                                                to={`/dashboard-admin/AdminEventsRequests/${event.eventId}`}
+                                                className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                                title="Open event details"
+                                            >
+                                                <ExternalLink size={17} />
+                                            </Link>
+                                        </td>
                                     </tr>
                                 )
                             }) : tableRows.map((row, index) => {
@@ -299,15 +299,15 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <StatusBadge status={row.status} />
                                         </td>
-                                    <td className="px-6 py-4">
-                                        <Link
-                                            to={`/dashboard/IndividualEvents/${row.id}`}
-                                            className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
-                                            title="Open request details"
-                                        >
-                                            <ExternalLink size={17} />
-                                        </Link>
-                                    </td>
+                                        <td className="px-6 py-4">
+                                            <Link
+                                                to={`/dashboard-admin/AdminEventsRequests/${row.id}`}
+                                                className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                                title="Open request details"
+                                            >
+                                                <ExternalLink size={17} />
+                                            </Link>
+                                        </td>
                                     </tr>
                                 )
                             })

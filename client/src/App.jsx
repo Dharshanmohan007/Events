@@ -73,6 +73,8 @@ import TransportDetailsPage from "./Pages/IndividualForm/TransportDetailsPage";
 import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
 import PurchaseDetails from "./Pages/IndividualForm/PurchaseDetails";
+import AdminIndividualDetailView from './Pages/IndividualDetailViewFolder/Admin-IndividualDetailView/AdminIndividualDetailView.jsx'
+
 
 // Module request list pages (Event / Individual two-tab)
 import AudioEventsListPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsListPage"
@@ -151,6 +153,10 @@ function AppRoutes() {
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+
+        {/* individual event details route  */}
+        <Route path="adminIndividualDetailView/:eventId" element={<AdminIndividualDetailView />} />
+
 
       </Route>
 
