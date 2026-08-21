@@ -392,7 +392,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       </div>
 
       {/* ── Row 3: Guest WiFi Needed — full width ── */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* <div className="grid grid-cols-1 gap-4">
         <div>
           <CustomSelect
             labelBg="#1E1E35"
@@ -410,13 +410,13 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
             <p className="text-red-400 text-xs mt-1">{errors.guestWifi}</p>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* ── Row 4 & 5: If guest Wi-Fi Exceed 5 + Total Guest Count ──
            • guestWifi = Yes, guestWifiExceed5 != Yes  → Exceed 5 full-width alone
            • guestWifi = Yes, guestWifiExceed5 = Yes   → Exceed 5 + Total Count side by side
       ── */}
-      {showGuestWifiExceed && (
+      {/* {showGuestWifiExceed && (
         <div className={`grid gap-4 ${showTotalGuestCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           <div>
             <CustomSelect
@@ -451,7 +451,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
             </div>
           )}
         </div>
-      )}
+      )} */}
 
       {/* ── Row 6: Requirements · Others ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -697,7 +697,9 @@ export default function IctsForm({
         <h2 className="text-white text-lg font-bold">
           ICTS Details
         </h2>
-
+        <h2 className="text-white text-lg ">
+          If Guest Wifi needed, Kindly Contact <span className="text-[#9E25FD] font-bold">ICTS Admin</span>
+        </h2>
         {/* API error banner */}
         {apiError && (
           <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">

@@ -3,7 +3,7 @@ import { searchFaculty } from "../../services/events/facultySearchService";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 
-export default function OrganizerDetails({ title, data = {}, errors = {}, onChange }) {
+export default function OrganizerDetails({ title, data = {}, errors = {}, onChange, hideSearch = false }) {
   const handle = (field) => (e) => onChange({ ...data, [field]: e.target.value });
   const handleSelect = (field) => (val) =>
     onChange({ ...data, [field]: val });
@@ -47,6 +47,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
       <h2 className='text-purple-400 text-sm font-semibold tracking-wide'>
         {title}
       </h2>
+      {!hideSearch && (
         <div className="relative mb-5">
 
       <label className="block text-white text-sm mb-2">
@@ -104,6 +105,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
       }
 
   </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>

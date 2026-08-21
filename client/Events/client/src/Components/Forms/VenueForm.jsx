@@ -137,9 +137,22 @@ function buildVenuePayload(venueData) {
 function MultiVenueSelect({ label, options, selected, onChange, error, totalParticipants }) {
   const [open, setOpen]               = useState(false);
   const [search, setSearch]           = useState("");
-  const [capacityError, setCapacityError] = useState("");
   const ref       = useRef(null);
   const searchRef = useRef(null);
+
+  let capacityErrorMsg = "";
+  if (totalParticipants > 0 && selected.length > 1) {
+    const capacities = selected
+      .map((name) => VENUES.find((v) => v.venue === name)?.capacity || 0)
+      .filter((c) => c > 0);
+    if (capacities.length > 1) {
+      const currentSum = capacities.reduce((a, b) => a + b, 0);
+      const minCap = Math.min(...capacities);
+      if (currentSum - minCap >= totalParticipants) {
+        capacityErrorMsg = `Total number of participants is ${totalParticipants}, but you have selected too many venues. Please reduce the number of venues.`;
+      }
+    }
+  }
 
   useEffect(() => {
     const handler = (e) => {
@@ -153,31 +166,10 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
     if (open && searchRef.current) searchRef.current.focus();
   }, [open]);
 
-  const getSelectedCapacitySum = (selectedVenues) =>
-    selectedVenues.reduce((sum, name) => {
-      const venue = VENUES.find((v) => v.venue === name);
-      return sum + (venue?.capacity || 0);
-    }, 0);
-
   const toggle = (venue) => {
-    setCapacityError("");
     if (selected.includes(venue)) {
       onChange(selected.filter((v) => v !== venue));
     } else {
-      if (totalParticipants > 0) {
-        const venueObj      = VENUES.find((v) => v.venue === venue);
-        const venueCapacity = venueObj?.capacity || 0;
-        if (venueCapacity > 0) {
-          const currentSum = getSelectedCapacitySum(selected);
-          const newSum     = currentSum + venueCapacity;
-          if (newSum > totalParticipants) {
-            setCapacityError(
-              `Total venue capacity (${newSum}) exceeds total participants (${totalParticipants}). Cannot add "${venue}".`
-            );
-            return;
-          }
-        }
-      }
       onChange([...selected, venue]);
     }
   };
@@ -276,7 +268,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             </div>
 
             {/* Capacity error */}
-            {capacityError && (
+            {capacityErrorMsg && (
               <div className="mx-2 mt-2 flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
                 <svg
                   className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5"
@@ -289,7 +281,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                   <line x1="12" y1="8" x2="12" y2="12" />
                   <line x1="12" y1="16" x2="12.01" y2="16" />
                 </svg>
-                <p className="text-red-400 text-xs">{capacityError}</p>
+                <p className="text-red-400 text-xs">{capacityErrorMsg}</p>
               </div>
             )}
 
@@ -338,7 +330,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
           </div>
         )}
       </div>
-      <ErrorMsg msg={error} />
+      <ErrorMsg msg={error || capacityErrorMsg} />
     </div>
   );
 }

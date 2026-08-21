@@ -79,12 +79,32 @@ function emptyAccommodation() {
   };
 }
 
+function getPastCheckInTimeError(checkIn) {
+  if (!checkIn) return "";
+
+  const now = new Date();
+  const isToday =
+    checkIn.getFullYear() === now.getFullYear() &&
+    checkIn.getMonth() === now.getMonth() &&
+    checkIn.getDate() === now.getDate();
+
+  if (!isToday || checkIn.getTime() >= now.getTime()) return "";
+
+  const currentTime = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `Current time is ${currentTime}, so you cannot choose a past time for today.`;
+}
+
 function validateAccommodation(acc) {
   const e = {};
 
   // Check In / Out
   if (!acc.checkIn) e.checkIn = "Check-in date & time is required";
   if (!acc.checkOut) e.checkOut = "Check-out date & time is required";
+  const pastCheckInTimeError = getPastCheckInTimeError(acc.checkIn);
+  if (pastCheckInTimeError) e.checkIn = pastCheckInTimeError;
 
   // Guest Selection
   if (!acc.selectedGuestIds || acc.selectedGuestIds.length === 0) {
@@ -822,7 +842,13 @@ export default function AccommodationForm({
 
   const updateBlock = (index, updated) => {
     setAccommodations((prev) => prev.map((a, i) => (i === index ? updated : a)));
-    setBlockErrors((prev) => prev.map((e, i) => (i === index ? {} : e)));
+    setBlockErrors((prev) =>
+      prev.map((e, i) => {
+        if (i !== index) return e;
+        const pastCheckInTimeError = getPastCheckInTimeError(updated.checkIn);
+        return pastCheckInTimeError ? { checkIn: pastCheckInTimeError } : {};
+      })
+    );
   };
 
   const addBlock = () => {

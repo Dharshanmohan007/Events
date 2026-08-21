@@ -53,11 +53,11 @@ function validateIctsCard(card, showProctoring) {
                                    e.expectedInternetUsers = "This field is required";
   if (showProctoring && !card.proctorUsers?.trim())
                                    e.proctorUsers          = "This field is required";
-  if (!card.guestWifi)             e.guestWifi             = "This field is required";
-  if (card.guestWifi === "Yes" && !card.guestWifiExceed5)
-                                   e.guestWifiExceed5      = "This field is required";
-  if (card.guestWifi === "Yes" && card.guestWifiExceed5 === "Yes" && !card.totalGuestCount?.trim())
-                                   e.totalGuestCount       = "This field is required";
+//   if (!card.guestWifi)             e.guestWifi             = "This field is required";
+//   if (card.guestWifi === "Yes" && !card.guestWifiExceed5)
+//                                    e.guestWifiExceed5      = "This field is required";
+//   if (card.guestWifi === "Yes" && card.guestWifiExceed5 === "Yes" && !card.totalGuestCount?.trim())
+//                                    e.totalGuestCount       = "This field is required";
   if (!card.requirements || card.requirements.length === 0)
                                    e.requirements          = "Select at least one requirement";
   return e;
@@ -86,9 +86,9 @@ function buildIctsPayload(ictsData) {
         internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
         proctoringUsers:       parseInt(card.proctorUsers) || 0,
-        guestWifiNeeded:       card.guestWifi === "Yes",
-        guestWifiExceed5:      card.guestWifiExceed5 === "Yes",
-        totalGuestCount:       parseInt(card.totalGuestCount) || 0,
+//         guestWifiNeeded:       card.guestWifi === "Yes",
+//         guestWifiExceed5:      card.guestWifiExceed5 === "Yes",
+//         totalGuestCount:       parseInt(card.totalGuestCount) || 0,
         requirements:          card.requirements || [],
         otherRequirements:     card.others || "",
         specialRequirements:   card.specialRequirements || "",
@@ -210,8 +210,8 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
   const update      = (field) => (val) => onChange({ ...data, [field]: val });
   const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
 
-  const showGuestWifiExceed  = data.guestWifi === "Yes";
-  const showTotalGuestCount  = data.guestWifi === "Yes" && data.guestWifiExceed5 === "Yes";
+  // const showGuestWifiExceed  = data.guestWifi === "Yes";
+  // const showTotalGuestCount  = data.guestWifi === "Yes" && data.guestWifiExceed5 === "Yes";
 
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
@@ -298,7 +298,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         )}
       </div>
 
-      {/* ── Row 3: Guest WiFi Needed — full width ── */}
+      {/* ── Row 3: Guest WiFi Needed — full width ──
       <div className="grid grid-cols-1 gap-4">
         <div>
           <CustomSelect
@@ -318,11 +318,12 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           )}
         </div>
       </div>
+      */}
 
       {/* ── Row 4 & 5: If guest Wi-Fi Exceed 5 + Total Guest Count ──
            • guestWifi = Yes, guestWifiExceed5 != Yes  → Exceed 5 full-width alone
            • guestWifi = Yes, guestWifiExceed5 = Yes   → Exceed 5 + Total Count side by side
-      ── */}
+      ──
       {showGuestWifiExceed && (
         <div className={`grid gap-4 ${showTotalGuestCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           <div>
@@ -359,6 +360,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           )}
         </div>
       )}
+      */}
 
       {/* ── Row 6: Requirements · Others ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -593,6 +595,10 @@ export default function IctsForm({
 
         <h2 className="text-white text-lg font-bold">
           ICTS Details – Day {currentDayIndex + 1}
+        </h2>
+        
+        <h2 className="text-white text-lg ">
+          If Guest Wifi needed, Kindly contact <span className="text-[#9B1CFC] font-bold">ICTS Admin.</span>
         </h2>
 
         {/* API error banner */}
