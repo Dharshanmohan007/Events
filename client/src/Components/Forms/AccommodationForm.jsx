@@ -4,48 +4,17 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Phone, Plus, Trash2, Check, Search, ChevronDown } from "lucide-react";
+import { Phone, Plus, Trash2, Check, Search, ChevronDown, AlertTriangle, LoaderCircle } from "lucide-react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-time picker
+import { fetchAvailableRooms } from "../../api/accommodationApi";
 
 
 // ─── Room config ───────────────────────────────────────────────────────────────
-const BASE_ROOM_OPTIONS = [
-  "Suite Room",
-  "Boys Hostel",
-  "Girls Hostel",
-];
-const PLACEMENT_EXTRA_ROOM = "Suite Room 4";
-const SINGLE_CAPACITY_ROOMS = [];
 const DINE_OPTIONS = ["Amenity", "Hostel"];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-function isPlacementLogin() {
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) return false;
-    const payload = JSON.parse(
-      atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))
-    );
-    return (
-      payload?.department?.toLowerCase() === "placement" ||
-      payload?.dept?.toLowerCase() === "placement" ||
-      payload?.role?.toLowerCase() === "placement"
-    );
-  } catch {
-    return false;
-  }
-}
-
-function buildRoomOptions() {
-  const opts = [...BASE_ROOM_OPTIONS];
-  if (isPlacementLogin()) {
-    opts.splice(2, 0, PLACEMENT_EXTRA_ROOM);
-  }
-  return opts;
-}
-
 function flattenGuests(eventDays = []) {
   const seen = new Set();
   const result = [];
@@ -63,14 +32,20 @@ function flattenGuests(eventDays = []) {
   return result;
 }
 
+function formatAccommodationDateTime(date) {
+  if (!date) return "";
+  const value = new Date(date);
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+}
+
 function emptyAccommodation() {
   return {
     checkIn: null,
     checkOut: null,
     selectedGuestIds: [],
     accommodationNeeded: "",
-    roomTypes: [],
-    roomCounts: {},
+    roomSelections: [],
     dine: "",
     dineTypes: [],
     hostelGuests: "",
@@ -117,19 +92,7 @@ function validateAccommodation(acc) {
   }
 
   if (acc.accommodationNeeded === "Yes") {
-    // Room Types
-    if (!acc.roomTypes || acc.roomTypes.length === 0) {
-      e.roomTypes = "Select at least one room type";
-    }
-
-    // Room Counts
-    (acc.roomTypes || []).forEach((roomType) => {
-      const count = parseInt(acc.roomCounts?.[roomType]);
-      if (!count || count <= 0) {
-        if (!e.roomCounts) e.roomCounts = {};
-        e.roomCounts[roomType] = `Enter number of ${roomType} rooms`;
-      }
-    });
+    if (!acc.roomSelections || acc.roomSelections.length === 0) e.roomSelections = "Select at least one room";
   }
 
   // Dine In Required
@@ -169,11 +132,13 @@ function buildPayload(accommodations, allGuests) {
           acc.selectedGuestIds.includes(g.guestId)
         );
 
-        const roomOccupancy = [];
-
-        const roomCategory = acc.accommodationNeeded === "Yes" ? (acc.roomTypes || []).map((rt) => ({
-          type: rt,
-          count: parseInt(acc.roomCounts?.[rt]) || 0,
+        const roomSelections = acc.accommodationNeeded === "Yes" ? (acc.roomSelections || []).map((room) => ({
+          roomId: room.roomId,
+          roomNumber: room.roomNumber,
+          venue: room.venue,
+          occupantCount: Number(room.occupantCount) || 0,
+          requiresAdminConfirmation: room.requiresAdminConfirmation === true,
+          adminContacted: room.adminContacted === true,
         })) : [];
 
         const dineInCounts = [];
@@ -185,15 +150,14 @@ function buildPayload(accommodations, allGuests) {
         }
 
         return {
-          checkInDateTime: acc.checkIn ? acc.checkIn.toISOString() : "",
-          checkOutDateTime: acc.checkOut ? acc.checkOut.toISOString() : "",
+          checkInDateTime: formatAccommodationDateTime(acc.checkIn),
+          checkOutDateTime: formatAccommodationDateTime(acc.checkOut),
           guests: selectedGuests.map((g) => ({
             name: g.name || "",
             mobile: parseInt(g.mobile) || 0,
             gender: g.gender || "",
           })),
-          roomOccupancy,
-          roomCategory,
+          roomSelections,
           dineInRequired: acc.dine === "Yes",
           dineInCounts,
           specialRequirements: acc.special || "",
@@ -243,6 +207,36 @@ function DeleteConfirmModal({ onConfirm, onCancel }) {
               Delete
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminConfirmationModal({ room, onContacted, onRevoke }) {
+  const [contacted, setContacted] = useState(room.adminContacted === true);
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center" role="dialog" aria-modal="true">
+      <div className="absolute inset-0 bg-black/70" />
+      <div className="relative z-10 bg-[#1f1f38] border border-yellow-500/50 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+        <div className="flex gap-3">
+          <AlertTriangle className="text-yellow-400 shrink-0" />
+          <div>
+            <h3 className="text-white font-semibold">Admin confirmation required</h3>
+            <p className="text-gray-300 text-sm mt-2">{room.adminMessage}</p>
+          </div>
+        </div>
+        <label className="flex items-center gap-3 text-white text-sm mt-5 cursor-pointer">
+          <input type="checkbox" checked={contacted} onChange={(event) => {
+            setContacted(event.target.checked);
+            if (event.target.checked) onContacted();
+          }} className="accent-purple-500" />
+          Contacted admin
+        </label>
+        <div className="flex justify-end mt-5">
+          <button type="button" onClick={onRevoke} className="px-4 py-2 rounded-lg border border-red-400/50 text-red-300 hover:bg-red-500/10 text-sm">
+            Revoke this message
+          </button>
         </div>
       </div>
     </div>
@@ -304,7 +298,7 @@ function PhoneIconFilled() {
 }
 
 // ─── Room Type MultiSelect — search, tick on right, violet bg selected, slash-joined display ─
-function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
+function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38", onOpen, loading = false }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef();
@@ -320,12 +314,13 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  const getLabel = (room) => `${room.venue || ""}${room.venue ? " - " : ""}${room.roomNumber}`;
   const filtered = options.filter((o) =>
-    o.toLowerCase().includes(search.toLowerCase())
+    getLabel(o).toLowerCase().includes(search.toLowerCase())
   );
 
   const toggle = (opt) => {
-    if (value.includes(opt)) onChange(value.filter((v) => v !== opt));
+    if (value.some((room) => room.roomId === opt.roomId)) onChange(value.filter((room) => room.roomId !== opt.roomId));
     else onChange([...value, opt]);
   };
 
@@ -333,20 +328,24 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
   const displayText =
     value.length === 0
       ? "Select..."
-      : value.join(" / ");
+      : value.map(getLabel).join(" / ");
 
   return (
     <div className="relative w-full" ref={ref}>
       {/* Trigger */}
       <div
-        className={`relative w-full p-3 rounded-lg bg-transparent border ${
+        className={`relative w-full h-10 px-3 rounded-lg bg-transparent border ${
           error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
         } text-white cursor-pointer flex items-center justify-between transition`}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          const nextOpen = !open;
+          setOpen(nextOpen);
+          if (nextOpen) onOpen?.();
+        }}
       >
         <span
           className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}
-          title={value.length > 0 ? value.join(" / ") : undefined}
+          title={value.length > 0 ? value.map(getLabel).join(" / ") : undefined}
         >
           {displayText}
         </span>
@@ -363,9 +362,9 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
       </label>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full max-h-64 rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-y-auto table-custom-scrollbar">
           {/* Search */}
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-[#3a3a5a]">
+          <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-[#3a3a5a] bg-[#1f1f38]">
             <Search size={13} className="text-gray-400 flex-shrink-0" />
             <input
               autoFocus
@@ -377,22 +376,35 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
             />
           </div>
 
-          {filtered.length === 0 ? (
-            <div className="px-4 py-3 text-xs text-gray-500">No results</div>
+          {loading ? (
+            <div className="px-4 py-3 text-xs text-gray-400 flex items-center gap-2">
+              <LoaderCircle size={13} className="animate-spin" /> Loading available rooms...
+            </div>
+          ) : filtered.length === 0 ? (
+              <div className="px-4 py-3 text-xs text-gray-500">No available rooms</div>
           ) : (
             filtered.map((opt) => {
-              const selected = value.includes(opt);
+              const selected = value.some((room) => room.roomId === opt.roomId);
               return (
                 <div
-                  key={opt}
+                  key={opt.roomId}
                   onClick={() => toggle(opt)}
-                  className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
+                  className={`flex items-center justify-between px-4 py-1.5 cursor-pointer text-sm transition-colors ${
                     selected
                       ? "bg-purple-700/30 text-white"
                       : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
                   }`}
                 >
-                  <span>{opt}</span>
+                  <span className="flex min-w-0 flex-1 items-start gap-2">
+                    {opt.requiresAdminConfirmation && <AlertTriangle size={14} className="text-yellow-400" />}
+                    <span className="min-w-0 flex-1 truncate">
+                      {opt.venue || "Unknown venue"}
+                    </span>
+                    <span className="w-20 flex-shrink-0 leading-5 text-left">
+                      <span className="block">{opt.occupantCount || "-"}</span>
+                      <span className="block text-gray-400">{opt.roomNumber || "Room unavailable"}</span>
+                    </span>
+                  </span>
                   {selected && (
                     <Check size={14} className="text-purple-400 flex-shrink-0" />
                   )}
@@ -490,9 +502,15 @@ function AccommodationBlock({
   allGuests,
   errors = {},
   roomOptions,
+  roomsLoading,
+  roomsError,
+  onRetryRooms,
+  onRevokeRoom,
   canRemove,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [adminRoom, setAdminRoom] = useState(null);
+  const [roomSelectionError, setRoomSelectionError] = useState("");
 
   const selectedCount = acc.selectedGuestIds.length;
   const totalGuests = allGuests.length;
@@ -505,32 +523,50 @@ function AccommodationBlock({
   };
 
   const handleRoomTypeChange = (types) => {
-    const nextCounts = { ...acc.roomCounts };
-    Object.keys(nextCounts).forEach((k) => {
-      if (!types.includes(k)) delete nextCounts[k];
-    });
-    onChange({ ...acc, roomTypes: types, roomCounts: nextCounts });
+    const maxRooms = selectedCount;
+    if (types.length > maxRooms) {
+      setRoomSelectionError(`You can select a maximum of ${maxRooms} rooms for ${selectedCount} selected guest${selectedCount === 1 ? "" : "s"}.`);
+      return;
+    }
+    setRoomSelectionError("");
+    onChange({ ...acc, roomSelections: types });
+    const warningRoom = types.find((room) => room.requiresAdminConfirmation && !room.adminContacted);
+    if (warningRoom) setAdminRoom(warningRoom);
   };
 
-  const handleRoomCount = (roomType, val) => {
-    let parsed = parseInt(val) || 0;
-    if (SINGLE_CAPACITY_ROOMS.includes(roomType) && parsed > 1) parsed = 1;
-    onChange({
-      ...acc,
-      roomCounts: {
-        ...acc.roomCounts,
-        [roomType]: parsed > 0 ? String(parsed) : "",
-      },
-    });
-  };
+  useEffect(() => {
+    if (!adminRoom) {
+      const pendingRoom = acc.roomSelections.find((room) => room.requiresAdminConfirmation && !room.adminContacted);
+      if (pendingRoom) setAdminRoom(pendingRoom);
+    }
+  }, [acc.roomSelections, adminRoom]);
 
   // Removed single/double rooms logic
 
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
+  const filteredRoomOptions = roomOptions.filter((room) => {
+    const capacity = Number(room.occupantCount) || 0;
+    if (selectedCount === 1) return capacity === 2;
+    return true;
+  });
 
   return (
     <>
+      {adminRoom && (
+        <AdminConfirmationModal
+          room={adminRoom}
+          onContacted={() => {
+            onChange({ ...acc, roomSelections: acc.roomSelections.map((room) => room.roomId === adminRoom.roomId ? { ...room, adminContacted: true } : room) });
+            setAdminRoom(null);
+          }}
+          onRevoke={() => {
+            onRevokeRoom(adminRoom.roomId);
+            onChange({ ...acc, roomSelections: acc.roomSelections.filter((room) => room.roomId !== adminRoom.roomId) });
+            setAdminRoom(null);
+          }}
+        />
+      )}
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <DeleteConfirmModal
@@ -645,8 +681,7 @@ function AccommodationBlock({
               onChange({
                 ...acc,
                 accommodationNeeded: val,
-                roomTypes: val === "No" ? [] : acc.roomTypes,
-                roomCounts: val === "No" ? {} : acc.roomCounts,
+                roomSelections: val === "No" ? [] : acc.roomSelections,
               })
             }
             options={["Yes", "No"]}
@@ -660,46 +695,22 @@ function AccommodationBlock({
         {/* Room type multi-select — slash-joined display, search, tick on right */}
         {acc.accommodationNeeded === "Yes" && (
           <div className="mb-4">
+            {roomsError && <p className="text-red-400 text-xs mb-2">{roomsError} <button type="button" onClick={onRetryRooms} className="underline">Retry</button></p>}
+            {roomSelectionError && <p className="text-red-400 text-xs mb-2">{roomSelectionError}</p>}
             <RoomMultiSelect
               label="Type of Room Wanted *"
-              options={roomOptions}
-              value={acc.roomTypes}
+              options={filteredRoomOptions}
+              value={acc.roomSelections}
               onChange={handleRoomTypeChange}
-              error={errors.roomTypes}
+              error={errors.roomSelections}
+              onOpen={onRetryRooms}
+              loading={roomsLoading}
               labelBg="#1f1f38"
             />
           </div>
         )}
 
-        {/* Dynamic room count inputs per selected room type */}
-        {acc.accommodationNeeded === "Yes" && acc.roomTypes.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
-            {acc.roomTypes.map((roomType, i) => {
-              const isLastOdd = acc.roomTypes.length % 2 !== 0 && i === acc.roomTypes.length - 1;
-              return (
-                <div key={roomType} className={isLastOdd ? "md:col-span-2" : ""}>
-                  <CustomInput
-                    label={`No. of ${roomType} Rooms *`}
-                    value={acc.roomCounts?.[roomType] || ""}
-                    onChange={(e) => handleRoomCount(roomType, e.target.value)}
-                    type="number"
-                    labelBg="#1f1f38"
-                  />
-                  {errors.roomCounts?.[roomType] && (
-                    <p className="text-red-400 text-xs mt-1">
-                      {errors.roomCounts[roomType]}
-                    </p>
-                  )}
-                  {SINGLE_CAPACITY_ROOMS.includes(roomType) && (
-                    <p className="text-yellow-400 text-xs mt-1">
-                      Only 1 room available for {roomType}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
+        {errors.roomSelections && <p className="text-red-400 text-xs mt-1">{errors.roomSelections}</p>}
 
         {/* Dine-in */}
         <div className="mb-4">
@@ -809,7 +820,6 @@ export default function AccommodationForm({
   eventDays: eventDaysProp,
   errors: propErrors = {},
 }) {
-  const roomOptions = buildRoomOptions();
   const allGuests = flattenGuests(eventDaysProp || []);
 
   const [accommodations, setAccommodations] = useState(() => {
@@ -826,6 +836,10 @@ export default function AccommodationForm({
   const [blockErrors, setBlockErrors] = useState([{}]);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [roomAvailability, setRoomAvailability] = useState({});
+  const [roomLoading, setRoomLoading] = useState({});
+  const [roomErrors, setRoomErrors] = useState({});
+  const [revokedRoomIds, setRevokedRoomIds] = useState(() => new Set());
 
   const accommodationsRef = useRef(accommodations);
   useEffect(() => { accommodationsRef.current = accommodations; }, [accommodations]);
@@ -839,6 +853,20 @@ export default function AccommodationForm({
   useEffect(() => {
     if (onChangeRef.current) onChangeRef.current({ accommodations });
   }, [accommodations]);
+
+  const loadRooms = useCallback(async (index, acc) => {
+    if (acc.accommodationNeeded !== "Yes" || !acc.checkIn || !acc.checkOut) return;
+    setRoomLoading((prev) => ({ ...prev, [index]: true }));
+    setRoomErrors((prev) => ({ ...prev, [index]: "" }));
+    try {
+      const rooms = await fetchAvailableRooms(formatAccommodationDateTime(acc.checkIn), formatAccommodationDateTime(acc.checkOut));
+      setRoomAvailability((prev) => ({ ...prev, [index]: rooms.filter((room) => !revokedRoomIds.has(room.roomId)) }));
+    } catch (error) {
+      setRoomErrors((prev) => ({ ...prev, [index]: error.message || "Unable to load room availability." }));
+    } finally {
+      setRoomLoading((prev) => ({ ...prev, [index]: false }));
+    }
+  }, [revokedRoomIds]);
 
   const updateBlock = (index, updated) => {
     setAccommodations((prev) => prev.map((a, i) => (i === index ? updated : a)));
@@ -859,6 +887,11 @@ export default function AccommodationForm({
   const removeBlock = (index) => {
     setAccommodations((prev) => prev.filter((_, i) => i !== index));
     setBlockErrors((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const revokeRoom = (roomId) => {
+    setRevokedRoomIds((prev) => new Set([...prev, roomId]));
+    setRoomAvailability((prev) => Object.fromEntries(Object.entries(prev).map(([key, rooms]) => [key, rooms.filter((room) => room.roomId !== roomId)])));
   };
 
   const handleNext = useCallback(async () => {
@@ -955,7 +988,11 @@ export default function AccommodationForm({
           onRemove={() => removeBlock(index)}
           allGuests={allGuests}
           errors={blockErrors[index] || {}}
-          roomOptions={roomOptions}
+          roomOptions={(roomAvailability[index] || []).filter((room) => !revokedRoomIds.has(room.roomId))}
+          roomsLoading={roomLoading[index]}
+          roomsError={roomErrors[index]}
+          onRetryRooms={() => loadRooms(index, acc)}
+          onRevokeRoom={revokeRoom}
           canRemove={index > 0}
         />
       ))}
