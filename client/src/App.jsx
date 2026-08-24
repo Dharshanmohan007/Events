@@ -155,8 +155,8 @@ function AppRoutes() {
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
         {/* individual event details route  */}
-        <Route path="adminIndividualDetailView/:eventId" element={<AdminIndividualDetailView />} />
 
+        <Route path="adminIndividualDetailView/:eventId" element={<AdminIndividualDetailView />} />
 
       </Route>
 

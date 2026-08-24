@@ -5,13 +5,29 @@ import {
   Phone,
   FileText, ClipboardList
 } from 'lucide-react';
-const IndividualPurchaseDetailPage = () => {
+const IndividualPurchaseDetailPage = ({ data }) => {
+  console.log("purchase data : ", data)
+
+
+  // function to get field data 
+  const students = data?.data?.purchases?.[0]?.students;
+
+  const trophyGift = students?.giftItems?.find(
+    (item) => item.giftType === "Trophy"
+  );
+
+  const basicTrophy = trophyGift?.trophy?.find(
+    (item) => item.trophyType === "Basic"
+  );
+
+  const eliteTrophy = trophyGift?.trophy?.find(
+    (item) => item.trophyType === "Elite"
+  );
+
   return (
     <main>
       <breadcrumb className="flex items-center gap-2">
         <h1 className="text-gray-500">Purchase Request List</h1>
-        <ChevronRight size={16} className="" />
-        <h1 className="text-white font-medium">Event Name</h1>
         <ChevronRight size={16} className="" />
         <button className="bg-green-200/10 px-3 py-2 rounded-full text-xs text-[#34D399]">Department</button>
       </breadcrumb>
@@ -33,7 +49,7 @@ const IndividualPurchaseDetailPage = () => {
               </span>
 
               <span className="text-[13px] font-semibold text-white">
-                100
+                {data?.data?.purchases[0].requirementNeeded[0]?.hardCount}
               </span>
             </div>
 
@@ -44,7 +60,7 @@ const IndividualPurchaseDetailPage = () => {
               </span>
 
               <span className="text-[13px] font-semibold text-white">
-                100
+                {data?.data?.purchases[0].requirementNeeded[1]?.hardCount}
               </span>
             </div>
           </div>
@@ -66,7 +82,8 @@ const IndividualPurchaseDetailPage = () => {
                 </span>
 
                 <span className="text-[13px] font-semibold text-white">
-                  01
+                  {/* {data?.data?.purchases[0]?.students?.giftItems[0].} */}
+                  {basicTrophy?.quantity}
                 </span>
               </div>
 
@@ -101,7 +118,7 @@ const IndividualPurchaseDetailPage = () => {
                 </span>
 
                 <span className="text-[13px] font-semibold text-white">
-                  50
+                  {data?.data?.purchases[0]?.students?.registrationKitQty}
                 </span>
               </div>
 
@@ -152,11 +169,7 @@ const IndividualPurchaseDetailPage = () => {
 
               {/* Description */}
               <p className="text-[14px] leading-6 text-slate-300">
-                Lorem Ipsum is simply dummy text of the printing and typesetting
-                industry. Lorem Ipsum has been the industry's standard dummy text
-                ever since the 1500s Lorem Ipsum is simply dummy text of the
-                printing and typesetting industry. Lorem Ipsum has been the
-                industry's standard dummy text ever since the 1500s
+                {data?.data?.purchases[0]?.students?.specialRequirements || "--"}
               </p>
 
             </div>
@@ -165,9 +178,9 @@ const IndividualPurchaseDetailPage = () => {
         </div>
 
         {/* guests  */}
-         <div className="bg-[#141c30] mt-3">
+        <div className="bg-[#141c30] mt-3">
 
-       
+
           {/* Students Container */}
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-3">
 
@@ -271,11 +284,7 @@ const IndividualPurchaseDetailPage = () => {
 
               {/* Description */}
               <p className="text-[14px] leading-6 text-slate-300">
-                Lorem Ipsum is simply dummy text of the printing and typesetting
-                industry. Lorem Ipsum has been the industry's standard dummy text
-                ever since the 1500s Lorem Ipsum is simply dummy text of the
-                printing and typesetting industry. Lorem Ipsum has been the
-                industry's standard dummy text ever since the 1500s
+                {data?.data?.purchases[0]?.guests?.specialRequirements || "--"}
               </p>
 
             </div>

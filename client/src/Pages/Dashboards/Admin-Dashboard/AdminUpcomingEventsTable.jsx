@@ -301,7 +301,15 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         </td>
                                         <td className="px-6 py-4">
                                             <Link
-                                                to={`/dashboard-admin/AdminEventsRequests/${row.id}`}
+                                                to={`/dashboard/IndividualEvents/${row.id}`}
+                                                className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                                                title="Open request details"
+                                            >
+                                                <ExternalLink className="text-red-500" size={17} />
+                                            </Link>
+                                            {/* new  */}
+                                            <Link
+                                                to={`/dashboard-admin/adminIndividualDetailView/${row.id}`}
                                                 className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
                                                 title="Open request details"
                                             >

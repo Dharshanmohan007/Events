@@ -6,15 +6,29 @@ import {
 } from 'lucide-react';
 import React from 'react';
 
-const IndividualFoodDetailPage = () => {
+const IndividualFoodDetailPage = ({ data }) => {
+  //  ===================== functions =============================
+
+  // format date 
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+
+  //  ---------------------------- jsx -------------------------------------------------
   return (
     <main>
       <breadcrumb className="flex items-center gap-2">
         <h1 className="text-gray-500">Food Request List</h1>
         <ChevronRight size={16} className="" />
-        <h1 className="text-white font-medium">Event Name</h1>
-        <ChevronRight size={16} className="" />
-        <button className="bg-green-200/10 px-3 py-2 rounded-full text-xs text-[#34D399]">Department</button>
+        {/* <h1 className="text-white font-medium">Event Name</h1>
+        <ChevronRight size={16} className="" /> */}
+        <button className="bg-green-200/10 px-3 py-2 rounded-full text-xs text-[#34D399]">{data?.employeeDetail?.department}</button>
       </breadcrumb>
 
 
@@ -37,7 +51,7 @@ const IndividualFoodDetailPage = () => {
                 </div>
 
                 <span className="text-sm font-semibold text-white">
-                  12/05/2026
+                  {formatDate(data?.data?.date)}
                 </span>
               </div>
 
@@ -47,7 +61,9 @@ const IndividualFoodDetailPage = () => {
                 </span>
 
                 <span className="text-sm font-semibold text-white">
-                  VIP&nbsp; / &nbsp;Trainer&nbsp; / &nbsp;Placement
+                  {data?.data?.resourcePersonType.map((item) => {
+                    return <div><p> &nbsp; {item} / </p></div>
+                  })}
                 </span>
               </div>
             </div>
@@ -60,7 +76,7 @@ const IndividualFoodDetailPage = () => {
                 </span>
 
                 <span className="text-sm font-semibold text-white">
-                  5 Members
+                  {data?.data?.numberOfResourcePersons} Members
                 </span>
               </div>
 
@@ -70,7 +86,7 @@ const IndividualFoodDetailPage = () => {
                 </span>
 
                 <span className="text-sm font-semibold text-white">
-                  2 Members
+                  {data?.data?.numberOfInternalAccompanyingStaff} Members
                 </span>
               </div>
             </div>
@@ -91,7 +107,9 @@ const IndividualFoodDetailPage = () => {
                   </p>
 
                   <p className="text-sm font-semibold text-white">
-                    Surya Chandran
+                    {data?.data?.accompanyingStaff.map((item) => {
+                      return <div className="flex items-center gap-1"><p>{item.name}</p></div>
+                    })}
                   </p>
                 </div>
               </div>
@@ -110,7 +128,9 @@ const IndividualFoodDetailPage = () => {
                   </p>
 
                   <p className="text-sm font-semibold text-white">
-                    1234567890
+                    {data?.data?.accompanyingStaff.map((item) => {
+                      return <div className="flex items-center gap-1"><p>{item.mobile}</p></div>
+                    })}
                   </p>
                 </div>
               </div>
@@ -281,11 +301,7 @@ const IndividualFoodDetailPage = () => {
           </div>
 
           <p className="text-[14px] font-normal leading-[18px] text-[#c1c4cf]/80">
-            Lorem Ipsum is simply dummy text of the printing and typesetting
-            industry. Lorem Ipsum has been the industry's standard dummy text ever
-            since the 1500s Lorem Ipsum is simply dummy text of the printing and
-            typesetting industry. Lorem Ipsum has been the industry's standard
-            dummy text ever since the 1500s
+            {data?.data?.specialRequirements}
           </p>
         </div>
 

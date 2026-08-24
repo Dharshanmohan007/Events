@@ -1,10 +1,4 @@
-import {
-  ChevronRight, CalendarDays,
-  UserRound,
-  Phone,
-  FileText,
-  FileCheck2
-} from 'lucide-react';
+import { ChevronRight, CalendarDays, UserRound, Phone, FileText, FileCheck2 } from 'lucide-react';
 
 import React from 'react';
 
@@ -25,7 +19,6 @@ const IndividualMediaDetailPage = () => {
 
         {/* ============================== poster section  ==========================  */}
 
-
         <div className="mt-4  ">
 
           {/* Main Container */}
@@ -43,15 +36,15 @@ const IndividualMediaDetailPage = () => {
                 <FileText
                   size={11}
                   strokeWidth={1.8}
-                  className="text-slate-300"
+                  className="text-white"
                 />
 
-                <span className="text-[14px] font-medium text-slate-300">
+                <span className="text-[14px] font-medium text-white">
                   Content for Poster
                 </span>
               </div>
 
-              <p className="text-[12px]  leading-4 text-slate-300">
+              <p className="text-[12px]  leading-4 text-white">
                 Lorem Ipsum is simply dummy text of the printing and typesetting
                 industry. Lorem Ipsum has been the industry's standard dummy text
                 ever since the 1500s Lorem Ipsum is simply dummy text of the
@@ -66,7 +59,7 @@ const IndividualMediaDetailPage = () => {
             <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-500/30 bg-[#2a3347]">
 
               <div className="flex items-center px-3 py-2.5">
-                <span className="text-[13px] text-slate-300">
+                <span className="text-[13px] text-white">
                   Reference poster
                 </span>
               </div>
@@ -79,7 +72,7 @@ const IndividualMediaDetailPage = () => {
                   className="text-emerald-400"
                 />
 
-                <span className="text-[13px] font-medium text-slate-300">
+                <span className="text-[13px] font-medium text-white">
                   Previous Event Completion Document.pdf
                 </span>
 
@@ -98,16 +91,16 @@ const IndividualMediaDetailPage = () => {
                 <FileText
                   size={11}
                   strokeWidth={1.8}
-                  className="text-slate-300"
+                  className="text-white"
                 />
 
-                <span className="text-[14px] font-medium text-slate-300">
+                <span className="text-[14px] font-medium text-white">
                   Content for Certificate
                 </span>
 
               </div>
 
-              <p className="text-[13px] leading-4 text-slate-300">
+              <p className="text-[13px] leading-4 text-white">
                 Lorem Ipsum is simply dummy text of the printing and typesetting
                 industry. Lorem Ipsum has been the industry's standard dummy text
                 ever since the 1500s Lorem Ipsum is simply dummy text of the
@@ -123,7 +116,7 @@ const IndividualMediaDetailPage = () => {
 
               <div className="flex items-center px-3 py-2.5">
 
-                <span className="text-[13px] text-slate-300">
+                <span className="text-[13px] text-white">
                   Reference Certificate
                 </span>
 
@@ -137,7 +130,7 @@ const IndividualMediaDetailPage = () => {
                   className="text-emerald-400"
                 />
 
-                <span className="text-[13px] font-medium text-slate-300">
+                <span className="text-[13px] font-medium text-white">
                   Previous Event Completion Document.pdf
                 </span>
 
@@ -156,16 +149,16 @@ const IndividualMediaDetailPage = () => {
                 <FileText
                   size={11}
                   strokeWidth={1.8}
-                  className="text-slate-300"
+                  className="text-white"
                 />
 
-                <span className="text-[14px] font-medium text-slate-300">
+                <span className="text-[14px] font-medium text-white">
                   Content for Trophy
                 </span>
 
               </div>
 
-              <p className="text-[13px] leading-4 text-slate-300">
+              <p className="text-[13px] leading-4 text-white">
                 Lorem Ipsum is simply dummy text of the printing and typesetting
                 industry. Lorem Ipsum has been the industry's standard dummy text
                 ever since the 1500s Lorem Ipsum is simply dummy text of the
@@ -188,16 +181,16 @@ const IndividualMediaDetailPage = () => {
                   <FileText
                     size={11}
                     strokeWidth={1.8}
-                    className="text-slate-300"
+                    className="text-white"
                   />
 
-                  <span className="text-[14px] font-medium text-slate-300">
+                  <span className="text-[14px] font-medium text-white">
                     Display Requirement
                   </span>
 
                 </div>
 
-                <p className="mb-2 text-[13px] font-medium text-slate-300">
+                <p className="mb-2 text-[13px] font-medium text-white">
                   Flex
                 </p>
 
@@ -216,10 +209,10 @@ const IndividualMediaDetailPage = () => {
                   <FileText
                     size={11}
                     strokeWidth={1.8}
-                    className="text-slate-300"
+                    className="text-white"
                   />
 
-                  <span className="text-[14px] font-medium text-slate-300">
+                  <span className="text-[14px] font-medium text-white">
                     Size Requirement
                   </span>
 
@@ -227,7 +220,7 @@ const IndividualMediaDetailPage = () => {
 
                 <div className="mb-2 flex items-center justify-between">
 
-                  <span className="text-[13px] text-slate-300">
+                  <span className="text-[13px] text-white">
                     Size for Flex
                   </span>
 
@@ -239,7 +232,7 @@ const IndividualMediaDetailPage = () => {
 
                 <div className="flex items-center justify-between">
 
-                  <span className="text-[13px] text-slate-300">
+                  <span className="text-[13px] text-white">
                     Size for Glass Sticker
                   </span>
 
@@ -266,10 +259,10 @@ const IndividualMediaDetailPage = () => {
                   <CalendarDays
                     size={11}
                     strokeWidth={1.8}
-                    className="text-slate-300"
+                    className="text-white"
                   />
 
-                  <span className="text-[13px] text-slate-300">
+                  <span className="text-[13px] text-white">
                     Delivery Date
                   </span>
 
@@ -285,7 +278,7 @@ const IndividualMediaDetailPage = () => {
               {/* Priority */}
               <div className="flex items-center justify-between px-3 py-3">
 
-                <span className="text-[13px] text-slate-300">
+                <span className="text-[13px] text-white">
                   Priority
                 </span>
 
@@ -307,16 +300,16 @@ const IndividualMediaDetailPage = () => {
                 <FileText
                   size={11}
                   strokeWidth={1.8}
-                  className="text-slate-300"
+                  className="text-white"
                 />
 
-                <span className="text-[14px] font-medium text-slate-300">
+                <span className="text-[14px] font-medium text-white">
                   Special Requirement
                 </span>
 
               </div>
 
-              <p className="text-[13px] leading-4 text-slate-300">
+              <p className="text-[13px] leading-4 text-white">
                 Lorem Ipsum is simply dummy text of the printing and typesetting
                 industry. Lorem Ipsum has been the industry's standard dummy text
                 ever since the 1500s Lorem Ipsum is simply dummy text of the
@@ -330,7 +323,6 @@ const IndividualMediaDetailPage = () => {
         </div>
 
         {/* ============================== Video section  ==========================  */}
-
 
 
 
