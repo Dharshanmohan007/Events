@@ -667,11 +667,16 @@ const validateFoodData = (foodData) => {
 };
 
 const validateAccommodationData = (accommodationData) => {
-  const errors = {};
-  if (!accommodationData.checkIn) errors.checkIn = "Check-in date is required";
-  if (!accommodationData.checkOut) errors.checkOut = "Check-out date is required";
-  if (!accommodationData.roomType) errors.roomType = "Room type is required";
-  return errors;
+  const blocks = accommodationData?.accommodations || [];
+  return blocks.map((acc) => {
+    const errors = {};
+    if (!acc.checkIn) errors.checkIn = "Check-in date is required";
+    if (!acc.checkOut) errors.checkOut = "Check-out date is required";
+    if (acc.accommodationNeeded === "Yes" && (!acc.roomSelections || acc.roomSelections.length === 0)) {
+      errors.roomSelections = "Select at least one room";
+    }
+    return errors;
+  });
 };
 
 // in Form.jsx, near the other buildXPayload helpers
@@ -691,6 +696,13 @@ const flattenGuestsForAccommodation = (eventDays = []) => {
   return result;
 };
 
+const formatAccommodationDateTime = (date) => {
+  if (!date) return "";
+  const value = new Date(date);
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+};
+
 const buildAccommodationPayload = (accommodationState, eventDays) => {
   const allGuests = flattenGuestsForAccommodation(eventDays);
   const accommodations = (accommodationState?.accommodations || []).map((acc) => {
@@ -698,14 +710,14 @@ const buildAccommodationPayload = (accommodationState, eventDays) => {
       (acc.selectedGuestIds || []).includes(g.guestId)
     );
 
-    const roomOccupancy = [];
-    if (parseInt(acc.singleRooms) > 0) roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
-    if (parseInt(acc.doubleRooms) > 0) roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
-
-    const roomCategory = (acc.roomTypes || []).map((rt) => ({
-      type: rt,
-      count: parseInt(acc.roomCounts?.[rt]) || 0,
-    }));
+    const roomSelections = acc.accommodationNeeded === "Yes" ? (acc.roomSelections || []).map((room) => ({
+      roomId: room.roomId,
+      roomNumber: room.roomNumber,
+      venue: room.venue,
+      occupantCount: Number(room.occupantCount) || 0,
+      requiresAdminConfirmation: room.requiresAdminConfirmation === true,
+      adminContacted: room.adminContacted === true,
+    })) : [];
 
     const dineInCounts = [];
     if (acc.dine === "Yes") {
@@ -716,12 +728,12 @@ const buildAccommodationPayload = (accommodationState, eventDays) => {
     }
 
     return {
-      checkInDateTime: acc.checkIn ? new Date(acc.checkIn).toISOString() : "",
-      checkOutDateTime: acc.checkOut ? new Date(acc.checkOut).toISOString() : "",
+      checkInDateTime: formatAccommodationDateTime(acc.checkIn),
+      checkOutDateTime: formatAccommodationDateTime(acc.checkOut),
       guests: selectedGuests.map((g) => ({
         name: g.name || "", mobile: parseInt(g.mobile) || 0, gender: g.gender || "",
       })),
-      roomOccupancy, roomCategory,
+      roomSelections,
       dineInRequired: acc.dine === "Yes",
       dineInCounts,
       specialRequirements: acc.special || "",
@@ -956,13 +968,15 @@ function hydrateEventData(apiData) {
         const entry = {
           checkIn: acc.checkInDateTime || null,
           checkOut: acc.checkOutDateTime || null,
-          singleRooms: "",
-          doubleRooms: "",
-          suiteRooms: "",
-          dBlockRooms: "",
-          roomType: "",
-          roomTypes: (acc.roomCategory || []).map((r) => r.type),
-          roomCounts: Object.fromEntries((acc.roomCategory || []).map((r) => [r.type, String(r.count)])),
+          roomSelections: (acc.roomSelections || []).map((room) => ({
+            roomId: room.roomId,
+            roomNumber: room.roomNumber,
+            venue: room.venue,
+            occupantCount: room.occupantCount || room.capacity || 0,
+            requiresAdminConfirmation: room.requiresAdminConfirmation === true,
+            adminContacted: room.adminContacted === true,
+            adminMessage: room.message || "This room was occupied immediately before the requested time. Please contact the admin team to confirm room availability.",
+          })),
           dine: acc.dineInRequired ? "Yes" : "No",
           dineTypes: (acc.dineInCounts || []).map((d) => d.type),
           hostelGuests: String((acc.dineInCounts || []).find((d) => d.type === "Hostel")?.count || "1"),
@@ -970,7 +984,7 @@ function hydrateEventData(apiData) {
           selectedGuestIds: [],
           guests: acc.guests || [],
           special: acc.specialRequirements || "",
-          accommodationNeeded: (acc.roomCategory && acc.roomCategory.length > 0) ? "Yes" : "No",
+          accommodationNeeded: (acc.roomSelections && acc.roomSelections.length > 0) ? "Yes" : "No",
         };
         return entry;
       }),

@@ -7,6 +7,8 @@ const adminRoutes = {
     dashboard: '/dashboard-admin',
     requests: '/dashboard-admin/AdminEventsRequests',
     venues: '/dashboard-admin/VenueManagement',
+    rooms: '/dashboard-admin/RoomManagement',
+    eventtype: '/dashboard-admin/EventTypeManagement',
     faculty: '/dashboard-admin/FacultyManagement',
     admins: '/dashboard-admin/AdminManagement',
     reports: '/dashboard-admin/reports',
@@ -30,6 +32,8 @@ const   AdminDashboardHeader = () => {
                         {/* <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink> */}
                         <NavLink to={adminRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
                         <NavLink to={adminRoutes.venues} className={getNavLinkClassName}>Venue Management</NavLink>
+                        <NavLink to={adminRoutes.rooms} className={getNavLinkClassName}>Room Management</NavLink>
+                        <NavLink to={adminRoutes.eventtype} className={getNavLinkClassName}>Event Type Management</NavLink>
                         <NavLink to={adminRoutes.faculty} className={getNavLinkClassName}>Faculty Management</NavLink>
                         {/* <NavLink to={adminRoutes.admins} className={getNavLinkClassName}>Admin Management</NavLink> */}
                         <NavLink to={adminRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>

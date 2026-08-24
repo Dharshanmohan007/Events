@@ -49,6 +49,24 @@ function sanitiseForm(f) {
   };
 }
 
+function getPastPickupTimeError(pickupDate) {
+  if (!pickupDate) return "";
+
+  const now = new Date();
+  const isToday =
+    pickupDate.getFullYear() === now.getFullYear() &&
+    pickupDate.getMonth() === now.getMonth() &&
+    pickupDate.getDate() === now.getDate();
+
+  if (!isToday || pickupDate.getTime() >= now.getTime()) return "";
+
+  const currentTime = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `Current time is ${currentTime}, so you cannot choose a past time for today.`;
+}
+
 function validateTransport(forms) {
   if (!forms || forms.length === 0) {
     return { _global: "Enter at least one transport entry" };
@@ -57,6 +75,8 @@ function validateTransport(forms) {
     const err = {};
     if (!form.pickupDate) err.pickupDate = "Pickup date & time is required";
     if (!form.dropDate) err.dropDate = "Drop date & time is required";
+    const pastPickupTimeError = getPastPickupTimeError(form.pickupDate);
+    if (pastPickupTimeError) err.pickupDate = pastPickupTimeError;
     
     if (form.pickupDate && form.dropDate && form.pickupDate.getTime() === form.dropDate.getTime()) {
       err.dropDate = "Pickup and drop date and time are same";
@@ -808,35 +828,31 @@ export default function TransportForm({
       return updated;
     });
     setErrors((prev) => {
-      if (!Array.isArray(prev)) return prev;
-      const updated = [...prev];
+      const updated = Array.isArray(prev) ? [...prev] : [];
       updated[index] = { ...(updated[index] || {}), [field]: "" };
       return updated;
     });
 
-    // Real-time check: if pickup and drop dates are the same, show error immediately
+    // Real-time check: reject past pickup times today and equal pickup/drop times.
     if (field === "pickupDate" || field === "dropDate") {
       setForms((currentForms) => {
         const form = currentForms[index];
         const pickup = field === "pickupDate" ? value : form.pickupDate;
         const drop = field === "dropDate" ? value : form.dropDate;
+        const pastPickupTimeError = getPastPickupTimeError(pickup);
 
-        if (pickup && drop && pickup.getTime() === drop.getTime()) {
-          setErrors((prev) => {
-            const errArr = Array.isArray(prev) ? [...prev] : [];
-            errArr[index] = { ...(errArr[index] || {}), dropDate: "Pickup and drop date and time are same" };
-            return errArr;
-          });
-        } else {
-          setErrors((prev) => {
-            if (!Array.isArray(prev)) return prev;
-            const errArr = [...prev];
-            if (errArr[index]) {
-              errArr[index] = { ...errArr[index], dropDate: "" };
-            }
-            return errArr;
-          });
-        }
+        setErrors((prev) => {
+          const errArr = Array.isArray(prev) ? [...prev] : [];
+          errArr[index] = {
+            ...(errArr[index] || {}),
+            pickupDate: pastPickupTimeError,
+            dropDate:
+              pickup && drop && pickup.getTime() === drop.getTime()
+                ? "Pickup and drop date and time are same"
+                : "",
+          };
+          return errArr;
+        });
 
         return currentForms; // don't modify forms
       });

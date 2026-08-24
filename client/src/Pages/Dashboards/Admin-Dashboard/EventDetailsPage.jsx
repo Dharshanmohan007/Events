@@ -16,7 +16,7 @@ import RejectionReasonPopup from './RejectionReasonPopup'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 import { jwtDecode } from 'jwt-decode'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const DEPARTMENT_TAB_MAP = {
   venue: { name: 'Venue Details', color: '#F20768' },

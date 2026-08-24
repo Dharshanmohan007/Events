@@ -73,7 +73,7 @@ export default function EventOrganizerDetails({
   return (
     <div className="w-full px-2 py-6 sm:px-1 rounded-xl">
       <h1 className="text-white text-base sm:text-lg font-bold mb-6 playfair">
-        Event Organizer Details
+        Event Organizer Details 
       </h1>
 
       {/* Completion of previous Event documentation */}
