@@ -88,6 +88,7 @@ import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
+import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -148,6 +149,7 @@ function AppRoutes() {
         <Route path="AdminEventsRequests" element={<AdminEventsListPage />} />
         <Route path="VenueManagement" element={<VenueManagementPage />} />
         <Route path="RoomManagement" element={<RoomManagement/>}/>
+        <Route path="EventTypeManagement" element={<EventTypeManagement/>}/>
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
