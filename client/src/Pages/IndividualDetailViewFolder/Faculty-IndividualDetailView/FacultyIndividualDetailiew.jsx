@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-
+import FacultyDahsboardHeader from "../../Dashboards/Faculty-Dashboard/FacultyDahsboardHeader";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 import IndividualFoodDetailPage from "../IndividualFoodDetailPage";
 import IndividualPurchaseDetailPage from "../IndividualPurchaseDetailPage";
 import IndividualTrasnportDetailPage from "../IndividualTrasnportDetailPage";
 import IndividualMediaDetailPage from "../IndividualMediaDetailPage";
-import { useParams } from "react-router-dom";
-import axios from "axios";
 
-const AdminIndividualDetailView = () => {
+const FacultyIndividualDetailiew = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   const { eventId } = useParams();
 
@@ -43,26 +43,25 @@ const AdminIndividualDetailView = () => {
     fetchData();
   }, [eventId]);
 
-  // console.log("individual data : ", data[0])
-  // console.log("Form type  : ", formType)
-
   return (
-    <div className="main-container text-white p-5">
-      {formType?.toLowerCase() == "food" && (
-        <IndividualFoodDetailPage data={data[0]} />
-      )}
-      {formType?.toLowerCase() == "purchase" && (
-        <IndividualPurchaseDetailPage data={data[0]} />
-      )}
-      {formType?.toLowerCase() == "transport" && (
-        <IndividualTrasnportDetailPage data={data[0]} />
-      )}
-      {/* {formType?.toLowerCase() == "media" && ( */}
-        <IndividualMediaDetailPage data={data[0]} />
-      {/* )} */}
-
-    </div>
+    <>
+      <FacultyDahsboardHeader />
+        <div className="main-container bg-[#0b1326] min-h-[calc(100vh-60px)] text-white p-5">
+            {formType?.toLowerCase() == "food" && (
+            <IndividualFoodDetailPage data={data[0]} />
+            )}
+            {formType?.toLowerCase() == "purchase" && (
+            <IndividualPurchaseDetailPage data={data[0]} />
+            )}
+            {formType?.toLowerCase() == "transport" && (
+            <IndividualTrasnportDetailPage data={data[0]} />
+            )}
+            {formType?.toLowerCase() == "media" && (
+            <IndividualMediaDetailPage data={data[0]} />
+            )}
+        </div>
+    </>
   );
 };
 
-export default AdminIndividualDetailView;
+export default FacultyIndividualDetailiew;

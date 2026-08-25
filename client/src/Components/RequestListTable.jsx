@@ -3,7 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ThemedDatePicker from "./ThemedDatePicker";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 
 // ── Safe string helpers ───────────────────────────────────────────────
 // API may return objects for some fields (e.g. status, department).
@@ -13,7 +14,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://sece-events.o
 const safeString = (value, fallback = "-") => {
   if (value === null || value === undefined) return fallback;
   if (typeof value === "string") return value || fallback;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  if (typeof value === "number" || typeof value === "boolean")
+    return String(value);
   if (typeof value === "object") {
     try {
       const entries = Object.entries(value).filter(([, v]) => v != null);
@@ -30,7 +32,11 @@ const formatDate = (dateValue) => {
   if (!dateValue) return "-";
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return safeString(dateValue);
-  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 };
 
 const toDateKey = (dateValue) => {
@@ -47,9 +53,15 @@ const normalizeEventRequest = (event) => ({
   id: event.eventId || event.id,
   eventName: safeString(event.eventName),
   eventType: safeString(event.eventType),
-  venues: Array.isArray(event.venues) ? event.venues.map(safeString) : [safeString(event.eventVenue || event.venue)].filter(Boolean),
-  dates: Array.isArray(event.dates) ? event.dates.map(formatDate) : [event.eventDate || event.requiredDate].filter(Boolean).map(formatDate),
-  dateKeys: Array.isArray(event.dates) ? event.dates.map(toDateKey) : [event.eventDate || event.requiredDate].filter(Boolean).map(toDateKey),
+  venues: Array.isArray(event.venues)
+    ? event.venues.map(safeString)
+    : [safeString(event.eventVenue || event.venue)].filter(Boolean),
+  dates: Array.isArray(event.dates)
+    ? event.dates.map(formatDate)
+    : [event.eventDate || event.requiredDate].filter(Boolean).map(formatDate),
+  dateKeys: Array.isArray(event.dates)
+    ? event.dates.map(toDateKey)
+    : [event.eventDate || event.requiredDate].filter(Boolean).map(toDateKey),
   department: safeString(event.organizingDepartment || event.department),
   approvedStatus: event.adminApproval ? "Approved" : "Pending",
   eventStatus: safeString(event.overallStatus || event.eventStatus),
@@ -60,12 +72,16 @@ const normalizeIndividualRequest = (request) => {
   const emp = request.data?.employee;
   return {
     id: request.id,
-    employee: safeString(request.employee || request.employeeDetail?.name || emp?.name),
+    employee: safeString(
+      request.employee || request.employeeDetail?.name || emp?.name,
+    ),
     employeeEmail: safeString(request.employeeEmail || emp?.email),
     formType: safeString(request.formType),
     createdAt: request.createdAt ? formatDate(request.createdAt) : "-",
     dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
-    status: safeString(typeof request.status === "string" ? request.status : "Pending"),
+    status: safeString(
+      typeof request.status === "string" ? request.status : "Pending",
+    ),
   };
 };
 
@@ -82,10 +98,13 @@ const getEventStatusClassName = (status = "") => {
 const StatusBadge = ({ status, className }) => {
   const s = (status || "").toLowerCase();
   const isPositive = s.includes("approved") || s.includes("acknowledged");
-  const colorClass = className || (isPositive ? "text-[#34D399]" : "text-[#B32058]");
+  const colorClass =
+    className || (isPositive ? "text-[#34D399]" : "text-[#B32058]");
   return (
     <span className={`inline-flex items-center gap-2 ${colorClass}`}>
-      <span className={`h-2 w-2 rounded-full ${colorClass.replace("text-", "bg-")}`} />
+      <span
+        className={`h-2 w-2 rounded-full ${colorClass.replace("text-", "bg-")}`}
+      />
       {status}
     </span>
   );
@@ -95,18 +114,35 @@ const MultiValueCell = ({ values }) => {
   const [isHovered, setIsHovered] = useState(false);
   const list = values?.length ? values : ["-"];
   const remainingItems = list.slice(1);
-  if (remainingItems.length === 0) return <span className="whitespace-nowrap">{list[0]}</span>;
+  if (remainingItems.length === 0)
+    return <span className="whitespace-nowrap">{list[0]}</span>;
   return (
-    <div className="relative inline-flex items-center gap-1.5" onMouseEnter={() => setIsHovered(true)} onMouseLeave={() => setIsHovered(false)}>
+    <div
+      className="relative inline-flex items-center gap-1.5"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       <span className="whitespace-nowrap">{list[0]}</span>
-      <span className="cursor-pointer text-xs font-medium text-[#853FF9] hover:text-[#a76df9]">+{remainingItems.length}</span>
+      <span className="cursor-pointer text-xs font-medium text-[#853FF9] hover:text-[#a76df9]">
+        +{remainingItems.length}
+      </span>
       {isHovered && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsHovered(false)} />
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsHovered(false)}
+          />
           <div className="absolute left-full z-50 mb-2 min-w-[180px] rounded-lg border border-[#374155] bg-[#1B2334] p-3 shadow-xl">
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">Details</p>
+            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#CBC3D7]/45">
+              Details
+            </p>
             {remainingItems.map((value, index) => (
-              <p key={`${value}-${index}`} className="py-0.5 text-sm text-white">{value}</p>
+              <p
+                key={`${value}-${index}`}
+                className="py-0.5 text-sm text-white"
+              >
+                {value}
+              </p>
             ))}
           </div>
         </>
@@ -125,9 +161,20 @@ const getFilteredDateValues = (values, dateKeys, selectedDateKey) => {
 const SelectFilter = ({ icon, value, onChange, options, ariaLabel }) => (
   <div className="filter-container border border-[#343b4a] rounded-lg flex items-center py-2 px-3 gap-2 bg-[#232A3C]">
     {icon}
-    <select value={value} onChange={(e) => onChange(e.target.value)} aria-label={ariaLabel} className="bg-transparent text-xs text-gray-300 outline-none">
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel}
+      className="bg-transparent text-xs text-gray-300 outline-none"
+    >
       {options.map((opt) => (
-        <option key={opt.value} value={opt.value} className="bg-[#171F31] text-white">{opt.label}</option>
+        <option
+          key={opt.value}
+          value={opt.value}
+          className="bg-[#171F31] text-white"
+        >
+          {opt.label}
+        </option>
       ))}
     </select>
   </div>
@@ -135,7 +182,9 @@ const SelectFilter = ({ icon, value, onChange, options, ariaLabel }) => (
 
 const EmptyRow = ({ colSpan }) => (
   <tr className="border-t border-[#20283a] text-sm text-[#8b93a7]">
-    <td className="px-6 py-8 text-center" colSpan={colSpan}>No requests available</td>
+    <td className="px-6 py-8 text-center" colSpan={colSpan}>
+      No requests available
+    </td>
   </tr>
 );
 
@@ -154,30 +203,62 @@ const EventRequestTable = ({ rows, selectedDateKey, detailViewPath }) => (
       </tr>
     </thead>
     <tbody>
-      {rows.length > 0 ? rows.map((event, index) => (
-        <tr key={event.id || index} className="border-t border-[#20283a] text-sm text-white align-top">
-          <td className="px-6 py-4 font-medium whitespace-nowrap">
-            <div className="max-w-34 truncate" title={event.eventName}>{event.eventName}</div>
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
-          <td className="px-6 py-4"><MultiValueCell values={event.venues} /></td>
-          <td className="px-6 py-4"><MultiValueCell values={getFilteredDateValues(event.dates, event.dateKeys, selectedDateKey)} /></td>
-          <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
-          <td className="px-6 py-4 whitespace-nowrap"><span className={getEventStatusClassName(event.eventStatus)}>{event.eventStatus}</span></td>
-          <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={event.approvedStatus} /></td>
-          <td className="px-6 py-4">
-            {detailViewPath ? (
-              <Link to={`${detailViewPath}/${event.rawEventId}`} className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open">
-                <ExternalLink size={17} />
-              </Link>
-            ) : (
-              <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open">
-                <ExternalLink size={17} />
-              </button>
-            )}
-          </td>
-        </tr>
-      )) : <EmptyRow colSpan={8} />}
+      {rows.length > 0 ? (
+        rows.map((event, index) => (
+          <tr
+            key={event.id || index}
+            className="border-t border-[#20283a] text-sm text-white align-top"
+          >
+            <td className="px-6 py-4 font-medium whitespace-nowrap">
+              <div className="max-w-34 truncate" title={event.eventName}>
+                {event.eventName}
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">{event.eventType}</td>
+            <td className="px-6 py-4">
+              <MultiValueCell values={event.venues} />
+            </td>
+            <td className="px-6 py-4">
+              <MultiValueCell
+                values={getFilteredDateValues(
+                  event.dates,
+                  event.dateKeys,
+                  selectedDateKey,
+                )}
+              />
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <span className={getEventStatusClassName(event.eventStatus)}>
+                {event.eventStatus}
+              </span>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <StatusBadge status={event.approvedStatus} />
+            </td>
+            <td className="px-6 py-4">
+              {detailViewPath ? (
+                <Link
+                  to={`${detailViewPath}/${event.rawEventId}`}
+                  className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                  title="Open"
+                >
+                  <ExternalLink size={17} />
+                </Link>
+              ) : (
+                <button
+                  className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                  title="Open"
+                >
+                  <ExternalLink size={17} />
+                </button>
+              )}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <EmptyRow colSpan={8} />
+      )}
     </tbody>
   </table>
 );
@@ -195,26 +276,51 @@ const IndividualRequestTable = ({ rows, individualDetailViewPath }) => (
       </tr>
     </thead>
     <tbody>
-      {rows.length > 0 ? rows.map((row, index) => (
-        <tr key={row.id || index} className="border-t border-[#20283a] text-sm text-white align-top">
-          <td className="px-6 py-4 whitespace-nowrap">{row.createdAt}</td>
-          <td className="px-6 py-4 font-medium whitespace-nowrap"><div className="max-w-34 truncate" title={row.employee}>{row.employee}</div></td>
-          <td className="px-6 py-4 whitespace-nowrap">{row.formType}</td>
-          <td className="px-6 py-4 whitespace-nowrap"><div className="max-w-40 truncate" title={row.employeeEmail}>{row.employeeEmail}</div></td>
-          <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={row.status} /></td>
-          <td className="px-6 py-4">
-            {individualDetailViewPath ? (
-              <Link to={`${individualDetailViewPath}/${row.id}`} className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open request">
-                <ExternalLink size={17} />
-              </Link>
-            ) : (
-              <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white" title="Open">
-                <ExternalLink size={17} />
-              </button>
-            )}
-          </td>
-        </tr>
-      )) : <EmptyRow colSpan={6} />}
+      {rows.length > 0 ? (
+        rows.map((row, index) => (
+          <tr
+            key={row.id || index}
+            className="border-t border-[#20283a] text-sm text-white align-top"
+          >
+            <td className="px-6 py-4 whitespace-nowrap">{row.createdAt}</td>
+            <td className="px-6 py-4 font-medium whitespace-nowrap">
+              <div className="max-w-34 truncate" title={row.employee}>
+                {row.employee}
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">{row.formType}</td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <div className="max-w-40 truncate" title={row.employeeEmail}>
+                {row.employeeEmail}
+              </div>
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap">
+              <StatusBadge status={row.status} />
+            </td>
+            <td className="px-6 py-4">
+              {individualDetailViewPath ? (
+                <Link
+                  // to={`${individualDetailViewPath}/${row.id}`}
+                  to={`/dashboard-faculty/individualDetailView/${row.id}`}
+                  className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                  title="Open request"
+                >
+                  <ExternalLink size={17} /> 
+                </Link>
+              ) : (
+                <button
+                  className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                  title="Open"
+                >
+                  <ExternalLink size={17} />
+                </button>
+              )}
+            </td>
+          </tr>
+        ))
+      ) : (
+        <EmptyRow colSpan={6} />
+      )}
     </tbody>
   </table>
 );
@@ -238,43 +344,72 @@ const RequestListTable = ({
 
   const hasExternalEvents = Boolean(propEventRows);
   const hasExternalIndividuals = Boolean(propIndividualRows);
-  const showIndividual = showIndividualTab || hasExternalIndividuals || Boolean(onFetchIndividuals);
+  const showIndividual =
+    showIndividualTab || hasExternalIndividuals || Boolean(onFetchIndividuals);
 
   useEffect(() => {
     if (hasExternalEvents || !onFetchEvents) return;
     let mounted = true;
-    onFetchEvents().then((data) => {
-      if (mounted) setInternalEventRows((data || []).map(normalizeEventRequest));
-    }).catch((err) => console.warn(err.message));
-    return () => { mounted = false; };
+    onFetchEvents()
+      .then((data) => {
+        if (mounted)
+          setInternalEventRows((data || []).map(normalizeEventRequest));
+      })
+      .catch((err) => console.warn(err.message));
+    return () => {
+      mounted = false;
+    };
   }, [hasExternalEvents, onFetchEvents]);
 
   useEffect(() => {
-    if (!showIndividual || hasExternalIndividuals || !onFetchIndividuals) return;
+    if (!showIndividual || hasExternalIndividuals || !onFetchIndividuals)
+      return;
     let mounted = true;
-    onFetchIndividuals().then((data) => {
-      if (mounted) setInternalIndividualRows((data || []).map(normalizeIndividualRequest));
-    }).catch((err) => console.warn(err.message));
-    return () => { mounted = false; };
+    onFetchIndividuals()
+      .then((data) => {
+        if (mounted)
+          setInternalIndividualRows(
+            (data || []).map(normalizeIndividualRequest),
+          );
+      })
+      .catch((err) => console.warn(err.message));
+    return () => {
+      mounted = false;
+    };
   }, [showIndividual, hasExternalIndividuals, onFetchIndividuals]);
 
   const eventRows = hasExternalEvents ? propEventRows : internalEventRows;
-  const individualRows = showIndividual ? (hasExternalIndividuals ? propIndividualRows : internalIndividualRows) : [];
+  const individualRows = showIndividual
+    ? hasExternalIndividuals
+      ? propIndividualRows
+      : internalIndividualRows
+    : [];
   const isEventTab = activeTab === "event";
   const activeRows = isEventTab ? eventRows : individualRows;
 
   const eventTypeOptions = useMemo(() => {
-    const types = [...new Set(eventRows.map((r) => r.eventType).filter(Boolean))];
-    return [{ value: "all", label: "All Types" }, ...types.map((t) => ({ value: t, label: t }))];
+    const types = [
+      ...new Set(eventRows.map((r) => r.eventType).filter(Boolean)),
+    ];
+    return [
+      { value: "all", label: "All Types" },
+      ...types.map((t) => ({ value: t, label: t })),
+    ];
   }, [eventRows]);
 
   const filteredRows = activeRows.filter((row) => {
     const q = searchQuery.toLowerCase();
     const text = Object.values(row).flat().join(" ").toLowerCase();
     const matchesSearch = !q || text.includes(q);
-    const matchesEventType = !isEventTab || eventTypeFilter === "all" || row.eventType === eventTypeFilter;
-    const matchesApproval = approvalFilter === "all" || (row.approvedStatus || "").toLowerCase() === approvalFilter;
-    const matchesDate = !dateFilter || (row.dateKeys || []).includes(dateFilter);
+    const matchesEventType =
+      !isEventTab ||
+      eventTypeFilter === "all" ||
+      row.eventType === eventTypeFilter;
+    const matchesApproval =
+      approvalFilter === "all" ||
+      (row.approvedStatus || "").toLowerCase() === approvalFilter;
+    const matchesDate =
+      !dateFilter || (row.dateKeys || []).includes(dateFilter);
     return matchesSearch && matchesEventType && matchesApproval && matchesDate;
   });
 
@@ -286,7 +421,10 @@ const RequestListTable = ({
           <span className="text-[#8B3DFF]">({filteredRows.length})</span>
         </h2>
         <div className="flex items-center gap-3">
-          <nav className="flex rounded-md bg-[#1b2335] p-0.5" aria-label="Request type tabs">
+          <nav
+            className="flex rounded-md bg-[#1b2335] p-0.5"
+            aria-label="Request type tabs"
+          >
             <button
               type="button"
               onClick={() => setActiveTab("event")}
@@ -343,15 +481,26 @@ const RequestListTable = ({
             ariaLabel="Filter by approval status"
           />
 
-          <ThemedDatePicker value={dateFilter} onChange={setDateFilter} placeholder="Date" />
+          <ThemedDatePicker
+            value={dateFilter}
+            onChange={setDateFilter}
+            placeholder="Date"
+          />
         </div>
       </div>
 
       <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
         {isEventTab ? (
-          <EventRequestTable rows={filteredRows} selectedDateKey={dateFilter} detailViewPath={detailViewPath} />
+          <EventRequestTable
+            rows={filteredRows}
+            selectedDateKey={dateFilter}
+            detailViewPath={detailViewPath}
+          />
         ) : (
-          <IndividualRequestTable rows={filteredRows} individualDetailViewPath={individualDetailViewPath} />
+          <IndividualRequestTable
+            rows={filteredRows}
+            individualDetailViewPath={individualDetailViewPath}
+          />
         )}
       </div>
     </section>

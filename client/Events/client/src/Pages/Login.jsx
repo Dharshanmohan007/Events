@@ -339,7 +339,7 @@
 //             </div>
 
 //             {/* ── RIGHT PANEL: Login form OR Forgot Password ── */}
-                
+
 //             <div className="form-container h-screen flex items-center justify-center w-1/2">
 
 //             {/* backgorund image container  */}
@@ -536,7 +536,6 @@
 //                 </div>
 //               </div>
 
-              
 //             </div>
 
 //           </div>
@@ -559,21 +558,15 @@
 //   );
 // }
 
-
-
-
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import ForgetPassword from "../Components/ForgetPassword";
 import { useAuth } from "../Components/AuthContext";
 import { MoveRight } from "lucide-react";
 import loginBg from "../assets/login_ConBg.svg";
-import {
-  showSuccessToast,
-  showErrorToast,
-} from "../Components/CustomToast";
+import { showSuccessToast, showErrorToast } from "../Components/CustomToast";
 
-import blurImg1  from "../assets/blur-img1.svg";
+import blurImg1 from "../assets/blur-img1.svg";
 
 // ─── Assets ───────────────────────────────────────────────────────────────────
 import Logo from "../assets/logo.svg";
@@ -598,7 +591,13 @@ async function loginApi(email, password) {
 const FEATURES = [
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
@@ -608,7 +607,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <rect x="2" y="3" width="20" height="14" rx="2" />
         <line x1="8" y1="21" x2="16" y2="21" />
         <line x1="12" y1="17" x2="12" y2="21" />
@@ -619,7 +624,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
     ),
@@ -628,7 +639,13 @@ const FEATURES = [
   },
   {
     icon: (
-      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+      <svg
+        className="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        strokeWidth={1.8}
+      >
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -704,7 +721,10 @@ function ParticleCanvas() {
     };
   }, []);
   return (
-    <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none"
+    />
   );
 }
 
@@ -794,14 +814,17 @@ export default function LoginPage({ onLoginSuccess }) {
       <div className="absolute top-0 right-0 left-0 bottom-0 tint z-10 pointer-events-none"></div>
 
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <img className="absolute pointer-events-none" src={LoginBackground} alt="Login Background" />
+        <img
+          className="absolute pointer-events-none"
+          src={LoginBackground}
+          alt="Login Background"
+        />
       </div>
 
       {/* Main card */}
       <div className="relative w-full max-w-[1380px] rounded-lg overflow-hidden h-screen">
         <div className="relative flex flex-col justify-between lg:min-h-0">
           <div className="flex items-stretch h-screen gap-0 overflow-hidden">
-
             {/* ── LEFT PANEL ── */}
             <div className="relative w-1/2 overflow-hidden h-screen bg-gradient-to-br flex flex-col justify-between py-5 px-4 sm:py-5 sm:px-5 lg:py-6 lg:px-6">
               <ParticleCanvas />
@@ -809,32 +832,45 @@ export default function LoginPage({ onLoginSuccess }) {
                 <div className="mb-6">
                   <img src={Logo} alt="Logo" className="w-50" />
                 </div>
-                <div className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+                <div
+                  className={`transition-all duration-700 delay-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+                >
                   <h1 className="playfair text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4">
-                    Plan faster host,
+                    Plan faster, host
                     <br />
                     <span className="playfair bg-gradient-to-r from-purple-400 to-violet-300 bg-clip-text text-transparent">
-                      better
+                      Better
                     </span>
                   </h1>
                   <p className="text-white/50 text-sm leading-relaxed max-w-xs">
                     The all-in-one platform for academic event management,
-                    combining institutional rigor with modern technological agility.
+                    combining institutional rigor with modern technological
+                    agility.
                   </p>
                 </div>
               </div>
 
               {/* Feature cards grid */}
-              <div className={`relative z-10 grid grid-cols-2 gap-3 mt-8 lg:mt-0 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+              <div
+                className={`relative z-10 grid grid-cols-2 gap-3 mt-8 lg:mt-0 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}
+              >
                 {FEATURES.map((f, i) => (
-                  <div key={i} className="rounded-xl bg-white/5 border border-white/8 backdrop-blur-sm p-3 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group">
+                  <div
+                    key={i}
+                    className="rounded-xl bg-white/5 border border-white/8 backdrop-blur-sm p-3 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-300 group"
+                  >
                     <div className="w-8 h-8 rounded-lg bg-purple-600/30 border border-purple-500/30 flex items-center justify-center text-purple-300 mb-2 group-hover:bg-purple-600/50 transition-colors">
                       {f.icon}
                     </div>
-                    <p className="text-white text-xs font-semibold mb-0.5" style={{ fontFamily: "'Sora', sans-serif" }}>
+                    <p
+                      className="text-white text-xs font-semibold mb-0.5"
+                      style={{ fontFamily: "'Sora', sans-serif" }}
+                    >
                       {f.title}
                     </p>
-                    <p className="text-white/40 text-[10px] leading-tight">{f.desc}</p>
+                    <p className="text-white/40 text-[10px] leading-tight">
+                      {f.desc}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -843,7 +879,6 @@ export default function LoginPage({ onLoginSuccess }) {
             {/* ── RIGHT PANEL ── */}
             <div className="form-container h-screen flex items-center justify-center w-1/2">
               <div className="glassmorphism-container h-[90%] relative border border-gray-700/60 shadow-md shadow-gray-900 rounded-2xl w-full overflow-hidden">
-
                 {/* ── Purple radial glow blobs matching Figma ── */}
                 {/* Top-left blob */}
                 <div
@@ -854,7 +889,8 @@ export default function LoginPage({ onLoginSuccess }) {
                     width: "340px",
                     height: "340px",
                     borderRadius: "50%",
-                    background: "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)",
+                    background:
+                      "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)",
                     filter: "blur(40px)",
                   }}
                 />
@@ -867,7 +903,8 @@ export default function LoginPage({ onLoginSuccess }) {
                     width: "340px",
                     height: "340px",
                     borderRadius: "50%",
-                    background: "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)",
+                    background:
+                      "radial-gradient(circle, rgba(88,28,220,0.55) 0%, rgba(67,20,180,0.25) 45%, transparent 70%)",
                     filter: "blur(40px)",
                   }}
                 />
@@ -881,7 +918,8 @@ export default function LoginPage({ onLoginSuccess }) {
                     width: "500px",
                     height: "300px",
                     borderRadius: "50%",
-                    background: "radial-gradient(ellipse, rgba(72,20,160,0.18) 0%, transparent 70%)",
+                    background:
+                      "radial-gradient(ellipse, rgba(72,20,160,0.18) 0%, transparent 70%)",
                     filter: "blur(30px)",
                   }}
                 />
@@ -897,14 +935,21 @@ export default function LoginPage({ onLoginSuccess }) {
                         </h2>
                         <p className="text-white/40 text-xs leading-relaxed">
                           The all-in-one platform for academic event management,
-                          combining institutional rigor with modern technological agility.
+                          combining institutional rigor with modern
+                          technological agility.
                         </p>
                       </div>
 
                       {/* Global error banner */}
                       {error && (
                         <div className="mb-5 flex items-center gap-2.5 rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3">
-                          <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <svg
+                            className="w-4 h-4 text-red-400 flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={2}
+                          >
                             <circle cx="12" cy="12" r="10" />
                             <line x1="12" y1="8" x2="12" y2="12" />
                             <line x1="12" y1="16" x2="12.01" y2="16" />
@@ -914,8 +959,11 @@ export default function LoginPage({ onLoginSuccess }) {
                       )}
 
                       {/* Login Form */}
-                      <form onSubmit={handleLogin} noValidate className="flex flex-col gap-0">
-
+                      <form
+                        onSubmit={handleLogin}
+                        noValidate
+                        className="flex flex-col gap-0"
+                      >
                         {/* ── E-mail field ── */}
                         <div className="flex flex-col gap-2 mb-1">
                           <label className="text-white text-xs font-medium">
@@ -925,17 +973,22 @@ export default function LoginPage({ onLoginSuccess }) {
                             type="email"
                             autoComplete="email"
                             value={email}
-                            onChange={(e) => handleFieldChange("email", e.target.value)}
+                            onChange={(e) =>
+                              handleFieldChange("email", e.target.value)
+                            }
                             placeholder="Enter Your E-mail id here"
                             className={`w-full rounded-xl px-4 py-3.5 text-sm text-white placeholder-white/25 outline-none transition-all duration-200
                               bg-[#0d0b1e]/60 border
-                              ${fieldErrors.email
-                                ? "border-red-500/60 focus:border-red-500"
-                                : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"
+                              ${
+                                fieldErrors.email
+                                  ? "border-red-500/60 focus:border-red-500"
+                                  : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"
                               }`}
                           />
                           {fieldErrors.email && (
-                            <p className="text-red-400 text-xs ml-1">{fieldErrors.email}</p>
+                            <p className="text-red-400 text-xs ml-1">
+                              {fieldErrors.email}
+                            </p>
                           )}
                         </div>
 
@@ -951,13 +1004,16 @@ export default function LoginPage({ onLoginSuccess }) {
                             <input
                               type={showPass ? "text" : "password"}
                               value={password}
-                              onChange={(e) => handleFieldChange("password", e.target.value)}
+                              onChange={(e) =>
+                                handleFieldChange("password", e.target.value)
+                              }
                               placeholder="Enter Your Password here"
                               className={`w-full rounded-xl px-4 py-3.5 pr-12 text-sm text-white placeholder-white/25 outline-none transition-all duration-200
                                 bg-[#0d0b1e]/60 border
-                                ${fieldErrors.password
-                                  ? "border-red-500/60 focus:border-red-500"
-                                  : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"
+                                ${
+                                  fieldErrors.password
+                                    ? "border-red-500/60 focus:border-red-500"
+                                    : "border-[#3a2a6e]/70 focus:border-[#6d3fc7]/80 hover:border-[#5530a8]/70"
                                 }`}
                             />
                             {/* Eye toggle */}
@@ -967,22 +1023,62 @@ export default function LoginPage({ onLoginSuccess }) {
                               className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/90 transition-colors"
                             >
                               {showPass ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.8}
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                  />
                                 </svg>
                               ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="w-5 h-5">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.584 10.587a2.25 2.25 0 003.182 3.182" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277" />
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  strokeWidth={1.8}
+                                  stroke="currentColor"
+                                  className="w-5 h-5"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M3 3l18 18"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M10.584 10.587a2.25 2.25 0 003.182 3.182"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M9.878 5.098A10.477 10.477 0 0112 4.875c6 0 9.75 7.125 9.75 7.125a13.16 13.16 0 01-4.293 4.774"
+                                  />
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M6.228 6.228A13.134 13.134 0 002.25 12s3.75 7.125 9.75 7.125a10.47 10.47 0 005.022-1.277"
+                                  />
                                 </svg>
                               )}
                             </button>
                           </div>
                           {fieldErrors.password && (
-                            <p className="text-red-400 text-xs ml-1">{fieldErrors.password}</p>
+                            <p className="text-red-400 text-xs ml-1">
+                              {fieldErrors.password}
+                            </p>
                           )}
                         </div>
 
@@ -1010,9 +1106,24 @@ export default function LoginPage({ onLoginSuccess }) {
                         >
                           {loading ? (
                             <>
-                              <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                              <svg
+                                className="animate-spin w-4 h-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8v8H4z"
+                                />
                               </svg>
                               Signing in...
                             </>
@@ -1031,7 +1142,6 @@ export default function LoginPage({ onLoginSuccess }) {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       </div>

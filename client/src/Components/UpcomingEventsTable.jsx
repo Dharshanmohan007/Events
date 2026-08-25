@@ -202,13 +202,13 @@ const renderCellValue = (event, header, detailViewPath) => {
             to={`${detailViewPath}/${eventId}`}
             className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
           >
-            <ExternalLink size={17} />
+            <ExternalLink size={17} /> 
           </Link>
         )
       }
       return (
         <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white">
-          <ExternalLink size={17} />
+          <ExternalLink size={17} /> 
         </button>
       )
     default:

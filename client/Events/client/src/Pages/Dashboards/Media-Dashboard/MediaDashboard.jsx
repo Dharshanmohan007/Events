@@ -103,6 +103,7 @@ const departmentData = [
 ]
 
 const MediaDashboard = () => {
+    c
     return (
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>

@@ -86,7 +86,7 @@ const MediaRequestTable = ({
 
                                     <td className="px-6 py-4">
                                         <button className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white">
-                                            <ExternalLink size={17} />
+                                            <ExternalLink size={17} /> 
                                         </button>
                                     </td>
                                 </tr>
