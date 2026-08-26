@@ -132,7 +132,8 @@ function AppRoutes() {
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-media/events/detailView/:eventId" element={<ProtectedRoute><MediaEventsDetailViewPage /></ProtectedRoute>} />
-      <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} />
+      {/* <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} /> */}
+      <Route path="/dashboard-media/individualDetailView/:eventId" element={<ProtectedRoute><HeadIndividualDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-media/reports" element={<ProtectedRoute><MediaReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
