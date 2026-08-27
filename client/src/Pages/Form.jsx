@@ -1029,6 +1029,34 @@ function hydrateEventData(apiData) {
 
   // 7. Food & Refreshments — unwrap refreshmentDetails and map backend names.
   const foodItems = apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || [];
+  const countValue = (group, aliases = []) => {
+    const value = group?.vegCount ?? group?.veg ?? group?.vegetarian ?? group?.vegParticipants
+      ?? group?.vegetarianCount ?? group?.veg?.count ?? group?.vegetarian?.count ?? group?.[aliases[0]];
+    return value === undefined || value === null ? "" : String(value);
+  };
+  const nonVegCountValue = (group, aliases = []) => {
+    const value = group?.nonVegCount ?? group?.nonVeg ?? group?.nonVegetarian ?? group?.nonVegParticipants
+      ?? group?.nonVegetarianCount ?? group?.nonVeg?.count ?? group?.nonVegetarian?.count ?? group?.[aliases[0]];
+    return value === undefined || value === null ? "" : String(value);
+  };
+  const hydrateMeal = (meal = {}) => ({
+    participants: {
+      vegCount: countValue(meal.participants, ["vegParticipants"] ) || String(meal.vegParticipants ?? ""),
+      nonVegCount: nonVegCountValue(meal.participants, ["nonVegParticipants"]) || String(meal.nonVegParticipants ?? ""),
+    },
+    vipGuests: {
+      vegCount: countValue(meal.vipGuests, ["vegGuest"]) || String(meal.vegGuest ?? ""),
+      nonVegCount: nonVegCountValue(meal.vipGuests, ["nonVegGuest"]) || String(meal.nonVegGuest ?? ""),
+    },
+    trainer: {
+      vegCount: countValue(meal.trainer, ["vegTrainer"]) || String(meal.vegTrainer ?? meal.trainerVegCount ?? meal.vegCountTrainer ?? meal.trainer?.vegParticipants ?? ""),
+      nonVegCount: nonVegCountValue(meal.trainer, ["nonVegTrainer"]) || String(meal.nonVegTrainer ?? meal.trainerNonVegCount ?? meal.nonVegCountTrainer ?? meal.trainer?.nonVegParticipants ?? ""),
+    },
+    placement: {
+      vegCount: countValue(meal.placement, ["vegPlacement"]) || String(meal.vegPlacement ?? ""),
+      nonVegCount: nonVegCountValue(meal.placement, ["nonVegPlacement"]) || String(meal.nonVegPlacement ?? ""),
+    },
+  });
   const foodandrefreshments = Array.isArray(foodItems) && foodItems.length > 0
     ? foodItems.map((item) => ({
         ...emptyFoodDay(),
@@ -1038,9 +1066,9 @@ function hydrateEventData(apiData) {
         staffList: item.staffList || item.accompanyingStaff || [],
         resourcePersonType: item.resourcePersonType || [],
         foodTypes: (item.foodTypes || []).map((food) => food.type),
-        breakfast: (item.foodTypes || []).find((food) => food.type === "Breakfast") || emptyFoodDay().breakfast,
-        lunch: (item.foodTypes || []).find((food) => food.type === "Lunch") || emptyFoodDay().lunch,
-        dinner: (item.foodTypes || []).find((food) => food.type === "Dinner") || emptyFoodDay().dinner,
+        breakfast: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Breakfast")),
+        lunch: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Lunch")),
+        dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
         specialRequirements: item.specialRequirements || "",
       }))
     : [emptyFoodDay()];
@@ -1200,8 +1228,8 @@ function determineDraftStep(apiData, selectedRequirements) {
     venue: (apiData.venueDetails?.venues || []).length > 0,
     icts: (apiData.ictsDetails?.ictses || []).length > 0,
     audio: apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0,
-    transport: Array.isArray(apiData.transportDetails) && apiData.transportDetails.length > 0,
-    foodandrefreshments: Array.isArray(apiData.foodDetails) && apiData.foodDetails.length > 0,
+    transport: (apiData.transportDetails?.transports || apiData.transportDetails || []).length > 0,
+    foodandrefreshments: (apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || []).length > 0,
     accommodation: (apiData.accommodationDetails?.accommodations || []).length > 0,
     purchase: (apiData.purchaseDetails?.purchases || []).length > 0,
     media: (apiData.mediaRequirementDetails?.mediaRequirements || []).length > 0,
@@ -1327,6 +1355,7 @@ export default function Form() {
         const step = isEditMode ? 0 : determineDraftStep(apiData, hydratedReqs);
         setCurrentStep(step);
         setCompletedSteps(Array.from({ length: step }, (_, i) => i));
+        if (!isEditMode && step === hydratedReqs.length) setShowPreview(true);
       } catch (error) {
         console.error("Failed to load event data:", error);
         setApiError("Failed to load event data. Starting a fresh form.");
