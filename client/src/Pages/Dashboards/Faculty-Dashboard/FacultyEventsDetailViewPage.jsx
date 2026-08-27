@@ -454,32 +454,33 @@ const FacultyEventsDetailViewPage = () => {
 
   // }
 
-    const openFeedbackPage = async () => {
-    try {
-      setCloseLoading(true);
-      const token = localStorage.getItem("token");
+  const openFeedbackPage = async () => {
+    // try {
+    //   setCloseLoading(true);
+    //   const token = localStorage.getItem("token");
 
-      const res = await axios.patch(
-        `${API_BASE_URL}/api/events/${eventId}/status`,
-        { action: "close" },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    //   const res = await axios.patch(
+    //     `${API_BASE_URL}/api/events/${eventId}/status`,
+    //     { action: "close" },
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
 
-      if (res.status === 200) {
-        toast.success("Event closed successfully");
-        setReloadKey((k) => k + 1);
+    //   if (res.status === 200) {
+    //     toast.success("Event closed successfully");
+    //     setReloadKey((k) => k + 1);
 
-        navigate(`/dashboard-faculty/feedback/${eventId}`);
-      }
-      setCloseLoading(false);
-    } catch (err) {
-      setCloseLoading(false);
-      console.error(err);
-    }
+    //     navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
+    //   }
+    //   setCloseLoading(false);
+    // } catch (err) {
+    //   setCloseLoading(false);
+    //   console.error(err);
+    // }
+    navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
   };
 
   const renderActivePanel = () => {
@@ -560,7 +561,7 @@ const FacultyEventsDetailViewPage = () => {
 
     return <FacultyStaticDetailsPanel activeTab={activeTab} />
   }
-  
+
 
   return (
     <>
@@ -581,7 +582,7 @@ const FacultyEventsDetailViewPage = () => {
             </div>
           </div>
           {console.log("data : ", data)}
-         {data.status?.toLowerCase() === "closed" ? (
+          {data.status?.toLowerCase() === "closed" ? (
             <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
               <Check size={18} />
               Closed
