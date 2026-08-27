@@ -417,6 +417,13 @@ const FacultyLatestEventsRequestTable = () => {
                                         >
                                             <ExternalLink size={14} />
                                         </Link>
+                                        <Link
+                                            to={`/dashboard-faculty/individual-detailView/v2/${request.id}`}
+                                            className="inline-flex text-red-500 transition hover:text-white"
+                                            title="Open request"
+                                        >
+                                            <ExternalLink size={14} />
+                                        </Link>
                                     </td>
                                 </tr>
                             ))}

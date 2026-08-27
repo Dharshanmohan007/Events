@@ -75,6 +75,9 @@ import MediaDetailsPage from "./Pages/IndividualForm/MediaDetailsPage";
 import IndividualFoodAndRefreshmentPage from "./Pages/IndividualForm/IndividualFoodAndRefreshmentPage";
 import PurchaseDetails from "./Pages/IndividualForm/PurchaseDetails";
 
+// admin individual detail view v2 
+import AdminIndividualDetailView from './Pages/IndividualDetailViewFolder/Admin-IndividualDetailView/AdminIndividualDetailView.jsx'
+
 // Module request list pages (Event / Individual two-tab)
 import AudioEventsListPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsListPage"
 import TransportEventsListPage from "./Pages/Dashboards/Transports-Dashboard/TransportEventsListPage"
@@ -88,6 +91,8 @@ import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
+import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Faculty-IndividualDetailView/FacultyIndividualDetailiew.jsx";
+import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -129,7 +134,8 @@ function AppRoutes() {
       <Route path="/dashboard-media" element={<ProtectedRoute><MediaDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-media/events" element={<ProtectedRoute><MediaEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-media/events/detailView/:eventId" element={<ProtectedRoute><MediaEventsDetailViewPage /></ProtectedRoute>} />
-      <Route path="/dashboard-media/individualDetailView/:id" element={<ProtectedRoute><MediaIndividualDetailViewPage /></ProtectedRoute>} />
+      {/* individual media detail view v2  */}
+      <Route path="/dashboard-media/individualDetailView/:eventId" element={<ProtectedRoute><HeadIndividualDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-media/reports" element={<ProtectedRoute><MediaReportsPage /></ProtectedRoute>} />
       <Route path="/dashboard-poster" element={<ProtectedRoute><PosterDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-poster/requests" element={<ProtectedRoute><PosterRequestListPage /></ProtectedRoute>} />
@@ -154,6 +160,7 @@ function AppRoutes() {
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
 
       </Route>
+      <Route path="/dashboard/AdminIndividualDetailView/v2/:eventId" element={< AdminIndividualDetailView />} />
 
       <Route path="/dashboard-hod" element={<ProtectedRoute><HodDashboardLayout /></ProtectedRoute>}>
         <Route index element={<HodDashboard />} />
@@ -163,7 +170,7 @@ function AppRoutes() {
         <Route path="individual-submissions/:id" element={<HodIndividualEventDetailPage />} />
       </Route>
 
-      <Route path="/dashboard/IndividualEvents/:id" element={<ProtectedRoute><IndividualEventDetailPage /></ProtectedRoute>} />
+      <Route path="/dashboard/IndividualEvents/:eventId" element={<ProtectedRoute><HeadIndividualDetailView /></ProtectedRoute>} />
 
       <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/media" element={<MediaDetailsPage />} />
@@ -175,6 +182,8 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/events/detailView/:eventId" element={<ProtectedRoute><FacultyEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/events/detailView/:eventId/documentUpload" element={<ProtectedRoute><FacultyDocumentUploadPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/individual-requests/:id" element={<ProtectedRoute><FacultyIndividualRequestDetailViewPage /></ProtectedRoute>} />
+      {/* faculty individual detail view v2  */}
+      <Route path="/dashboard-faculty/individual-detailView/v2/:eventId" element={<ProtectedRoute><FacultyIndividualDetailiew /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/venues" element={<ProtectedRoute><FacultyVenueListPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/feedback/:eventId" element={<ProtectedRoute><FacultyfeedbackPage /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/individual-feedback/:requestId" element={<ProtectedRoute><FacultyIndividualFeedbackPage /></ProtectedRoute>} />
@@ -195,7 +204,8 @@ function AppRoutes() {
       <Route path="/dashboard-food" element={<ProtectedRoute><FoodDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-food/events" element={<ProtectedRoute><FoodEventsListPage /></ProtectedRoute>} />
       <Route path="/dashboard-food/events/detailView/:eventId" element={<ProtectedRoute><FoodEventsDetailViewPage /></ProtectedRoute>} />
-      <Route path="/dashboard-food/events/individualDetailView/:id" element={<ProtectedRoute><FoodIndividualDetailViewPage /></ProtectedRoute>} />
+      {/* Food individual detail view v2 */}
+      <Route path="/dashboard-food/events/individualDetailView/:eventId" element={<ProtectedRoute><HeadIndividualDetailView /></ProtectedRoute>} />
       <Route path="/dashboard-food/reports" element={<ProtectedRoute><FoodReportsPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-purchase" element={<ProtectedRoute><PurchaseDashboard /></ProtectedRoute>} />
@@ -203,9 +213,12 @@ function AppRoutes() {
       <Route path="/dashboard-purchase/events/detailView/:eventId" element={<ProtectedRoute><PurchaseEventsDetailViewPage /></ProtectedRoute>} />
       <Route path="/dashboard-purchase/reports" element={<ProtectedRoute><PurchaseReportsPage /></ProtectedRoute>} />
       <Route path="/calendar" element={<Calendar />} />
-      <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} />
+      {/* Purchase individual detail view v2 */}
+      <Route path="/dashboard-purchase/events/individualDetailView/:eventId" element={<ProtectedRoute><HeadIndividualDetailView /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
+
+
     </Routes>
   );
 }
