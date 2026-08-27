@@ -1326,6 +1326,7 @@ const TransportDetailsPage = () => {
               label="Pickup Date & Time *"
               value={form.pickupDateTime}
               minDate={new Date()}
+              minDateTime={new Date()}
               onChange={(date) =>
                 updateFormField(formIndex, "pickupDateTime", date)
               }

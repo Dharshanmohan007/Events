@@ -87,12 +87,25 @@ import FoodEventsListPage from "./Pages/Dashboards/Food-Dashboard/FoodEventsList
 import AccommodationRequestListPage from "./Pages/Dashboards/Accommodation-Dashboard/AccommodationRequestListPage"
 import MediaEventsListPage from "./Pages/Dashboards/Media-Dashboard/MediaEventsListPage"
 
+import IndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/IndividualDocumentUpload";
+import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/PurchaseIndividualDocumentUpload";
+import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
+import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
+
+
+
+
 import Calendar from "./Pages/Calendar/Calendar.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
+
 import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyReportsPage";
+
 import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Faculty-IndividualDetailView/FacultyIndividualDetailiew.jsx";
 import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
+
+
+
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -200,8 +213,18 @@ function AppRoutes() {
       <Route path="/dashboard-faculty/individual-feedback/:requestId" element={<ProtectedRoute><FacultyIndividualFeedbackPage /></ProtectedRoute>} />
 
       <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
-
-
+      
+      
+      
+      
+      <Route path="/dashboard-faculty/IndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/PurchaseIndividualDocumentUpload/:eventId" element={<ProtectedRoute><PurchaseIndividualDocumentUpload /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/MediaIndividualDocumentUpload/:eventId" element={<ProtectedRoute><MediaIndividualDocumentUpload /></ProtectedRoute>} />
+      
+      
+      
+      
       <Route path="/dashboard-accommodation" element={<ProtectedRoute><AccommodationDashboard /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/requests" element={<ProtectedRoute><AccommodationRequestListPage /></ProtectedRoute>} />
       <Route path="/dashboard-accommodation/events/detailView/:eventId" element={<ProtectedRoute><AccommodationEventsDetailViewPage /></ProtectedRoute>} />

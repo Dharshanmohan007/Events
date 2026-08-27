@@ -7,7 +7,7 @@ import {
   FileText,
 } from "lucide-react";
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Modal from "../../Components/Modal";
 
@@ -239,13 +239,13 @@ const IndividualFoodDetailPage = ({ data }) => {
         {role.toLowerCase() === "faculty" && (
           <div>
             {data?.superAdminApproval?.status?.toLowerCase() === "approved" && (
-              <button
+              <Link
                 // onClick={handleFacultyClose}
                 to={`/dashboard-faculty/IndividualDocumentUpload/${eventId}`}
                 className="bg-emerald-800 text-white px-4 py-2 rounded-lg cursor-pointer"
               >
                 Close
-              </button>
+              </Link>
             )}
           </div>
         )}
