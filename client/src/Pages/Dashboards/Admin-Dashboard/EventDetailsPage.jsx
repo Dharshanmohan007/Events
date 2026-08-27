@@ -650,7 +650,7 @@ const EventDetailsPage = () => {
 
             {role.toLowerCase() == "hod" ? "" : <>
 
-              {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
+              {data?.status?.toLowerCase() !== "closed" && <Link to={`/forms/edit/${eventId}`} className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer ">
                 <Pencil size={14} className="text-[#34D399]  " />
               </Link>}
               <button
