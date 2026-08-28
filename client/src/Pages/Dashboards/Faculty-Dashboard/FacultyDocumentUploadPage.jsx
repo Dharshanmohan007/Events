@@ -244,6 +244,8 @@ const FacultyDocumentUploadPage = () => {
     }
   }, [step, eventId, basicDetails])
 
+  console.log("updated code is here")
+
 
   useEffect(() => {
     if (navigationDetails?.isDocumentsCompleted == false) {
