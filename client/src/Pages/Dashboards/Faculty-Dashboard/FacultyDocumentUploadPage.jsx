@@ -151,8 +151,9 @@ const validateOtherDetails = (otherData) => {
 }
 
 const FacultyDocumentUploadPage = () => {
-  console.log("correction branch")
 
+
+  const token = localStorage.getItem('token')
 
   const { eventId } = useParams()
   const navigate = useNavigate()
@@ -166,6 +167,8 @@ const FacultyDocumentUploadPage = () => {
   const [files, setFiles] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [basicDetails, setBasicDetails] = useState(null)
+  const [navigationDetails, setnavigationDetails] = useState(null)
+
 
   // Form data for each step
   const [incomeData, setIncomeData] = useState(initialIncomeData)
@@ -173,12 +176,30 @@ const FacultyDocumentUploadPage = () => {
   const [otherData, setOtherData] = useState(initialOtherData)
 
   // Fetch required documents on mount
+
+  // fetch event details 
+  async function fetchEventDetails() {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/api/events/${eventId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log("events response : ", res.data?.data)
+      setnavigationDetails(res?.data?.data)
+    } catch (error) {
+      console.error("error occured while fetching the events data : ", error.message)
+    }
+  }
+
+
+
   useEffect(() => {
+    fetchEventDetails()
     const fetchDocuments = async () => {
       setLoading(true)
       setError('')
       try {
-        const token = localStorage.getItem('token')
         const res = await fetch(`${API_BASE_URL}/api/events/documents/${eventId}`, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         })
@@ -222,6 +243,21 @@ const FacultyDocumentUploadPage = () => {
       fetchBasicDetails()
     }
   }, [step, eventId, basicDetails])
+
+
+  useEffect(() => {
+    if (navigationDetails?.isDocumentsCompleted == false) {
+      setStep('documentUpload')
+      return
+    } else if (navigationDetails?.isExpenditureCompleted == false) {
+      setStep('incomeSource')
+      return
+    }
+    else if (navigationDetails?.isFeedbackCompleted == false) {
+     window.open(`/dashboard-faculty/feedback/${eventId}`, "_blank")
+      return
+    }
+  }, [navigationDetails])
 
   const handleFileChange = (fileRef, file) => {
     setFiles((prev) => ({ ...prev, [fileRef]: file }))
@@ -378,23 +414,23 @@ const FacultyDocumentUploadPage = () => {
       // Build basicDetails - only send organizerId from organizerDetails
       const builtBasicDetails = basicDetails
         ? {
-            eventName: basicDetails.eventName || eventName,
-            organizerId: basicDetails.organizerDetails?.facultyId || '',
-            iqacNumber: basicDetails.iqacNumber || '',
-            advanceAmount: basicDetails.advanceAmount || 0,
-            dateOfAdvanceTaken: basicDetails.dateAdvanceTaken || '',
-            purposeOfAdvanceTaken: basicDetails.purposeOfAdvance || '',
-            guestDetails: basicDetails.guestNames || [],
-          }
+          eventName: basicDetails.eventName || eventName,
+          organizerId: basicDetails.organizerDetails?.facultyId || '',
+          iqacNumber: basicDetails.iqacNumber || '',
+          advanceAmount: basicDetails.advanceAmount || 0,
+          dateOfAdvanceTaken: basicDetails.dateAdvanceTaken || '',
+          purposeOfAdvanceTaken: basicDetails.purposeOfAdvance || '',
+          guestDetails: basicDetails.guestNames || [],
+        }
         : {
-            eventName,
-            organizerId: '',
-            iqacNumber: '',
-            advanceAmount: 0,
-            dateOfAdvanceTaken: '',
-            purposeOfAdvanceTaken: '',
-            guestDetails: [],
-          }
+          eventName,
+          organizerId: '',
+          iqacNumber: '',
+          advanceAmount: 0,
+          dateOfAdvanceTaken: '',
+          purposeOfAdvanceTaken: '',
+          guestDetails: [],
+        }
 
       // Build final payload
       const payload = {

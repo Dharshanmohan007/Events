@@ -581,30 +581,41 @@ const FacultyEventsDetailViewPage = () => {
               )}
             </div>
           </div>
-          {console.log("data : ", data)}
-          {data.status?.toLowerCase() === "closed" ? (
-            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
+          {console.log("eve data : ", data)}
+          {data?.isClosed ? (
+            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white">
               <Check size={18} />
               Closed
             </div>
-          ) : data.adminApproval == true ? <button
-            type="button"
-            onClick={openFeedbackPage}
-            disabled={closeLoading}
-            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {closeLoading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Closing...
-              </>
-            ) : (
-              <>
-                <Check size={18} />
-                Close
-              </>
-            )}
-          </button> : ""}
+          ) : (
+            data?.adminApproval === true &&
+            (!data?.isDocumentsCompleted ||
+              !data?.isExpenditureCompleted ||
+              !data?.isFeedbackCompleted) && (
+              <button
+                type="button"
+                onClick={openFeedbackPage}
+                disabled={closeLoading}
+                className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {closeLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Closing...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Close
+                  </>
+                )}
+              </button>
+            )
+          )}
+
+
+
+
           {/* <button
             type="button"
             onClick={openFeedbackPage}
