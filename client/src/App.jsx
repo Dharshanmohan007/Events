@@ -219,7 +219,7 @@ function AppRoutes() {
       
       <Route path="/dashboard-faculty/IndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/PurchaseIndividualDocumentUpload/:eventId" element={<ProtectedRoute><PurchaseIndividualDocumentUpload /></ProtectedRoute>} />
-      <Route path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId" element={<ProtectedRoute><TransportIndividualDocumentUpload /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/MediaIndividualDocumentUpload/:eventId" element={<ProtectedRoute><MediaIndividualDocumentUpload /></ProtectedRoute>} />
       
       

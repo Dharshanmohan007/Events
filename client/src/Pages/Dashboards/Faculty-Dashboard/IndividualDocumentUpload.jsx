@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
-export default function IndividualDocumentUpload() {
+export default function IndividualDocumentUpload({ requestType = "Food Request", sectionTitle = "Food Details" }) {
   const { eventId } = useParams();
   const [foodDetails, setFoodDetails] = useState([
     { name: "", billNo: "", billDate: "", vendor: "", amount: "", file: null, fileError: "" }
@@ -82,16 +82,16 @@ export default function IndividualDocumentUpload() {
       return;
     }
 
-    const expenditures = [...foodDetails, ...miscDetails].filter((item) => (
-      item.name || item.billNo || item.billDate || item.vendor || item.amount || item.file
-    ));
+    const food = foodDetails[0];
+    const others = miscDetails[0];
 
-    if (!expenditures.length) {
+    if (!food.name && !food.billNo && !food.billDate && !food.vendor && !food.amount && !food.file &&
+      !others.name && !others.billNo && !others.billDate && !others.vendor && !others.amount && !others.file) {
       setSubmitError("Please enter at least one expenditure");
       return;
     }
 
-    const invalidFile = expenditures.find((item) => item.fileError);
+    const invalidFile = [food, others].find((item) => item.fileError);
     if (invalidFile) {
       setSubmitError(invalidFile.fileError);
       return;
@@ -100,32 +100,48 @@ export default function IndividualDocumentUpload() {
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      await Promise.all(expenditures.map(async (item) => {
-        const payload = {
-          requestId: eventId,
-          expenseName: item.name,
-          billNo: item.billNo,
-          billDate: item.billDate,
-          vendorOrGuestName: item.vendor,
-          amount: item.amount,
-          remarks,
-        };
+      const payload = {
+        requestId: eventId,
+        food: {
+          expenseName: food.name,
+          billNo: food.billNo,
+          billDate: food.billDate,
+          vendorOrGuestName: food.vendor,
+          amount: food.amount,
+        },
+        others: {
+          expenseName: others.name,
+          billNo: others.billNo,
+          billDate: others.billDate,
+          vendorOrGuestName: others.vendor,
+          amount: others.amount,
+        },
+        remarks,
+      };
 
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      let requestBody = JSON.stringify(payload);
+
+      if (food.file || others.file) {
         const formData = new FormData();
-        Object.entries(payload).forEach(([field, value]) => formData.append(field, value));
-        if (item.file) formData.append("file", item.file, item.file.name);
+        formData.append("payload", JSON.stringify(payload));
+        if (food.file) formData.append("foodFile", food.file, food.file.name);
+        if (others.file) formData.append("othersFile", others.file, others.file.name);
+        requestBody = formData;
+      } else {
+        headers["Content-Type"] = "application/json";
+      }
 
-        const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
-          method: "PUT",
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: formData,
-        });
+      const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
+        method: "PUT",
+        headers,
+        body: requestBody,
+      });
 
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({}));
-          throw new Error(errorBody.message || "Unable to upload expenditure details");
-        }
-      }));
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.message || "Unable to upload expenditure details");
+      }
 
       setSubmitSuccess("Expenditure details uploaded successfully");
     } catch (error) {
@@ -139,7 +155,7 @@ export default function IndividualDocumentUpload() {
     <div className="min-h-screen bg-slate-950 text-white p-8">
       {/* Breadcrumb */}
       <div className="mb-6 text-sm text-slate-400">
-        <span>Food Request</span> <span className="mx-2">›</span> <span>Expenditure Details</span>
+        <span>{requestType}</span> <span className="mx-2">›</span> <span>Expenditure Details</span>
       </div>
 
       {/* Header */}
@@ -154,7 +170,7 @@ export default function IndividualDocumentUpload() {
           <div key={index} className="mb-8 last:mb-0 bg-[#191D36] border border-slate-700/50 p-6 rounded-lg">
             {index === 0 && (
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-sm font-medium text-purple-400">Food Details</h2>
+                <h2 className="text-sm font-medium text-purple-400">{sectionTitle}</h2>
                 <button
                   onClick={addFoodRow}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded text-xs font-medium flex items-center gap-1"
