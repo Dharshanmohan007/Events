@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { FileText } from 'lucide-react'
+import ExpenditureView from '../ExpenditureView'
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 const EMPTY_VENUES = []
@@ -59,7 +60,7 @@ const VenueBlock = ({ venue }) => (
   </section>
 )
 
-const FacultyVenueDetailsPanel = ({ venueDetails, eventSchedule = [] }) => {
+const FacultyVenueDetailsPanel = ({ venueDetails, eventData, eventSchedule = [] }) => {
   const [activeDay, setActiveDay] = useState(0)
   const venues = venueDetails?.venues ?? EMPTY_VENUES
   const dayCount = Math.max(eventSchedule.length, ...venues.map((venue) => Number(venue.dayIndex) + 1), 1)
@@ -71,6 +72,8 @@ const FacultyVenueDetailsPanel = ({ venueDetails, eventSchedule = [] }) => {
 
   return (
     <div className="space-y-5 ">
+      <ExpenditureView data={eventData} />
+
       {dayCount > 1 && (
         <nav className="flex border-b border-[#374155]" aria-label="Venue event days">
           {Array.from({ length: dayCount }, (_, index) => (

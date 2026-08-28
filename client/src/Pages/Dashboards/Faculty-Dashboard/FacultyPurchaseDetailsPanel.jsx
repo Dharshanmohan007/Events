@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { FileText } from 'lucide-react'
+import ExpenditureView from '../ExpenditureView'
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
@@ -85,7 +86,7 @@ const RecipientSection = ({ title, data }) => {
   )
 }
 
-const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) => {
+const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventData, eventSchedule = [] }) => {
   const [activeDay, setActiveDay] = useState(0)
   const purchases = purchaseDetails?.purchases || []
   const dayCount = Math.max(eventSchedule.length, purchases.length, 1)
@@ -101,6 +102,9 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
 
   return (
     <div className="space-y-5">
+
+      <ExpenditureView data={eventData} />
+
       {dayCount > 1 && (
         <nav className="flex border-b border-[#374155]" aria-label="Purchase event days">
           {Array.from({ length: dayCount }, (_, index) => (
@@ -108,11 +112,10 @@ const FacultyPurchaseDetailsPanel = ({ purchaseDetails, eventSchedule = [] }) =>
               key={index}
               type="button"
               onClick={() => setActiveDay(index)}
-              className={`border-b-2 px-5 py-2 text-[10px] font-medium transition ${
-                selectedDay === index
+              className={`border-b-2 px-5 py-2 text-[10px] font-medium transition ${selectedDay === index
                   ? 'border-[#8B3DFF] text-[#9F68FF]'
                   : 'border-transparent text-[#CBC3D7]/75 hover:text-white'
-              }`}
+                }`}
             >
               Day {index + 1}
             </button>
