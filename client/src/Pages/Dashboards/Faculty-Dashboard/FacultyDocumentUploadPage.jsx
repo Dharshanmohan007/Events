@@ -157,7 +157,7 @@ const FacultyDocumentUploadPage = () => {
   const { eventId } = useParams()
   const navigate = useNavigate()
 
-  const [step, setStep] = useState('incomeSource')
+  const [step, setStep] = useState('documentUpload')
   const [documents, setDocuments] = useState([])
   const [eventName, setEventName] = useState('')
   const [loading, setLoading] = useState(true)
