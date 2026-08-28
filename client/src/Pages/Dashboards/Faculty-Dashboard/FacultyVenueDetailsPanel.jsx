@@ -70,7 +70,7 @@ const FacultyVenueDetailsPanel = ({ venueDetails, eventSchedule = [] }) => {
   if (!venueDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No venue details are available.</p>
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 ">
       {dayCount > 1 && (
         <nav className="flex border-b border-[#374155]" aria-label="Venue event days">
           {Array.from({ length: dayCount }, (_, index) => (

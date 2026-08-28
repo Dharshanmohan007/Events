@@ -154,7 +154,7 @@ const VenueEventsDetailViewPage = () => {
                   )}
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-8 ">
                   <FacultyVenueDetailsPanel
                     venueDetails={venueDetails}
                     eventSchedule={eventSchedule}

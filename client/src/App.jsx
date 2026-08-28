@@ -103,6 +103,7 @@ import FacultyReportsPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyRepo
 
 import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Faculty-IndividualDetailView/FacultyIndividualDetailiew.jsx";
 import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
+import AdminExpenditureTable from "./Pages/Dashboards/Admin-Dashboard/AdminExpenditureTable.jsx";
 
 
 
@@ -171,6 +172,7 @@ function AppRoutes() {
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+        <Route path="expenditures" element={<AdminExpenditureTable />} />
 
       </Route>
       <Route path="/dashboard/AdminIndividualDetailView/v2/:eventId" element={< AdminIndividualDetailView />} />
