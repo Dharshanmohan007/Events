@@ -73,52 +73,63 @@ export default function IndividualDocumentUpload() {
     setMiscDetails(miscDetails.filter((_, rowIndex) => rowIndex !== index));
   };
 
-  const handleFoodSubmit = async () => {
-    const food = foodDetails[0];
+  const handleSubmit = async () => {
     setSubmitError("");
     setSubmitSuccess("");
 
     if (!eventId) {
-      setSubmitError("Food request ID is missing");
+      setSubmitError("Request ID is missing");
       return;
     }
 
-    if (food.fileError) {
-      setSubmitError(food.fileError);
+    const expenditures = [...foodDetails, ...miscDetails].filter((item) => (
+      item.name || item.billNo || item.billDate || item.vendor || item.amount || item.file
+    ));
+
+    if (!expenditures.length) {
+      setSubmitError("Please enter at least one expenditure");
       return;
     }
 
-    const payload = {
-      requestId: eventId,
-      expenseName: food.name,
-      billNo: food.billNo,
-      billDate: food.billDate,
-      vendorOrGuestName: food.vendor,
-      amount: food.amount,
-      remarks,
-    };
-
-    const formData = new FormData();
-    Object.entries(payload).forEach(([field, value]) => formData.append(field, value));
-    if (food.file) formData.append("file", food.file, food.file.name);
+    const invalidFile = expenditures.find((item) => item.fileError);
+    if (invalidFile) {
+      setSubmitError(invalidFile.fileError);
+      return;
+    }
 
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/individual/food/${eventId}`, {
-        method: "PUT",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
+      await Promise.all(expenditures.map(async (item) => {
+        const payload = {
+          requestId: eventId,
+          expenseName: item.name,
+          billNo: item.billNo,
+          billDate: item.billDate,
+          vendorOrGuestName: item.vendor,
+          amount: item.amount,
+          remarks,
+        };
 
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody.message || "Unable to upload food details");
-      }
+        const formData = new FormData();
+        Object.entries(payload).forEach(([field, value]) => formData.append(field, value));
+        if (item.file) formData.append("file", item.file, item.file.name);
 
-      setSubmitSuccess("Food details uploaded successfully");
+        const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
+          method: "PUT",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({}));
+          throw new Error(errorBody.message || "Unable to upload expenditure details");
+        }
+      }));
+
+      setSubmitSuccess("Expenditure details uploaded successfully");
     } catch (error) {
-      setSubmitError(error.message || "Unable to upload food details");
+      setSubmitError(error.message || "Unable to upload expenditure details");
     } finally {
       setIsSubmitting(false);
     }
@@ -447,7 +458,7 @@ export default function IndividualDocumentUpload() {
         </button>
         <button
           type="button"
-          onClick={handleFoodSubmit}
+          onClick={handleSubmit}
           disabled={isSubmitting}
           className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2 rounded text-sm font-medium transition"
         >
