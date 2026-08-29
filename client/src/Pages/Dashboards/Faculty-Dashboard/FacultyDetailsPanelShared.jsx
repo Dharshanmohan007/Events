@@ -12,11 +12,11 @@ export const FacultyKeyValueGrid = ({ items }) => (
   </div>
 )
 
-export const FacultySectionCard = ({ icon = FileText, title, children }) => {
+export const FacultySectionCard = ({ icon = FileText, title, children, className = '' }) => {
   const IconComponent = icon
 
   return (
-    <section className="rounded-lg border border-[#374155] bg-[#232A3B] p-5">
+    <section className={`rounded-lg border border-[#374155] bg-[#232A3B] p-5 ${className}`}>
       <div className="mb-4 flex items-center gap-2 text-base font-semibold text-[#E6E2F0]">
         <IconComponent size={17} />
         {title}

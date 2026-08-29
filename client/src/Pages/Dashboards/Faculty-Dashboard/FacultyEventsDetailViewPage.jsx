@@ -505,6 +505,7 @@ const FacultyEventsDetailViewPage = () => {
         <FacultyIctcsDetailsPanel
           ictsDetails={ictsDetails}
           eventSchedule={requestDetails?.eventDetails?.eventSchedule}
+          allocationId={eventId}
         />
       )
     }
