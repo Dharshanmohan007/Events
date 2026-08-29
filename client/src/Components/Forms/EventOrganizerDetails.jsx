@@ -53,15 +53,17 @@ export default function EventOrganizerDetails({
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
 
   const handleOrganizersChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 0)) {
-      setNumOrganizers(val);
-      const count = parseInt(val) || 0;
-      const newOrganizers = Array.from({ length: count + 1 }, (_, i) =>
-        organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }
-      );
-      setOrganizers(newOrganizers);
+    let val = e.target.value;
+    if (val !== "") {
+      const num = parseInt(val) || 0;
+      val = Math.max(0, Math.min(5, num)).toString();
     }
+    setNumOrganizers(val);
+    const count = val === "" ? 0 : parseInt(val);
+    const newOrganizers = Array.from({ length: count + 1 }, (_, i) =>
+      organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }
+    );
+    setOrganizers(newOrganizers);
   };
 
   const organizerCount = parseInt(numOrganizers) >= 0 ? parseInt(numOrganizers) : 0;

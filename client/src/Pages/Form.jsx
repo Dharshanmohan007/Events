@@ -313,8 +313,8 @@ const validateIctsData = (ictsData, venueData) => {
       const card = venues?.[venueName] || {};
       const cardErrors = {};
 
-      if (!card.equipmentRequired || card.equipmentRequired.length === 0)
-        cardErrors.equipmentRequired = "Select at least one equipment";
+      if (!card.laptopTypes || card.laptopTypes.length === 0)
+        cardErrors.laptopTypes = "Select at least one laptop type";
       if (!card.internetFacility)
         cardErrors.internetFacility = "This field is required";
       if (
@@ -352,20 +352,20 @@ const buildIctsPayload = (ictsData) => {
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
-      const desktopLaptop = (card.equipmentRequired || []).map((type) => ({
+      const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
-          type === "Desktop"
-            ? parseInt(card.desktopCount) || 0
-            : type === "Laptop"
-            ? parseInt(card.laptopCount) || 0
+          type === "Windows"
+            ? parseInt(card.windowsCount) || 0
+            : type === "Mac"
+            ? parseInt(card.macCount) || 0
             : 0,
       }));
 
       ictses.push({
         dayIndex,
         venueName,
-        desktopLaptop,
+        laptopSpec,
         internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
         proctoringUsers:       parseInt(card.proctorUsers) || 0,
@@ -945,11 +945,11 @@ function hydrateEventData(apiData) {
   ictsBackend.forEach((item) => {
     const dayKey = String(item.dayIndex);
     if (!icts[dayKey]) icts[dayKey] = {};
-    const equipmentRequired = (item.desktopLaptop || []).map((d) => d.type);
+    const laptopTypes = (item.laptopSpec || []).map((d) => d.type);
     const card = {
-      equipmentRequired,
-      desktopCount: "",
-      laptopCount: "",
+      laptopTypes,
+      windowsCount: "",
+      macCount: "",
       internetFacility: item.internetFacility || "",
       expectedInternetUsers: item.expectedInternetUsers ? String(item.expectedInternetUsers) : "",
       proctorUsers: item.proctoringUsers ? String(item.proctoringUsers) : "",
@@ -960,9 +960,9 @@ function hydrateEventData(apiData) {
       others: item.otherRequirements || "",
       specialRequirements: item.specialRequirements || "",
     };
-    (item.desktopLaptop || []).forEach((d) => {
-      if (d.type === "Desktop") card.desktopCount = String(d.count);
-      if (d.type === "Laptop") card.laptopCount = String(d.count);
+    (item.laptopSpec || []).forEach((d) => {
+      if (d.type === "Windows") card.windowsCount = String(d.count);
+      if (d.type === "Mac") card.macCount = String(d.count);
     });
     icts[dayKey][item.venueName] = card;
   });

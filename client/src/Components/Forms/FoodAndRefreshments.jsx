@@ -189,9 +189,11 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
           const sectionLabel = getSectionLabel(sectionKey);
           const vegVal = parseInt(data[sectionKey]?.vegCount) || 0;
           const nonVegVal = parseInt(data[sectionKey]?.nonVegCount) || 0;
+          const hideNonVeg = (title === "Breakfast" || title === "Dinner") && sectionKey !== "participants";
+
           return (
             <React.Fragment key={sectionKey}>
-              <div>
+              <div className={hideNonVeg ? "col-span-1 md:col-span-2" : ""}>
                 <CustomInput
                   label={`No. of veg In ${sectionLabel} Menu *`}
                   labelBg={labelBg}
@@ -212,27 +214,29 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                   </p>
                 )}
               </div>
-              <div>
-                <CustomInput
-                  label={`No. of Non-veg In ${sectionLabel} Menu *`}
-                  labelBg={labelBg}
-                  type="number"
-                  value={data[sectionKey]?.nonVegCount ?? ""}
-                  onChange={(e) => {
-                    const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
-                    let val = strVal === "" ? "" : Math.max(0, Number(strVal));
-                    if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
-                      if (val > maxCount) val = maxCount;
-                    }
-                    onChange(sectionKey, "nonVegCount", val);
-                  }}
-                />
-                {errors[sectionKey]?.nonVegCount && (
-                  <p className="text-red-400 text-xs mt-1">
-                    {errors[sectionKey].nonVegCount}
-                  </p>
-                )}
-              </div>
+              {!((title === "Breakfast" || title === "Dinner") && sectionKey !== "participants") && (
+                <div>
+                  <CustomInput
+                    label={`No. of Non-veg In ${sectionLabel} Menu *`}
+                    labelBg={labelBg}
+                    type="number"
+                    value={data[sectionKey]?.nonVegCount ?? ""}
+                    onChange={(e) => {
+                      const strVal = String(e.target.value).replace(/[eE+\-.]/g, "");
+                      let val = strVal === "" ? "" : Math.max(0, Number(strVal));
+                      if (val !== "" && sectionKey !== "participants" && maxCount > 0) {
+                        if (val > maxCount) val = maxCount;
+                      }
+                      onChange(sectionKey, "nonVegCount", val);
+                    }}
+                  />
+                  {errors[sectionKey]?.nonVegCount && (
+                    <p className="text-red-400 text-xs mt-1">
+                      {errors[sectionKey].nonVegCount}
+                    </p>
+                  )}
+                </div>
+              )}
             </React.Fragment>
           );
         })}
@@ -349,7 +353,11 @@ function validateFoodForms(forms) {
           const sectionData = mealData[sectionKey] || {};
           const secErrs = {};
           if (sectionData.vegCount === "") secErrs.vegCount = "Veg count is required";
-          if (sectionData.nonVegCount === "") secErrs.nonVegCount = "Non-veg count is required";
+          
+          const hideNonVeg = (meal === "Breakfast" || meal === "Dinner") && sectionKey !== "participants";
+          if (!hideNonVeg && sectionData.nonVegCount === "") {
+            secErrs.nonVegCount = "Non-veg count is required";
+          }
 
           // No sum validation needed here, as inputs are capped at maxCount individually
           
@@ -988,7 +996,7 @@ export default function FoodAndRefreshments({
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
-                  Special Requirements, If any food allergies
+                  Special Requirements
                 </label>
                 <textarea
                   rows={4}

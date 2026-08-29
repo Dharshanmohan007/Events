@@ -117,23 +117,57 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
   }, [dayData?.date, dayData?.startTime]);
 
   const handleGuestsChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
-      const count = parseInt(val) || 1;
-      const existingGuests = dayData.guests || [];
-      // Preserve existing guest data — only add empty entries or trim from end
-      let newGuests;
-      if (count > existingGuests.length) {
-        const extra = Array.from({ length: count - existingGuests.length }, () => ({
-          name: "", designation: "", organization: "", mobile: "", gender: "",
-        }));
-        newGuests = [...existingGuests, ...extra];
-      } else {
-        newGuests = existingGuests.slice(0, count);
-      }
-      updateDay({ ...dayData, numGuests: val, guests: newGuests });
-    }
-  };
+  const val = e.target.value;
+
+  // Allow empty input
+  if (val === "") {
+    updateDay({
+      ...dayData,
+      numGuests: "",
+      guests: [],
+    });
+    return;
+  }
+
+  // Allow only digits
+  if (!/^\d+$/.test(val)) {
+    return;
+  }
+
+  const count = parseInt(val, 10);
+
+  // Maximum 10 guests
+  if (count > 10) {
+    return;
+  }
+
+  const existingGuests = dayData.guests || [];
+
+  let newGuests;
+
+  if (count > existingGuests.length) {
+    const extra = Array.from(
+      { length: count - existingGuests.length },
+      () => ({
+        name: "",
+        designation: "",
+        organization: "",
+        mobile: "",
+        gender: "",
+      })
+    );
+
+    newGuests = [...existingGuests, ...extra];
+  } else {
+    newGuests = existingGuests.slice(0, count);
+  }
+
+  updateDay({
+    ...dayData,
+    numGuests: val,
+    guests: newGuests,
+  });
+};
 
   const guestCount = parseInt(dayData?.numGuests) > 0 ? parseInt(dayData.numGuests) : 0;
 
@@ -188,9 +222,11 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
         <div>
           <CustomInput
             labelBg="#1E1E35"
-            label={`Day ${dayIndex} – Total Number of Guests *`}
+            label={`Day ${dayIndex} – Total Number of Guests (max 10 guest allowed) *`}
             type="number"
-            value={dayData?.numGuests || ""}
+            min={0}
+            max={10}
+            value={dayData?.numGuests ?? ""}
             onChange={handleGuestsChange}
             placeholder="Enter number of guests"
           />

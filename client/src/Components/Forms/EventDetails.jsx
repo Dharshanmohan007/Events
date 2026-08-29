@@ -32,30 +32,33 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
   }, []);
 
   const handleDaysChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
-      const count = parseInt(val) || 0;
-      // Preserve existing days data — only add new empty days or trim from the end
-      const existing = eventData.eventDays || [];
-      let newDays;
-      if (count > existing.length) {
-        // Adding more days: keep all existing, append new empty ones
-        const extra = Array.from({ length: count - existing.length }, () => ({
-          date: "",
-          startTime: "",
-          endTime: "",
-          numGuests: "1",
-          guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
-        }));
-        newDays = [...existing, ...extra];
-      } else {
-        // Reducing days: trim from the END only
-        newDays = existing.slice(0, count);
-      }
-      setEventDays(newDays);
-      setEventData((prev) => ({ ...prev, eventDays: newDays }));
-      if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
+    let val = e.target.value;
+    if (val !== "") {
+      const num = parseInt(val) || 0;
+      val = Math.max(0, Math.min(10, num)).toString();
     }
+    const count = val === "" ? 0 : parseInt(val);
+    
+    // Preserve existing days data — only add new empty days or trim from the end
+    const existing = eventData.eventDays || [];
+    let newDays;
+    if (count > existing.length) {
+      // Adding more days: keep all existing, append new empty ones
+      const extra = Array.from({ length: count - existing.length }, () => ({
+        date: "",
+        startTime: "",
+        endTime: "",
+        numGuests: "1",
+        guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
+      }));
+      newDays = [...existing, ...extra];
+    } else {
+      // Reducing days: trim from the END only
+      newDays = existing.slice(0, count);
+    }
+    setEventDays(newDays);
+    setEventData((prev) => ({ ...prev, eventDays: newDays }));
+    if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
   };
 
   const handle = (field) => (e) => {
