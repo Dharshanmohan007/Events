@@ -372,6 +372,12 @@ function MealRow({
 // -------------------------------------------------------
 
 function MealSection({ title, data = {} }) {
+  // data is day[meal.toLowerCase()] e.g., day.breakfast
+  const participants = data?.participants || {};
+  const vipGuests = data?.vipGuests || {};
+  const trainer = data?.trainer || {};
+  const placement = data?.placement || {};
+
   return (
     <div className="border border-[#343C59] rounded-2xl bg-[#1E2435] p-5">
       <h3 className="text-[26px] font-bold text-[#8B5CF6] mb-5">
@@ -379,19 +385,46 @@ function MealSection({ title, data = {} }) {
       </h3>
 
       <div className="space-y-3">
+        {/* Participants & VIP */}
         <MealRow
           leftLabel="No. of Veg In Participants Menu"
-          leftValue={data.vegParticipants || 0}
+          leftValue={participants.vegCount || 0}
           rightLabel="No. of Veg In Guest/VIP Menu"
-          rightValue={data.vegGuest || 0}
+          rightValue={vipGuests.vegCount || 0}
         />
 
         <MealRow
           leftLabel="No. of Non-veg In Participants Menu"
-          leftValue={data.nonVegParticipants || 0}
+          leftValue={participants.nonVegCount || 0}
           rightLabel="No. of Non-veg In Guest/VIP Menu"
-          rightValue={data.nonVegGuest || 0}
+          rightValue={vipGuests.nonVegCount || 0}
         />
+        
+        {/* Trainer & Placement */}
+        {(title === "Lunch") && (
+          <>
+            <MealRow
+              leftLabel="No. of Veg In Trainer Menu"
+              leftValue={trainer.vegCount || 0}
+              rightLabel="No. of Veg In Placement Menu"
+              rightValue={placement.vegCount || 0}
+            />
+            <MealRow
+              leftLabel="No. of Non-veg In Trainer Menu"
+              leftValue={trainer.nonVegCount || 0}
+              rightLabel="No. of Non-veg In Placement Menu"
+              rightValue={placement.nonVegCount || 0}
+            />
+          </>
+        )}
+        {(title === "Breakfast" || title === "Dinner") && (
+          <MealRow
+            leftLabel="No. of Veg In Trainer Menu"
+            leftValue={trainer.vegCount || 0}
+            rightLabel="No. of Veg In Placement Menu"
+            rightValue={placement.vegCount || 0}
+          />
+        )}
       </div>
     </div>
   );

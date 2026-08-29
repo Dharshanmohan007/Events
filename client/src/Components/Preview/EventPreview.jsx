@@ -20,7 +20,10 @@ import {
         finance,
         advanceAmount,
         purposeOfAdvance,
-        // principalApprovalDocument,
+        principalApprovalDocument,
+        advanceToBeReceivedWithin,
+        expectedEventOutcome,
+        estimatedBudget,
         budget,
         department,
         organizers = [],
@@ -126,10 +129,16 @@ import {
 
                         <button
                             type="button"
-                            onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+                            onClick={() => {
+                                if (typeof file === "string") {
+                                    window.open(file, "_blank");
+                                } else if (file) {
+                                    window.open(URL.createObjectURL(file), "_blank");
+                                }
+                            }}
                             className="truncate text-blue-400 hover:underline"
                         >
-                            {file?.name || "-"}
+                            {typeof file === "string" ? file.split("/").pop() || "View Document" : file?.name || "-"}
                         </button>
                         </div>
                     ) : (
@@ -138,6 +147,35 @@ import {
                 </div>
             </div>
             </div>
+            {principalApprovalDocument && (
+                <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4 mt-4">
+                    <div className="grid md:grid-cols-2 gap-5">
+                        <div className="flex justify-between border-r border-[#8e93a6] pr-4">
+                            <span className="text-gray-400 text-sm">
+                                Principal Approval Form
+                            </span>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 text-green-400">
+                                <FileText size={18} />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (typeof principalApprovalDocument === "string") {
+                                            window.open(principalApprovalDocument, "_blank");
+                                        } else if (principalApprovalDocument) {
+                                            window.open(URL.createObjectURL(principalApprovalDocument), "_blank");
+                                        }
+                                    }}
+                                    className="truncate text-blue-400 hover:underline"
+                                >
+                                    {typeof principalApprovalDocument === "string" ? principalApprovalDocument.split("/").pop() || "View Document" : principalApprovalDocument?.name || "-"}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* ==========================================================
@@ -228,6 +266,12 @@ import {
                         ? eventData.audience.join(", ")
                         : eventData.audience
                     }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow
+                    title="Expected Outcome"
+                    value={expectedEventOutcome}
+                    className="border-b border-[#363D57] pb-3"
                 />
                 <PreviewRow
                     title="Poster Logos"
@@ -236,15 +280,24 @@ import {
                         ? eventData.logos.join(", ")
                         : eventData.logos
                     }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow
+                    title="Estimated Budget"
+                    value={estimatedBudget ? `₹ ${estimatedBudget}` : "-"}
+                    className="border-b border-[#363D57] pb-3"
                 />
                 {finance === "Yes" && (
                     <>
                     <PreviewRow
                         title="Advance Amount"
                         value={advanceAmount ? `₹ ${advanceAmount}` : "-"}
+                        className="border-b border-[#363D57] pb-3"
                     />
 
-                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} />
+                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} className="border-b border-[#363D57] pb-3"/>
+                    
+                    <PreviewRow title="Advance Expected Within" value={advanceToBeReceivedWithin} className="border-b border-[#363D57] pb-3"/>
                     </>
                 )}
             </div>

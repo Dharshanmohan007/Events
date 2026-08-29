@@ -179,14 +179,7 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
     (acc.selectedGuestIds || []).includes(g.guestId)
   );
 
-  const roomOccupancy = [];
-  if (parseInt(acc.singleRooms) > 0) {
-    roomOccupancy.push({ type: "Single Room", count: acc.singleRooms });
-  }
-
-  if (parseInt(acc.doubleRooms) > 0) {
-    roomOccupancy.push({ type: "Double Room", count: acc.doubleRooms });
-  }
+  const roomSelections = acc.roomSelections || [];
 
   return (
     <div className="space-y-6">
@@ -265,41 +258,25 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
         <SectionCard title="Room Details" icon={BedDouble}>
           <div className="space-y-3">
             <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
-              <p className="text-[14px] text-[#C4C8D4] mb-2">Occupancy</p>
-              <div className="flex flex-wrap gap-2">
-                {roomOccupancy.length > 0 ? (
-                  roomOccupancy.map((room) => (
-                    <span
-                      key={room.type}
-                      className="inline-block rounded-full border border-[#7C3AED]/40 bg-[#7C3AED]/15 px-3 py-1 text-[13px] text-[#C4B5FD]"
-                    >
-                      {room.type} × {room.count}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-[14px] text-[#98A2B3]">No room occupancy provided.</span>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
-              <p className="text-[14px] text-[#C4C8D4] mb-2">Room Types</p>
-              {(acc.roomTypes || []).length > 0 ? (
+              <p className="text-[14px] text-[#C4C8D4] mb-2">Room Selections</p>
+              {roomSelections.length > 0 ? (
                 <div className="space-y-2">
-                  {(acc.roomTypes || []).map((roomType) => (
+                  {roomSelections.map((room, idx) => (
                     <div
-                      key={roomType}
+                      key={idx}
                       className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2 last:border-b-0 last:pb-0"
                     >
-                      <span className="text-[14px] text-[#D6D8E1]">{roomType}</span>
+                      <span className="text-[14px] text-[#D6D8E1]">
+                        {room.venue} - Room {room.roomNumber}
+                      </span>
                       <span className="text-[14px] text-white font-semibold">
-                        {acc.roomCounts?.[roomType] || 0} room(s)
+                        Capacity: {room.occupantCount}
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <span className="text-[14px] text-[#98A2B3]">No room type selected.</span>
+                <span className="text-[14px] text-[#98A2B3]">No rooms selected.</span>
               )}
             </div>
           </div>
