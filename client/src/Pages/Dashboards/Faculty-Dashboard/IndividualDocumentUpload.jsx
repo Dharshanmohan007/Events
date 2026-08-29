@@ -3,8 +3,18 @@ import { useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
-export default function IndividualDocumentUpload({ requestType = "Food Request", sectionTitle = "Food Details" }) {
+export default function IndividualDocumentUpload({
+  requestType = "Expenditure Request",
+  sectionTitle = "Expenditure Details",
+}) {
   const { eventId } = useParams();
+  const requestKey = (() => {
+    const label = String(requestType || "").toLowerCase();
+    if (label.includes("purchase")) return "purchase";
+    if (label.includes("transport")) return "transport";
+    if (label.includes("media")) return "media";
+    return "food";
+  })();
   const [foodDetails, setFoodDetails] = useState([
     { name: "", billNo: "", billDate: "", vendor: "", amount: "", file: null, fileError: "" }
   ]);
@@ -82,16 +92,19 @@ export default function IndividualDocumentUpload({ requestType = "Food Request",
       return;
     }
 
-    const food = foodDetails[0];
-    const others = miscDetails[0];
+    const hasDetails = (item) => (
+      item.name || item.billNo || item.billDate || item.vendor || item.amount || item.file
+    );
+    const getFilledRows = (rows) => rows.filter(hasDetails);
+    const foodRows = getFilledRows(foodDetails);
+    const miscRows = getFilledRows(miscDetails);
 
-    if (!food.name && !food.billNo && !food.billDate && !food.vendor && !food.amount && !food.file &&
-      !others.name && !others.billNo && !others.billDate && !others.vendor && !others.amount && !others.file) {
+    if (!foodRows.length && !miscRows.length) {
       setSubmitError("Please enter at least one expenditure");
       return;
     }
 
-    const invalidFile = [food, others].find((item) => item.fileError);
+    const invalidFile = [...foodDetails, ...miscDetails].find((item) => item.fileError);
     if (invalidFile) {
       setSubmitError(invalidFile.fileError);
       return;
@@ -100,42 +113,43 @@ export default function IndividualDocumentUpload({ requestType = "Food Request",
     try {
       setIsSubmitting(true);
       const token = localStorage.getItem("token");
-      const payload = {
-        requestId: eventId,
-        food: {
-          expenseName: food.name,
-          billNo: food.billNo,
-          billDate: food.billDate,
-          vendorOrGuestName: food.vendor,
-          amount: food.amount,
-        },
-        others: {
-          expenseName: others.name,
-          billNo: others.billNo,
-          billDate: others.billDate,
-          vendorOrGuestName: others.vendor,
-          amount: others.amount,
-        },
-        remarks,
-      };
+      const formData = new FormData();
 
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      let requestBody = JSON.stringify(payload);
+      formData.append("requestId", eventId);
 
-      if (food.file || others.file) {
-        const formData = new FormData();
-        formData.append("payload", JSON.stringify(payload));
-        if (food.file) formData.append("foodFile", food.file, food.file.name);
-        if (others.file) formData.append("othersFile", others.file, others.file.name);
-        requestBody = formData;
-      } else {
-        headers["Content-Type"] = "application/json";
-      }
+      const foodPayload = foodRows.map((item) => ({
+        expenseName: item.name,
+        billNo: item.billNo,
+        billDate: item.billDate,
+        vendorOrGuestName: item.vendor,
+        amount: item.amount,
+      }));
+      const othersPayload = miscRows.map((item) => ({
+        expenseName: item.name,
+        billNo: item.billNo,
+        billDate: item.billDate,
+        vendorOrGuestName: item.vendor,
+        amount: item.amount,
+      }));
 
-      const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
-        method: "PUT",
-        headers,
-        body: requestBody,
+      formData.append(requestKey, JSON.stringify(foodPayload));
+      formData.append("others", JSON.stringify(othersPayload));
+      formData.append("remarks", remarks);
+
+      foodRows.forEach((item) => {
+        if (item.file) formData.append(`${requestKey}Files`, item.file, item.file.name);
+      });
+      miscRows.forEach((item) => {
+        if (item.file) formData.append("othersFiles", item.file, item.file.name);
+      });
+
+      if (foodRows[0]?.file) formData.append(`${requestKey}File`, foodRows[0].file, foodRows[0].file.name);
+      if (miscRows[0]?.file) formData.append("othersFile", miscRows[0].file, miscRows[0].file.name);
+
+      const response = await fetch(`${API_BASE}/api/individual/expenditure`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
       });
 
       if (!response.ok) {

@@ -91,8 +91,7 @@ import IndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/Indiv
 import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/PurchaseIndividualDocumentUpload";
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
-
-
+import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
 
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
@@ -171,6 +170,8 @@ function AppRoutes() {
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
+        
 
       </Route>
       <Route path="/dashboard/AdminIndividualDetailView/v2/:eventId" element={< AdminIndividualDetailView />} />
@@ -214,13 +215,17 @@ function AppRoutes() {
 
       <Route path="/dashboard-faculty/reports" element={<ProtectedRoute><FacultyReportsPage /></ProtectedRoute>} />
       
+
+      {/* <Route path="/expenditure/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} /> */}
       
       
-      
-      <Route path="/dashboard-faculty/IndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload /></ProtectedRoute>} />
+      <Route path="/dashboard-faculty/IndividualDocumentUpload/:eventId" element={<ProtectedRoute><IndividualDocumentUpload requestType="Food Request" sectionTitle="Food Details" /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/PurchaseIndividualDocumentUpload/:eventId" element={<ProtectedRoute><PurchaseIndividualDocumentUpload /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId" element={<ProtectedRoute><TransportIndividualDocumentUpload /></ProtectedRoute>} />
       <Route path="/dashboard-faculty/MediaIndividualDocumentUpload/:eventId" element={<ProtectedRoute><MediaIndividualDocumentUpload /></ProtectedRoute>} />
+      
+      
+      {/* <Route path="/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} /> */}
       
       
       
