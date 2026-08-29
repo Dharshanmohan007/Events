@@ -463,14 +463,14 @@ function buildGuestGiftItems(personData = {}) {
       trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
     if (personData.trophyType?.includes("Elite"))
       trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
-    giftItems.push({ giftType: "Trophy", trophy, glassCupQty: 0, voucher: [] });
+    giftItems.push({ giftType: "Trophy", trophy, giftsQty: 0, voucher: [] });
   }
 
-  if (personData.giftType?.includes("Glass Cup")) {
+  if (personData.giftType?.includes("Gifts")) {
     giftItems.push({
-      giftType: "Glass Cup",
+      giftType: "Gifts",
       trophy: [],
-      glassCupQty: parseInt(personData.glassCupQty) || 0,
+      giftsQty: parseInt(personData.giftsQty ?? personData.glassCupQty) || 0,
       voucher: [],
     });
   }
@@ -484,7 +484,7 @@ function buildGuestGiftItems(personData = {}) {
       voucherWorth: w,
       quantity: parseInt(worthQty[w]) || 0,
     }));
-    giftItems.push({ giftType: "Voucher", trophy: [], glassCupQty: 0, voucher });
+    giftItems.push({ giftType: "Voucher", trophy: [], giftsQty: 0, voucher });
   }
 
   return giftItems;
@@ -1136,7 +1136,7 @@ function hydrateEventData(apiData) {
           if (t.trophyType === "Elite") result.eliteTrophyQty = String(t.quantity);
         });
       }
-      if (gi.giftType === "Glass Cup") result.glassCupQty = String(gi.glassCupQty ?? gi.qty ?? "");
+      if (gi.giftType === "Gifts") result.giftsQty = String(gi.giftsQty ?? gi.glassCupQty ?? gi.qty ?? "");
       if (gi.giftType === "Cash Prize") result.cashPrizeAmount = String(gi.cashPrizeAmount);
       if (gi.giftType === "Voucher") {
         const worths = (gi.voucher || []).map((v) => v.voucherWorth);

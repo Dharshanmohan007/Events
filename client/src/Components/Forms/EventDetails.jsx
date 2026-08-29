@@ -299,6 +299,36 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
               updated[i] = updatedDay;
               setEventDays(updated);
               setEventData((prev) => ({ ...prev, eventDays: updated }));
+
+              if (setErrors) {
+                setErrors((prev) => {
+                  const currentDaysErrors = prev.days ? [...prev.days] : [];
+                  while (currentDaysErrors.length < updated.length) currentDaysErrors.push({});
+                  
+                  const newDaysErrors = currentDaysErrors.map((errObj, idx) => {
+                    const newErr = { ...errObj };
+                    // Clear only overlap messages
+                    if (newErr.startTime?.includes("Cannot choose the same time and date as Day")) delete newErr.startTime;
+                    if (newErr.endTime?.includes("Cannot choose the end time and date as Day")) delete newErr.endTime;
+                    
+                    const d = updated[idx];
+                    for (let j = 0; j < idx; j++) {
+                      const prevDay = updated[j];
+                      if (
+                        d.date && prevDay.date && d.date === prevDay.date &&
+                        d.startTime && prevDay.startTime && d.startTime === prevDay.startTime &&
+                        d.endTime && prevDay.endTime && d.endTime === prevDay.endTime
+                      ) {
+                        newErr.startTime = `Cannot choose the same time and date as Day ${j + 1}`;
+                        newErr.endTime = `Cannot choose the end time and date as Day ${j + 1}`;
+                      }
+                    }
+                    return newErr;
+                  });
+                  
+                  return { ...prev, days: newDaysErrors };
+                });
+              }
             }}
           />
         );

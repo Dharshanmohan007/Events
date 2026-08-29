@@ -253,7 +253,7 @@ export default function EventOrganizerDetails({
       {/* Principal Approval Form Upload */}
       <div className="mb-7">
         <label className="block mb-1 text-sm text-white">
-          Principal Approval Form
+          Principal Approval Form *
         </label>
 
         <div

@@ -249,8 +249,8 @@ function buildPersonItems(personData = {}, kind) {
     });
   }
 
-  if (kind === "guest" && giftType.includes("Glass Cup")) {
-    items.push({ label: "Glass Cup Quantity", value: padQty(personData.glassCupQty) });
+  if (kind === "guest" && giftType.includes("Gifts")) {
+    items.push({ label: "Gift Count", value: padQty(personData.giftsQty ?? personData.glassCupQty) });
   }
 
   if (personData.registrationKitNeeded === "Yes") {
