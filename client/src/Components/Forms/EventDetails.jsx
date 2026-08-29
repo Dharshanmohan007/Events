@@ -305,7 +305,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
 
               if (setErrors) {
                 setErrors((prev) => {
-                  const currentDaysErrors = prev.days ? [...prev.days] : [];
+                  const currentDaysErrors = prev.days ? prev.days.slice(0, updated.length) : [];
                   while (currentDaysErrors.length < updated.length) currentDaysErrors.push({});
                   
                   const newDaysErrors = currentDaysErrors.map((errObj, idx) => {
@@ -315,8 +315,10 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
                     if (newErr.endTime?.includes("Cannot choose the end time and date as Day")) delete newErr.endTime;
                     
                     const d = updated[idx];
+                    if (!d) return newErr;
                     for (let j = 0; j < idx; j++) {
                       const prevDay = updated[j];
+                      if (!prevDay) continue;
                       if (
                         d.date && prevDay.date && d.date === prevDay.date &&
                         d.startTime && prevDay.startTime && d.startTime === prevDay.startTime &&

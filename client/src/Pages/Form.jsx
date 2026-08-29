@@ -171,7 +171,7 @@ let decodedToken = jwtDecode(token);
   fd.append("organizerId", organizerId);
   const requestDetails = {
     organizerDetails: {
-      previousEventDocumentation: eventRequisition.doc === "Yes",
+      previousEventDocumentation: eventRequisition.doc === "Yes" ? true : eventRequisition.doc === "No" ? false : null,
       previousEventReason: eventRequisition.doc === "No" ? eventRequisition.reason : "",
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
@@ -784,7 +784,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
   const purchase = buildPurchasePayload(formData.purchase);
   return {
     organizerDetails: {
-      previousEventDocumentation: formData.event.doc === "Yes",
+      previousEventDocumentation: formData.event.doc === "Yes" ? true : formData.event.doc === "No" ? false : null,
       previousEventReason: formData.event.doc === "No" ? formData.event.reason : "",
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
@@ -858,7 +858,7 @@ function hydrateEventData(apiData) {
     })),
   }));
   const event = {
-    doc: od.previousEventDocumentation ? "Yes" : "No",
+    doc: od.previousEventDocumentation === true ? "Yes" : (od.previousEventDocumentation === false && od.previousEventReason?.trim() ? "No" : ""),
     reason: od.previousEventReason || "",
     budget: od.isBudgetApproved ? "Yes" : "No",
     finance: od.financeRequired ? "Yes" : "No",
