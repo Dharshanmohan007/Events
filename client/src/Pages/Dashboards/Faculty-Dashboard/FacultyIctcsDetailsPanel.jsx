@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { FacultySectionCard } from './FacultyDetailsPanelShared'
+import EventHeaderData from '../../Dashboards/EventHeaderData'
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
@@ -73,7 +74,7 @@ const IctsVenueDetails = ({ icts }) => {
   )
 }
 
-const FacultyIctcsDetailsPanel = ({ ictsDetails, eventSchedule = [] }) => {
+const FacultyIctcsDetailsPanel = ({ ictsDetails, eventData, eventSchedule = [] }) => {
   const [activeDay, setActiveDay] = useState(0)
   const ictses = ictsDetails?.ictses ?? []
   if (!ictsDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No ICTS details are available.</p>
@@ -83,6 +84,9 @@ const FacultyIctcsDetailsPanel = ({ ictsDetails, eventSchedule = [] }) => {
 
   return (
     <div className="space-y-5">
+
+      <EventHeaderData data={eventData?.requestDetails}/>
+
       {dayCount > 1 && (
         <nav className="flex border-b border-[#374155]" aria-label="ICTCS event days">
           {Array.from({ length: dayCount }, (_, index) => (

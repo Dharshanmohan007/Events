@@ -53,7 +53,7 @@ const AdminExpenditureTable = () => {
 
 
     useEffect(() => {
-        // fetchIndividualList();
+        fetchIndividualList();
         fetchEventsList();
     }, [])
 

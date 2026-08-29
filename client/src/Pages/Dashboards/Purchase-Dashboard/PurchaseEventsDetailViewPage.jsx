@@ -26,6 +26,7 @@ const PurchaseEventsDetailViewPage = () => {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -43,6 +44,7 @@ const PurchaseEventsDetailViewPage = () => {
         if (!eventData.purchaseDetails) throw new Error('Purchase details are not available')
 
         setPurchaseDetails(eventData.purchaseDetails)
+        setEventData(eventData)
         const eventDetails = eventData.requestDetails?.eventDetails || {}
         setEventName(eventDetails.eventName || 'Event Details')
         setEventSchedule(eventDetails.eventSchedule || [])
@@ -154,6 +156,7 @@ const PurchaseEventsDetailViewPage = () => {
                 <FacultyPurchaseDetailsPanel
                   purchaseDetails={purchaseDetails}
                   eventSchedule={eventSchedule}
+                  eventData={eventData}
                 />
               </div>
               </>

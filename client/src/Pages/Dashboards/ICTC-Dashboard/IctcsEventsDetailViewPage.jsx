@@ -26,6 +26,7 @@ const IctcsEventsDetailViewPage = () => {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -43,6 +44,7 @@ const IctcsEventsDetailViewPage = () => {
         if (!eventData.ictsDetails) throw new Error('ICTS details are not available')
 
         setIctsDetails(eventData.ictsDetails)
+        setEventData(eventData)
         const eventDetails = eventData.requestDetails?.eventDetails || {}
         setEventName(eventDetails.eventName || 'Event Details')
         setEventSchedule(eventDetails.eventSchedule || [])
@@ -158,6 +160,7 @@ const IctcsEventsDetailViewPage = () => {
                   <FacultyIctcsDetailsPanel
                     ictsDetails={ictsDetails}
                     eventSchedule={eventSchedule}
+                    eventData={eventData}
                   />
                 </div>
               </>

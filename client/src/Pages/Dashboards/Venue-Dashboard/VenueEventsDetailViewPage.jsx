@@ -26,6 +26,7 @@ const VenueEventsDetailViewPage = () => {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -43,6 +44,7 @@ const VenueEventsDetailViewPage = () => {
         if (!eventData.venueDetails) throw new Error('Venue details are not available')
 
         setVenueDetails(eventData.venueDetails)
+        setEventData(eventData)
         const eventDetails = eventData.requestDetails?.eventDetails || {}
         setEventName(eventDetails.eventName || 'Event Details')
         setEventSchedule(eventDetails.eventSchedule || [])
@@ -158,6 +160,7 @@ const VenueEventsDetailViewPage = () => {
                   <FacultyVenueDetailsPanel
                     venueDetails={venueDetails}
                     eventSchedule={eventSchedule}
+                    eventData={eventData}
                   />
                 </div>
               </>
