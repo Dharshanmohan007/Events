@@ -7,7 +7,7 @@ import { buildEventTemplate } from '../../../templates/eventTemplate'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // ─── Status badge (mirrors PurchaseLatestEventsRequestTable) ──────────────────
-const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted']
+const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'acknowledged']
 
 const ReportStatus = ({ status }) => {
   const label = status || 'Pending'
@@ -15,12 +15,12 @@ const ReportStatus = ({ status }) => {
   return (
     <span
       className={`flex items-center gap-1.5 text-[11px] font-semibold ${
-        isPositive ? 'text-[#20D18C]' : 'text-[#F20768]'
+        isPositive ? 'text-[#34D399]' : 'text-[#F87171]'
       }`}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          isPositive ? 'bg-[#20D18C]' : 'bg-[#F20768]'
+          isPositive ? 'bg-[#34D399]' : 'bg-[#F87171]'
         }`}
       />
       {label}

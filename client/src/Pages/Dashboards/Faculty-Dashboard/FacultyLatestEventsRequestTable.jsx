@@ -54,6 +54,13 @@ const getStatusColor = (status = '') => {
         }
     }
 
+    if (normalizedStatus.includes('completed')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
     return {
         text: 'text-white',
         dot: 'bg-white'

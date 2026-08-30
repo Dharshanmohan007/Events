@@ -2,6 +2,27 @@ import React from 'react'
 import { ArrowRight, ExternalLink, SlidersHorizontal } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+const getStatusColor = (status = '') => {
+    const normalizedStatus = String(status).toLowerCase()
+    if (normalizedStatus.includes('rejected')) return { text: 'text-red-400', dot: 'bg-red-400' }
+    if (normalizedStatus.includes('acknowledged')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('approved')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    if (normalizedStatus.includes('pending')) return { text: 'text-pink-600', dot: 'bg-pink-600' }
+    if (normalizedStatus.includes('submitted')) return { text: 'text-yellow-400', dot: 'bg-yellow-400' }
+    if (normalizedStatus.includes('completed')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
+    return { text: 'text-white', dot: 'bg-white' }
+}
+
+const StatusBadge = ({ status }) => {
+    const { text, dot } = getStatusColor(status)
+    return (
+        <span className={`inline-flex items-center gap-2 ${text}`}>
+            <span className={`h-2 w-2 rounded-full ${dot}`} />
+            {status}
+        </span>
+    )
+}
+
 const FoodRequestTable = ({
     requests,
     viewAllLink,
@@ -43,9 +64,6 @@ const FoodRequestTable = ({
 
                     <tbody>
                         {requests.map((request, index) => {
-                            const isAcknowledged =
-                                request.acknowledgeStatus === 'Acknowledged'
-
                             return (
                                 <tr
                                     key={index}
@@ -68,20 +86,7 @@ const FoodRequestTable = ({
                                     </td>
 
                                     <td className="px-6 py-4">
-                                        <span
-                                            className={`inline-flex items-center gap-2 ${isAcknowledged
-                                                ? 'text-[#34D399]'
-                                                : 'text-[#B32058]'
-                                                }`}
-                                        >
-                                            <span
-                                                className={`h-2 w-2 rounded-full ${isAcknowledged
-                                                    ? 'bg-[#34D399]'
-                                                    : 'bg-[#B32058]'
-                                                    }`}
-                                            />
-                                            {request.acknowledgeStatus}
-                                        </span>
+                                        <StatusBadge status={request.acknowledgeStatus} />
                                     </td>
 
                                     <td className="px-6 py-4">
