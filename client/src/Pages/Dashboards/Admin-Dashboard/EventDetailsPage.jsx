@@ -161,6 +161,7 @@ const EventDetailsPage = () => {
       }
       setDetailTabs(tabs);
       setActiveTab("Event Requisition Details");
+      return tabs;
     } catch (err) {
       console.error("Failed to fetch requisition details:", err);
       setRequestDetails(null);
@@ -173,9 +174,55 @@ const EventDetailsPage = () => {
     }
   };
 
+  // ── Fetch all module statuses upfront ──────────────────────────────
+  const fetchAllModuleStatuses = async (tabs) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const moduleMap = {
+        "Venue Details": "venue",
+        "ICTCS Details": "icts",
+        "Audio Details": "audio",
+        "Transportation Details": "transport",
+        "Food Details": "refreshment",
+        "Accommodation Details": "accommodation",
+        "Purchase Details": "purchase",
+        "Media Details": "media",
+      };
+
+      const fetches = tabs
+        .filter((tab) => moduleMap[tab.name])
+        .map((tab) =>
+          fetch(`${API_BASE_URL}/api/events/${eventId}?module=${moduleMap[tab.name]}`, { headers })
+            .then((res) => res.json())
+            .then((payload) => ({
+              tabName: tab.name,
+              status: payload.data?.[`${moduleMap[tab.name]}Details`]?.status?.status || null,
+            }))
+            .catch(() => ({ tabName: tab.name, status: null }))
+        );
+
+      const results = await Promise.all(fetches);
+
+      setDetailTabs((prevTabs) =>
+        prevTabs.map((tab) => {
+          const result = results.find((r) => r.tabName === tab.name);
+          return result?.status ? { ...tab, status: result.status } : tab;
+        })
+      );
+    } catch (err) {
+      console.error("Failed to fetch module statuses:", err);
+    }
+  };
+
   // ── Fetch requisition details on mount ──────────────────────────────
   useEffect(() => {
-    fetchRequisitionDetails();
+    fetchRequisitionDetails().then((tabs) => {
+      if (tabs && tabs.length > 1) {
+        fetchAllModuleStatuses(tabs);
+      }
+    });
   }, [eventId]);
 
   // ── Lazy fetch venue details ────────────────────────────────────────
