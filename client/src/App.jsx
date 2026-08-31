@@ -91,6 +91,8 @@ import IndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/Indiv
 import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/PurchaseIndividualDocumentUpload";
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
+import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
+
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
 import AllVenuesFullscreenPage from "./Pages/Calendar/AllVenuesFullscreenPage.jsx";
@@ -421,6 +423,11 @@ function AppRoutes() {
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
+        <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+        
+        <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
+        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
+
         <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
@@ -601,7 +608,7 @@ function AppRoutes() {
         path="/dashboard-faculty/IndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
-            <IndividualDocumentUpload />
+            <IndividualDocumentUpload requestType="Food Request" sectionTitle="Food Details" />
           </ProtectedRoute>
         }
       />
@@ -617,7 +624,7 @@ function AppRoutes() {
         path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
-            <IndividualDocumentUpload />
+            <TransportIndividualDocumentUpload />
           </ProtectedRoute>
         }
       />

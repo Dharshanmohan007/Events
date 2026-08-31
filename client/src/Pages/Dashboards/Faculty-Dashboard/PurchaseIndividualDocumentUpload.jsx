@@ -1,5 +1,5 @@
 import IndividualDocumentUpload from "./IndividualDocumentUpload";
 
 export default function PurchaseIndividualDocumentUpload() {
-  return <IndividualDocumentUpload />;
+  return <IndividualDocumentUpload requestType="Purchase Request" sectionTitle="Purchase Details" />;
 }
