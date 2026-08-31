@@ -297,6 +297,8 @@ function createForm() {
     internalCount: "",
     staffList: [],
     foodTypes: [],
+    morningRefreshmentCount: "",
+    eveningRefreshmentCount: "",
     breakfast: {
       participants: { vegCount: "", nonVegCount: "" },
       vipGuests: { vegCount: "", nonVegCount: "" },
@@ -674,6 +676,12 @@ export default function FoodAndRefreshments({
 
               return payloadObj;
             }
+            if (type === "Morning Refreshment" || type === "Evening Refreshment") {
+              return {
+                type,
+                refreshmentCount: parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0
+              };
+            }
             return {
               type,
               participants: { vegCount: 0, nonVegCount: 0 },
@@ -991,6 +999,45 @@ export default function FoodAndRefreshments({
                 />
               );
             })}
+
+            {/* Refreshment Counts */}
+            {form.foodTypes.includes("Morning Refreshment") && (
+              <div className="col-span-1 md:col-span-2">
+                <CustomInput
+                  label="Morning Refreshment Count *"
+                  labelBg="#1f1f38"
+                  value={form.morningRefreshmentCount || ""}
+                  onChange={(e) =>
+                    handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))
+                  }
+                  type="text"
+                />
+                {getError(form.id, "morningRefreshmentCount") && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {getError(form.id, "morningRefreshmentCount")}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {form.foodTypes.includes("Evening Refreshment") && (
+              <div className="col-span-1 md:col-span-2">
+                <CustomInput
+                  label="Evening Refreshment Count *"
+                  labelBg="#1f1f38"
+                  value={form.eveningRefreshmentCount || ""}
+                  onChange={(e) =>
+                    handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))
+                  }
+                  type="text"
+                />
+                {getError(form.id, "eveningRefreshmentCount") && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {getError(form.id, "eveningRefreshmentCount")}
+                  </p>
+                )}
+              </div>
+            )}
 
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">

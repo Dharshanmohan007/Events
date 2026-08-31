@@ -335,7 +335,32 @@ export default function FoodPreview({ foodData = [] }) {
 
         {/* Remaining content (Breakfast, Lunch, Dinner, Special Requirements)
             will come in Part 2B */}
-                    {/* Meal Sections */}
+        {/* Refreshment Counts */}
+
+        {(day.foodTypes || []).includes("Morning Refreshment") && !(day.foodTypes || []).includes("Evening Refreshment") && (
+          <MealRow
+            leftLabel="Morning Refreshment Count"
+            leftValue={day.morningRefreshmentCount || "0"}
+          />
+        )}
+        
+        {!(day.foodTypes || []).includes("Morning Refreshment") && (day.foodTypes || []).includes("Evening Refreshment") && (
+          <MealRow
+            leftLabel="Evening Refreshment Count"
+            leftValue={day.eveningRefreshmentCount || "0"}
+          />
+        )}
+
+        {(day.foodTypes || []).includes("Morning Refreshment") && (day.foodTypes || []).includes("Evening Refreshment") && (
+          <MealRow
+            leftLabel="Morning Refreshment Count"
+            leftValue={day.morningRefreshmentCount || "0"}
+            rightLabel="Evening Refreshment Count"
+            rightValue={day.eveningRefreshmentCount || "0"}
+          />
+        )}
+
+        {/* Meal Sections */}
 
         {selectedMeals.includes("Breakfast") && (
           <MealSection

@@ -64,6 +64,7 @@ const emptyFoodDay = () => ({
   date: null, resourcePersonType: [], resourcePersons: "",
   internalCount: "", staffName: "", mobileNumber: "",
   foodTypes: [], specialRequirements: "",
+  morningRefreshmentCount: "", eveningRefreshmentCount: "",
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -1069,6 +1070,8 @@ function hydrateEventData(apiData) {
         breakfast: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Breakfast")),
         lunch: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Lunch")),
         dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
+        morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
+        eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
         specialRequirements: item.specialRequirements || "",
       }))
     : [emptyFoodDay()];

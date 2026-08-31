@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Phone, Plus, Trash2, Check, Search, ChevronDown, AlertTriangle, LoaderCircle } from "lucide-react";
+import { Phone, Plus, Trash2, Check, Search, ChevronDown, AlertTriangle, LoaderCircle, Building2 } from "lucide-react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-time picker
@@ -666,6 +666,10 @@ function AccommodationBlock({
                     <span className="text-sm text-white truncate">{g.name}</span>
                   </div>
                   <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
+                    <span className="flex items-center gap-1.5">
+                      <Building2 className="text-purple-500" gender={g.organization} />
+                      <span className="text-gray-300">{g.organization || "—"}</span>
+                    </span>
                     <span className="flex items-center gap-1.5">
                       <GenderIcon gender={g.gender} />
                       <span className="text-gray-300">{g.gender || "—"}</span>
