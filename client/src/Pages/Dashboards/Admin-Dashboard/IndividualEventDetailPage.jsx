@@ -790,7 +790,7 @@ const IndividualEventDetailPage = () => {
   const formTypeKey = resolveFormType(submission?.formType);
   const config = FORM_TYPE_CONFIG[formTypeKey];
   const DetailComponent = config?.component;
-  const detailProps = config?.props?.(data) || {};
+  const detailProps = { ...(config?.props?.(data) || {}), allocationId: id };
   const status = submission?.status || data.overallStatus || "-";
   const employeeName = employee.name || submission?.employee || "-";
   const employeeEmail = employee.email || submission?.employeeEmail || "-";

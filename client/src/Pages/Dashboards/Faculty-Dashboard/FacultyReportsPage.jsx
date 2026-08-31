@@ -3,6 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import { Search, ListFilter, Download, ChevronDown } from 'lucide-react'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
+import { buildIndividualRequestTemplate } from '../../../templates/individualRequestTemplate'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -155,27 +156,54 @@ const downloadRow = async (row, tabContext) => {
     return
   }
 
-  // Logic for Individual Requests (CSV Download)
-  const lines = [
-    ['Field', 'Value'],
-    ['Organizer', row.employee],
-    ['Email', row.employeeEmail],
-    ['Form Type', row.formType],
-    ['Venue', row.eventVenue],
-    ['Date', row.createdAt],
-    ['Status', row.status],
-  ]
+  // Individual Requests (PDF Download)
+  try {
+    const token = localStorage.getItem('token')
+    const endpoint = `${API_BASE_URL}/api/individual-submissions/getrequest/${row.id}`
+    const res = await fetch(endpoint, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const json = await res.json()
+    
+    // API returns: { success: true, count: N, data: [ { id, formType, employee, ..., data:{approvals, poster, ...} } ] }
+    // data is an ARRAY — take the first (and only) element
+    const reqObj = Array.isArray(json.data) ? json.data[0] : (json.data || json)
+    
+    if (reqObj && (reqObj.id || reqObj._id || reqObj.formType)) {
+      const htmlString = buildIndividualRequestTemplate(reqObj)
+      
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'absolute'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = 'none'
+      document.body.appendChild(iframe)
 
-  const csv = lines
-    .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `report-${row.eventName || row.employee || 'row'}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+      // Set onload BEFORE writing so we don't miss it
+      iframe.onload = () => {
+        iframe.contentWindow.focus()
+        setTimeout(() => {
+          iframe.contentWindow.print()
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe)
+            }
+          }, 2000)
+        }, 300)
+      }
+
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+      iframeDoc.open()
+      iframeDoc.write(htmlString)
+      iframeDoc.close()
+    } else {
+      console.error('[PDF Fetch] Failed to find individual request data:', json)
+      alert('Failed to fetch individual request details.')
+    }
+  } catch (err) {
+    console.error('[PDF Fetch] Error generating individual PDF:', err)
+    alert('Error connecting to API to generate PDF.')
+  }
 }
 
 // ─── Format date helper ───────────────────────────────────────────────────────

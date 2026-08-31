@@ -665,7 +665,7 @@ export default function EventOrganizerDetails({
       </div>
 
       {/* Department & Organizers count */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-1 gap-4 mb-6">
         <div>
           <CustomSelect
             label="Name of the Organizing Department / Centre "
@@ -708,16 +708,7 @@ export default function EventOrganizerDetails({
           />
           {errors.department && <p className="text-red-400 text-xs mt-1">{errors.department}</p>}
         </div>
-        <div>
-          <CustomInput
-            label="Total Number of CO - Organizer's"
-            type="number"
-            value={numOrganizers}
-            onChange={handleOrganizersChange}
-            placeholder="Enter number of organizers"
-          />
-          {errors.numOrganizers && <p className="text-red-400 text-xs mt-1">{errors.numOrganizers}</p>}
-        </div>
+        
       </div>
 
       {/* Organizer Cards */}
@@ -731,7 +722,18 @@ export default function EventOrganizerDetails({
             arr[0] = updated;
             setOrganizers(arr);
           }}
+          hideSearch={true}
         />
+        <div>
+          <CustomInput
+            label="Total Number of CO - Organizer's"
+            type="number"
+            value={numOrganizers}
+            onChange={handleOrganizersChange}
+            placeholder="Enter number of organizers"
+          />
+          {errors.numOrganizers && <p className="text-red-400 text-xs mt-1">{errors.numOrganizers}</p>}
+        </div>
         {organizerCount > 0 && Array.from({ length: organizerCount }, (_, i) => (
           <OrganizerDetails
             key={i + 1}
