@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Check, ChevronRight } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import FacultyDahsboardHeader from './FacultyDahsboardHeader'
 import FacultyAccommodationDetailsPanel from './FacultyAccommodationDetailsPanel'
 import FacultyAudioDetailsPanel from './FacultyAudioDetailsPanel'
@@ -68,9 +69,14 @@ const FacultyEventsDetailViewPage = () => {
   const [accommodationError, setAccommodationError] = useState('')
   const [purchaseDetails, setPurchaseDetails] = useState(null)
   const [data, setData] = useState([]);
+  const [reloadKey, setReloadKey] = useState(0)
   const [purchaseLoading, setPurchaseLoading] = useState(false)
   const [purchaseError, setPurchaseError] = useState('')
   const activeTabConfig = detailTabs.find((tab) => tab.name === activeTab)
+  const [closeLoading, setCloseLoading] = useState(false)
+  const navigate = useNavigate();
+
+
 
   useEffect(() => {
     const fetchRequisitionDetails = async () => {
@@ -88,7 +94,7 @@ const FacultyEventsDetailViewPage = () => {
         const eventData = payload.data || payload
         const details = eventData.requestDetails
         setData(eventData);
-        console.log("event tabs data : ", details)
+        // console.log("event tabs data : ", details)
         if (!details) throw new Error('Event requisition details are not available')
 
         setRequestDetails(details)
@@ -109,6 +115,9 @@ const FacultyEventsDetailViewPage = () => {
         }
         setDetailTabs(tabs)
         setActiveTab('Event Requisition Details')
+
+        // Fetch all module statuses upfront
+        fetchAllModuleStatuses(tabs)
       } catch (err) {
         console.error('Failed to fetch requisition details:', err)
         setRequestDetails(null)
@@ -120,7 +129,49 @@ const FacultyEventsDetailViewPage = () => {
     }
 
     fetchRequisitionDetails()
-  }, [eventId])
+  }, [eventId, reloadKey])
+
+  // ── Fetch all module statuses upfront ──────────────────────────────
+  const fetchAllModuleStatuses = async (tabs) => {
+    try {
+      const token = localStorage.getItem('token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+      const moduleMap = {
+        'Venue Details': 'venue',
+        'ICTCS Details': 'icts',
+        'Audio Details': 'audio',
+        'Transportation Details': 'transport',
+        'Food Details': 'refreshment',
+        'Accommodation Details': 'accommodation',
+        'Purchase Details': 'purchase',
+        'Media Details': 'media',
+      }
+
+      const fetches = tabs
+        .filter((tab) => moduleMap[tab.name])
+        .map((tab) =>
+          fetch(`${API_BASE_URL}/api/events/${eventId}?module=${moduleMap[tab.name]}`, { headers })
+            .then((res) => res.json())
+            .then((payload) => ({
+              tabName: tab.name,
+              status: payload.data?.[`${moduleMap[tab.name]}Details`]?.status?.status || null,
+            }))
+            .catch(() => ({ tabName: tab.name, status: null }))
+        )
+
+      const results = await Promise.all(fetches)
+
+      setDetailTabs((prevTabs) =>
+        prevTabs.map((tab) => {
+          const result = results.find((r) => r.tabName === tab.name)
+          return result?.status ? { ...tab, status: result.status } : tab
+        })
+      )
+    } catch (err) {
+      console.error('Failed to fetch module statuses:', err)
+    }
+  }
 
   useEffect(() => {
     if (activeTab !== 'Venue Details') return
@@ -415,36 +466,67 @@ const FacultyEventsDetailViewPage = () => {
 
 
 
+  // const openFeedbackPage = async () => {
+  //   // const newTab = window.open("", "_blank");
+
+  //   try {
+  //     const token = localStorage.getItem("token");
+
+  //    const res =  await axios.patch(
+  //       `${API_BASE_URL}/api/events/${eventId}/status`,
+  //       { action: "close" },
+  //       {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     if (res.status === 200) {
+  //       toast.success('Event closed successfully')
+  //       setReloadKey((k) => k + 1)
+  //       const newTab = window.open("", "_blank");
+
+  //       if (newTab) {
+  //         newTab.location.href = `/dashboard-faculty/feedback/${eventId}`;
+  //       } else {
+  //         console.error("Popup was blocked by the browser.");
+  //       }
+  //     }
+
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+
+  // }
+
   const openFeedbackPage = async () => {
-    // const newTab = window.open("", "_blank");
+    // try {
+    //   setCloseLoading(true);
+    //   const token = localStorage.getItem("token");
 
-    try {
-      const token = localStorage.getItem("token");
+    //   const res = await axios.patch(
+    //     `${API_BASE_URL}/api/events/${eventId}/status`,
+    //     { action: "close" },
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
 
-     const res =  await axios.patch(
-        `${API_BASE_URL}/api/events/${eventId}/status`,
-        { action: "close" },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (res.status === 200) {
-        const newTab = window.open("", "_blank");
+    //   if (res.status === 200) {
+    //     toast.success("Event closed successfully");
+    //     setReloadKey((k) => k + 1);
 
-        if (newTab) {
-          newTab.location.href = `/dashboard-faculty/feedback/${eventId}`;
-        } else {
-          console.error("Popup was blocked by the browser.");
-        }
-      }
-
-    } catch (err) {
-      console.error(err);
-    }
-
-  }
+    //     navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
+    //   }
+    //   setCloseLoading(false);
+    // } catch (err) {
+    //   setCloseLoading(false);
+    //   console.error(err);
+    // }
+    navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
+  };
 
   const renderActivePanel = () => {
     if (activeTab === 'Event Requisition Details') {
@@ -469,6 +551,7 @@ const FacultyEventsDetailViewPage = () => {
         <FacultyIctcsDetailsPanel
           ictsDetails={ictsDetails}
           eventSchedule={requestDetails?.eventDetails?.eventSchedule}
+          allocationId={eventId}
         />
       )
     }
@@ -525,6 +608,7 @@ const FacultyEventsDetailViewPage = () => {
     return <FacultyStaticDetailsPanel activeTab={activeTab} />
   }
 
+
   return (
     <>
 
@@ -536,17 +620,48 @@ const FacultyEventsDetailViewPage = () => {
               <h1 className="text-md font-medium text-[#CBC3D7]/50">Event Details</h1>
               <ChevronRight size={16} className="text-white" />
               <h2 className="text-md font-medium text-[#D0BCFF]">{requestDetails?.eventDetails?.eventName}</h2>
+              {requestDetails?.eventDetails?.organizingDepartment && (
+                <div className="ml-3 bg-green-400/10 text-sm text-[#10B981] px-5 py-2 rounded-full">
+                  <h1>{requestDetails.eventDetails.organizingDepartment}</h1>
+                </div>
+              )}
             </div>
           </div>
-          {console.log("data : ", data)}
-          {data.adminApproval == true && data.status.toLowerCase() !== "closed" ? <button
-            type="button"
-            onClick={openFeedbackPage}
-            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f]"
-          >
-            <Check size={18} />
-            Close
-          </button> : ""}
+          {console.log("eve data : ", data)}
+          {data?.isClosed ? (
+            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white">
+              <Check size={18} />
+              Closed
+            </div>
+          ) : (
+            data?.adminApproval === true &&
+            (!data?.isDocumentsCompleted ||
+              !data?.isExpenditureCompleted ||
+              !data?.isFeedbackCompleted) && (
+              <button
+                type="button"
+                onClick={openFeedbackPage}
+                disabled={closeLoading}
+                className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {closeLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Closing...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Close
+                  </>
+                )}
+              </button>
+            )
+          )}
+
+
+
+
           {/* <button
             type="button"
             onClick={openFeedbackPage}

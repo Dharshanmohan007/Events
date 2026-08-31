@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import AccommodationHeader from './AccommodationHeader'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 // Accommodation Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
@@ -58,16 +59,44 @@ const transformAccommodationData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
 
 const AccommodationDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('accommodation')
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=accommodation`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=accommodation`, { headers }),
+        ])
+            .then(([eventRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData]) => {
+                if (isMounted) {
+                    setEventStats(eventData.modules?.accommodation ?? eventData.events ?? EMPTY_STATS)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+                if (isMounted) setEventStats(EMPTY_STATS)
+            })
+
+        return () => { isMounted = false }
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -104,7 +133,15 @@ const AccommodationDashboard = () => {
                     </div>
 
                     {/* stat cards  */}
-                    <StatCard data={statCardData} />
+                    <StatCard data={statCardData.map((item) => {
+                        const label = item.lable.toLowerCase()
+                        const stats = eventStats ?? EMPTY_STATS
+                        if (label.includes('total')) return { ...item, value: stats.total ?? 0 }
+                        if (label.includes('approved')) return { ...item, value: stats.approved ?? 0 }
+                        if (label.includes('completed')) return { ...item, value: stats.completed ?? 0 }
+                        if (label.includes('pending')) return { ...item, value: stats.pending ?? 0 }
+                        return item
+                    })} />
 
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
@@ -123,8 +160,8 @@ const AccommodationDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-accommodation/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Accommodation Request By Department" />
+                        <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-accommodation/feedback" />
+                        <DepartmentRequestChart module="accommodation" title="Accommodation Request By Department" />
                     </div>
 
                 </div>

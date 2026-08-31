@@ -4,15 +4,16 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FoodStatcard from './FoodStatcard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const formatDate = (dateStr) => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return Number.isNaN(date.getTime())
-    ? dateStr
-    : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return Number.isNaN(date.getTime())
+        ? dateStr
+        : date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
 }
 
 const transformFoodData = (apiData) =>
@@ -28,27 +29,19 @@ const transformFoodData = (apiData) =>
 const transformIndividualData = (apiData) =>
     apiData.map((item) => ({
         requiredDate: formatDate(item.createdAt),
-        organizerName: item.employeeDetail?.name || item.employee || '-',
+        organizerName: item.data.employee?.firstName || item.employee || '-',
         department: item.employeeDetail?.department || '-',
         organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
         acknowledgeStatus: item.data?.overallStatus || item.status || '-',
         eventId: item.id || item.data?._id,
     }))
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-    { name: 'ECE', value: 15, color: '#ff7675' },
-    { name: 'ME', value: 20, color: '#fdcb6e' },
-    { name: 'IT', value: 18, color: '#00b894' },
-]
-
 const FoodDashboard = () => {
     const [events, setEvents] = useState([])
     const [individualEvents, setIndividualEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const feedbackRows = useDepartmentFeedback('food')
+    const individualFeedbackRows = useIndividualFeedback()
 
     useEffect(() => {
         const fetchData = async () => {
@@ -87,7 +80,7 @@ const FoodDashboard = () => {
         <>
             <section className='bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar'>
                 {/* header  */}
-                <div className='header-container sticky top-0'>
+                <div className='header-container sticky top-0 z-50'>
                     <DashboardHeader basePath="/dashboard-food" />
                 </div>
 
@@ -95,7 +88,7 @@ const FoodDashboard = () => {
                 <div className='main-body-container  px-6 '>
                     {/* heading */}
                     <div className="heading mt-2">
-                        <h1 className='text-white text-lg font-medium'>Food & Catering Dashboard Overview</h1>
+                        <h1 className='text-white text-lg font-medium'>Food Dashboard Overview</h1>
                         <h1 className='text-[#FFFFFF80] text-sm'>Lorem Ipsumis simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s</h1>
                     </div>
 
@@ -112,7 +105,7 @@ const FoodDashboard = () => {
                             <UpcomingEventsTable
                                 events={events}
                                 viewAllLink="/dashboard-food/events"
-                                title="Upcoming Food & Catering Requests"
+                                title="Upcoming food requests"
                                 module="food"
                                 individualEvents={individualEvents}
                                 detailViewPath="/dashboard-food/events/detailView"
@@ -121,8 +114,8 @@ const FoodDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-food/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="Catering Request By Department" />
+                        <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-food/feedback" />
+                        <DepartmentRequestChart module="food" title="Catering Request By Department" />
                     </div>
                 </div>
 

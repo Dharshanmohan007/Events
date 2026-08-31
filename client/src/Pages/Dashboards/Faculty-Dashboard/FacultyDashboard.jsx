@@ -21,7 +21,7 @@ const FacultyDashboard = () => {
                 if (!token) return
 
                 const decoded = jwtDecode(token)
-                const userId = decoded.id || decoded._id || decoded.userId
+                const userId = decoded.facultyId
 
                 const res = await fetch(`${API_BASE_URL}/api/events/draft/${userId}`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -48,12 +48,14 @@ const FacultyDashboard = () => {
                     <div>
                         <h1 className="text-white text-lg font-medium">Faculty Dashboard Overview</h1>
                         <p className="text-[#FFFFFF80] text-sm">
-                            Quick access to your key insights and updates.
+                            Quick access to your key insights and updates. 
                         </p>
                     </div>
 
                     <Link
                         to="/forms"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#853FF9] to-[#4F2593] hover:bg-linear-to-l hover:from-[#853FF9] hover:to-[#4F2593] px-3 py-2  font-medium text-white transition-all duration-300 "
                     >
                         <Plus size={22} />
@@ -61,11 +63,11 @@ const FacultyDashboard = () => {
                     </Link>
                 </div>
 
-                {draftData && <FacultyDraft data={draftData} />}
+                {draftData && <FacultyDraft data={draftData} setDraftData={setDraftData} />}
                 <FacultyStatcard />
                 <FacultyQuickActions />
 
-                <div className="mt-4 grid grid-cols-2 gap-5 rounded-lg  ">
+                <div className="mt-4 grid grid-cols-2 gap-5  rounded-lg  ">
                     <FacultyVenueAvailability />
                     <FacultyLatestEventsRequestTable />
                 </div>

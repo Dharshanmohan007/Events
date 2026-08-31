@@ -7,6 +7,14 @@ import tick from '../../../assets/tick.svg'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const FacultyStatcard = () => {
     const [eventStats, setEventStats] = useState({
         totalEvents: 0,
@@ -14,6 +22,7 @@ const FacultyStatcard = () => {
         completedEvents: 0,
         pendingApprovalEvents: 0,
     })
+    const [individualStats, setIndividualStats] = useState(null)
 
     useEffect(() => {
         const fetchEventStats = async () => {
@@ -22,7 +31,7 @@ const FacultyStatcard = () => {
                 if (!token) return
 
                 const decoded = jwtDecode(token)
-                const facultyId = decoded.id || decoded._id || decoded.userId
+                const facultyId = decoded.facultyId
 
                 const res = await fetch(
                     `${API_BASE_URL}/api/dashboard/faculty-dashboard-events-count?facultyId=${facultyId}`,
@@ -41,6 +50,25 @@ const FacultyStatcard = () => {
         fetchEventStats()
     }, [])
 
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        fetch(`${API_BASE_URL}/api/dashboard/individual-faculty-wise-stats`, { headers })
+            .then((res) => res.ok ? res.json() : Promise.resolve({}))
+            .then((data) => {
+                if (isMounted) {
+                    setIndividualStats(data.overall ?? null)
+                }
+            })
+            .catch((error) => console.warn('Failed to fetch individual stats:', error.message))
+
+        return () => { isMounted = false }
+    }, [])
+
+    const individualValues = individualStats ?? EMPTY_STATS
+
     const statCardData = [
         {
             title: 'Event Request',
@@ -54,10 +82,10 @@ const FacultyStatcard = () => {
         {
             title: 'Individual Request',
             stats: [
-                { label: 'Total Request', value: 50, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
-                { label: 'Approved Request', value: 50, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
-                { label: 'Completed', value: 50, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
-                { label: 'pending Approval Request', value: 50, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
+                { label: 'Total Request', value: individualValues.total, icon: calendarFill, bgColor: 'from-[#2d2851] via-[#45216f] to-[#67208f]', iconBg: 'bg-[#A78BFA]' },
+                { label: 'Approved Request', value: individualValues.approved, icon: tick, bgColor: 'from-[#173945] via-[#0d5c4b] to-[#0f8f55]', iconBg: 'bg-[#36D399]' },
+                { label: 'Completed', value: individualValues.completed, icon: circleTick, bgColor: 'from-[#252d5c] via-[#26278b] to-[#2018a6]', iconBg: 'bg-[#8390FF]' },
+                { label: 'pending Approval Request', value: individualValues.pending, icon: hourglassFill, bgColor: 'from-[#36243c] via-[#61214b] to-[#9d1c5a]', iconBg: 'bg-[#EE67AD]' },
             ],
         },
     ]

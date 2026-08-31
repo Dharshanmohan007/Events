@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import {
   ChevronDown,
@@ -13,6 +14,7 @@ import FormSubmitted from "../IndividualForm/FormSubmitted";
 import UploadIcon from "../../assets/upload.svg";
 import { jwtDecode } from "jwt-decode";
 import { API_BASE } from "../../utils/apiConfig";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 const floatingLabelClass =
   "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
@@ -21,7 +23,29 @@ const pageFloatingLabelClass = `${floatingLabelClass} bg-[#141428]`;
 
 const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 
+const getFinanceComparisonError = (estimatedAmount, advanceAmount) => {
+  const estimated = Number(estimatedAmount);
+  const advance = Number(advanceAmount);
+
+  if (!Number.isNaN(estimated) && !Number.isNaN(advance) && advance > estimated) {
+    return "Advance amount cannot exceed the estimated budget amount.";
+  }
+
+  return "";
+};
+
 const MediaDetailsPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+  const [existingPosterFile, setExistingPosterFile] = useState(null);
+  const [existingCertificateFile, setExistingCertificateFile] = useState(null);
+  const [existingVideoFile, setExistingVideoFile] = useState(null);
+
   // =========================
   // MAIN TYPE DROPDOWN
   // =========================
@@ -84,18 +108,217 @@ const MediaDetailsPage = () => {
   ];
 
   // Auth 
-  const [id, setId] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   useEffect(() => {
     const token = localStorage.getItem("token");
-    console.log("token :", token);
-
     if (token) {
-      const decoded = jwtDecode(token);
-      setId(decoded.id);
-
-      console.log("Decoded JWT:", decoded);
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded?.id) {
+          setEmployeeId(decoded.id);
+        }
+      } catch (err) {
+        console.error("Failed to decode JWT:", err);
+      }
     }
   }, []);
+
+  const mapMediaApiToForm = (data) => {
+    const mediaDoc = data?.data || data?.media || data;
+
+    let types = [];
+    if (Array.isArray(mediaDoc.typeOfMedia)) {
+      types = mediaDoc.typeOfMedia.map((t) => {
+        const lower = String(t).toLowerCase();
+        if (lower === "poster") return "Poster";
+        if (lower === "video") return "Video";
+        return t;
+      });
+    } else if (mediaDoc.typeOfMedia) {
+      const lower = String(mediaDoc.typeOfMedia).toLowerCase();
+      if (lower.includes("poster")) types.push("Poster");
+      if (lower.includes("video")) types.push("Video");
+    }
+
+    if (types.length === 0) {
+      if (mediaDoc.poster && (mediaDoc.poster.posterContent || mediaDoc.poster.displayNeeded?.length)) {
+        types.push("Poster");
+      }
+      if (mediaDoc.video && (mediaDoc.video.videoContent || mediaDoc.video.eventCoverage?.length)) {
+        types.push("Video");
+      }
+    }
+
+    const poster = mediaDoc.poster || {};
+    const selectedDisplaysList = Array.isArray(poster.displayNeeded) ? poster.displayNeeded : [];
+    let flexSizeVal = "";
+    let glassSizeVal = "";
+    if (Array.isArray(poster.sizes)) {
+      poster.sizes.forEach((s) => {
+        if (s.type === "Flex") flexSizeVal = s.value || "";
+        if (s.type === "Glass Sticker") glassSizeVal = s.value || "";
+      });
+    }
+
+    let pDelivery = "";
+    if (poster.deliveryDate) {
+      const d = new Date(poster.deliveryDate);
+      if (!Number.isNaN(d.getTime())) {
+        pDelivery = poster.deliveryDate;
+      }
+    }
+
+    const video = mediaDoc.video || {};
+    let vDelivery = "";
+    if (video.deliveryDate) {
+      const d = new Date(video.deliveryDate);
+      if (!Number.isNaN(d.getTime())) {
+        vDelivery = video.deliveryDate;
+      }
+    }
+
+    return {
+      types,
+      poster: {
+        selectedDisplays: selectedDisplaysList,
+        posterContent: poster.posterContent || "",
+        certificateContent: poster.certificateContent || "",
+        trophyContent: poster.trophyContent || "",
+        displaySize: flexSizeVal,
+        glassStickerSize: glassSizeVal,
+        posterDeliveryDate: pDelivery,
+        posterPriority: poster.priority || "High",
+        posterRequirement: poster.specialRequirements || "",
+      },
+      video: {
+        videoContent: video.videoContent || "",
+        selectedPreEvent: Array.isArray(video.preEventVideos) ? video.preEventVideos : [],
+        selectedCoverage: Array.isArray(video.eventCoverage) ? video.eventCoverage : [],
+        selectedPostEvent: Array.isArray(video.postEventVideos) ? video.postEventVideos : [],
+        selectedSpecialVideo: Array.isArray(video.specialVideos) ? video.specialVideos : [],
+        videoDeliveryDate: vDelivery,
+        videoPriority: video.priority || "High",
+        videoRequirement: video.specialRequirements || "",
+      },
+      finance: {
+        financeRequired: (mediaDoc.financeRequired || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+        financeAdvanceAmount: String(mediaDoc.advanceAmount ?? ""),
+        financeEstimatedAmount: String(mediaDoc.estimatedAmount ?? mediaDoc.estimatedEventBudget ?? ""),
+        financeAdvancePurpose: mediaDoc.advancePurpose || "",
+        financeAdvanceToBeReceviedWithin: String(mediaDoc.advanceToBeReceviedWithin ?? ""),
+      },
+      files: {
+        principalApprovalForm:
+          mediaDoc.principalApprovalForm ||
+          mediaDoc.principalApprovalFormName ||
+          mediaDoc.principalApprovalDocument ||
+          mediaDoc.principalDocument ||
+          mediaDoc.approvalDocument ||
+          mediaDoc.approvalForm ||
+          null,
+        referencePosterFiles: mediaDoc.referencePosterFiles || null,
+        referenceCertificateFiles: mediaDoc.referenceCertificateFiles || null,
+        referenceFiles: mediaDoc.referenceFiles || null,
+      },
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchMediaDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token");
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/individual-media/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load media request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualMedia = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mapped = mapMediaApiToForm(actualMedia);
+          setSelectedTypes(mapped.types);
+          // Poster
+          setSelectedDisplays(mapped.poster.selectedDisplays);
+          setPosterContent(mapped.poster.posterContent);
+          setCertificateContent(mapped.poster.certificateContent);
+          setTrophyContent(mapped.poster.trophyContent);
+          setDisplaySize(mapped.poster.displaySize);
+          setGlassStickerSize(mapped.poster.glassStickerSize);
+          setPosterDeliveryDate(mapped.poster.posterDeliveryDate);
+          setPosterPriority(mapped.poster.posterPriority);
+          setPosterRequirement(mapped.poster.posterRequirement);
+          // Video
+          setVideoContent(mapped.video.videoContent);
+          setSelectedPreEvent(mapped.video.selectedPreEvent);
+          setSelectedCoverage(mapped.video.selectedCoverage);
+          setSelectedPostEvent(mapped.video.selectedPostEvent);
+          setSelectedSpecialVideo(mapped.video.selectedSpecialVideo);
+          setVideoDeliveryDate(mapped.video.videoDeliveryDate);
+          setVideoPriority(mapped.video.videoPriority);
+          setVideoRequirement(mapped.video.videoRequirement);
+          // Finance
+          setFinanceRequired(mapped.finance.financeRequired);
+          setFinanceAdvanceAmount(mapped.finance.financeAdvanceAmount);
+          setFinanceEstimatedAmount(mapped.finance.financeEstimatedAmount);
+          setFinanceAdvancePurpose(mapped.finance.financeAdvancePurpose);
+          setFinanceAdvanceToBeReceviedWithin(mapped.finance.financeAdvanceToBeReceviedWithin);
+          // Files
+          const existingPrincipal =
+            mapped.files?.principalApprovalForm ||
+            actualMedia?.principalApprovalForm ||
+            actualMedia?.principalApprovalFormName ||
+            actualMedia?.principalApprovalDocument ||
+            actualMedia?.principalDocument ||
+            actualMedia?.approvalDocument ||
+            actualMedia?.approvalForm ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument;
+          if (existingPrincipal) {
+            setExistingPrincipalDocument(existingPrincipal);
+          }
+          if (mapped.files.referencePosterFiles) {
+            setExistingPosterFile(mapped.files.referencePosterFiles);
+          }
+          if (mapped.files.referenceCertificateFiles) {
+            setExistingCertificateFile(mapped.files.referenceCertificateFiles);
+          }
+          if (mapped.files.referenceFiles) {
+            setExistingVideoFile(mapped.files.referenceFiles);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load media request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchMediaDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
   
 
 
@@ -135,10 +358,12 @@ const [trophyContent, setTrophyContent] = useState("");
     posterRequirement,
     setPosterRequirement,
   ] = useState("");
-  const [posterFinanceRequired, setPosterFinanceRequired] = useState("No");
-  const [posterAdvanceAmount, setPosterAdvanceAmount] = useState("");
-  const [posterAdvancePurpose, setPosterAdvancePurpose] = useState("");
-  const [showPosterFinanceDropdown, setShowPosterFinanceDropdown] = useState(false);
+  const [financeRequired, setFinanceRequired] = useState("No");
+  const [financeEstimatedAmount, setFinanceEstimatedAmount] = useState("");
+  const [financeAdvanceAmount, setFinanceAdvanceAmount] = useState("");
+  const [financeAdvancePurpose, setFinanceAdvancePurpose] = useState("");
+  const [financeAdvanceToBeReceviedWithin, setFinanceAdvanceToBeReceviedWithin] = useState("");
+  const [showFinanceDropdown, setShowFinanceDropdown] = useState(false);
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -146,6 +371,7 @@ const [trophyContent, setTrophyContent] = useState("");
   const principalInputRef = useRef(null);
   const [principalApprovalDocument, setPrincipalApprovalDocument] = useState(null);
   const [principalFileError, setPrincipalFileError] = useState("");
+
   const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
   const MAX_PRINCIPAL_FILE_SIZE_BYTES = MAX_PRINCIPAL_FILE_SIZE_MB * 1024 * 1024;
   const ALLOWED_PRINCIPAL_FILE_TYPE = "application/pdf";
@@ -181,10 +407,6 @@ const [trophyContent, setTrophyContent] = useState("");
     if (droppedFile.type !== ALLOWED_PRINCIPAL_FILE_TYPE) {
       setPrincipalFileError("Only PDF files are allowed.");
       return;
-  const [videoFinanceRequired, setVideoFinanceRequired] = useState(false);
-  const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
-  const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
-  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
     }
 
     if (droppedFile.size > MAX_PRINCIPAL_FILE_SIZE_BYTES) {
@@ -297,10 +519,14 @@ const [trophyContent, setTrophyContent] = useState("");
     videoRequirement,
     setVideoRequirement,
   ] = useState("");
-  const [videoFinanceRequired, setVideoFinanceRequired] = useState("No");
+  const [videoEstimatedAmount, setVideoEstimatedAmount] = useState("");
   const [videoAdvanceAmount, setVideoAdvanceAmount] = useState("");
   const [videoAdvancePurpose, setVideoAdvancePurpose] = useState("");
-  const [showVideoFinanceDropdown, setShowVideoFinanceDropdown] = useState(false);
+
+  const financeComparisonError =
+    financeRequired === "Yes"
+      ? getFinanceComparisonError(financeEstimatedAmount, financeAdvanceAmount)
+      : "";
 
   // =========================
   // FILE VALIDATION
@@ -344,7 +570,7 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const validatePoster = () => {
-    console.log("validating poster...");
+    // console.log("validating poster...");
     const errors = [];
     if (!selectedTypes.includes("Poster")) {
       return errors;
@@ -377,17 +603,30 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!posterRequirement.trim()) {
         errors.push("Special Requirements is required."); 
       }
-      if (posterFinanceRequired === "Yes") {
-        if (!posterAdvanceAmount || !posterAdvanceAmount.toString().trim()) {
-          errors.push("Poster: Advance amount is required.");
+      if (financeRequired === "Yes") {
+        if (!financeEstimatedAmount || Number.isNaN(Number(financeEstimatedAmount)) || Number(financeEstimatedAmount) <= 0) {
+          errors.push("Estimated budget amount is required.");
         }
-        if (!posterAdvancePurpose || !posterAdvancePurpose.trim()) {
-          errors.push("Poster: Advance purpose is required.");
+        if (!financeAdvanceAmount || financeAdvanceAmount.toString().trim() === "") {
+          errors.push("Advance amount is required.");
+        }
+        if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
+          errors.push("Advance purpose is required.");
+        }
+        if (!financeAdvanceToBeReceviedWithin) {
+          errors.push("Advance to be received within is required.");
+        }
+        if (
+          !Number.isNaN(Number(financeEstimatedAmount)) &&
+          !Number.isNaN(Number(financeAdvanceAmount)) &&
+          Number(financeAdvanceAmount) > Number(financeEstimatedAmount)
+        ) {
+          errors.push("Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
 
-    console.log("Poster validation errors:", errors);
+    // console.log("Poster validation errors:", errors);
     return errors;
   };
 
@@ -421,12 +660,25 @@ const [trophyContent, setTrophyContent] = useState("");
       if (!videoRequirement.trim()) {
         errors.push("Special Requirements is required.");
       }
-      if (videoFinanceRequired === "Yes") {
-        if (!videoAdvanceAmount || !videoAdvanceAmount.toString().trim()) {
-          errors.push("Video: Advance amount is required.");
+      if (financeRequired === "Yes") {
+        if (!financeEstimatedAmount || Number.isNaN(Number(financeEstimatedAmount)) || Number(financeEstimatedAmount) <= 0) {
+          errors.push("Estimated budget amount is required.");
         }
-        if (!videoAdvancePurpose || !videoAdvancePurpose.trim()) {
-          errors.push("Video: Advance purpose is required.");
+        if (!financeAdvanceAmount || financeAdvanceAmount.toString().trim() === "") {
+          errors.push("Advance amount is required.");
+        }
+        if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
+          errors.push("Advance purpose is required.");
+        }
+        if (!financeAdvanceToBeReceviedWithin) {
+          errors.push("Advance to be received within is required.");
+        }
+        if (
+          !Number.isNaN(Number(financeEstimatedAmount)) &&
+          !Number.isNaN(Number(financeAdvanceAmount)) &&
+          Number(financeAdvanceAmount) > Number(financeEstimatedAmount)
+        ) {
+          errors.push("Advance amount cannot exceed the estimated budget amount.");
         }
       }
     }
@@ -524,21 +776,17 @@ const [trophyContent, setTrophyContent] = useState("");
     const formData = new FormData();
     
     // Root level fields
-    formData.append("employee", id || "6a0411af4579d3137b255e71");
+    formData.append("employee", employeeId || "6a0411af4579d3137b255e71");
     formData.append("dayIndex", "1");
     formData.append("status", "Pending");
     
     // Finance fields at root level (only if needed)
-    const hasFinance = (selectedTypes.includes("Poster") && posterFinanceRequired === "Yes") || 
-                       (selectedTypes.includes("Video") && videoFinanceRequired === "Yes");
-    if (hasFinance) {
+    if (financeRequired === "Yes") {
       formData.append("financeRequired", "Yes");
-      const posterAmount = posterFinanceRequired === "Yes" ? posterAdvanceAmount : 0;
-      const videoAmount = videoFinanceRequired === "Yes" ? videoAdvanceAmount : 0;
-      formData.append("advanceAmount", posterAmount || videoAmount || "0");
-      const posterPurpose = posterFinanceRequired === "Yes" ? posterAdvancePurpose : "";
-      const videoPurpose = videoFinanceRequired === "Yes" ? videoAdvancePurpose : "";
-      formData.append("advancePurpose", posterPurpose || videoPurpose || "");
+      formData.append("advanceAmount", financeAdvanceAmount || "0");
+      formData.append("estimatedAmount", financeEstimatedAmount || "0");
+      formData.append("advancePurpose", financeAdvancePurpose || "");
+      formData.append("advanceToBeReceviedWithin", financeAdvanceToBeReceviedWithin || "0");
     }
     
     // typeOfMedia with CAPITALIZED names - append each type separately
@@ -596,10 +844,17 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const handleNext = async () => {
-    console.log("activated function");
+    // console.log('[MediaDetails] handleNext start');
+    // console.log("activated function");
     
     if (!selectedTypes.length) {
       setValidationErrors(["Please select at least one Type of Design Required."]);
+      return;
+    }
+
+    // Principal approval validation — allow existing document in edit mode
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
+      setValidationErrors(["Principal Approval Form is required."]);
       return;
     }
 
@@ -614,27 +869,97 @@ const [trophyContent, setTrophyContent] = useState("");
     setValidationErrors(errors);
     if (errors.length) return;
 
-    console.log("no errors");
+    // console.log("no errors");
+
+    // Validate token before attempting submit. Show an error instead of redirecting.
+    const authToken = localStorage.getItem("token");
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setValidationErrors(["Session expired or invalid token. Please login again."]);
+      return;
+    }
 
     setIsSubmitting(true);
     setSubmitSuccess(false);
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE}/api/individual-media/create`, {
-        method: "POST",
-          headers: {
-            ...(token && {
-              Authorization: `Bearer ${token}`,
-            }),
-          },
-        body: buildMediaFormData(),
-      });
+      const formData = buildMediaFormData();
+      const headers = { ...(token && { Authorization: `Bearer ${token}` }) };
+
+      let response;
+      if (isEditMode) {
+        // PUT to update existing media request
+        response = await fetch(`${API_BASE}/api/individual-media/${id}`, {
+          method: "PUT",
+          headers,
+          body: formData,
+        });
+        if (!response.ok) {
+          // fallback route
+          response = await fetch(`${API_BASE}/api/individual-media/update/${id}`, {
+            method: "PUT",
+            headers,
+            body: formData,
+          });
+        }
+      } else {
+        response = await fetch(`${API_BASE}/api/individual-media/create`, {
+          method: "POST",
+          headers,
+          body: formData,
+        });
+      }
+
       const data = await response.json();
-      console.log("Media submit response:", data);
       if (!response.ok) {
-        throw new Error(data.message || "Media submission failed.");
+        throw new Error(data.message || (isEditMode ? "Media update failed." : "Media submission failed."));
       }
       setSubmitSuccess(true);
+
+      if (String(financeRequired).toLowerCase() === "yes") {
+        const respData = data?.data || data || {};
+        const receiptRequestNo =
+          respData?.requestNo ||
+          respData?.data?.requestNo ||
+          respData?.media?.requestNo ||
+          respData?.data?.media?.requestNo ||
+          "";
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+        const employeePayload = {
+          name: storedUser?.name || storedUser?.employeeName || respData?.employeeName || "",
+          empId: respData?.empId || storedUser?.empId || storedUser?.employeeId || "",
+          designation: storedUser?.designation || respData?.designation || "",
+          department: storedUser?.department || respData?.department || "",
+        };
+
+        const submitRespPayload = {
+          requestNo: receiptRequestNo,
+          response: data,
+          employeeId:
+            respData?.employee ||
+            respData?.employeeId ||
+            employeeId ||
+            employeePayload.empId ||
+            "",
+        };
+
+        await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+          return ReportPdf({
+            formData: {
+              selectDate: posterDeliveryDate || videoDeliveryDate || "",
+              advanceAmount: financeAdvanceAmount || "",
+              advancePurpose: financeAdvancePurpose || "",
+              clearanceDays: financeAdvanceToBeReceviedWithin || 15,
+            },
+            employee: employeePayload,
+            submitResponse: submitRespPayload,
+          });
+        });
+      }
     } catch (error) {
       setValidationErrors([error.message || "Unable to send media data."]);
     } finally {
@@ -710,29 +1035,54 @@ const [trophyContent, setTrophyContent] = useState("");
       <FormSubmitted
         advanceData={{
           selectDate: posterDeliveryDate || videoDeliveryDate || "",
-          advanceAmount:
-            posterFinanceRequired === "Yes"
-              ? posterAdvanceAmount || ""
-              : videoFinanceRequired === "Yes"
-                ? videoAdvanceAmount || ""
-                : "",
-          advancePurpose:
-            posterFinanceRequired === "Yes"
-              ? posterAdvancePurpose || ""
-              : videoFinanceRequired === "Yes"
-                ? videoAdvancePurpose || ""
-                : "",
+          advanceAmount: financeAdvanceAmount || "",
+          advancePurpose: financeAdvancePurpose || "",
+          clearanceDays: financeAdvanceToBeReceviedWithin || 15,
         }}
+        showDownloadButton={false}
       />
+    );
+  }
+
+  if (isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white flex items-center justify-center">
+        <p className="text-lg text-purple-300 animate-pulse">Loading media request...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white flex flex-col items-center justify-center gap-4">
+        <p className="text-red-400 text-lg">{loadError}</p>
+        <button
+          onClick={() => navigate(-1)}
+          className="px-6 py-2 rounded-lg bg-[#8b3dff] hover:bg-[#9a52ff] text-white text-sm transition-all"
+        >
+          Go Back
+        </button>
+      </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
-      {/* TITLE */}
-      <h1 className="text-3xl font-bold mb-6">
-        Media Form
-      </h1>
+      {/* TITLE + CANCEL */}
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">
+          {isEditMode ? "Edit Media Request" : "Media Form"}
+        </h1>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="px-5 py-2 rounded-lg border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-purple-500 text-sm transition-all"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       {validationErrors.length > 0 && (
         <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
@@ -748,6 +1098,37 @@ const [trophyContent, setTrophyContent] = useState("");
         <label className="block mb-2 text-sm text-white">
           Principal Approval Form (without uploading this document you cannot proceed further)
         </label>
+        {/* Show existing principal document in edit mode */}
+        {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-300">Current file:</span>
+            <a
+              href={
+                typeof existingPrincipalDocument === "string"
+                  ? (existingPrincipalDocument.startsWith("http")
+                      ? existingPrincipalDocument
+                      : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                  : (existingPrincipalDocument?.url
+                      ? existingPrincipalDocument.url
+                      : (existingPrincipalDocument?.path
+                          ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                          : "#"))
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-purple-400 underline truncate max-w-xs"
+            >
+              {typeof existingPrincipalDocument === "string"
+                ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                : (existingPrincipalDocument?.name ||
+                   existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.originalName ||
+                   "View existing document")}
+            </a>
+            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+          </div>
+        )}
 
         <div
           onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
@@ -912,38 +1293,113 @@ const [trophyContent, setTrophyContent] = useState("");
         )}
       </div>
 
-      {/* ===================================================== */}
-      {/* ================= POSTER SECTION ==================== */}
-      {/* ===================================================== */}
+      <div className="space-y-4 mb-6">
+        <div className="relative w-full">
+          <label className={pageFloatingLabelClass}>Finance Required *</label>
+
+          <div
+            onClick={() => setShowFinanceDropdown(!showFinanceDropdown)}
+            className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
+          >
+            <span className={financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              {financeRequired === "Yes" ? "Yes" : "No"}
+            </span>
+
+            <ChevronDown size={18} className="text-gray-400" />
+          </div>
+
+          {showFinanceDropdown && (
+            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
+                <div
+                  key={opt.label}
+                  onClick={() => {
+                    setFinanceRequired(opt.value);
+                    setShowFinanceDropdown(false);
+                    if (opt.value === "No") {
+                      setFinanceEstimatedAmount("");
+                      setFinanceAdvanceAmount("");
+                      setFinanceAdvancePurpose("");
+                      setFinanceAdvanceToBeReceviedWithin("");
+                    }
+                  }}
+                  className={`px-4 py-3 cursor-pointer flex items-center justify-between ${financeRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                >
+                  <span>{opt.label}</span>
+                  {financeRequired === opt.value && <span>✓</span>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {financeRequired === "Yes" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+            <div className="relative w-full md:col-span-2">
+              <label className={cardFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
+              <input
+                type="number"
+                min="0"
+                value={financeEstimatedAmount}
+                onChange={(e) => setFinanceEstimatedAmount(e.target.value)}
+                placeholder="0"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+              {financeComparisonError && (
+                <p className="mt-1 text-sm text-red-400">{financeComparisonError}</p>
+              )}
+            </div>
+
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
+              <input
+                type="number"
+                min="0"
+                value={financeAdvanceAmount}
+                onChange={(e) => setFinanceAdvanceAmount(e.target.value)}
+                placeholder="0"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+
+            <div className="relative w-full">
+              <label className={cardFloatingLabelClass}>Purpose of Advance</label>
+              <input
+                type="text"
+                value={financeAdvancePurpose}
+                onChange={(e) => setFinanceAdvancePurpose(e.target.value)}
+                placeholder="Purpose"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+
+            <div className="relative w-full md:col-span-2">
+              <label className={cardFloatingLabelClass}>Advance To Be Received Within</label>
+              <input
+                type="number"
+                min="0"
+                value={financeAdvanceToBeReceviedWithin}
+                onChange={(e) => setFinanceAdvanceToBeReceviedWithin(e.target.value)}
+                placeholder="0"
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
 
       {selectedTypes.includes("Poster") && (
         <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6">
-          <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
-            Poster
-          </h2>
+          <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">Poster</h2>
 
-          {/* Poster Content */}
           <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Content for Poster *
-            </label>
-
+            <label className={cardFloatingLabelClass}>Content for poster*</label>
             <textarea
               rows={4}
-
-             value={posterContent}
-onChange={(e) => setPosterContent(e.target.value)}
+              value={posterContent}
+              onChange={(e) => setPosterContent(e.target.value)}
               placeholder="reason"
-              className="
-                w-full
-             
-                border
-                border-[#2F2F3E]
-                rounded-md
-                p-4
-                text-white
-                outline-none
-              "
+              className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
             />
           </div>
 
@@ -1193,7 +1649,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={displaySize}
                     onChange={(e) => setDisplaySize(e.target.value)}
-                    placeholder={`Enter Flex Size`}
+                    placeholder="e.g. 2 * 2 px"
                     className="
                       w-full
                       border
@@ -1218,7 +1674,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                     type="text"
                     value={glassStickerSize}
                     onChange={(e) => setGlassStickerSize(e.target.value)}
-                    placeholder={`Enter Glass Sticker Size`}
+                    placeholder="e.g. 4 * 4 px"
                     className="
                       w-full
                       border
@@ -1256,13 +1712,14 @@ onChange={(e) => setPosterContent(e.target.value)}
       }
       placeholder="Select Delivery Date"
       showTime={false}
+      minDate={new Date()}
     />
   </div>
 
   {/* PRIORITY */}
   {/* PRIORITY */}
-<div className="relative w-full pt-[1px]">
-  <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+<div className="relative w-full pt-px">
+  <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
     Priority *
   </label>
 
@@ -1279,7 +1736,7 @@ onChange={(e) => setPosterContent(e.target.value)}
       border-[#2F2F3E]
       rounded-lg
       px-4
-      py-[13px]
+      py-3.25
       flex
       justify-between
       items-center
@@ -1321,70 +1778,6 @@ onChange={(e) => setPosterContent(e.target.value)}
 
           {/* Requirement */}
           {/* FINANCE REQUIRED */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="relative w-full">
-              <label className={cardFloatingLabelClass}>Finance Required *</label>
-
-              <div
-                onClick={() => setShowPosterFinanceDropdown(!showPosterFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
-              >
-                <span className={posterFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
-                  {posterFinanceRequired === "Yes" ? "Yes" : "No"}
-                </span>
-
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-
-              {showPosterFinanceDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
-                    <div
-                      key={opt.label}
-                      onClick={() => {
-                        setPosterFinanceRequired(opt.value);
-                        setShowPosterFinanceDropdown(false);
-                        if (opt.value === "No") {
-                          setPosterAdvanceAmount("");
-                          setPosterAdvancePurpose("");
-                        }
-                      }}
-                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${posterFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-                    >
-                      <span>{opt.label}</span>
-                      {posterFinanceRequired === opt.value && <span>✓</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {posterFinanceRequired === "Yes" && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
-                  <input
-                    type="number"
-                    value={posterAdvanceAmount}
-                    onChange={(e) => setPosterAdvanceAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
-                  <input
-                    type="text"
-                    value={posterAdvancePurpose}
-                    onChange={(e) => setPosterAdvancePurpose(e.target.value)}
-                    placeholder="Purpose"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
           <div className="relative">
             <label className={cardFloatingLabelClass}>
               Special Requirements, If any 
@@ -1502,7 +1895,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                 border-[#4b4b6b]
                 rounded-lg
                 p-8
-                min-h-[54px]
+                min-h-13.5
                 flex
                 justify-center
                 items-center
@@ -1573,11 +1966,12 @@ onChange={(e) => setPosterContent(e.target.value)}
                 }
                 placeholder="__/__/____"
                 showTime={false}
+                minDate={new Date()}
               />
             </div>
 
-            <div className="relative w-full pt-[1px]">
-              <label className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+            <div className="relative w-full pt-px">
+              <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
                 Priority *
               </label>
 
@@ -1594,7 +1988,7 @@ onChange={(e) => setPosterContent(e.target.value)}
                   border-[#2F2F3E]
                   rounded-lg
                   px-4
-                  py-[13px]
+                  py-3.25
                   flex
                   justify-between
                   items-center
@@ -1631,70 +2025,6 @@ onChange={(e) => setPosterContent(e.target.value)}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div className="relative w-full">
-              <label className={cardFloatingLabelClass}>Finance Required *</label>
-
-              <div
-                onClick={() => setShowVideoFinanceDropdown(!showVideoFinanceDropdown)}
-                className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-[13px] flex justify-between items-center cursor-pointer text-white"
-              >
-                <span className={videoFinanceRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
-                  {videoFinanceRequired === "Yes" ? "Yes" : "No"}
-                </span>
-
-                <ChevronDown size={18} className="text-gray-400" />
-              </div>
-
-              {showVideoFinanceDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                  {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
-                    <div
-                      key={opt.label}
-                      onClick={() => {
-                        setVideoFinanceRequired(opt.value);
-                        setShowVideoFinanceDropdown(false);
-                        if (opt.value === "No") {
-                          setVideoAdvanceAmount("");
-                          setVideoAdvancePurpose("");
-                        }
-                      }}
-                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${videoFinanceRequired === opt.value ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-                    >
-                      <span>{opt.label}</span>
-                      {videoFinanceRequired === opt.value && <span>✓</span>}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {videoFinanceRequired === "Yes" && (
-              <>
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>I require Cash / In bank / Travel Advance /Online Payment of Rs.</label>
-                  <input
-                    type="number"
-                    value={videoAdvanceAmount}
-                    onChange={(e) => setVideoAdvanceAmount(e.target.value)}
-                    placeholder="0"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-
-                <div className="relative w-full">
-                  <label className={cardFloatingLabelClass}>Purpose of Advance</label>
-                  <input
-                    type="text"
-                    value={videoAdvancePurpose}
-                    onChange={(e) => setVideoAdvancePurpose(e.target.value)}
-                    placeholder="Purpose"
-                    className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
-                  />
-                </div>
-              </>
-            )}
-          </div>
 
           <div className="relative">
             <label className={cardFloatingLabelClass}>
@@ -1724,14 +2054,17 @@ onChange={(e) => setPosterContent(e.target.value)}
         </div>
       )}
 
-      {/* NEXT BUTTON */}
+      {/* SUBMIT BUTTON */}
       <div className="flex justify-end mt-8">
         <button
           type="button"
           onClick={handleNext}
+          disabled={isSubmitting}
           className="
             bg-[#8b3dff]
             hover:bg-[#9a52ff]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
             transition-all
             duration-300
             text-white
@@ -1746,7 +2079,9 @@ onChange={(e) => setPosterContent(e.target.value)}
             shadow-purple-900/30
           "
         >
-          Submit
+          {isSubmitting
+            ? (isEditMode ? "Updating..." : "Submitting...")
+            : (isEditMode ? "Update Media Request" : "Submit")}
 
           <ArrowRight size={18} />
         </button>

@@ -1,21 +1,31 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Download, Filter, Search } from 'lucide-react'
+import { buildEventTemplate } from '../../../templates/eventTemplate'
+import { buildIndividualRequestTemplate } from '../../../templates/individualRequestTemplate'
 
-const eventReportRows = Array.from({ length: 9 }, (_, index) => ({
-    eventName: 'Welcome Freshers',
-    eventType: 'Seminar',
-    eventVenue: 'Main Board Room',
-    eventDate: '15-03-2026',
-    status: [1, 6, 7, 8].includes(index) ? 'Not Completed' : 'Completed',
-}))
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-const individualReportRows = Array.from({ length: 9 }, (_, index) => ({
-    eventName: 'Dharsan',
-    eventType: 'Individual',
-    eventVenue: index % 2 === 0 ? 'Main Board Room' : 'Vista Hall',
-    eventDate: '15-03-2026',
-    status: [2, 5, 8].includes(index) ? 'Not Completed' : 'Completed',
-}))
+const TableSkeleton = ({ cols = 6 }) => (
+    <tbody>
+        {Array.from({ length: 6 }).map((_, i) => (
+            <tr key={i} className="border-t border-[#20283a]">
+                {Array.from({ length: cols }).map((__, j) => (
+                    <td key={j} className="px-5 py-4">
+                        <div className="h-3 w-full animate-pulse rounded bg-[#20283a]" />
+                    </td>
+                ))}
+            </tr>
+        ))}
+    </tbody>
+)
+
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-'
+    const d = new Date(dateStr)
+    return Number.isNaN(d.getTime())
+        ? dateStr
+        : d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
 
 const Status = ({ status }) => {
     const completed = status === 'Completed'
@@ -28,25 +38,90 @@ const Status = ({ status }) => {
     )
 }
 
-const AdminReportsTable = ({ rows, activeTab }) => {
+const AdminReportsTable = ({ rows, activeTab, isLoading }) => {
     const [searchTerm, setSearchTerm] = useState('')
 
     const filteredRows = rows.filter((row) => (
         `${row.eventName} ${row.eventType} ${row.eventVenue} ${row.eventDate} ${row.status}`.toLowerCase().includes(searchTerm.toLowerCase())
     ))
 
-    const handleDownload = (row) => {
-        const csv = [
-            'Event Name,Event Type,Event Venue,Event Date,Status',
-            [row.eventName, row.eventType, row.eventVenue, row.eventDate, row.status].join(','),
-        ].join('\n')
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `admin-${activeTab}-${row.eventName.replaceAll(' ', '-')}-report.csv`
-        link.click()
-        URL.revokeObjectURL(url)
+    const handleDownload = async (row) => {
+        if (activeTab === 'event') {
+            try {
+                const token = localStorage.getItem('token')
+                const res = await fetch(`${API_BASE_URL}/api/events/${row.id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                })
+                const json = await res.json()
+                // console.log('[PDF Fetch] Raw response for', row.id, ':', json)
+
+                const eventData = json.data || json.event || (json.requestDetails ? json : null)
+                if (eventData) {
+                    const html = buildEventTemplate(eventData)
+                    const iframe = document.createElement('iframe')
+                    iframe.style.display = 'none'
+                    document.body.appendChild(iframe)
+                    
+                    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+                    iframeDoc.open()
+                    iframeDoc.write(html)
+                    iframeDoc.close()
+            
+                    iframe.onload = () => {
+                        iframe.contentWindow.focus()
+                        iframe.contentWindow.print()
+                        setTimeout(() => {
+                            if (document.body.contains(iframe)) {
+                                document.body.removeChild(iframe)
+                            }
+                        }, 1000)
+                    }
+                } else {
+                    console.error('[PDF Fetch] Failed to find event data in response:', json)
+                    alert(`Failed to fetch event details. See console for API response.`)
+                }
+            } catch (err) {
+                console.error('[PDF Fetch] Error generating PDF:', err)
+                alert('Error connecting to API to generate PDF.')
+            }
+            return
+        }
+
+        try {
+            const token = localStorage.getItem('token')
+            const res = await fetch(`${API_BASE_URL}/api/individual-submissions/getrequest/${row.id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            })
+            const json = await res.json()
+            const data = Array.isArray(json.data) ? json.data[0] : (json.data || json);
+            if (data && (data.id || data._id || data.formType)) {
+                const html = buildIndividualRequestTemplate(data)
+                const iframe = document.createElement('iframe')
+                iframe.style.display = 'none'
+                document.body.appendChild(iframe)
+                
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+                iframeDoc.open()
+                iframeDoc.write(html)
+                iframeDoc.close()
+        
+                iframe.onload = () => {
+                    iframe.contentWindow.focus()
+                    iframe.contentWindow.print()
+                    setTimeout(() => {
+                        if (document.body.contains(iframe)) {
+                            document.body.removeChild(iframe)
+                        }
+                    }, 1000)
+                }
+            } else {
+                console.error('[PDF Fetch] Failed to find individual request data in response:', json)
+                alert(`Failed to fetch individual request details. See console for API response.`)
+            }
+        } catch (err) {
+            console.error('[PDF Fetch] Error generating PDF:', err)
+            alert('Error connecting to API to generate PDF.')
+        }
     }
 
     return (
@@ -80,22 +155,34 @@ const AdminReportsTable = ({ rows, activeTab }) => {
                             ))}
                         </tr>
                     </thead>
-                    <tbody>
-                        {filteredRows.map((row, index) => (
-                            <tr key={`${row.eventName}-${index}`} className="border-t border-[#20283a] text-xs text-white">
-                                <td className="px-5 py-4 font-medium">{row.eventName}</td>
-                                <td className="px-5 py-4">{row.eventType}</td>
-                                <td className="px-5 py-4">{row.eventVenue}</td>
-                                <td className="px-5 py-4">{row.eventDate}</td>
-                                <td className="px-5 py-4"><Status status={row.status} /></td>
-                                <td className="px-5 py-4 text-center">
-                                    <button type="button" onClick={() => handleDownload(row)} className="inline-flex text-[#8b93a7] hover:text-white" aria-label="Download report">
-                                        <Download size={15} />
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
+                    {isLoading ? (
+                        <TableSkeleton cols={6} />
+                    ) : (
+                        <tbody>
+                            {filteredRows.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
+                                        No reports found.
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredRows.map((row, index) => (
+                                    <tr key={row.id || `${row.eventName}-${index}`} className="border-t border-[#20283a] text-xs text-white">
+                                        <td className="px-5 py-4 font-medium">{row.eventName}</td>
+                                        <td className="px-5 py-4">{row.eventType}</td>
+                                        <td className="px-5 py-4">{row.eventVenue}</td>
+                                        <td className="px-5 py-4">{row.eventDate}</td>
+                                        <td className="px-5 py-4"><Status status={row.status} /></td>
+                                        <td className="px-5 py-4 text-center">
+                                            <button type="button" onClick={() => handleDownload(row)} className="inline-flex text-[#8b93a7] hover:text-white" aria-label="Download report">
+                                                <Download size={15} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    )}
                 </table>
             </div>
         </section>
@@ -106,31 +193,131 @@ const AdminReportsPage = () => {
     const [activeTab, setActiveTab] = useState('event')
     const isEventReport = activeTab === 'event'
 
-    return (
-        <main className="px-6 py-5 text-white">
-            <h1 className="text-lg font-semibold">Reports</h1>
-            <p className="mt-3 text-sm text-[#FFFFFF80]">
-                Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-            </p>
+    const [events, setEvents] = useState([])
+    const [eventsLoading, setEventsLoading] = useState(true)
 
-            <div className="mt-5 flex border-b border-[#52596b]">
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('event')}
-                    className={`min-w-[175px] px-3 pb-3 cursor-pointer text-left text-base font-medium ${isEventReport ? 'border-b-2 border-[#8B3DFF] text-[#8B3DFF]' : 'text-white'}`}
-                >
-                    Event Request Report
-                </button>
-                <button
-                    type="button"
-                    onClick={() => setActiveTab('individual')}
-                    className={`min-w-[205px] px-3 pb-3 cursor-pointer text-left text-base font-medium ${!isEventReport ? 'border-b-2 border-[#8B3DFF] text-[#8B3DFF]' : 'text-white'}`}
-                >
-                    Individual Request Report
-                </button>
+    const [individualRows, setIndividualRows] = useState([])
+    const [individualLoading, setIndividualLoading] = useState(true)
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        if (!token) {
+            setEventsLoading(false)
+            return
+        }
+
+        ;(async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/table/dashboard-table?module=admin`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                const json = await res.json()
+                if (Array.isArray(json.data) && isMounted) {
+                    setEvents(
+                        (json.data || []).map((ev) => ({
+                            id: ev.eventId || ev.id || ev._id,
+                            eventName: ev.eventName || '-',
+                            eventType: ev.eventType || '-',
+                            eventVenue: (Array.isArray(ev.venues) && ev.venues.length > 0)
+                                ? ev.venues[0]
+                                : ev.eventVenue || ev.venue || '-',
+                            eventDate: formatDate(
+                                (Array.isArray(ev.dates) && ev.dates.length > 0)
+                                    ? ev.dates[0]
+                                    : ev.eventDate
+                            ),
+                            status: ev.overallStatus || ev.acknowledgeStatus || '-',
+                        }))
+                    )
+                }
+            } catch (err) {
+                console.warn('AdminReportsPage events:', err.message)
+            } finally {
+                if (isMounted) setEventsLoading(false)
+            }
+        })()
+
+        return () => { isMounted = false }
+    }, [])
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        if (!token) {
+            setIndividualLoading(false)
+            return
+        }
+
+        ;(async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                })
+                const json = await res.json()
+                if (json.success && isMounted) {
+                    setIndividualRows(
+                        (json.data || []).map((req) => ({
+                            id: req.id || req._id,
+                            eventName: req.employee || req.employeeDetail?.name || '-',
+                            eventType: req.formType || '-',
+                            eventVenue: req.venue || req.eventVenue || '-',
+                            eventDate: formatDate(req.createdAt),
+                            status: typeof req.status === 'string'
+                                ? req.status
+                                : Object.values(req.status || {}).find(Boolean) || 'Pending',
+                        }))
+                    )
+                }
+            } catch (err) {
+                console.warn('AdminReportsPage individual:', err.message)
+            } finally {
+                if (isMounted) setIndividualLoading(false)
+            }
+        })()
+
+        return () => { isMounted = false }
+    }, [])
+
+    return (
+        <main className="px-6 pb-10">
+            <div className="flex items-center justify-between pt-5 pb-5">
+                <div>
+                    <h1 className="text-[22px] font-semibold text-white">Reports</h1>
+                    <p className="mt-1 text-sm text-[#FFFFFF80]">
+                        Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
+                    </p>
+                </div>
+
+                <nav className="flex rounded-md bg-[#1b2335] p-0.5" aria-label="Request type tabs">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('event')}
+                        className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${isEventReport
+                            ? 'bg-[#8B3DFF] text-white shadow-sm'
+                            : 'text-[#8b93a7] hover:text-white'
+                            }`}
+                    >
+                        Event Request Report
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('individual')}
+                        className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${!isEventReport
+                            ? 'bg-[#8B3DFF] text-white shadow-sm'
+                            : 'text-[#8b93a7] hover:text-white'
+                            }`}
+                    >
+                        Individual Request Report
+                    </button>
+                </nav>
             </div>
 
-            <AdminReportsTable rows={isEventReport ? eventReportRows : individualReportRows} activeTab={activeTab} />
+            <AdminReportsTable 
+                rows={isEventReport ? events : individualRows} 
+                activeTab={activeTab} 
+                isLoading={isEventReport ? eventsLoading : individualLoading} 
+            />
         </main>
     )
 }

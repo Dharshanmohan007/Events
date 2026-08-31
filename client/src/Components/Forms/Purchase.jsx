@@ -478,14 +478,22 @@ function validateGuestCard(data) {
   return e;
 }
 
-function validateDay(data) {
+function validateDay(data, maxParticipants = 0) {
   const e = {};
-  // if (!data.requirementNeeded || data.requirementNeeded.length === 0)
-  //   e.requirementNeeded = "Select at least one requirement";
-  if (data.requirementNeeded?.includes("Id Card") && !data.idCardQty?.trim())
-    e.idCardQty = "ID Card quantity is required";
-  if (data.requirementNeeded?.includes("Certificate") && !data.certificateQty?.trim())
-    e.certificateQty = "Certificate quantity is required";
+  if (data.requirementNeeded?.includes("Id Card")) {
+    if (!data.idCardQty?.toString().trim()) {
+      e.idCardQty = "ID Card quantity is required";
+    } else if (parseInt(data.idCardQty) > maxParticipants) {
+      e.idCardQty = `Max allowed is ${maxParticipants}`;
+    }
+  }
+  if (data.requirementNeeded?.includes("Certificate")) {
+    if (!data.certificateQty?.toString().trim()) {
+      e.certificateQty = "Certificate quantity is required";
+    } else if (parseInt(data.certificateQty) > maxParticipants) {
+      e.certificateQty = `Max allowed is ${maxParticipants}`;
+    }
+  }
   if (!data.selectedPersons)
     e.selectedPersons = "Please select required persons";
   if (data.selectedPersons === "Students" || data.selectedPersons === "Both") {
@@ -844,6 +852,7 @@ export default function Purchase({
   eventDays = [],
   eventId,
   purchaseData: initialPurchaseData,
+  venueData = [],
   onPurchaseDataChange,
   errors: propErrors = {},
 }) {
@@ -942,7 +951,8 @@ export default function Purchase({
   const handleNext = useCallback(async () => {
     const latestDayData  = dayDataRef.current;
     const currentDayData = latestDayData[currentDayIndex] ?? emptyPurchaseDay();
-    const dayErrors      = validateDay(currentDayData);
+    const maxParticipants = parseInt(venueData?.[currentDayIndex]?.participants) || 0;
+    const dayErrors      = validateDay(currentDayData, maxParticipants);
     const hasErrors      = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
@@ -1063,8 +1073,20 @@ export default function Purchase({
           selected={current.requirementNeeded || []}
           onChange={(val) => {
             const patch = { requirementNeeded: val };
-            if (!val.includes("Id Card"))     patch.idCardQty     = "";
-            if (!val.includes("Certificate")) patch.certificateQty = "";
+            const maxParticipants = parseInt(venueData?.[currentDayIndex]?.participants) || 0;
+            
+            if (!val.includes("Id Card")) {
+              patch.idCardQty = "";
+            } else if (!current.requirementNeeded?.includes("Id Card") && !current.idCardQty) {
+              patch.idCardQty = maxParticipants > 0 ? String(maxParticipants) : "";
+            }
+            
+            if (!val.includes("Certificate")) {
+              patch.certificateQty = "";
+            } else if (!current.requirementNeeded?.includes("Certificate") && !current.certificateQty) {
+              patch.certificateQty = maxParticipants > 0 ? String(maxParticipants) : "";
+            }
+            
             updateCurrent(patch);
           }}
           error={currentErrors.requirementNeeded}

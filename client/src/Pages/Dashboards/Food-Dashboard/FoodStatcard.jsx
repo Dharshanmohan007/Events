@@ -1,5 +1,99 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import pattern from '../../../assets/pattern.svg'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
+
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
+const individualTargetTitles = ['Individual Requests']
+
+const applyEventStats = (sections, eventStats) => {
+    const stats = eventStats ?? EMPTY_STATS
+
+    return sections.map((section) => {
+        if (!section.title.toLowerCase().includes('event') && individualTargetTitles.includes(section.title)) return section
+
+        return {
+            ...section,
+            stats: section.stats.map((item) => {
+                const label = item.label.toLowerCase()
+
+                if (label.includes('total')) {
+                    return { ...item, value: stats.total ?? 0 }
+                }
+
+                if (label.includes('approved')) {
+                    return { ...item, value: stats.approved ?? 0 }
+                }
+
+                if (label.includes('completed')) {
+                    return { ...item, value: stats.completed ?? 0 }
+                }
+
+                if (label.includes('pending')) {
+                    return { ...item, value: stats.pending ?? 0 }
+                }
+
+                if (label.includes('rejected')) {
+                    return { ...item, value: stats.rejected ?? 0 }
+                }
+
+                if (label.includes('acknowledged')) {
+                    return { ...item, value: stats.approved ?? 0 }
+                }
+
+                return item
+            }),
+        }
+    })
+}
+
+const applyIndividualStats = (sections, individualStats) => {
+    const stats = individualStats ?? EMPTY_STATS
+
+    return sections.map((section) => {
+        if (!individualTargetTitles.includes(section.title)) return section
+
+        return {
+            ...section,
+            stats: section.stats.map((item) => {
+                const label = item.label.toLowerCase()
+
+                if (label.includes('total')) {
+                    return { ...item, value: stats.total ?? 0 }
+                }
+
+                if (label.includes('completed')) {
+                    return { ...item, value: stats.completed ?? 0 }
+                }
+
+                if (label.includes('approved')) {
+                    return { ...item, value: stats.approved ?? 0 }
+                }
+
+                if (label.includes('pending')) {
+                    return { ...item, value: stats.pending ?? 0 }
+                }
+
+                if (label.includes('rejected')) {
+                    return { ...item, value: stats.rejected ?? 0 }
+                }
+
+                if (label.includes('acknowledged')) {
+                    return { ...item, value: stats.approved ?? 0 }
+                }
+
+                return item
+            }),
+        }
+    })
+}
 
 const UtensilsIcon = () => (
     <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" aria-hidden="true">
@@ -29,6 +123,12 @@ const HourglassIcon = () => (
     <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" aria-hidden="true">
         <path d="M6 3h12M6 21h12M8 3v4.5L12 12l4 4.5V21M16 3v4.5L12 12l-4 4.5V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         <path d="M10 8h4M10 17h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+)
+
+const RejectedIcon = () => (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 text-white" fill="none" aria-hidden="true">
+        <path d="m7 7 10 10M17 7 7 17" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
     </svg>
 )
 
@@ -67,7 +167,7 @@ const defaultSections = [
         ],
     },
     {
-        title: 'Catering Requests',
+        title: 'Individual Requests',
         stats: [
             {
                 label: 'Total Requests',
@@ -84,27 +184,81 @@ const defaultSections = [
                 icon: <CheckBadgeIcon />,
             },
             {
-                label: 'In Progress',
-                value: 50,
-                cardClass: 'from-[#252d5c] via-[#25258a] to-[#2116a5] border-l-[#7181ff]',
-                iconClass: 'bg-[#8292ff]',
-                icon: <CheckIcon />,
-            },
-            {
                 label: 'Pending Approval',
                 value: 50,
                 cardClass: 'from-[#342238] via-[#652049] to-[#9b1b59] border-l-[#eb3f99]',
                 iconClass: 'bg-[#ef68ad]',
                 icon: <HourglassIcon />,
             },
+            {
+                label: 'Rejected Requests',
+                value: 0,
+                cardClass: 'from-[#4a1d24] via-[#7f1d2d] to-[#991b1b] border-l-[#f87171]',
+                iconClass: 'bg-[#ef4444]',
+                icon: <RejectedIcon />,
+            },
         ],
     },
 ]
 
 const FoodStatcard = ({ sections = defaultSections }) => {
+    const [eventStats, setEventStats] = useState(null)
+    const [individualStats, setIndividualStats] = useState(null)
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+
+        fetch(`${API_BASE_URL}/api/dashboard/stats?module=food`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch food dashboard stats')
+                }
+                return response.json()
+            })
+            .then((responseData) => {
+                if (isMounted) {
+                    setEventStats(responseData.modules?.food ?? responseData.events ?? null)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+            })
+
+        fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=food`, {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch individual food dashboard stats')
+                }
+                return response.json()
+            })
+            .then((responseData) => {
+                if (isMounted) {
+                    setIndividualStats(responseData.stats ?? null)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+            })
+
+        return () => {
+            isMounted = false
+        }
+    }, [])
+
+    const displaySections = useMemo(() => {
+        let result = applyEventStats(sections, eventStats)
+        result = applyIndividualStats(result, individualStats)
+        return result
+    }, [sections, eventStats, individualStats])
+
     return (
         <section className="grid grid-cols-1 gap-7 xl:grid-cols-2 mt-6">
-            {sections.map((section) => (
+            {displaySections.map((section) => (
                 <div key={section.title} className="rounded-lg border border-[#263044] bg-[#141b2b] px-4 py-3 shadow-[0_10px_30px_rgba(0,0,0,0.16)]">
                     <h2 className="mb-3 text-lg font-medium text-white">{section.title}</h2>
 

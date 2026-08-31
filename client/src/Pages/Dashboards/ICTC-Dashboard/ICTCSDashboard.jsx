@@ -4,6 +4,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import StatCard from '../../../Components/StatCard'
 import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 
 // ICTS Dashboard specific data
 import calendarFill from '../../../assets/calendarFill.svg'
@@ -48,13 +49,6 @@ const statCardData = [
     },
 ]
 
-const departmentData = [
-    { name: 'CSE', value: 25, color: '#74b9ff' },
-    { name: 'AIML', value: 55, color: '#159283' },
-    { name: 'EEE', value: 12, color: '#68df85' },
-    { name: 'VLSI', value: 8, color: '#4169e1' },
-]
-
 const transformIctsData = (apiData) =>
     apiData.map((item) => ({
         eventId: item.eventId,
@@ -66,9 +60,44 @@ const transformIctsData = (apiData) =>
         acknowledgeStatus: item.departmentStatus || item.overallStatus || '-',
     }))
 
+const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+}
+
 const ICTCSDashboard = () => {
     const [events, setEvents] = useState([])
     const [loading, setLoading] = useState(true)
+    const [eventStats, setEventStats] = useState(null)
+    const feedbackRows = useDepartmentFeedback('ictc')
+
+    useEffect(() => {
+        let isMounted = true
+        const token = localStorage.getItem('token')
+        const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+        Promise.all([
+            fetch(`${API_BASE_URL}/api/dashboard/stats?module=icts`, { headers }),
+            fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=icts`, { headers }),
+        ])
+            .then(([eventRes]) => Promise.all([
+                eventRes.ok ? eventRes.json() : Promise.resolve({}),
+            ]))
+            .then(([eventData]) => {
+                if (isMounted) {
+                    setEventStats(eventData.modules?.icts ?? eventData.events ?? EMPTY_STATS)
+                }
+            })
+            .catch((error) => {
+                console.warn(error.message)
+                if (isMounted) setEventStats(EMPTY_STATS)
+            })
+
+        return () => { isMounted = false }
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -105,7 +134,15 @@ const ICTCSDashboard = () => {
                     </div>
 
                     {/* stat cards  */}
-                    <StatCard data={statCardData} />
+                    <StatCard data={statCardData.map((item) => {
+                        const label = item.lable.toLowerCase()
+                        const stats = eventStats ?? EMPTY_STATS
+                        if (label.includes('total')) return { ...item, value: stats.total ?? 0 }
+                        if (label.includes('acknowledged')) return { ...item, value: stats.approved ?? 0 }
+                        if (label.includes('completed')) return { ...item, value: stats.completed ?? 0 }
+                        if (label.includes('pending')) return { ...item, value: stats.pending ?? 0 }
+                        return item
+                    })} />
 
                     {/* table and charts   */}
                     <div className="main-container mt-4 h-[calc(100vh-270px)] w-full [&>section]:w-full">
@@ -124,8 +161,8 @@ const ICTCSDashboard = () => {
                     </div>
 
                     <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-                        <FeedbackRatings feedbackLink="/dashboard-ictcs/feedback" />
-                        <DepartmentRequestChart data={departmentData} title="ICTCS Request By Department" />
+                        <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-ictcs/feedback" />
+                        <DepartmentRequestChart module="icts" title="ICTCS Request By Department" />
                     </div>
 
                 </div>

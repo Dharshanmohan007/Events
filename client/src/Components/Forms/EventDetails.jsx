@@ -1,5 +1,5 @@
 import React, { useState,useEffect  } from 'react'
-import CustomSelect from "../CustomSelect";
+import CustomSelect, { SDG_GOALS } from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
@@ -14,12 +14,12 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
       try {
         const response = await getEventTypes();
 
-        console.log("API Response:", response);
+        // console.log("API Response:", response);
 
         if (response.success) {
           const types = response.data.map(item => item.eventType);
 
-          console.log("Types:", types);
+          // console.log("Types:", types);
 
           setEventTypeOptions([...types, "Other"]);
         }
@@ -157,20 +157,49 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           <CustomSelect
             label="Professional Society Involved"
             required
+            multi
             searchable
-            value={eventData?.society || ""}
-            onChange={handleSelect("society")}
-            options={["IEEE", "ISTE", "CSI", "IETE", "WICYS","IGEN", "Other"]}
+            value={
+              Array.isArray(eventData?.society)
+                ? eventData.society
+                : eventData?.society
+                ? [eventData.society]
+                : []
+            }
+            onChange={(val) => {
+              setEventData((prev) => ({
+                ...prev,
+                society: val,
+              }));
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  society: "",
+                }));
+              }
+            }}
+            options={["IEEE", "ISTE", "CSI", "IETE", "WICYS", "IGEN", "Other"]}
             placeholder="Select professional society"
           />
-          {errors.society && <p className="text-red-400 text-xs mt-1">{errors.society}</p>}
+          {errors.society && (
+            <p className="text-red-400 text-xs mt-1">{errors.society}</p>
+          )}
         </div>
         <div>
           <CustomInput
             label="If professional society involved is others, please specify *"
             value={eventData?.societyOther || ""}
             onChange={handle("societyOther")}
-            disabled={eventData?.society !== "Other"}
+            disabled={
+              !(
+                Array.isArray(eventData?.society)
+                  ? eventData.society
+                  : eventData?.society
+                  ? [eventData.society]
+                  : []
+              ).includes("Other")
+            }
             placeholder="Specify society"
           />
           {errors.societyOther && <p className="text-red-400 text-xs mt-1">{errors.societyOther}</p>}
@@ -187,6 +216,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             value={logosValue}
             onChange={handleLogosChange}
             options={["AICTE", "IIC","Viksit Bharat", "Skill India", "IEEE","ISTE","CSI","IETE","IEI","WICYS", "IGEN", "SDG", "Other"]}
+            nestedOptions={{ "SDG": SDG_GOALS }}
             placeholder="Select logos"
           />
           {errors.logos && <p className="text-red-400 text-xs mt-1">{errors.logos}</p>}
@@ -215,51 +245,64 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           />
           {errors.numDays && <p className="text-red-400 text-xs mt-1">{errors.numDays}</p>}
         </div>
-        <CustomSelect
-          label="Target Audience"
-          required
-          multi
-          searchable
-          value={audienceValue}
-          onChange={(val) => {
-            setEventData((prev) => ({
-              ...prev,
-              audience: val,
-            }));
-
-            if (setErrors) {
-              setErrors((prev) => ({
+        <div>
+          <CustomSelect
+            label="Target Audience"
+            required
+            multi
+            searchable
+            value={audienceValue}
+            onChange={(val) => {
+              setEventData((prev) => ({
                 ...prev,
-                audience: "",
+                audience: val,
               }));
-            }
-          }}
-          options={[
-            "Internal Students",
-            "Internal Faculty",
-            "External Students",
-            "External Faculty",
-            "Industry Person",
-          ]}
-          placeholder="Select target audience"
-        />
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  audience: "",
+                }));
+              }
+            }}
+            options={[
+              "Internal Students",
+              "Internal Faculty",
+              "External Students",
+              "External Faculty",
+              "Industry Person",
+            ]}
+            placeholder="Select target audience"
+          />
+          {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
+        </div>
       </div>
 
       {/* Day Cards */}
-      {daysData.map((day, i) => (
-        <EventDates
-          key={i}
-          dayIndex={i + 1}
-          dayData={day}
-          errors={(errors.days && errors.days[i]) || {}}
-          updateDay={(updatedDay) => {
-            const updated = [...daysData];
-            updated[i] = updatedDay;
-            setEventDays(updated);
-            setEventData((prev) => ({ ...prev, eventDays: updated }));
-          }}
-        />
-      ))}
+      {daysData.map((day, i) => {
+        const today = new Date().toISOString().split("T")[0];
+        let calculatedMinDate = today;
+        if (i > 0 && daysData[i - 1].date) {
+          calculatedMinDate = daysData[i - 1].date > today ? daysData[i - 1].date : today;
+        }
+
+        return (
+          <EventDates
+            key={i}
+            dayIndex={i + 1}
+            dayData={day}
+            day1Guests={i > 0 ? daysData[0].guests : []}
+            minDate={calculatedMinDate}
+            errors={(errors.days && errors.days[i]) || {}}
+            updateDay={(updatedDay) => {
+              const updated = [...daysData];
+              updated[i] = updatedDay;
+              setEventDays(updated);
+              setEventData((prev) => ({ ...prev, eventDays: updated }));
+            }}
+          />
+        );
+      })}
       </div>
     </div>
   );

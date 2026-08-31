@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react'
-import { ArrowRight, Bell, Calendar, Check, CircleQuestionMark, ExternalLink, Hourglass, Search, Settings } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { ArrowRight, Calendar, Check, ExternalLink, Hourglass } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
+import { useDepartmentFeedback } from '../../../api/feedbackApi'
 import smallLogo from '../../../assets/small-logo.svg'
-import profileAvatar from '../../../assets/profile-avatar.svg'
+import LogoutButton from '../../../Components/LogoutButton'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -68,45 +69,49 @@ const statGroups = [
   },
 ]
 
-const chartData = [
-  { name: 'CSE', value: 25, color: '#74B9FF' },
-  { name: 'AI&ML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68DF85' },
-  { name: 'VLSI', value: 8, color: '#3352C8' },
-]
-
-const feedbackRows = Array.from({ length: 13 }, () => ({
-  name: 'Dr. Sarah Jenkins',
-  department: 'Dept. of Computer Science',
-  quote: '"The event video exceeded expectations. The team captured the technical essence perfectly with modern aesthetics."',
-  time: '2 HOURS AGO',
-}))
-
 // ── Sub-components ───────────────────────────────────────────────────────
 
-const DashboardHeader = () => (
-  <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
-    <div className="flex items-center gap-6">
-      <img src={smallLogo} alt="Logo" className="h-11 w-11" />
-      <nav className="flex items-center gap-8 text-sm">
-        <span className="border-b border-[#8B3DFF] pb-2 font-semibold text-[#8B3DFF]">Dashboard</span>
-      </nav>
-    </div>
+// const DashboardHeader = () => (
+//   <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
+//     <div className="flex items-center gap-6">
+//       <img src={smallLogo} alt="Logo" className="h-11 w-11" />
+//       <nav className="flex items-center gap-8 text-sm font-medium">
+//         <Link to="/dashboard-video" className="border-b border-[#8B3DFF] pb-2 font-semibold text-[#8B3DFF]">Dashboard</Link>
+//         <Link to="/dashboard-video/requests" className="pb-2 text-[#FFFFFF80] hover:text-white">Request List</Link>
+//         <span className="pb-2 text-[#FFFFFF80]">Calendar</span>
+//         <Link to="/dashboard-video/reports" className="pb-2 text-[#FFFFFF80] hover:text-white">Reports</Link>
+//         <Link to="/dashboard-video/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
+//       </nav>
+//     </div>
+const DashboardHeader = () => {
+  const location = useLocation();
+  const isRequests = location.pathname.includes('/dashboard-video/requests');
 
-    <div className="flex items-center gap-6">
-      <div className="flex w-[290px] items-center gap-2 rounded-full border border-[#343b4a] bg-[#161a23] px-3 py-2">
-        <Search size={15} className="text-[#8b93a4]" />
-        <input className="w-full bg-transparent text-xs text-white outline-none placeholder:text-[#FFFFFF66]" placeholder="Search events, venues, or faculty..." />
+  return (
+    <header className="fixed left-0 right-0 top-0 z-50 flex items-center justify-between border-b border-[#1d2638] bg-[#0a0e18] px-6 py-3">
+      <div className="flex items-center gap-6">
+        <img src={smallLogo} alt="Logo" className="h-11 w-11" />
+        <nav className="flex items-center gap-8 text-sm">
+          <Link to="/dashboard-video" className={`pb-2 ${!isRequests ? 'border-b border-[#8B3DFF] font-semibold text-[#8B3DFF]' : 'text-[#FFFFFF80] hover:text-white'}`}>
+            Dashboard
+          </Link>
+          <Link to="/dashboard-video/requests" className={`pb-2 ${isRequests ? 'border-b border-[#8B3DFF] font-semibold text-[#8B3DFF]' : 'text-[#FFFFFF80] hover:text-white'}`}>
+            Request List
+          </Link>
+           <Link to="/dashboard-video/reports" className="pb-2 text-[#FFFFFF80] hover:text-white">Reports</Link>
+          <Link to="/dashboard-video/feedback" className="pb-2 text-[#FFFFFF80] hover:text-white">Feedback</Link>
+          <Link to="/calendar" className="pb-2 text-[#FFFFFF80] hover:text-white">
+            Calendar
+          </Link>
+        </nav>
       </div>
-      <div className="flex items-center gap-5 text-[#b7bdc8]">
-        <Bell size={18} />
-        <CircleQuestionMark size={18} />
-        <Settings size={18} />
-        <img src={profileAvatar} alt="Profile Avatar" className="h-8 w-8 rounded-full" />
+
+      <div className="flex items-center gap-6">
+        <LogoutButton />
       </div>
-    </div>
-  </header>
-)
+    </header>
+  );
+}
 
 const StatGroup = ({ title, cards }) => (
   <section className="rounded-lg border border-[#2a3347] bg-[#151c2c] p-2">
@@ -147,6 +152,41 @@ const VideoDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const [eventStats, setEventStats] = useState(null)
+  const [individualStats, setIndividualStats] = useState(null)
+  const feedbackRows = useDepartmentFeedback('video')
+
+  useEffect(() => {
+    let isMounted = true
+    const token = localStorage.getItem('token')
+    const headers = token ? { Authorization: `Bearer ${token}` } : {}
+    const decoded = jwtDecode(token)
+    const email = decoded?.email
+
+    Promise.all([
+      fetch(`${API_BASE_URL}/api/dashboard/video-dashboard?email=${email}`, { headers }),
+      fetch(`${API_BASE_URL}/api/dashboard/individual-stats?module=video`, { headers }),
+    ])
+      .then(([eventRes, individualRes]) => Promise.all([
+        eventRes.ok ? eventRes.json() : Promise.resolve({}),
+        individualRes.ok ? individualRes.json() : Promise.resolve({}),
+      ]))
+      .then(([eventData, individualData]) => {
+        if (isMounted) {
+          setEventStats(eventData.modules?.video ?? eventData.events ?? null)
+          setIndividualStats(individualData.stats ?? null)
+        }
+      })
+      .catch((error) => console.warn(error.message))
+
+    return () => { isMounted = false }
+  }, [])
+
+  // ── Individual tab state ────────────────────────────────────────────────
+  const [individualRequests, setIndividualRequests] = useState([])
+  const [individualLoading, setIndividualLoading] = useState(false)
+  const [individualError, setIndividualError] = useState('')
+  const individualFetchedRef = useRef(false)
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -191,7 +231,99 @@ const VideoDashboard = () => {
     return () => abortController.abort()
   }, [])
 
+  const EMPTY_STATS = {
+    total: 0,
+    approved: 0,
+    completed: 0,
+    pending: 0,
+    rejected: 0,
+  }
+
+  const displayStatGroups = useMemo(() => {
+    if (!eventStats && !individualStats) return statGroups
+
+    const eventValues = eventStats ?? EMPTY_STATS
+    const individualValues = individualStats ?? EMPTY_STATS
+
+    return statGroups.map((group) => {
+      const isEventSection = group.title.toLowerCase().includes('event')
+      const isIndividualSection = group.title.toLowerCase().includes('individual')
+      const stats = isEventSection ? eventValues : (isIndividualSection ? individualValues : EMPTY_STATS)
+
+      return {
+        ...group,
+        cards: group.cards.map((card) => {
+          const label = card.label.toLowerCase()
+
+          if (label.includes('total')) {
+            return { ...card, value: stats.total ?? 0 }
+          }
+
+          if (label.includes('completed')) {
+            return { ...card, value: stats.completed ?? 0 }
+          }
+
+          if (label.includes('pending')) {
+            return { ...card, value: stats.pending ?? 0 }
+          }
+
+          if (label.includes('acknowledged')) {
+            return { ...card, value: stats.approved ?? 0 }
+          }
+
+          return card
+        }),
+      }
+    })
+  }, [eventStats, individualStats])
+
+  // ── Fetch individual video requests ─────────────────────────────────────
+  const fetchIndividualRequests = useCallback(async () => {
+    try {
+      setIndividualLoading(true)
+      setIndividualError('')
+      const token = localStorage.getItem('token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/individual-submissions/video`,
+        { headers }
+      )
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`)
+      }
+
+      const json = await response.json()
+      const data = json.data || json.results || json
+      if (Array.isArray(data)) {
+        setIndividualRequests(data)
+      } else {
+        setIndividualRequests([])
+      }
+    } catch (err) {
+      console.error('Failed to fetch individual video requests:', err)
+      setIndividualError(err.message || 'Failed to load individual requests')
+    } finally {
+      setIndividualLoading(false)
+    }
+  }, [])
+
+  // ── Reset fetch flag when tab changes ───────────────────────────────────
+  useEffect(() => {
+    individualFetchedRef.current = false
+  }, [activeTab])
+
+  // ── Fetch individual data when tab switches to 'individual' ───────────
+  useEffect(() => {
+    if (activeTab === 'individual' && !individualFetchedRef.current && !individualLoading) {
+      individualFetchedRef.current = true
+      fetchIndividualRequests()
+    }
+  }, [activeTab, individualLoading, fetchIndividualRequests])
+
   const headers = ['Event Name', 'Event Date', 'Dept', 'Status', 'Action']
+  const individualHeaders = ['Request No', 'Employee', 'Emp ID', 'Dept', 'Media Type', 'Priority', 'Delivery Date', 'Status', 'Action']
 
   const renderTable = () => {
     if (events.length === 0) {
@@ -260,8 +392,94 @@ const VideoDashboard = () => {
     )
   }
 
+  // ── Render individual table ────────────────────────────────────────────
+  const renderIndividualTable = () => {
+    if (individualRequests.length === 0) {
+      return (
+        <div className="flex flex-1 items-center justify-center py-12">
+          <p className="text-sm text-[#CBC3D7]/65">No individual video requests found.</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
+        <table className="w-full text-left">
+          <thead className="sticky top-0 bg-[#151c2c]">
+            <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
+              {individualHeaders.map((header) => (
+                <th
+                  key={header}
+                  className={`px-6 py-4 font-semibold ${header === 'Action' ? 'text-center' : ''}`}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {individualRequests.map((item) => {
+              const data = item.data || {}
+              const emp = data.employee || item.employeeDetail || {}
+              const requestNo = data.requestNo || item.requestNo || '-'
+              const empName = item.employee || emp.name || '-'
+              const empId = emp.empId || '-'
+              const dept = emp.department || '-'
+              const mediaTypes = Array.isArray(data.typeOfMedia)
+                ? data.typeOfMedia.join(', ')
+                : data.typeOfMedia || 'Video'
+              const status = item.finalStatus || item.status || '-'
+              const isPending = String(status).toLowerCase().includes('pending')
+              const videoPriority = data.video?.priority || 'Medium'
+              const deliveryDate = formatDate(data.video?.deliveryDate)
+
+              return (
+                <tr
+                  key={item.id || item._id}
+                  className="border-t border-[#20283a] text-sm text-white whitespace-nowrap"
+                >
+                  <td className="px-6 py-4 font-medium">{requestNo}</td>
+                  <td className="px-6 py-4">{empName}</td>
+                  <td className="px-6 py-4">{empId}</td>
+                  <td className="px-6 py-4">{dept}</td>
+                  <td className="px-6 py-4">{mediaTypes}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-[#F20768] font-semibold">{videoPriority}</span>
+                  </td>
+                  <td className="px-6 py-4">{deliveryDate}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center gap-2 ${isPending ? 'text-[#F20768]' : 'text-[#20D18C]'}`}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${isPending ? 'bg-[#F20768]' : 'bg-[#20D18C]'}`}
+                      />
+                      {status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center">
+                      <Link
+                        to={`/dashboard-video/individualDetailView/${item.id || item._id}`}
+                        className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
+                        aria-label={`View details for ${requestNo}`}
+                      >
+                        <ExternalLink size={17} />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
-    <section className="min-h-screen overflow-auto bg-[#0b1326] pt-16.25 text-white poppins table-custom-scrollbar">
+    <>
+      <section className="min-h-screen overflow-auto bg-[#0b1326] pt-16.25 text-white poppins table-custom-scrollbar">
       <DashboardHeader />
       <main className="px-6 py-5">
         <h1 className="text-lg font-medium">Dashboard Overview</h1>
@@ -270,7 +488,7 @@ const VideoDashboard = () => {
         </p>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {statGroups.map((group) => <StatGroup key={group.title} {...group} />)}
+          {displayStatGroups.map((group) => <StatGroup key={group.title} {...group} />)}
         </div>
 
         <div className="mt-7">
@@ -309,30 +527,39 @@ const VideoDashboard = () => {
               </div>
             </div>
 
-            {loading ? (
+            {loading && activeTab === 'events' ? (
               <div className="flex flex-1 items-center justify-center py-12">
                 <p className="text-sm text-[#CBC3D7]/65">Loading video requests...</p>
               </div>
-            ) : error ? (
+            ) : error && activeTab === 'events' ? (
               <div className="flex flex-1 items-center justify-center py-12">
                 <p className="text-sm text-[#FF4F91]">{error}</p>
               </div>
             ) : activeTab === 'events' ? (
               renderTable()
-            ) : (
+            ) : activeTab === 'individual' && individualLoading ? (
               <div className="flex flex-1 items-center justify-center py-12">
-                <p className="text-sm text-[#CBC3D7]/65">Individual video requests will be available soon.</p>
+                <p className="text-sm text-[#CBC3D7]/65">Loading individual video requests...</p>
               </div>
-            )}
+            ) : activeTab === 'individual' && individualError ? (
+              <div className="flex flex-1 items-center justify-center py-12">
+                <p className="text-sm text-[#FF4F91]">{individualError}</p>
+              </div>
+            ) : activeTab === 'individual' ? (
+              renderIndividualTable()
+            ) : null}
           </section>
         </div>
 
         <div className="mt-8 grid grid-cols-12 gap-3">
           <FeedbackRatings rows={feedbackRows} feedbackLink="/dashboard-video/feedback" />
-          <DepartmentRequestChart data={chartData} title="Event Video Request By Department" />
+          <DepartmentRequestChart module="video" title="Event Video Request By Department" />
         </div>
       </main>
-    </section>
+      </section>
+
+
+    </>
   )
 }
 

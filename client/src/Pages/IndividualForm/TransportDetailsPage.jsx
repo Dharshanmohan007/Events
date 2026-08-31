@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import FormSubmitted from "./FormSubmitted";
 
@@ -11,9 +12,12 @@ import {
   X,
   ChevronDown,
   ArrowRight,
+  FileText,
 } from "lucide-react";
 
 import { jwtDecode } from "jwt-decode";
+import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
+
 import { API_BASE } from "../../utils/apiConfig";
 
 const createTransportForm = () => ({
@@ -28,6 +32,8 @@ const createTransportForm = () => ({
   // VEHICLES
   selectedVehicles: [],
   vehicleCounts: {},
+  availableVehicleCounts: {},
+  inventoryLoading: false,
   showVehicleDropdown: false,
 
   // STAFF
@@ -39,6 +45,8 @@ const createTransportForm = () => ({
   financeRequired: "No",
   advanceAmount: "",
   advancePurpose: "",
+  advanceToBeReceviedWithin: "",
+  estimatedEventBudget: "",
   showFinanceDropdown: false,
 });
 
@@ -50,6 +58,14 @@ const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
 
 const TransportDetailsPage = () => {
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
+  const navigate = useNavigate();
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(isEditMode);
+  const [loadError, setLoadError] = useState("");
+  const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
+
   const [transportForms, setTransportForms] = useState([createTransportForm()]);
 
   const [employeeId, setEmployeeId] = useState("");
@@ -68,6 +84,130 @@ const TransportDetailsPage = () => {
   const [principalApprovalDocument, setPrincipalApprovalDocument] =
     useState(null);
   const [principalFileError, setPrincipalFileError] = useState("");
+
+  const mapTransportApiToForm = (data) => {
+    const transport = data?.data || data?.transport || data;
+
+    let pickupDate = null;
+    if (transport.pickupDateTime) {
+      pickupDate = new Date(transport.pickupDateTime);
+      if (Number.isNaN(pickupDate.getTime())) pickupDate = null;
+    }
+
+    let dropDate = null;
+    if (transport.dropDateTime) {
+      dropDate = new Date(transport.dropDateTime);
+      if (Number.isNaN(dropDate.getTime())) dropDate = null;
+    }
+
+    const checkpointsList = Array.isArray(transport.checkpoints)
+      ? transport.checkpoints.map((cp) => (typeof cp === "string" ? cp : cp.location || "")).filter(Boolean)
+      : [];
+
+    const vehiclesList = Array.isArray(transport.vehicles) ? transport.vehicles : [];
+    const selectedVehicles = vehiclesList.map((v) => v.type).filter(Boolean);
+    const vehicleCounts = vehiclesList.reduce((acc, v) => {
+      if (v.type) acc[v.type] = String(v.count ?? 1);
+      return acc;
+    }, {});
+
+    const accompanyingStaffList = Array.isArray(transport.accompanyingStaff) && transport.accompanyingStaff.length > 0
+      ? transport.accompanyingStaff.map((s) => ({ name: s.name || "", mobile: String(s.mobile || "") }))
+      : [];
+
+    return {
+      pickupDateTime: pickupDate,
+      dropDateTime: dropDate,
+      pickupLocation: transport.pickupLocation || "",
+      dropLocation: transport.dropLocation || "",
+      checkpoints: checkpointsList,
+      draggedIndex: null,
+      totalPassengers: String(transport.totalPassengers ?? ""),
+
+      selectedVehicles: selectedVehicles,
+      vehicleCounts: vehicleCounts,
+      availableVehicleCounts: {},
+      inventoryLoading: false,
+      showVehicleDropdown: false,
+
+      staffOptionType: String(transport.numberOfAccompanyingStaff ?? (accompanyingStaffList.length || "")),
+      showStaffDropdown: false,
+      staffDetails: accompanyingStaffList,
+
+      specialRequirement: transport.specialRequirements || "",
+      financeRequired: (transport.financeRequired || "No").toString().toLowerCase() === "yes" ? "Yes" : "No",
+      advanceAmount: String(transport.advanceAmount ?? ""),
+      advancePurpose: transport.advancePurpose || "",
+      advanceToBeReceviedWithin: String(transport.advanceToBeReceviedWithin ?? ""),
+      estimatedEventBudget: String(transport.estimatedEventBudget ?? transport.estimatedAmount ?? ""),
+      showFinanceDropdown: false,
+    };
+  };
+
+  useEffect(() => {
+    if (!isEditMode || !id) return;
+
+    let isMounted = true;
+    const fetchTransportDetails = async () => {
+      setIsLoadingDetails(true);
+      setLoadError("");
+      try {
+        const authToken = localStorage.getItem("token") || token;
+        const headers = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
+        let response = await fetch(`${API_BASE}/api/transports/${id}`, { headers });
+        if (!response.ok) {
+          response = await fetch(`${API_BASE}/api/individual-submissions/getrequest/${id}`, { headers });
+        }
+
+        if (!response.ok) {
+          throw new Error(`Failed to load transport request (Status ${response.status})`);
+        }
+
+        const resData = await response.json();
+        const rawData = resData.data || resData;
+        const actualTransport = Array.isArray(rawData) ? rawData[0] : (rawData.data || rawData);
+
+        if (isMounted) {
+          const mappedForm = mapTransportApiToForm(actualTransport);
+          setTransportForms([mappedForm]);
+          const existingDoc =
+            actualTransport?.principalApprovalForm ||
+            actualTransport?.principalApprovalFormName ||
+            actualTransport?.principalApprovalDocument ||
+            actualTransport?.principalDocument ||
+            actualTransport?.approvalDocument ||
+            actualTransport?.approvalForm ||
+            actualTransport?.files?.principalApprovalForm ||
+            actualTransport?.files?.principalApprovalFormName ||
+            rawData?.principalApprovalForm ||
+            rawData?.principalApprovalFormName ||
+            rawData?.principalApprovalDocument ||
+            rawData?.principalDocument ||
+            resData?.principalApprovalForm ||
+            resData?.principalApprovalFormName ||
+            resData?.principalApprovalDocument ||
+            resData?.principalDocument;
+          if (existingDoc) {
+            setExistingPrincipalDocument(existingDoc);
+          }
+        }
+      } catch (err) {
+        if (isMounted) {
+          setLoadError(err.message || "Failed to load transport request details");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoadingDetails(false);
+        }
+      }
+    };
+
+    fetchTransportDetails();
+    return () => {
+      isMounted = false;
+    };
+  }, [id, isEditMode]);
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token");
@@ -150,7 +290,8 @@ const TransportDetailsPage = () => {
 
   const handleUploadDragOver = (e) => e.preventDefault();
 
-  const vehicleOptions = ["Bus", "Van", "Car"];
+  const getVehicleOptions = (totalPassengers) =>
+    Number(totalPassengers) > 5 ? ["Bus"] : ["Car"];
 
   // =========================
   // ADD FORM
@@ -162,12 +303,65 @@ const TransportDetailsPage = () => {
   // =========================
   // UPDATE FIELD
   // =========================
-  const updateFormField = (formIndex, field, value) => {
-    const updatedForms = [...transportForms];
+  const updateTransportForm = (formIndex, updates) => {
+    setTransportForms((prevForms) => {
+      const updatedForms = [...prevForms];
+      updatedForms[formIndex] = {
+        ...updatedForms[formIndex],
+        ...updates,
+      };
+      return updatedForms;
+    });
+  };
 
-    updatedForms[formIndex][field] = value;
+  const updateFormField = async (formIndex, field, value) => {
+    const isDateField = field === "pickupDateTime" || field === "dropDateTime";
+    const nextForm = {
+      ...transportForms[formIndex],
+      [field]: value,
+    };
 
-    setTransportForms(updatedForms);
+    // Keep the pickup/drop range valid even if a date is changed after both
+    // fields have already been selected.
+    if (
+      nextForm.pickupDateTime &&
+      nextForm.dropDateTime &&
+      nextForm.pickupDateTime > nextForm.dropDateTime
+    ) {
+      if (field === "pickupDateTime") {
+        nextForm.dropDateTime = null;
+      } else {
+        nextForm.pickupDateTime = null;
+      }
+    }
+
+    if (field === "totalPassengers") {
+      const allowedVehicles = getVehicleOptions(value);
+
+      nextForm.selectedVehicles = (nextForm.selectedVehicles || []).filter(
+        (vehicle) => allowedVehicles.includes(vehicle),
+      );
+      nextForm.vehicleCounts = Object.fromEntries(
+        Object.entries(nextForm.vehicleCounts || {}).filter(([vehicle]) =>
+          allowedVehicles.includes(vehicle),
+        ),
+      );
+    }
+
+    if (isDateField) {
+      nextForm.availableVehicleCounts = {};
+      nextForm.inventoryLoading = true;
+    }
+
+    updateTransportForm(formIndex, nextForm);
+
+    if (isDateField) {
+      if (nextForm.pickupDateTime && nextForm.dropDateTime) {
+        await fetchVehicleInventory(formIndex, nextForm.pickupDateTime, nextForm.dropDateTime);
+      } else {
+        updateTransportForm(formIndex, { inventoryLoading: false });
+      }
+    }
   };
 
   // =========================
@@ -313,7 +507,38 @@ const TransportDetailsPage = () => {
     }
   };
 
-  // Format a Date into ISO-like string that preserves local timezone offset
+  const formatDateOnly = (date) => {
+    if (!date) return null;
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+  };
+
+  const rangesOverlap = (aStart, aEnd, bStart, bEnd) => {
+    if (!aStart || !aEnd || !bStart || !bEnd) return false;
+    const aS = new Date(aStart).getTime();
+    const aE = new Date(aEnd).getTime();
+    const bS = new Date(bStart).getTime();
+    const bE = new Date(bEnd).getTime();
+    return aS <= bE && bS <= aE;
+  };
+
+  const getDisplayedAvailability = (formIndex, vehicle) => {
+    const form = transportForms[formIndex];
+    const available = form.availableVehicleCounts?.[vehicle];
+    if (available === undefined || available === null) return undefined;
+
+    // subtract counts reserved by other forms that overlap this form's date range
+    const reserved = transportForms.reduce((sum, otherForm, idx) => {
+      if (idx === formIndex) return sum;
+      if (!rangesOverlap(form.pickupDateTime, form.dropDateTime, otherForm.pickupDateTime, otherForm.dropDateTime)) return sum;
+      const v = Number(otherForm.vehicleCounts?.[vehicle]) || 0;
+      return sum + v;
+    }, 0);
+
+    const remaining = Number(available) - reserved;
+    return remaining >= 0 ? remaining : 0;
+  };
+
   const formatDateWithOffset = (date) => {
     if (!date) return null;
     const pad = (n) => String(n).padStart(2, "0");
@@ -330,6 +555,83 @@ const TransportDetailsPage = () => {
     const offM = pad(absOff % 60);
 
     return `${y}-${mo}-${d}T${hh}:${mm}:${ss}${sign}${offH}:${offM}`;
+  };
+
+  const isFinanceYes = (value) => String(value || "").toLowerCase() === "yes";
+
+  const fetchVehicleInventory = async (formIndex, pickupDate, dropDate) => {
+    if (!pickupDate || !dropDate) return;
+
+    const pickup = formatDateOnly(new Date(pickupDate));
+    const drop = formatDateOnly(new Date(dropDate));
+    const candidateUrls = [
+      `${API_BASE}/api/transport-inventory/available?pickupDateTime=${encodeURIComponent(
+        pickup,
+      )}&dropDateTime=${encodeURIComponent(drop)}`,
+      `http://10.57.1.245:5005/api/transport-inventory/available?pickupDateTime=${encodeURIComponent(
+        pickup,
+      )}&dropDateTime=${encodeURIComponent(drop)}`,
+    ];
+
+    let inventory = [];
+    let lastError = null;
+
+    for (const url of candidateUrls) {
+      try {
+        const res = await fetch(url, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!res.ok) {
+          lastError = new Error(
+            `Transport inventory API returned ${res.status} for ${url}`,
+          );
+          console.warn(lastError.message);
+          continue;
+        }
+
+        const json = await res.json();
+        // Backend may return either { data: [...] } or [...] directly — handle both
+        const candidateData = json?.data ?? json;
+        if (Array.isArray(candidateData)) {
+          inventory = candidateData;
+        } else if (Array.isArray(candidateData?.data)) {
+          inventory = candidateData.data;
+        } else {
+          inventory = [];
+        }
+        // Debugging aid when availability isn't present
+        console.debug("Transport inventory response:", { url, json, inventory });
+        break;
+      } catch (error) {
+        lastError = error;
+        console.warn("Transport inventory fetch error:", error, "url=", url);
+      }
+    }
+
+    const availableVehicleCounts = inventory.reduce((acc, item) => {
+      if (item?.vehicleType) {
+        acc[item.vehicleType] = item.availableCount ?? 0;
+      }
+      return acc;
+    }, {});
+
+    if (!inventory.length && lastError) {
+      console.warn("Failed to load transport inventory:", lastError);
+    }
+
+    setTransportForms((prev) => {
+      const updated = [...prev];
+      updated[formIndex] = {
+        ...updated[formIndex],
+        availableVehicleCounts,
+        inventoryLoading: false,
+      };
+      return updated;
+    });
   };
 
   const buildTransportPayload = (form) => {
@@ -411,6 +713,17 @@ const TransportDetailsPage = () => {
     formData.append("financeRequired", form.financeRequired);
     formData.append("advanceAmount", form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0);
     formData.append("advancePurpose", form.financeRequired === "Yes" ? form.advancePurpose || "" : "");
+    formData.append("advanceToBeReceviedWithin", form.financeRequired === "Yes" ? Number(form.advanceToBeReceviedWithin) || 0 : 0);
+    formData.append(
+      "estimatedEventBudget",
+      form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
+    );
+
+    // Also include backend-expected `estimatedAmount` for compatibility
+    formData.append(
+      "estimatedAmount",
+      form.financeRequired === "Yes" ? Number(form.estimatedEventBudget) || 0 : 0,
+    );
 
     formData.append("status", "Pending");
 
@@ -421,11 +734,13 @@ const TransportDetailsPage = () => {
   // SUBMIT
   // =========================
   const handleSubmit = async () => {
+    // console.log('[TransportDetails] handleSubmit start');
     const errors = [];
 
-    // if (!principalApprovalDocument) {
-    //   errors.push("Principal Approval Form is required.");
-    // }
+    // Principal approval validation
+    if (!principalApprovalDocument && !existingPrincipalDocument) {
+      errors.push("Principal Approval Form is required.");
+    }
 
     transportForms.forEach((form, index) => {
       if (!form.pickupDateTime) {
@@ -458,14 +773,44 @@ const TransportDetailsPage = () => {
         }
       });
 
+      // Staff count validation
+      if (form.staffOptionType && Number(form.staffOptionType) > 99) {
+        errors.push(`Form ${index + 1}: Number of accompanying staff cannot exceed 99.`);
+      }
+
       // Finance validation
       if (form.financeRequired === "Yes") {
-        if (!form.advanceAmount) {
+        const advanceAmount = parseFloat(form.advanceAmount);
+        const totalBudget = parseFloat(form.estimatedEventBudget);
+
+        if (!form.advanceAmount || Number.isNaN(advanceAmount) || advanceAmount <= 0) {
           errors.push(`Form ${index + 1}: Advance amount is required.`);
         }
 
         if (!form.advancePurpose || !form.advancePurpose.trim()) {
           errors.push(`Form ${index + 1}: Advance purpose is required.`);
+        }
+
+        if (!form.advanceToBeReceviedWithin) {
+          errors.push(`Form ${index + 1}: Advance to be received within is required.`);
+        }
+
+        if (
+          !form.estimatedEventBudget ||
+          Number.isNaN(totalBudget) ||
+          totalBudget <= 0
+        ) {
+          errors.push(`Form ${index + 1}: Total budget amount is required.`);
+        }
+
+        if (
+          !Number.isNaN(advanceAmount) &&
+          !Number.isNaN(totalBudget) &&
+          advanceAmount > totalBudget
+        ) {
+          errors.push(
+            `Form ${index + 1}: Advance amount cannot exceed the Estimated Budget amount.`,
+          );
         }
       }
     });
@@ -475,36 +820,50 @@ const TransportDetailsPage = () => {
 
     if (errors.length) return;
 
+    // Validate stored token before attempting submit. If token is missing/expired,
+    // show an error instead of forcing a navigation to the login page.
+    const authToken = localStorage.getItem("token") || token;
+    const decodedAuthToken = decodeToken(authToken);
+
+    if (!authToken || !decodedAuthToken || isTokenExpired(decodedAuthToken)) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setValidationErrors(["Session expired or invalid token. Please login again."]);
+      return;
+    }
+
     setIsSubmitting(true);
-    setSubmitSuccess(true);
 
     try {
-      for (const form of transportForms) {
+      if (isEditMode) {
+        // Edit mode: single Transport update via PUT /api/transports/:id
+        const form = transportForms[0];
         const payload = buildTransportPayload(form);
 
-        // Log payload to verify timezone handling
-        for (let pair of payload.entries()) {
-          console.log(pair[0], pair[1]);
-        }
-        console.log("✅ Pickup sent as:", payload.pickupDateTime);
-        console.log("✅ Drop sent as:", payload.dropDateTime);
-
-        const response = await fetch(`${API_BASE}/api/transports`, {
-          method: "POST",
+        let response = await fetch(`${API_BASE}/api/transports/${id}`, {
+          method: "PUT",
           headers: {
-            ...(token && {
-              Authorization: `Bearer ${token}`,
+            ...(authToken && {
+              Authorization: `Bearer ${authToken}`,
             }),
           },
           body: payload,
         });
 
-        // The API should return JSON, but Express sends an HTML error page for
-        // unhandled server errors. Read the body first so that the useful error
-        // is not hidden behind a `response.json()` parsing error.
+        if (!response.ok && response.status === 404) {
+          response = await fetch(`${API_BASE}/api/transports/${id}`, {
+            method: "PATCH",
+            headers: {
+              ...(authToken && {
+                Authorization: `Bearer ${authToken}`,
+              }),
+            },
+            body: payload,
+          });
+        }
+
         const responseText = await response.text();
         let responseData;
-
         try {
           responseData = responseText ? JSON.parse(responseText) : null;
         } catch {
@@ -515,36 +874,157 @@ const TransportDetailsPage = () => {
           const serverMessage =
             responseData?.message ||
             responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
-            `Transport submission failed (HTTP ${response.status}).`;
-
-          console.error("Transport API error:", {
-            status: response.status,
-            response: responseData || responseText,
-          });
+            `Transport update failed (HTTP ${response.status}).`;
           throw new Error(serverMessage);
         }
 
-        // Log response with IST formatting
-        console.log("📥 Response received:", responseData?.data);
-        console.log(
-          "⏰ Pickup stored as (UTC):",
-          responseData?.data?.pickupDateTime,
-        );
-        const pickupIST = responseData?.data?.pickupDateTime
-          ? formatInIST(new Date(responseData.data.pickupDateTime))
-          : "N/A";
-        console.log("🇮🇳 Pickup displayed as (IST):", pickupIST);
-        const dropIST = responseData?.data?.dropDateTime
-          ? formatInIST(new Date(responseData.data.dropDateTime))
-          : "N/A";
-        console.log("🇮🇳 Drop displayed as (IST):", dropIST);
-      }
+        setValidationErrors([]);
+        setSubmitMessage("Transport request updated successfully.");
+        setSubmitSuccess(true);
 
-      setValidationErrors([]);
+        const financeEnabled = String(form?.financeRequired).toLowerCase() === "yes";
+        if (financeEnabled) {
+          const respData = responseData?.data || responseData || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.transport?.requestNo ||
+            respData?.data?.transport?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const employeePayload = {
+            name: form?.employeeName || storedUser?.name || respData?.employeeName || "",
+            empId: form?.empId || respData?.empId || storedUser?.empId || "",
+            designation: form?.designation || storedUser?.designation || respData?.designation || "",
+            department: form?.department || storedUser?.department || respData?.department || "",
+          };
+
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            response: responseData,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              employeeId ||
+              employeePayload.empId ||
+              "",
+          };
+
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: form?.pickupDateTime || "",
+                advanceAmount: form?.advanceAmount || "",
+                advancePurpose: form?.advancePurpose || "",
+                clearanceDays: form?.advanceToBeReceviedWithin || 15,
+                employeeName: employeePayload.name,
+                empId: employeePayload.empId,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
+          });
+        }
+      } else {
+        // Create mode: loop through transportForms
+        let lastResponseData = null;
+        for (const form of transportForms) {
+          const payload = buildTransportPayload(form);
+
+          const response = await fetch(`${API_BASE}/api/transports`, {
+            method: "POST",
+            headers: {
+              ...(token && {
+                Authorization: `Bearer ${token}`,
+              }),
+            },
+            body: payload,
+          });
+
+          const responseText = await response.text();
+          let responseData;
+
+          try {
+            responseData = responseText ? JSON.parse(responseText) : null;
+          } catch {
+            responseData = null;
+          }
+
+          if (!response.ok) {
+            const serverMessage =
+              responseData?.message ||
+              responseText.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim() ||
+              `Transport submission failed (HTTP ${response.status}).`;
+
+            console.error("Transport API error:", {
+              status: response.status,
+              response: responseData || responseText,
+            });
+            throw new Error(serverMessage);
+          }
+
+          lastResponseData = responseData;
+        }
+
+        setValidationErrors([]);
+        setSubmitSuccess(true);
+
+        const firstForm = transportForms[0] || {};
+        const financeEnabled = firstForm?.financeRequired === "Yes";
+
+        if (financeEnabled) {
+          const respData = lastResponseData?.data || lastResponseData || {};
+          const receiptRequestNo =
+            respData?.requestNo ||
+            respData?.data?.requestNo ||
+            respData?.transport?.requestNo ||
+            respData?.data?.transport?.requestNo ||
+            "";
+          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+          const employeePayload = {
+            name: firstForm?.employeeName || storedUser?.name || respData?.employeeName || "",
+            empId: firstForm?.empId || respData?.empId || storedUser?.empId || "",
+            designation: firstForm?.designation || storedUser?.designation || respData?.designation || "",
+            department: firstForm?.department || storedUser?.department || respData?.department || "",
+          };
+
+          const submitRespPayload = {
+            requestNo: receiptRequestNo,
+            response: lastResponseData,
+            employeeId:
+              respData?.employee ||
+              respData?.employeeId ||
+              employeeId ||
+              employeePayload.empId ||
+              "",
+          };
+
+          await import("../../utils/ReportPdf").then(({ default: ReportPdf }) => {
+            return ReportPdf({
+              formData: {
+                selectDate: firstForm?.pickupDateTime || "",
+                advanceAmount: firstForm?.advanceAmount || "",
+                advancePurpose: firstForm?.advancePurpose || "",
+                clearanceDays: firstForm?.advanceToBeReceviedWithin || 15,
+                employeeName: employeePayload.name,
+                empId: employeePayload.empId,
+                designation: employeePayload.designation,
+                department: employeePayload.department,
+              },
+              employee: employeePayload,
+              submitResponse: submitRespPayload,
+            });
+          });
+        }
+      }
     } catch (error) {
       console.error("Transport submission failed:", error);
       setValidationErrors([
-        error.message || "Unable to submit transport forms.",
+        error.message || "Unable to save transport data.",
       ]);
     } finally {
       setIsSubmitting(false);
@@ -552,7 +1032,32 @@ const TransportDetailsPage = () => {
   };
 
   if (submitSuccess) {
-    return <FormSubmitted advanceData={transportForms[0] || {}} />;
+    return <FormSubmitted advanceData={transportForms[0] || {}} showDownloadButton={false} />;
+  }
+
+  if (isLoadingDetails) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+        <p className="text-gray-300 text-sm">Loading Transport request details...</p>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
+          <p className="text-red-300 text-sm mb-4">{loadError}</p>
+          <button
+            onClick={() => navigate(-1)}
+            className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -568,13 +1073,63 @@ const TransportDetailsPage = () => {
           }
         `}</style>
 
-      <h1 className="text-3xl font-bold mb-6">Transport Details Form</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">
+            {isEditMode ? "Edit Transport Details" : "Transport Details Form"}
+          </h1>
+          {isEditMode && (
+            <p className="text-gray-400 text-xs mt-1">
+              Editing Transport Request ID: <span className="text-purple-400 font-mono">{id}</span>
+            </p>
+          )}
+        </div>
+        {isEditMode && (
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+          >
+            Cancel
+          </button>
+        )}
+      </div>
 
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
-          Principal Approval Form (without uploading this document you cannot
-          proceed further)
+          Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
         </label>
+        {/* Show existing principal document in edit mode */}
+        {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
+          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-300">Current file:</span>
+            <a
+              href={
+                typeof existingPrincipalDocument === "string"
+                  ? (existingPrincipalDocument.startsWith("http")
+                      ? existingPrincipalDocument
+                      : `${API_BASE}/${existingPrincipalDocument.replace(/^[/]+/, "")}`)
+                  : (existingPrincipalDocument?.url
+                      ? existingPrincipalDocument.url
+                      : (existingPrincipalDocument?.path
+                          ? `${API_BASE}/${existingPrincipalDocument.path.replace(/^[/]+/, "")}`
+                          : "#"))
+              }
+              target="_blank"
+              rel="noreferrer"
+              className="text-sm text-purple-400 underline truncate max-w-xs"
+            >
+              {typeof existingPrincipalDocument === "string"
+                ? existingPrincipalDocument.split("/").pop() || "View existing document"
+                : (existingPrincipalDocument?.name ||
+                   existingPrincipalDocument?.filename ||
+                   existingPrincipalDocument?.originalName ||
+                   "View existing document")}
+            </a>
+            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+          </div>
+        )}
 
         <div
           onClick={
@@ -657,7 +1212,7 @@ const TransportDetailsPage = () => {
             </div>
           ) : (
             <p className="z-10">
-              Drag and drop files here or{" "}
+              Drag and drop files here{" "}
               <span className="text-purple-400 underline">choose file</span>
               <span className="block text-xs text-gray-500 mt-0.5">
                 Only PDF files supported • Max file size: 1MB
@@ -680,26 +1235,28 @@ const TransportDetailsPage = () => {
       </div>
 
       {/* ADD BUTTON */}
-      <div className="flex justify-end mb-5">
-        <button
-          type="button"
-          onClick={addTransportForm}
-          className="
-              flex
-              items-center
-              gap-2
-              bg-[#8b5cf6]
-              hover:bg-[#7c3aed]
-              px-5
-              py-2.5
-              rounded-md
-              transition-all
-            "
-        >
-          <Plus size={18} />
-          Add
-        </button>
-      </div>
+      {!isEditMode && (
+        <div className="flex justify-end mb-5">
+          <button
+            type="button"
+            onClick={addTransportForm}
+            className="
+                flex
+                items-center
+                gap-2
+                bg-[#8b5cf6]
+                hover:bg-[#7c3aed]
+                px-5
+                py-2.5
+                rounded-md
+                transition-all
+              "
+          >
+            <Plus size={18} />
+            Add
+          </button>
+        </div>
+      )}
 
       {/* FORMS */}
       {transportForms.map((form, formIndex) => (
@@ -768,11 +1325,14 @@ const TransportDetailsPage = () => {
             <CustomDateTimePicker
               label="Pickup Date & Time *"
               value={form.pickupDateTime}
+              minDate={new Date()}
+              minDateTime={new Date()}
               onChange={(date) =>
                 updateFormField(formIndex, "pickupDateTime", date)
               }
               placeholder="Select pickup date & time"
               labelBgClass="bg-[#1b1b35]"
+              maxDate={form.dropDateTime}
             />
 
             <CustomDateTimePicker
@@ -783,6 +1343,7 @@ const TransportDetailsPage = () => {
               }
               placeholder="Select drop date & time"
               labelBgClass="bg-[#1b1b35]"
+              minDate={form.pickupDateTime}
             />
           </div>
 
@@ -1026,7 +1587,7 @@ const TransportDetailsPage = () => {
 
               {form.showVehicleDropdown && (
                 <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
-                  {vehicleOptions.map((option, index) => {
+                  {getVehicleOptions(form.totalPassengers).map((option, index) => {
                     const isSelected = (form.selectedVehicles || []).includes(
                       option,
                     );
@@ -1047,9 +1608,11 @@ const TransportDetailsPage = () => {
                               (v) => v !== option,
                             );
 
-                            delete updatedForms[formIndex].vehicleCounts?.[
-                              option
-                            ];
+                            const newVehicleCounts = {
+                              ...updatedForms[formIndex].vehicleCounts,
+                            };
+                            delete newVehicleCounts[option];
+                            updatedForms[formIndex].vehicleCounts = newVehicleCounts;
                           } else {
                             updatedVehicles = [...currentVehicles, option];
                           }
@@ -1058,6 +1621,18 @@ const TransportDetailsPage = () => {
                             updatedVehicles;
 
                           setTransportForms(updatedForms);
+
+                          const nextForm = {
+                            ...updatedForms[formIndex],
+                            selectedVehicles: updatedVehicles,
+                          };
+                          if (nextForm.pickupDateTime && nextForm.dropDateTime) {
+                            fetchVehicleInventory(
+                              formIndex,
+                              nextForm.pickupDateTime,
+                              nextForm.dropDateTime,
+                            );
+                          }
                         }}
                         className={`
                                  px-4
@@ -1079,6 +1654,30 @@ const TransportDetailsPage = () => {
                       </div>
                     );
                   })}
+                </div>
+              )}
+
+              {form.pickupDateTime && form.dropDateTime && (
+                <div className="mt-2 text-xs text-gray-400">
+                  {form.inventoryLoading ? (
+                    <span>Checking available vehicle counts...</span>
+                  ) : Object.keys(form.availableVehicleCounts).length > 0 ? (
+                    <span>
+                      Available counts: {getVehicleOptions(form.totalPassengers)
+                        .map((vehicle) => {
+                          const raw = form.availableVehicleCounts[vehicle];
+                          const displayed = getDisplayedAvailability(formIndex, vehicle);
+                          const toShow = displayed === undefined ? (raw !== undefined ? raw : null) : displayed;
+                          return toShow !== null && toShow !== undefined
+                            ? `${vehicle}: ${toShow}`
+                            : null;
+                        })
+                        .filter(Boolean)
+                        .join(", ")}
+                    </span>
+                  ) : (
+                    <span>No availability data available for selected dates.</span>
+                  )}
                 </div>
               )}
             </div>
@@ -1116,7 +1715,11 @@ const TransportDetailsPage = () => {
 
                         setTransportForms(updatedForms);
                       }}
-                      placeholder={getVehiclePlaceholder(vehicle)}
+                      placeholder={
+                        (form.availableVehicleCounts?.[vehicle] !== undefined)
+                          ? `${getVehiclePlaceholder(vehicle)} (Available: ${getDisplayedAvailability(formIndex, vehicle)})`
+                          : getVehiclePlaceholder(vehicle)
+                      }
                       className="
                             w-full
                          
@@ -1147,10 +1750,15 @@ const TransportDetailsPage = () => {
             <input
               type="number"
               min="0"
-              max="10"
+              max="99"
               value={form.staffOptionType}
               onChange={(e) => {
                 const value = e.target.value;
+
+                // Reject values greater than 99
+                if (Number(value) > 99) {
+                  return;
+                }
 
                 const updatedForms = [...transportForms];
 
@@ -1174,6 +1782,9 @@ const TransportDetailsPage = () => {
                 setTransportForms(updatedForms);
               }}
               placeholder="Enter staff count"
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
               className="
                     w-full
                    
@@ -1294,7 +1905,9 @@ const TransportDetailsPage = () => {
             <button
               type="button"
               onClick={() =>
-                updateFormField(formIndex, "showFinanceDropdown", !form.showFinanceDropdown)
+                updateTransportForm(formIndex, {
+                  showFinanceDropdown: !form.showFinanceDropdown,
+                })
               }
               className="
                 transport-select-control
@@ -1325,11 +1938,14 @@ const TransportDetailsPage = () => {
                   <div
                     key={opt.label}
                     onClick={() =>
-                      updateFormField(formIndex, "showFinanceDropdown", false) ||
-                      updateFormField(formIndex, "financeRequired", opt.value) ||
-                      (opt.value === "No"
-                        ? updateFormField(formIndex, "advanceAmount", "") || updateFormField(formIndex, "advancePurpose", "")
-                        : null)
+                              updateTransportForm(formIndex, {
+                        showFinanceDropdown: false,
+                        financeRequired: opt.value,
+                        advanceAmount: opt.value === "No" ? "" : undefined,
+                        advancePurpose: opt.value === "No" ? "" : undefined,
+                        advanceToBeReceviedWithin: opt.value === "No" ? "" : undefined,
+                        estimatedEventBudget: opt.value === "No" ? "" : undefined,
+                      })
                     }
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       form.financeRequired === opt.value
@@ -1347,16 +1963,15 @@ const TransportDetailsPage = () => {
           </div>
 
           {form.financeRequired === "Yes" && (
-            <>
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>
-                  I require Cash / In bank / Travel Advance /Online Payment of Rs.
-                </label>
+            <div className="grid grid-cols-1 gap-5 mb-5">
+              <div className="relative order-first md:col-span-2">
+                <label className={formFloatingLabelClass}>Estimated Budget Amount (Rs.)</label>
 
                 <input
                   type="number"
-                  value={form.advanceAmount}
-                  onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                  min="0"
+                  value={form.estimatedEventBudget}
+                  onChange={(e) => updateFormField(formIndex, "estimatedEventBudget", e.target.value)}
                   placeholder="0"
                   className="
                     w-full
@@ -1371,27 +1986,87 @@ const TransportDetailsPage = () => {
                 />
               </div>
 
-              <div className="relative mt-5">
-                <label className={formFloatingLabelClass}>Purpose of Advance</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="relative">
+                  <label className={formFloatingLabelClass}>Advance Amount (Rs.)</label>
 
-                <input
-                  type="text"
-                  value={form.advancePurpose}
-                  onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
-                  placeholder="Purpose"
-                  className="
-                    w-full
-                    border
-                    border-[#2F2F47]
-                    rounded-md
-                    px-4
-                    py-3
-                    text-white
-                    outline-none
-                  "
-                />
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.advanceAmount}
+                    onChange={(e) => updateFormField(formIndex, "advanceAmount", e.target.value)}
+                    placeholder="0"
+                    className={`
+                      w-full
+                      border
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                      ${
+                        Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                        form.estimatedEventBudget !== ""
+                          ? "border-red-500"
+                          : "border-[#2F2F47]"
+                      }
+                    `}
+                  />
+
+                  {Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
+                    form.estimatedEventBudget !== "" && (
+                      <p className="mt-1 text-sm text-red-400">
+                        Advance amount cannot exceed the estimated event budget.
+                      </p>
+                    )}
+                </div>
+
+                <div className="relative">
+                  <label className={formFloatingLabelClass}>Purpose of Advance</label>
+
+                  <input
+                    type="text"
+                    value={form.advancePurpose}
+                    onChange={(e) => updateFormField(formIndex, "advancePurpose", e.target.value)}
+                    placeholder="Purpose"
+                    className="
+                      w-full
+                      border
+                      border-[#2F2F47]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
+
+                <div className="relative md:col-span-2">
+                  <label className={formFloatingLabelClass}>
+                    Advance To Be Received Within
+                  </label>
+
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.advanceToBeReceviedWithin}
+                    onChange={(e) => updateFormField(formIndex, "advanceToBeReceviedWithin", e.target.value)}
+                    placeholder="0"
+                    className="
+                      w-full
+                      border
+                      border-[#2F2F47]
+                      rounded-md
+                      px-4
+                      py-3
+                      text-white
+                      outline-none
+                    "
+                  />
+                </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* SPECIAL REQUIREMENT */}
@@ -1467,8 +2142,8 @@ const TransportDetailsPage = () => {
               items-center
               gap-2
             "
-        >
-          {isSubmitting ? "Submitting..." : "Submit"}
+          >
+          {isSubmitting ? (isEditMode ? "Updating..." : "Submitting...") : (isEditMode ? "Update Transport Request" : "Submit")}
 
           <ArrowRight size={18} />
         </button>

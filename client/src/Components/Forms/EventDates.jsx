@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import CustomInput from "../CustomInput";
 import CustomSelect from '../CustomSelect';
 import TimePickerInput from "../TimePickerInput";
+import CustomDatePicker from '../CustomDatePicker';
 
 // Indian mobile regex
 const MOBILE_REGEX = /^[6-9]\d{9}$/;
@@ -84,7 +85,37 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
   </div>
 );
 
-export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }) {
+export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {}, day1Guests = [] }) {
+  const [localTimeError, setLocalTimeError] = useState("");
+
+  useEffect(() => {
+    if (dayData?.date && dayData?.startTime) {
+      const today = new Date();
+      const offset = today.getTimezoneOffset() * 60000;
+      const todayStr = (new Date(today - offset)).toISOString().split("T")[0];
+      
+      if (dayData.date === todayStr) {
+        const [selH, selM] = dayData.startTime.split(":").map(Number);
+        const currentH = today.getHours();
+        const currentM = today.getMinutes();
+        
+        if (selH < currentH || (selH === currentH && selM < currentM)) {
+          const ampm = currentH >= 12 ? 'PM' : 'AM';
+          let displayH = currentH % 12;
+          displayH = displayH ? displayH : 12;
+          const displayM = currentM.toString().padStart(2, '0');
+          setLocalTimeError(`Current time is ${displayH}:${displayM} ${ampm}, cannot choose a past time for today.`);
+        } else {
+          setLocalTimeError("");
+        }
+      } else {
+        setLocalTimeError("");
+      }
+    } else {
+      setLocalTimeError("");
+    }
+  }, [dayData?.date, dayData?.startTime]);
+
   const handleGuestsChange = (e) => {
     const val = e.target.value;
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
@@ -112,13 +143,19 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
 
       {/* Date / Time */}
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
-        <div>
-          <CustomInput
-            labelBg="#1E1E35"
-            type="date"
-            label={`Day ${dayIndex} – Event Date *`}
+        <div className="relative w-full">
+          <span
+            className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
+            style={{ backgroundColor: "#1E1E35" }}
+          >
+            {`Day ${dayIndex} – Event Date *`}
+          </span>
+          <CustomDatePicker
             value={dayData?.date || ""}
-            onChange={(e) => updateDay({ ...dayData, date: e.target.value })}
+            onChange={(val) => updateDay({ ...dayData, date: val })}
+            placeholder="DD/MM/YYYY"
+            minDate={minDate}
+            className="w-full !h-[50px] !text-sm !px-3.5 !rounded-lg !border-[#3A3A5A] !bg-transparent text-white"
           />
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
         </div>
@@ -129,7 +166,11 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
             value={dayData?.startTime || ""}
             onChange={(e) => updateDay({ ...dayData, startTime: e.target.value })}
           />
-          {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
+          {localTimeError ? (
+            <p className="text-red-400 text-xs mt-1">{localTimeError}</p>
+          ) : errors.startTime ? (
+            <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>
+          ) : null}
         </div>
         <div>
           <TimePickerInput
@@ -143,7 +184,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
       </div>
 
       {/* Guests count */}
-      <div className='grid grid-cols-1 sm:grid-cols-1 gap-4'>
+      {/* <div className=' items-center'> */}
         <div>
           <CustomInput
             labelBg="#1E1E35"
@@ -155,7 +196,28 @@ export default function EventDates({ dayIndex, dayData, updateDay, errors = {} }
           />
           {errors.numGuests && <p className="text-red-400 text-xs mt-1">{errors.numGuests}</p>}
         </div>
-      </div>
+      {/* </div> */}
+      {dayIndex > 1 && (
+        <div className="flex items-center mt-2 sm:mt-0">
+          <input
+            type="checkbox"
+            id={`same-as-day1-${dayIndex}`}
+            className="mr-2 w-4 h-4 cursor-pointer"
+            onChange={(e) => {
+              if (e.target.checked) {
+                updateDay({
+                  ...dayData,
+                  numGuests: day1Guests.length.toString(),
+                  guests: JSON.parse(JSON.stringify(day1Guests)),
+                });
+              }
+            }}
+          />
+          <label htmlFor={`same-as-day1-${dayIndex}`} className="text-white text-sm cursor-pointer">
+            Same as Day 1 Guests
+          </label>
+        </div>
+      )}
 
       {/* Guest fields */}
       {guestCount > 0 && (

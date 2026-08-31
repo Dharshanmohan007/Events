@@ -3,7 +3,6 @@ import { ChevronRight, Check } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
-// import FacultyTransportationDetailsPanel from '../../Faculty-Dashboard/FacultyTransportationDetailsPanel'
 import FacultyTransportationDetailsPanel from '../Faculty-Dashboard/FacultyTransportationDetailsPanel'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -21,10 +20,14 @@ const TransportEventsDetailViewPage = () => {
   const [transportDetails, setTransportDetails] = useState(null)
   const [eventSchedule, setEventSchedule] = useState([])
   const [eventName, setEventName] = useState('')
+  const [organizingDepartment, setOrganizingDepartment] = useState('')
   const [status, setStatus] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
+
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -42,8 +45,11 @@ const TransportEventsDetailViewPage = () => {
         if (!eventData.transportDetails) throw new Error('Transportation details are not available')
 
         setTransportDetails(eventData.transportDetails)
-        setEventName(eventData.requestDetails?.eventDetails?.eventName || 'Event Details')
-        setEventSchedule(eventData.requestDetails?.eventDetails?.eventSchedule || [])
+        setEventData(eventData)
+        const eventDetails = eventData.requestDetails?.eventDetails || {}
+        setEventName(eventDetails.eventName || 'Event Details')
+        setEventSchedule(eventDetails.eventSchedule || [])
+        setOrganizingDepartment(eventDetails.organizingDepartment || '')
 
         const transportStatus = eventData.transportDetails.status?.status
         if (transportStatus) {
@@ -60,7 +66,7 @@ const TransportEventsDetailViewPage = () => {
     }
 
     fetchDetails()
-  }, [eventId])
+  }, [eventId, reloadKey])
 
   const handleStatusUpdate = async (action) => {
     setActionLoading(true)
@@ -78,6 +84,7 @@ const TransportEventsDetailViewPage = () => {
       if (!res.ok || !responseData.success) throw new Error(responseData.message || `Failed to ${action}`)
       toast.success(`Status updated to ${action === 'acknowledge' ? 'Acknowledged' : 'Completed'} successfully`)
       setStatus(action === 'acknowledge' ? 'Acknowledged' : 'Completed')
+      setReloadKey((k) => k + 1)
     } catch (err) {
       toast.error(err.message || `Failed to ${action}`)
     } finally {
@@ -86,68 +93,80 @@ const TransportEventsDetailViewPage = () => {
   }
 
   return (
-    <section className="min-h-screen bg-[#0b1326] poppins">
+    <section className="min-h-screen bg-[#0b1326] text-white poppins">
       <DashboardHeader basePath="/dashboard-transports" />
 
-      <main className="px-6 pb-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-2 py-3 text-sm text-[#CBC3D7]/50">
-          <Link to="/dashboard-transports" className="hover:text-white transition-colors">
-            Transport Dashboard
-          </Link>
-          <ChevronRight size={14} />
-          <span className="text-[#D0BCFF]">{eventName || 'Transport Details'}</span>
-        </div>
+      <main className="h-[93vh] px-7 pt-2">
+        <header className="mt-4 flex items-center justify-between gap-5">
+          <div className="flex items-center gap-2">
+            <Link to="/dashboard-transports" className="text-md font-medium text-[#CBC3D7]/50 transition hover:text-white">Event Details</Link>
+            <ChevronRight size={16} />
+            <h1 className="text-md font-medium text-[#D0BCFF]">{eventName || 'Event Details'}</h1>
+            {organizingDepartment && (
+              <span className="ml-3 rounded-full bg-green-400/10 px-5 py-2 text-sm text-[#10B981]">{organizingDepartment}</span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {status === 'Pending for Acknowledge' && (
+              <button
+                onClick={() => handleStatusUpdate('acknowledge')}
+                disabled={actionLoading}
+                className="flex items-center gap-1 rounded-md bg-gradient-to-r from-[#07785D] to-[#07785D] px-4 py-1 text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Check size={16} /> {actionLoading ? 'Processing...' : 'Acknowledge'}
+              </button>
+            )}
+            {status === 'Acknowledged' && (
+              <button
+                onClick={() => handleStatusUpdate('complete')}
+                disabled={actionLoading}
+                className="flex items-center gap-1 rounded-md bg-gradient-to-r from-[#4A2BB7] to-[#6D3BD8] px-4 py-1 text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Check size={16} /> {actionLoading ? 'Processing...' : 'Complete'}
+              </button>
+            )}
+          </div>
+        </header>
 
-        <section className="mt-2 rounded-lg border border-[#27334c] bg-[#151d31] p-6">
-          {loading ? (
-            <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading transportation details...</p>
-          ) : error ? (
-            <p className="py-10 text-center text-sm text-[#FF4F91]">{error}</p>
-          ) : (
-            <>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h2 className="text-lg font-medium text-[#8B3DFF]">Transportation Details</h2>
-                  <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
-                    Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {status === 'Pending for Acknowledge' && (
-                    <button
-                      onClick={() => handleStatusUpdate('acknowledge')}
-                      disabled={actionLoading}
-                      className="flex items-center gap-1 bg-gradient-to-r from-[#07785D] to-[#07785D] text-white px-4 py-1 rounded-md hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Check size={16} className="text-white" /> {actionLoading ? 'Processing...' : 'Acknowledge'}
-                    </button>
-                  )}
-                  {status === 'Acknowledged' && (
-                    <button
-                      onClick={() => handleStatusUpdate('complete')}
-                      disabled={actionLoading}
-                      className="flex items-center gap-1 bg-gradient-to-r from-[#4A2BB7] to-[#6D3BD8] text-white px-4 py-1 rounded-md hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Check size={16} className="text-white" /> {actionLoading ? 'Processing...' : 'Complete'}
-                    </button>
-                  )}
+        <section className="mt-3">
+          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+            <span className={`h-3 w-3 rounded-full ${status === 'Completed' ? 'bg-[#6D3BD8]' : status === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
+            {status === 'Completed' ? 'COMPLETED' : status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
+          </div>
+        </section>
+
+        <section className="mt-3 overflow-hidden">
+          <section className="max-h-[calc(100vh-170px)] overflow-auto rounded-lg border border-[#27334c] bg-[#151d31] p-5 table-custom-scrollbar">
+            {loading ? (
+              <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading transportation details...</p>
+            ) : error ? (
+              <p className="py-10 text-center text-sm text-[#FF4F91]">{error}</p>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-medium text-[#8B3DFF]">Transportation Details</h2>
+                    <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
+                      Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
+                    </p>
+                  </div>
                   {status && (
                     <span className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(status)}`}>
                       {status}
                     </span>
                   )}
                 </div>
-              </div>
 
-              <div className="mt-8">
-                <FacultyTransportationDetailsPanel
-                  transportDetails={transportDetails}
-                  eventSchedule={eventSchedule}
-                />
-              </div>
-            </>
-          )}
+                <div className="mt-8">
+                  <FacultyTransportationDetailsPanel
+                    transportDetails={transportDetails}
+                    eventSchedule={eventSchedule}
+                    eventData={eventData}
+                  />
+                </div>
+              </>
+            )}
+          </section>
         </section>
       </main>
     </section>

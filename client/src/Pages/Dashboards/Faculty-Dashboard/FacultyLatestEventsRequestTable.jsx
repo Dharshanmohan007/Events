@@ -1,18 +1,83 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, ExternalLink, ListFilter } from 'lucide-react'
+import { ArrowRight, ExternalLink, ListFilter, Search, X } from 'lucide-react'
 import { jwtDecode } from 'jwt-decode'
 import CustomDatePicker from '../../../Components/CustomDatePicker'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
+const formatDate = (dateStr) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    return Number.isNaN(date.getTime())
+        ? dateStr
+        : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+
+
+// Updated in laptop need to merge this 
+const getStatusColor = (status = '') => {
+    const normalizedStatus = String(status).toLowerCase()
+
+    if (normalizedStatus.includes('rejected')) {
+        return {
+            text: 'text-red-400',
+            dot: 'bg-red-400'
+        }
+    }
+
+    if (normalizedStatus.includes('acknowledged')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
+    if (normalizedStatus.includes('approved')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
+    if (normalizedStatus.includes('pending')) {
+        return {
+            text: 'text-pink-600',
+            dot: 'bg-pink-600'
+        }
+    }
+
+    if (normalizedStatus.includes('submitted')) {
+        return {
+            text: 'text-yellow-400',
+            dot: 'bg-yellow-400'
+        }
+    }
+
+    if (normalizedStatus.includes('completed')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
+    return {
+        text: 'text-white',
+        dot: 'bg-white'
+    }
+}
+
 const Status = ({ status }) => {
-    const isApproved = status === 'Approved'
+    const colors = getStatusColor(status)
 
     return (
-        <span className={`flex items-center gap-1.5 text-[10px] font-semibold ${isApproved ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${isApproved ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
-            {status}
+        <span
+            className={`flex items-center gap-1.5 text-[10px] font-semibold ${colors.text}`}
+        >
+            <span
+                className={`h-1.5 w-1.5 rounded-full ${colors.dot}`}
+            />
+            <span>{status}</span>
         </span>
     )
 }
@@ -52,6 +117,7 @@ const FacultyLatestEventsRequestTable = () => {
     const [eventTypeFilter, setEventTypeFilter] = useState('')
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
+    const [searchQuery, setSearchQuery] = useState('')
 
     const filterRef = useRef(null)
 
@@ -116,6 +182,17 @@ const FacultyLatestEventsRequestTable = () => {
     useEffect(() => {
         let result = [...events]
 
+        const query = searchQuery.trim().toLowerCase()
+        if (query) {
+            result = result.filter(e => {
+                const date = new Date(e.eventDates?.[0])
+                const dateStr = Number.isNaN(date.getTime())
+                    ? ''
+                    : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                return [e.eventName, e.eventType, dateStr, e.eventStatus].join(' ').toLowerCase().includes(query)
+            })
+        }
+
         if (statusFilter) {
             result = result.filter(e => e.eventStatus === statusFilter)
         }
@@ -135,7 +212,7 @@ const FacultyLatestEventsRequestTable = () => {
         }
 
         setFilteredEvents(result)
-    }, [statusFilter, eventTypeFilter, dateFrom, dateTo, events])
+    }, [statusFilter, eventTypeFilter, dateFrom, dateTo, events, searchQuery])
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -156,17 +233,35 @@ const FacultyLatestEventsRequestTable = () => {
 
     const hasActiveFilters = statusFilter || eventTypeFilter || dateFrom || dateTo
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-'
-        const date = new Date(dateStr)
-        return Number.isNaN(date.getTime())
-            ? dateStr
-            : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
-    }
+    const filteredIndividualRequests = useMemo(() => {
+        let result = [...individualRequests]
+
+        const query = searchQuery.trim().toLowerCase()
+        if (query) {
+            result = result.filter(request => {
+                console.log("date req : ", request)
+                const status =
+                    typeof request.status === 'object' && request.status !== null
+                        ? Object.values(request.status).filter(Boolean).join(' ')
+                        : request.status || ''
+                return [
+                    request.employee,
+                    request.employeeDetail?.name,
+                    request.formType,
+                    request.employeeEmail,
+                    formatDate(request.date),
+                    status,
+                ].join(' ').toLowerCase().includes(query)
+            })
+        }
+
+        return result
+    }, [individualRequests, searchQuery])
+    console.log("req : ", filteredIndividualRequests)
 
     return (
-        <section className="rounded-lg border border-[#263044] bg-[#151d2d]">
-            <div className="flex items-center justify-between px-4 py-4">
+        <section className="flex max-h-[570px] flex-col overflow-hidden rounded-lg border border-[#263044] bg-[#151d2d]">
+            <div className="flex flex-shrink-0 items-center justify-between px-4 py-4">
                 <h2 className="text-sm font-semibold text-white">Latest Requests</h2>
                 <div className="flex items-center gap-4">
                     {/* Tabs */}
@@ -272,7 +367,7 @@ const FacultyLatestEventsRequestTable = () => {
                     )}
 
                     <Link
-                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/individual-requests'}
+                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/events'}
                         className="flex items-center gap-1.5 text-xs font-semibold text-[#8B5CF6]"
                     >
                         View All
@@ -281,10 +376,34 @@ const FacultyLatestEventsRequestTable = () => {
                 </div>
             </div>
 
-            <div className="overflow-auto table-custom-scrollbar">
+            {/* Search */}
+            <div className="flex-shrink-0 px-4 pb-4">
+                <div className="flex items-center gap-2 rounded-md border border-[#2e394e] bg-[#1b2435] px-3 py-2 transition focus-within:border-[#853FF9]">
+                    <Search size={13} className="shrink-0 text-[#8b93a4]" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder={`Search ${activeTab === 'events' ? 'events' : 'requests'} by name, type, date, or status`}
+                        className="w-full bg-transparent text-[11px] text-white outline-none placeholder:text-[#FFFFFF66]"
+                    />
+                    {searchQuery && (
+                        <button
+                            type="button"
+                            onClick={() => setSearchQuery('')}
+                            className="shrink-0 cursor-pointer text-[#8b93a4] transition hover:text-white"
+                            title="Clear search"
+                        >
+                            <X size={13} />
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-auto table-custom-scrollbar">
                 {activeTab === 'events' ? (
                     <table className="w-full min-w-[520px]">
-                        <thead className="bg-[#1b2435]">
+                        <thead className="sticky top-0 z-10 bg-[#1b2435]">
                             <tr>
                                 {['EVENT NAME', 'EVENT TYPE', 'EVENT DATE', 'STATUS', 'ACTION'].map((column) => (
                                     <th key={column} className="px-4 py-3 text-left text-[10px] font-semibold text-[#FFFFFF66]">
@@ -320,9 +439,9 @@ const FacultyLatestEventsRequestTable = () => {
                     </table>
                 ) : (
                     <table className="w-full min-w-[520px]">
-                        <thead className="bg-[#1b2435]">
+                        <thead className="sticky top-0 z-10 bg-[#1b2435]">
                             <tr>
-                                {['DATE', 'ORGANIZER NAME','EVENT TYPE', 'ORGANIZER EMAIL', 'STATUS', 'ACTION'].map((column) => (
+                                {['DATE', 'ORGANIZER NAME', 'EVENT TYPE', 'ORGANIZER EMAIL', 'STATUS', 'ACTION'].map((column) => (
                                     <th key={column} className="px-4 py-3 text-left text-[10px] font-semibold text-[#FFFFFF66]">
                                         {column}
                                     </th>
@@ -330,10 +449,10 @@ const FacultyLatestEventsRequestTable = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {individualRequests.map((request) => (
+                            {filteredIndividualRequests.map((request) => (
                                 <tr key={request.id} className="border-b border-[#222b3d] last:border-b-0">
                                     <td className="px-4 py-3 text-[12px] text-white">
-                                        {formatDate(request.data?.date)}
+                                        {formatDate(request.date)}
                                     </td>
                                     <td className="px-4 py-3 text-[12px] font-medium text-white">
                                         {request.employee || request.employeeDetail?.name || '-'}
@@ -355,10 +474,17 @@ const FacultyLatestEventsRequestTable = () => {
                                         >
                                             <ExternalLink size={14} />
                                         </Link>
+                                        <Link
+                                            to={`/dashboard-faculty/individual-detailView/v2/${request.id}`}
+                                            className="inline-flex text-red-500 transition hover:text-white"
+                                            title="Open request"
+                                        >
+                                            <ExternalLink size={14} />
+                                        </Link>
                                     </td>
                                 </tr>
                             ))}
-                            {individualRequests.length === 0 && (
+                            {filteredIndividualRequests.length === 0 && (
                                 <tr>
                                     <td colSpan={6} className="px-4 py-6 text-center text-[12px] text-[#FFFFFF66]">
                                         No individual requests found.

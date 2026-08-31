@@ -71,7 +71,7 @@ const VideoDetails = ({ video }) => (
 const FacultyMediaDetailsPanel = ({ mediaDetails }) => {
   const requirements = mediaDetails?.mediaRequirements || []
   if (!mediaDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No media details are available.</p>
-  return <div className="space-y-6">{requirements.flatMap((requirement, index) => (requirement.typeOfMedia || []).map((type) => type === 'poster' && requirement.poster ? <PosterDetails key={`poster-${index}`} poster={requirement.poster} /> : type === 'video' && requirement.video ? <VideoDetails key={`video-${index}`} video={requirement.video} /> : null))}</div>
+  return <div className="space-y-6">{requirements.flatMap((requirement, index) => (requirement.typeOfMedia || []).map((type) => { const t = String(type).toLowerCase(); return t === 'poster' && requirement.poster ? <PosterDetails key={`poster-${index}`} poster={requirement.poster} /> : t === 'video' && requirement.video ? <VideoDetails key={`video-${index}`} video={requirement.video} /> : null; }))}</div>
 }
 
 export default FacultyMediaDetailsPanel

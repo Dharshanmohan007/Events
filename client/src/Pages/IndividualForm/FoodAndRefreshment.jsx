@@ -187,6 +187,7 @@ const FoodAndRefreshment = () => {
             <div className="relative">
               <input
                 type="date"
+                min={new Date().toISOString().split("T")[0]}
                 value={selectDate}
                 onChange={(e) =>
                   setSelectDate(

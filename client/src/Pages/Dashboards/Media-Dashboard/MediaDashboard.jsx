@@ -6,6 +6,7 @@ import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import MediaStatcard from './MediaStatcard'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import MediaStaffInterchangeModal from '../../../Components/MediaStaffInterchangeModal'
+import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -41,9 +42,10 @@ export const deriveMediaStatus = (mediaEntries = []) => {
 // ── Normalize a single typeOfMedia entry ───────────────────────────────
 // Handles "poster", "video", and "poster and video" (single string)
 const normalizeMediaType = (type) => {
-  if (type === 'poster and video') return ['poster', 'video']
-  if (type === 'poster') return ['poster']
-  if (type === 'video') return ['video']
+  const t = String(type).toLowerCase().trim()
+  if (t === 'poster and video') return ['poster', 'video']
+  if (t === 'poster') return ['poster']
+  if (t === 'video') return ['video']
   return []
 }
 
@@ -78,25 +80,23 @@ const transformMediaData = (apiData) =>
     status: deriveMediaStatus(item.media),
   }))
 
-const departmentData = [
-  { name: 'CSE', value: 25, color: '#74b9ff' },
-  { name: 'AIML', value: 55, color: '#159283' },
-  { name: 'EEE', value: 12, color: '#68df85' },
-  { name: 'VLSI', value: 8, color: '#4169e1' },
-  { name: 'ECE', value: 15, color: '#ff7675' },
-  { name: 'ME', value: 20, color: '#fdcb6e' },
-  { name: 'IT', value: 18, color: '#00b894' },
-]
-
 const MediaDashboard = () => {
   const [events, setEvents] = useState([])
   const [rawData, setRawData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('events')
+  const feedbackRows = useDepartmentFeedback('media')
+  const individualFeedbackRows = useIndividualFeedback()
   const [selectedEventForInterchange, setSelectedEventForInterchange] = useState(null)
   const [interchangeMediaType, setInterchangeMediaType] = useState('')
   const abortControllerRef = useRef(null)
+
+  // ── Individual tab state ────────────────────────────────────────────────
+  const [individualRequests, setIndividualRequests] = useState([])
+  const [individualLoading, setIndividualLoading] = useState(false)
+  const [individualError, setIndividualError] = useState('')
+  const individualFetchedRef = useRef(false)
 
   const fetchMediaDashboardData = useCallback(async () => {
     // Abort any in-flight request before starting a new one
@@ -143,7 +143,68 @@ const MediaDashboard = () => {
     }
   }, [fetchMediaDashboardData])
 
+  // ── Fetch individual media requests ─────────────────────────────────────
+  const fetchIndividualRequests = useCallback(async () => {
+    abortControllerRef.current?.abort()
+    abortControllerRef.current = new AbortController()
+    const { signal } = abortControllerRef.current
+
+    try {
+      setIndividualLoading(true)
+      setIndividualError('')
+      const token = localStorage.getItem('token')
+      const headers = token ? { Authorization: `Bearer ${token}` } : {}
+
+      const response = await fetch(
+        `${API_BASE_URL}/api/individual-submissions/getrequest/?module=media`,
+        { headers, signal }
+      )
+
+      if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`)
+      }
+
+      const json = await response.json()
+      if (json.success && Array.isArray(json.data)) {
+        setIndividualRequests(json.data)
+      } else {
+        setIndividualRequests([])
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') return
+      console.error('Failed to fetch individual media requests:', err)
+      setIndividualError(err.message || 'Failed to load individual requests')
+    } finally {
+      if (!signal.aborted) setIndividualLoading(false)
+    }
+  }, [])
+
+  // ── Reset fetch flag when tab changes ───────────────────────────────────
+  useEffect(() => {
+    individualFetchedRef.current = false
+  }, [activeTab])
+
+  // ── Fetch individual data when tab switches to 'individual' ───────────
+  useEffect(() => {
+    if (activeTab === 'individual' && !individualFetchedRef.current && !individualLoading) {
+      individualFetchedRef.current = true
+      fetchIndividualRequests()
+    }
+  }, [activeTab, individualLoading, fetchIndividualRequests])
+
   const headers = ['Event Name', 'Dept', 'Type', 'Status', 'Action']
+  const individualHeaders = ['Request No', 'Employee', 'Emp ID', 'Dept', 'Media Type', 'Priority', 'Delivery Date', 'Status', 'Action']
+
+  // ── Helpers for individual data ────────────────────────────────────────
+  const formatDateSafe = (dateStr) => {
+    if (!dateStr) return '-'
+    const date = new Date(dateStr)
+    if (Number.isNaN(date.getTime())) return '-'
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-')
+  }
+
+  const safeText = (val, fallback = '-') =>
+    val === null || val === undefined || val === '' ? fallback : String(val)
 
   const renderTable = () => (
     <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
@@ -215,6 +276,7 @@ const MediaDashboard = () => {
                           if (types.length === 0) return
                           setSelectedEventForInterchange(rawEvent || item)
                           setInterchangeMediaType(types[0])
+                          setIsIndividualInterchange(false)
                         }}
                         className="flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white transition"
                         title="Interchange staff"
@@ -233,12 +295,102 @@ const MediaDashboard = () => {
     </div>
   )
 
+  // ── Render individual table ────────────────────────────────────────────
+  const renderIndividualTable = () => {
+    if (individualRequests.length === 0) {
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <p className="text-sm text-[#CBC3D7]/65">
+            No individual media requests found.
+          </p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="overflow-x-auto overflow-y-auto flex-1 table-custom-scrollbar">
+        <table className="w-full text-left">
+          <thead className="sticky top-0 bg-[#151c2c]">
+            <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
+              {individualHeaders.map((header) => (
+                <th
+                  key={header}
+                  className={`px-6 py-4 font-semibold ${header === 'Action' ? 'text-center' : ''}`}
+                >
+                  {header}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {individualRequests.map((item) => {
+              const data = item.data || {}
+              const emp = data.employee || item.employeeDetail || {}
+              const requestNo = data.requestNo || item.requestNo || '-'
+              const empName = item.employee || emp.name || '-'
+              const empId = emp.empId || '-'
+              const dept = emp.department || '-'
+              const mediaTypes = Array.isArray(data.typeOfMedia)
+                ? data.typeOfMedia.join(', ')
+                : data.typeOfMedia || '-'
+              const status = item.finalStatus || item.status || '-'
+              const isPending = String(status).toLowerCase().includes('pending')
+
+              const posterPriority = data.poster?.priority
+              const videoPriority = data.video?.priority
+              const priority = safeText(posterPriority || videoPriority)
+
+              const deliveryDate = formatDateSafe(data.poster?.deliveryDate || data.video?.deliveryDate)
+              return (
+                <tr
+                  key={item.id || item._id}
+                  className="border-t border-[#20283a] text-sm text-white whitespace-nowrap"
+                >
+                  <td className="px-6 py-4 font-medium">{requestNo}</td>
+                  <td className="px-6 py-4">{empName}</td>
+                  <td className="px-6 py-4">{empId}</td>
+                  <td className="px-6 py-4">{dept}</td>
+                  <td className="px-6 py-4">{mediaTypes}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-[#F20768] font-semibold">{priority}</span>
+                  </td>
+                  <td className="px-6 py-4">{deliveryDate}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center gap-2 ${isPending ? 'text-[#B32058]' : 'text-[#34D399]'}`}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${isPending ? 'bg-[#B32058]' : 'bg-[#34D399]'}`}
+                      />
+                      {status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center">
+                      <Link
+                        to={`/dashboard-media/individualDetailView/${item.id || item._id}`}
+                        className="flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white transition"
+                        aria-label={`View details for ${requestNo}`}
+                      >
+                        <ExternalLink size={17} />
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
   return (
     <>
       <section className="bg-[#0b1326] poppins h-screen border overflow-auto table-custom-scrollbar">
         {/* header */}
-        <div className="header-container sticky top-0">
-          <DashboardHeader basePath="/dashboard-media" />
+        <div className="header-container sticky top-0 z-50">
+          <DashboardHeader basePath="/dashboard-media" showReports={false} />
         </div>
 
         {/* main-container */}
@@ -306,32 +458,38 @@ const MediaDashboard = () => {
                 </div>
               </div>
 
-              {loading ? (
+              {loading && activeTab === 'events' ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-sm text-[#CBC3D7]/65">
                     Loading events...
                   </p>
                 </div>
-              ) : error ? (
+              ) : error && activeTab === 'events' ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-sm text-[#FF4F91]">{error}</p>
                 </div>
               ) : activeTab === 'events' ? (
                 renderTable()
-              ) : (
+              ) : activeTab === 'individual' && individualLoading ? (
                 <div className="flex flex-1 items-center justify-center">
                   <p className="text-sm text-[#CBC3D7]/65">
-                    Individual media requests will be available soon.
+                    Loading individual requests...
                   </p>
                 </div>
-              )}
+              ) : activeTab === 'individual' && individualError ? (
+                <div className="flex flex-1 items-center justify-center">
+                  <p className="text-sm text-[#FF4F91]">{individualError}</p>
+                </div>
+              ) : activeTab === 'individual' ? (
+                renderIndividualTable()
+              ) : null}
             </section>
           </div>
 
           <div className="mt-8 grid grid-cols-12 gap-3 pb-5">
-            <FeedbackRatings feedbackLink="/dashboard-media/feedback" />
+            <FeedbackRatings tabs rows={feedbackRows} individualRows={individualFeedbackRows} feedbackLink="/dashboard-media/feedback" />
             <DepartmentRequestChart
-              data={departmentData}
+              module="media"
               title="Event Media Request By Department"
             />
           </div>
@@ -343,6 +501,7 @@ const MediaDashboard = () => {
         <MediaStaffInterchangeModal
           event={selectedEventForInterchange}
           mediaType={interchangeMediaType}
+          isIndividualInterchange={false}
           onClose={() => {
             setSelectedEventForInterchange(null)
             setInterchangeMediaType('')

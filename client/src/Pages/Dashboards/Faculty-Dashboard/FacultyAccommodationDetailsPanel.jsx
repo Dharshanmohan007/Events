@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import { CalendarDays, Clock3, FileText, Phone, User } from 'lucide-react'
+import EventDataHeader from '../../Dashboards/EventHeaderData'
+
 
 const displayValue = (value) => (value === null || value === undefined || value === '' ? '-' : String(value))
 
@@ -80,7 +82,12 @@ const AccommodationDayDetails = ({ accommodation }) => {
     })
   }
 
-  const totalDineIn = dineInCounts.reduce((sum, item) => sum + (Number(item.count) || 0), 0)
+  const dineInRows = []
+  for (let i = 0; i < dineInCounts.length; i += 2) {
+    dineInRows.push(
+      dineInCounts.slice(i, i + 2).map((item) => [`No. of Guest In ${item.type} Dine-in`, displayValue(item.count)])
+    )
+  }
 
   return (
     <div className="space-y-5">
@@ -98,9 +105,9 @@ const AccommodationDayDetails = ({ accommodation }) => {
         <SplitInfoRow key={i} items={row} />
       ))}
 
-      {accommodation.dineInRequired && (
-        <SplitInfoRow items={[['Dine-in Required', 'Yes'], ['Total Dine-in Count', displayValue(totalDineIn)]]} />
-      )}
+      {dineInRows.map((row, i) => (
+        <SplitInfoRow key={i} items={row} />
+      ))}
 
       {accommodation.specialRequirements ? (
         <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-5">
@@ -115,7 +122,7 @@ const AccommodationDayDetails = ({ accommodation }) => {
   )
 }
 
-const FacultyAccommodationDetailsPanel = ({ accommodationDetails, eventSchedule = [] }) => {
+const FacultyAccommodationDetailsPanel = ({ accommodationDetails, eventData, eventSchedule = [] }) => {
   const [activeDay, setActiveDay] = useState(0)
   const accommodations = accommodationDetails?.accommodations || []
   if (!accommodationDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No accommodation details are available.</p>
@@ -125,6 +132,7 @@ const FacultyAccommodationDetailsPanel = ({ accommodationDetails, eventSchedule 
 
   return (
     <div className="space-y-5">
+      <EventDataHeader data={eventData?.requestDetails}/>
       {dayCount > 1 && (
         <nav className="flex border-b border-[#374155]" aria-label="Accommodation event days">
           {Array.from({ length: dayCount }, (_, index) => (
