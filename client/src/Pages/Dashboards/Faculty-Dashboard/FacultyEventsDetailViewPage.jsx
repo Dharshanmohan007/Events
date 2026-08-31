@@ -454,32 +454,33 @@ const FacultyEventsDetailViewPage = () => {
 
   // }
 
-    const openFeedbackPage = async () => {
-    try {
-      setCloseLoading(true);
-      const token = localStorage.getItem("token");
+  const openFeedbackPage = async () => {
+    // try {
+    //   setCloseLoading(true);
+    //   const token = localStorage.getItem("token");
 
-      const res = await axios.patch(
-        `${API_BASE_URL}/api/events/${eventId}/status`,
-        { action: "close" },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    //   const res = await axios.patch(
+    //     `${API_BASE_URL}/api/events/${eventId}/status`,
+    //     { action: "close" },
+    //     {
+    //       headers: {
+    //         Authorization: `Bearer ${token}`,
+    //       },
+    //     }
+    //   );
 
-      if (res.status === 200) {
-        toast.success("Event closed successfully");
-        setReloadKey((k) => k + 1);
+    //   if (res.status === 200) {
+    //     toast.success("Event closed successfully");
+    //     setReloadKey((k) => k + 1);
 
-        navigate(`/dashboard-faculty/feedback/${eventId}`);
-      }
-      setCloseLoading(false);
-    } catch (err) {
-      setCloseLoading(false);
-      console.error(err);
-    }
+    //     navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
+    //   }
+    //   setCloseLoading(false);
+    // } catch (err) {
+    //   setCloseLoading(false);
+    //   console.error(err);
+    // }
+    navigate(`/dashboard-faculty/events/detailView/${eventId}/documentUpload`);
   };
 
   const renderActivePanel = () => {
@@ -561,7 +562,7 @@ const FacultyEventsDetailViewPage = () => {
 
     return <FacultyStaticDetailsPanel activeTab={activeTab} />
   }
-  
+
 
   return (
     <>
@@ -581,30 +582,41 @@ const FacultyEventsDetailViewPage = () => {
               )}
             </div>
           </div>
-          {console.log("data : ", data)}
-         {data.status?.toLowerCase() === "closed" ? (
-            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white">
+          {console.log("eve data : ", data)}
+          {data?.isClosed ? (
+            <div className="flex items-center gap-2 rounded-md bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white">
               <Check size={18} />
               Closed
             </div>
-          ) : data.adminApproval == true ? <button
-            type="button"
-            onClick={openFeedbackPage}
-            disabled={closeLoading}
-            className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 font- text-white transition-colors hover:bg-[#0a755f] disabled:cursor-not-allowed disabled:opacity-70"
-          >
-            {closeLoading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                Closing...
-              </>
-            ) : (
-              <>
-                <Check size={18} />
-                Close
-              </>
-            )}
-          </button> : ""}
+          ) : (
+            data?.adminApproval === true &&
+            (!data?.isDocumentsCompleted ||
+              !data?.isExpenditureCompleted ||
+              !data?.isFeedbackCompleted) && (
+              <button
+                type="button"
+                onClick={openFeedbackPage}
+                disabled={closeLoading}
+                className="flex items-center gap-2 rounded-md cursor-pointer hover:bg-linear-to-l hover:from-[#0a755f] bg-linear-to-r from-[#078B72] to-[#035546] px-6 py-2 text-white transition-colors disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {closeLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    Closing...
+                  </>
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Close
+                  </>
+                )}
+              </button>
+            )
+          )}
+
+
+
+
           {/* <button
             type="button"
             onClick={openFeedbackPage}

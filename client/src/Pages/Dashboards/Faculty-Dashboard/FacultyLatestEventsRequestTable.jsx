@@ -14,13 +14,63 @@ const formatDate = (dateStr) => {
         : date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
+
+// Updated in laptop need to merge this 
+const getStatusColor = (status = '') => {
+    const normalizedStatus = String(status).toLowerCase()
+
+    if (normalizedStatus.includes('rejected')) {
+        return {
+            text: 'text-red-400',
+            dot: 'bg-red-400'
+        }
+    }
+
+    if (normalizedStatus.includes('acknowledged')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
+    if (normalizedStatus.includes('approved')) {
+        return {
+            text: 'text-emerald-400',
+            dot: 'bg-emerald-400'
+        }
+    }
+
+    if (normalizedStatus.includes('pending')) {
+        return {
+            text: 'text-pink-600',
+            dot: 'bg-pink-600'
+        }
+    }
+
+    if (normalizedStatus.includes('submitted')) {
+        return {
+            text: 'text-yellow-400',
+            dot: 'bg-yellow-400'
+        }
+    }
+
+    return {
+        text: 'text-white',
+        dot: 'bg-white'
+    }
+}
+
 const Status = ({ status }) => {
-    const isApproved = status === 'Approved'
+    const colors = getStatusColor(status)
 
     return (
-        <span className={`flex items-center gap-1.5 text-[10px] font-semibold ${isApproved ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${isApproved ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
-            {status}
+        <span
+            className={`flex items-center gap-1.5 text-[10px] font-semibold ${colors.text}`}
+        >
+            <span
+                className={`h-1.5 w-1.5 rounded-full ${colors.dot}`}
+            />
+            <span>{status}</span>
         </span>
     )
 }
@@ -310,7 +360,7 @@ const FacultyLatestEventsRequestTable = () => {
                     )}
 
                     <Link
-                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/individual-requests'}
+                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/events'}
                         className="flex items-center gap-1.5 text-xs font-semibold text-[#8B5CF6]"
                     >
                         View All
@@ -413,6 +463,13 @@ const FacultyLatestEventsRequestTable = () => {
                                         <Link
                                             to={`/dashboard-faculty/individual-requests/${request.id}`}
                                             className="inline-flex text-[#FFFFFF80] transition hover:text-white"
+                                            title="Open request"
+                                        >
+                                            <ExternalLink size={14} />
+                                        </Link>
+                                        <Link
+                                            to={`/dashboard-faculty/individual-detailView/v2/${request.id}`}
+                                            className="inline-flex text-red-500 transition hover:text-white"
                                             title="Open request"
                                         >
                                             <ExternalLink size={14} />

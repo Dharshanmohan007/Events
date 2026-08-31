@@ -134,3 +134,12 @@ input[type="password"]:focus {
   border-color: #8b3dff !important;
   box-shadow: 0 0 0 1px rgba(139, 61, 255, 0.45) !important;
 }
+
+.custom-dashed {
+  border: none;
+  background:
+    linear-gradient(90deg, #313e5a 50%, transparent 50%) top / 16px 1px repeat-x,
+    linear-gradient(90deg, #313e5a 50%, transparent 50%) bottom / 16px 1px repeat-x,
+    linear-gradient(0deg, #313e5a 50%, transparent 50%) left / 1px 16px repeat-y,
+    linear-gradient(0deg, #313e5a 50%, transparent 50%) right / 1px 16px repeat-y;
+}

@@ -10,6 +10,7 @@ const facultyRoutes = {
     requests: '/dashboard-faculty/events',
     venues: '/dashboard-faculty/venues',
     reports: '/dashboard-faculty/reports',
+    expenditures: '/dashboard-faculty/expenditures',
     calendar: '/calendar',
 }
 
@@ -30,6 +31,7 @@ const FacultyDahsboardHeader = () => {
                     <NavLink to={facultyRoutes.reports} className={getNavLinkClassName}>Reports</NavLink>
                     <NavLink to={facultyRoutes.calendar} className={getNavLinkClassName}>Calendar</NavLink>
                     <NavLink to={facultyRoutes.venues} className={getNavLinkClassName}>Venue List</NavLink>
+                    <NavLink to={facultyRoutes.expenditures} className={getNavLinkClassName}>Expenditures</NavLink>
                 </nav>
             </div>
 

@@ -26,6 +26,7 @@ const AudioEventsDetailViewPage = () => {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -43,6 +44,7 @@ const AudioEventsDetailViewPage = () => {
         if (!eventData.audioDetails) throw new Error('Audio details are not available')
 
         setAudioDetails(eventData.audioDetails)
+        setEventData(eventData)
         const eventDetails = eventData.requestDetails?.eventDetails || {}
         setEventName(eventDetails.eventName || 'Event Details')
         setEventSchedule(eventDetails.eventSchedule || [])
@@ -158,6 +160,7 @@ const AudioEventsDetailViewPage = () => {
                   <FacultyAudioDetailsPanel
                     audioDetails={audioDetails}
                     eventSchedule={eventSchedule}
+                    eventData={eventData}
                   />
                 </div>
               </>

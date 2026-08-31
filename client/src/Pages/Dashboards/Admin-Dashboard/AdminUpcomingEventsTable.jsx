@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -307,6 +309,13 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                         >
                                             <ExternalLink size={17} />
                                         </Link>
+                                        <Link
+                                            to={`/dashboard/AdminIndividualDetailView/v2/${row.id}`}
+                                            className="mx-auto flex h-8 w-8 items-center justify-center text-red-400 hover:text-white"
+                                            title="Open request details"
+                                        >
+                                            <ExternalLink size={17} />
+                                        </Link>
                                     </td>
                                     </tr>
                                 )
@@ -326,3 +335,4 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
 }
 
 export default AdminUpcomingEventsTable
+

@@ -26,6 +26,8 @@ const TransportEventsDetailViewPage = () => {
   const [error, setError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [reloadKey, setReloadKey] = useState(0)
+  const [eventData, setEventData] = useState(null)
+
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -43,6 +45,7 @@ const TransportEventsDetailViewPage = () => {
         if (!eventData.transportDetails) throw new Error('Transportation details are not available')
 
         setTransportDetails(eventData.transportDetails)
+        setEventData(eventData)
         const eventDetails = eventData.requestDetails?.eventDetails || {}
         setEventName(eventDetails.eventName || 'Event Details')
         setEventSchedule(eventDetails.eventSchedule || [])
@@ -158,6 +161,7 @@ const TransportEventsDetailViewPage = () => {
                   <FacultyTransportationDetailsPanel
                     transportDetails={transportDetails}
                     eventSchedule={eventSchedule}
+                    eventData={eventData}
                   />
                 </div>
               </>
