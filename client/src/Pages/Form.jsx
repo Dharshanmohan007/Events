@@ -5,6 +5,7 @@ import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 import VenueForm from "../Components/Forms/VenueForm";
 import ICTSForm from "../Components/Forms/IctsForm";
 import TransportForm from "../Components/Forms/TransportForm";
+import ExternalTransportForm from "../Components/Forms/ExternalTransportForm";
 import FoodAndRefreshments from "../Components/Forms/FoodAndRefreshments";
 import AccommodationForm from "../Components/Forms/AccommodationForm";
 import Purchase from "../Components/Forms/Purchase";
@@ -68,6 +69,20 @@ const emptyFoodDay = () => ({
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+});
+
+const emptyExternalTransport = () => ({
+  id: crypto.randomUUID(),
+  travelOption: "",
+  travelDate: "",
+  from: "",
+  to: "",
+  totalPassengers: "",
+  classOrBerth: [],
+  trainNumber: "",
+  flightNumber: "",
+  specialRequirements: "None",
+  passengers: [],
 });
 
 const defaultAccommodation = {
@@ -757,6 +772,26 @@ const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
     case "media":               return buildMediaPayload(data);
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
+    case "externalTransport":   return { externalTransports: data.map(item => ({
+      travelOption: item.travelOption || "",
+      travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+      from: item.from || "",
+      to: item.to || "",
+      totalPassengers: parseInt(item.totalPassengers) || 0,
+      classOrBerth: Array.isArray(item.classOrBerth) ? item.classOrBerth : item.classOrBerth || "",
+      trainNumber: item.trainNumber || "",
+      flightNumber: item.flightNumber || "",
+      specialRequirements: item.specialRequirements || "None",
+      passengers: (item.passengers || []).map(p => ({
+        name: p.name || "",
+        phone: p.phone || "",
+        email: p.email || "",
+        age: parseInt(p.age) || 0,
+        gender: p.gender || "",
+        designation: p.designation || "",
+        organization: p.organization || ""
+      }))
+    })) };
     case "foodandrefreshments": return { foodDetails: data };
     case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
@@ -808,6 +843,26 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     ...media,
     audioDetails:        formData.audio,
     transportDetails:    formData.transport,
+    externalTransports:  formData.externalTransport.map(item => ({
+      travelOption: item.travelOption || "",
+      travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+      from: item.from || "",
+      to: item.to || "",
+      totalPassengers: parseInt(item.totalPassengers) || 0,
+      classOrBerth: Array.isArray(item.classOrBerth) ? item.classOrBerth : item.classOrBerth || "",
+      trainNumber: item.trainNumber || "",
+      flightNumber: item.flightNumber || "",
+      specialRequirements: item.specialRequirements || "None",
+      passengers: (item.passengers || []).map(p => ({
+        name: p.name || "",
+        phone: p.phone || "",
+        email: p.email || "",
+        age: parseInt(p.age) || 0,
+        gender: p.gender || "",
+        designation: p.designation || "",
+        organization: p.organization || ""
+      }))
+    })),
     foodDetails:         formData.foodandrefreshments,
     accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
@@ -820,6 +875,7 @@ const REQUIREMENT_KEY_MAP = {
   ictsRequired: "icts",
   audioRequired: "audio",
   transportRequired: "transport",
+  externalTransportRequired: "externalTransport",
   refreshmentRequired: "foodandrefreshments",
   accommodationRequired: "accommodation",
   purchaseRequired: "purchase",
@@ -1028,6 +1084,33 @@ function hydrateEventData(apiData) {
       }))
     : [defaultTransport()];
 
+  // 6b. External Transport
+  const externalTransportBackend = apiData.externalTransports || [];
+  const externalTransport = externalTransportBackend.length > 0
+    ? externalTransportBackend.map(item => ({
+        id: crypto.randomUUID(),
+        travelOption: item.travelOption || "",
+        travelDate: asDateOnly(item.travelDate),
+        from: item.from || "",
+        to: item.to || "",
+        totalPassengers: String(item.totalPassengers || ""),
+        classOrBerth: item.classOrBerth || (item.travelOption === "Train" ? [] : ""),
+        trainNumber: item.trainNumber || "",
+        flightNumber: item.flightNumber || "",
+        specialRequirements: item.specialRequirements || "None",
+        passengers: (item.passengers || []).map(p => ({
+          id: crypto.randomUUID(),
+          name: p.name || "",
+          phone: p.phone || "",
+          email: p.email || "",
+          age: String(p.age || ""),
+          gender: p.gender || "",
+          designation: p.designation || "",
+          organization: p.organization || ""
+        }))
+      }))
+    : [emptyExternalTransport()];
+
   // 7. Food & Refreshments — unwrap refreshmentDetails and map backend names.
   const foodItems = apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || [];
   const countValue = (group, aliases = []) => {
@@ -1220,7 +1303,7 @@ function hydrateEventData(apiData) {
     : [emptyMediaDay()];
 
   return {
-    formData: { event, venue, icts, audio, transport, foodandrefreshments, accommodation, purchase, media },
+    formData: { event, venue, icts, audio, transport, externalTransport, foodandrefreshments, accommodation, purchase, media },
     selectedRequirements,
   };
 }
@@ -1232,6 +1315,7 @@ function determineDraftStep(apiData, selectedRequirements) {
     icts: (apiData.ictsDetails?.ictses || []).length > 0,
     audio: apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0,
     transport: (apiData.transportDetails?.transports || apiData.transportDetails || []).length > 0,
+    externalTransport: (apiData.externalTransports || []).length > 0,
     foodandrefreshments: (apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || []).length > 0,
     accommodation: (apiData.accommodationDetails?.accommodations || []).length > 0,
     purchase: (apiData.purchaseDetails?.purchases || []).length > 0,
@@ -1268,6 +1352,7 @@ export default function Form() {
     },
     venue: [], icts: {}, audio: defaultAudio,
     transport: [defaultTransport()],
+    externalTransport: [emptyExternalTransport()],
     foodandrefreshments: [emptyFoodDay()],
     accommodation: defaultAccommodation,
     purchase: [emptyPurchaseDay()],
@@ -1297,6 +1382,7 @@ export default function Form() {
     icts:                { label: "ICTS Details",                  component: ICTSForm },
     audio:               { label: "Audio Details",                 component: AudioForm },
     transport:           { label: "Transport Details",             component: TransportForm },
+    externalTransport:   { label: "External Transport Details",    component: ExternalTransportForm },
     foodandrefreshments: { label: "Food and Refreshments Details", component: FoodAndRefreshments },
     accommodation:       { label: "Accommodation Details",         component: AccommodationForm },
     purchase:            { label: "Purchase Details",              component: Purchase },
@@ -1392,6 +1478,7 @@ export default function Form() {
   const handleIctsDataChange          = useCallback((v) => updateFormSection("icts",                v), [updateFormSection]);
   const handleAudioDataChange         = useCallback((v) => updateFormSection("audio",               v), [updateFormSection]);
   const handleTransportDataChange     = useCallback((v) => updateFormSection("transport",           v), [updateFormSection]);
+  const handleExternalTransportDataChange = useCallback((v) => updateFormSection("externalTransport", v), [updateFormSection]);
   const handleFoodDataChange          = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
   const handleAccommodationDataChange = useCallback((v) => updateFormSection("accommodation",       v), [updateFormSection]);
   const handlePurchaseDataChange      = useCallback((v) => updateFormSection("purchase",            v), [updateFormSection]);
@@ -1700,6 +1787,11 @@ export default function Form() {
       transportData: formData.transport,
       onTransportDataChange: handleTransportDataChange,
       eventId, errors: formErrors.transport || {},
+    },
+    externalTransport: {
+      initialValues: formData.externalTransport,
+      onDataChange: handleExternalTransportDataChange,
+      eventId, errors: formErrors.externalTransport || {},
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,

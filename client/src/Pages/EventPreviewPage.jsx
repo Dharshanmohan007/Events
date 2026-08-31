@@ -4,6 +4,7 @@ import VenuePreview from "../Components/Preview/VenuePreview";
 import ICTSPreview from "../Components/Preview/ICTSPreview";
 import AudioPreview from "../Components/Preview/AudioPreview";
 import TransportPreview from "../Components/Preview/TransportPreview";
+import ExternalTransportPreview from "../Components/Preview/ExternalTransportPreview";
 import FoodRefreshmentPreview from "../Components/Preview/FoodPreview";
 import AccommodationPreview from "../Components/Preview/AccommodationPreview";
 import PurchasePreview from "../Components/Preview/PurchasePreview";
@@ -23,6 +24,7 @@ export default function EventPreviewPage({
         icts: "ICTS Details",
         audio: "Audio Details",
         transport: "Transport Details",
+        externalTransport: "External Transport",
         foodandrefreshments: "Food & Refreshments",
         accommodation: "Accommodation Details",
         purchase: "Purchase Details",
@@ -85,6 +87,12 @@ export default function EventPreviewPage({
                 return (
                     <TransportPreview
                         transportData={formData?.transport}
+                    />
+                );
+            case "externalTransport":
+                return (
+                    <ExternalTransportPreview
+                        data={formData?.externalTransport}
                     />
                 );
             case "foodandrefreshments":

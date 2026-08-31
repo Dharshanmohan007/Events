@@ -175,7 +175,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
             </button>
 
             {open && (
-                <div className="absolute bottom-full right-0 z-30 mb-2 w-72 rounded-xl border border-[#283247] bg-[#151d2e] p-3 shadow-2xl">
+                <div className="absolute top-full left-0 z-50 mt-1 w-72 rounded-xl border border-[#283247] bg-[#151d2e] p-3 shadow-2xl">
                     {/* Month & Year selectors */}
                     <div className="mb-3 flex items-center justify-between gap-2">
                         <button
