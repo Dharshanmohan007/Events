@@ -7,6 +7,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import DashboardHeader from "../../Dashboards/ICTC-Dashboard/DashboardHeader";
 import { jwtDecode } from "jwt-decode";
+import IndividualVideoDetailPage from "../IndividualVideoDetailPage";
 
 const HeadIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -75,6 +76,9 @@ const HeadIndividualDetailView = () => {
         )}
         {formType?.toLowerCase() == "media" && (
           <IndividualMediaDetailPage data={data[0]} />
+        )}
+        {formType?.toLowerCase() == "video" && (
+          <IndividualVideoDetailPage data={data[0]} />
         )}
       </div>
     </>

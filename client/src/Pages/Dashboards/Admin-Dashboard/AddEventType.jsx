@@ -7,7 +7,11 @@ import {
   deleteEventType,
 } from "../../../services/events/eventTypesService";
 
-export default function AddEventType({ isOpen, onClose }) {
+export default function AddEventType({
+  isOpen,
+  onClose,
+  onDataChanged,
+}) {
   const [eventTypes, setEventTypes] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -48,55 +52,90 @@ export default function AddEventType({ isOpen, onClose }) {
   };
 
   const handleCreate = async () => {
-    if (!newEventName.trim()) return;
-    try {
-      setLoading(true);
-      await createEventType({
-        eventType: newEventName.trim(),
-        documents: []
-      });
-      setIsAdding(false);
-      setNewEventName('');
-      await fetchEventTypes();
-    } catch (error) {
-      console.error("Failed to create event type:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!newEventName.trim()) return;
+
+  try {
+    setLoading(true);
+
+    await createEventType({
+      eventType: newEventName.trim(),
+      documents: [],
+    });
+
+    setIsAdding(false);
+    setNewEventName("");
+
+    await fetchEventTypes();
+
+    // Refresh ViewEventDocumentMapping automatically
+    onDataChanged?.();
+  } catch (error) {
+    console.error(
+      "Failed to create event type:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleUpdate = async (id) => {
-    if (!editEventName.trim()) return;
-    try {
-      setLoading(true);
-      const original = eventTypes.find(et => et._id === id || et.id === id);
-      await updateEventType(id, {
-        eventType: editEventName.trim(),
-        documents: original?.documents || []
-      });
-      setEditingId(null);
-      setEditEventName('');
-      await fetchEventTypes();
-    } catch (error) {
-      console.error("Failed to update event type:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!editEventName.trim()) return;
+
+  try {
+    setLoading(true);
+
+    const original = eventTypes.find(
+      (eventType) =>
+        eventType._id === id ||
+        eventType.id === id
+    );
+
+    await updateEventType(id, {
+      eventType: editEventName.trim(),
+      documents: original?.documents || [],
+    });
+
+    setEditingId(null);
+    setEditEventName("");
+
+    await fetchEventTypes();
+
+    // Refresh ViewEventDocumentMapping automatically
+    onDataChanged?.();
+  } catch (error) {
+    console.error(
+      "Failed to update event type:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDelete = async () => {
-    if (!deleteModalId) return;
-    try {
-      setLoading(true);
-      await deleteEventType(deleteModalId);
-      setDeleteModalId(null);
-      await fetchEventTypes();
-    } catch (error) {
-      console.error("Failed to delete event type:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (!deleteModalId) return;
+
+  try {
+    setLoading(true);
+
+    await deleteEventType(deleteModalId);
+
+    setDeleteModalId(null);
+
+    await fetchEventTypes();
+
+    // Refresh ViewEventDocumentMapping automatically
+    onDataChanged?.();
+  } catch (error) {
+    console.error(
+      "Failed to delete event type:",
+      error
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getEventTypeName = (id) => {
     const item = eventTypes.find(et => et._id === id || et.id === id);

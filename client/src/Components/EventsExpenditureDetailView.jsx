@@ -16,6 +16,8 @@ import {
 import { jwtDecode } from "jwt-decode";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { Loader2 } from "lucide-react";
 
 const documents = [
   {
@@ -92,6 +94,7 @@ const EventsExpenditureDetailView = () => {
   const [participantsData, setParticipantsData] = useState(null);
   const [expenditureOverAllData, setExpenditureOverAllData] = useState(null);
   const [expenditureToBeShown, setExpenditureToBeShown] = useState(null);
+  const [isApproving, setIsApproving] = useState(false);
 
   //   -------------------- functions ----------------
 
@@ -153,6 +156,33 @@ const EventsExpenditureDetailView = () => {
     }
   };
 
+  const handleAdminApprove = async () => {
+    setIsApproving(true);
+    try {
+      await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/document-expenditure-approval`,
+        { approved: true },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      toast.success("Expenditure approved successfully!");
+      fetchExpenditureDetails();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to approve expenditure",
+      );
+      console.error(
+        "error occured while approving the Events - Expenditure form : ",
+        error.message,
+      );
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
   //  -------------------------- useEffect's -----------------
   useEffect(() => {
     getDocuments();
@@ -161,7 +191,7 @@ const EventsExpenditureDetailView = () => {
 
   //   ----------------- consoles ----------------------
 
-  console.log("expenditure data : ", expenditureOverAllData);
+  console.log("event data : ", overAllData);
   //   console.log("organizer's data : ", organizerData);
 
   //  --------------------- jsx ------------------------
@@ -182,25 +212,55 @@ const EventsExpenditureDetailView = () => {
             </span>
 
             <span className="text-[18px] font-medium text-[#d9ddeb]">
-               {eventData?.eventName}
+              {eventData?.eventName}
             </span>
 
-            <button
-              type="button"
-              className="ml-1 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
-            >
-              <Pencil size={14} strokeWidth={2} />
-            </button>
+            {role?.toLowerCase() !== "faculty" && (
+              <button
+                type="button"
+                className="ml-1 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
+              >
+                <Pencil size={14} strokeWidth={2} />
+              </button>
+            )}
           </div>
 
           {/* Approve button */}
-          <button
-            type="button"
-            className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[3px] bg-linear-to-r from-emerald-700 to-emerald-900 px-4 text-[14px] font-medium text-white transition hover:bg-[#009f89]"
-          >
-            <Check size={16} strokeWidth={2.5} />
-            Approve
-          </button>
+          {role.toLowerCase() !== "faculty" &&
+            overAllData?.eventId?.documentExpenditureApproved == false && (
+              <button
+                type="button"
+                onClick={handleAdminApprove}
+                disabled={isApproving}
+                className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[3px] bg-linear-to-r from-emerald-700 to-emerald-900 px-4 text-[14px] font-medium text-white transition hover:bg-[#009f89] disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isApproving ? (
+                  <>
+                    <Loader2
+                      size={16}
+                      strokeWidth={2.5}
+                      className="animate-spin"
+                    />
+                    Approving...
+                  </>
+                ) : (
+                  <>
+                    <Check size={16} strokeWidth={2.5} />
+                    Approve
+                  </>
+                )}
+              </button>
+            )}
+
+          {overAllData?.eventId?.documentExpenditureApproved && (
+            <p
+              className={`${overAllData?.eventId?.documentExpenditureApproved ? "text-green-400 bg-green-200/10 px-4 py-2 rounded-full" : "text-red-400   bg-red-200/10 px-4 py-2 rounded-full "}`}
+            >
+              {overAllData?.eventId?.documentExpenditureApproved
+                ? "Approved"
+                : "Pending"}
+            </p>
+          )}
         </div>
 
         <div className="content-container bg-[#171f31] p-4  rounded-lg border border-gray-800">
@@ -681,7 +741,9 @@ const EventsExpenditureDetailView = () => {
               <div className="flex w-1/2 items-center justify-between border-r border-[#555d6f] px-3">
                 <p className="text-[14px] text-[#a1a7b5]">Primary SDG</p>
 
-                <p className="text-[14px] font-medium text-white">{expenditureOverAllData?.primarySdg || "--"}</p>
+                <p className="text-[14px] font-medium text-white">
+                  {expenditureOverAllData?.primarySdg || "--"}
+                </p>
               </div>
 
               {/* Secondary SDG */}
@@ -689,8 +751,8 @@ const EventsExpenditureDetailView = () => {
                 <p className="text-[14px] text-[#a1a7b5]">Secondary SDG</p>
 
                 <p className="text-[14px] font-medium text-white flex flex-wrap gap-1 items-center">
-                  {expenditureOverAllData?.secondarySdg.map((item)=>{
-                    return <p>{item} ,</p>
+                  {expenditureOverAllData?.secondarySdg.map((item) => {
+                    return <p>{item} ,</p>;
                   })}
                 </p>
               </div>
@@ -711,7 +773,7 @@ const EventsExpenditureDetailView = () => {
               </div>
 
               <p className="text-[14px] leading-[14px] text-[#d0d3dc]">
-               {expenditureOverAllData?.aboutProgram}
+                {expenditureOverAllData?.aboutProgram}
               </p>
             </div>
           </div>

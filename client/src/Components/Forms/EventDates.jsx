@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import CustomInput from "../CustomInput";
 import CustomSelect from '../CustomSelect';
 import TimePickerInput from "../TimePickerInput";
@@ -86,6 +86,36 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
 );
 
 export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {}, day1Guests = [] }) {
+  const [localTimeError, setLocalTimeError] = useState("");
+
+  useEffect(() => {
+    if (dayData?.date && dayData?.startTime) {
+      const today = new Date();
+      const offset = today.getTimezoneOffset() * 60000;
+      const todayStr = (new Date(today - offset)).toISOString().split("T")[0];
+      
+      if (dayData.date === todayStr) {
+        const [selH, selM] = dayData.startTime.split(":").map(Number);
+        const currentH = today.getHours();
+        const currentM = today.getMinutes();
+        
+        if (selH < currentH || (selH === currentH && selM < currentM)) {
+          const ampm = currentH >= 12 ? 'PM' : 'AM';
+          let displayH = currentH % 12;
+          displayH = displayH ? displayH : 12;
+          const displayM = currentM.toString().padStart(2, '0');
+          setLocalTimeError(`Current time is ${displayH}:${displayM} ${ampm}, cannot choose a past time for today.`);
+        } else {
+          setLocalTimeError("");
+        }
+      } else {
+        setLocalTimeError("");
+      }
+    } else {
+      setLocalTimeError("");
+    }
+  }, [dayData?.date, dayData?.startTime]);
+
   const handleGuestsChange = (e) => {
     const val = e.target.value;
     if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
@@ -136,7 +166,11 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
             value={dayData?.startTime || ""}
             onChange={(e) => updateDay({ ...dayData, startTime: e.target.value })}
           />
-          {errors.startTime && <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>}
+          {localTimeError ? (
+            <p className="text-red-400 text-xs mt-1">{localTimeError}</p>
+          ) : errors.startTime ? (
+            <p className="text-red-400 text-xs mt-1">{errors.startTime}</p>
+          ) : null}
         </div>
         <div>
           <TimePickerInput

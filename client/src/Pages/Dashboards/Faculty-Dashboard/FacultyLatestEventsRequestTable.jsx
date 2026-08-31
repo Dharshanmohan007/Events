@@ -367,7 +367,7 @@ const FacultyLatestEventsRequestTable = () => {
                     )}
 
                     <Link
-                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/individual-requests'}
+                        to={activeTab === 'events' ? '/dashboard-faculty/events' : '/dashboard-faculty/events'}
                         className="flex items-center gap-1.5 text-xs font-semibold text-[#8B5CF6]"
                     >
                         View All

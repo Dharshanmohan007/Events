@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Download, Filter, Search } from 'lucide-react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
+import { buildIndividualRequestTemplate } from '../../../templates/individualRequestTemplate'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
@@ -92,26 +93,46 @@ const FoodReportsTable = ({ rows, activeTab, isLoading }) => {
             return
         }
 
-        const lines = isEventReport
-            ? [
-                  ['Event Name', 'Event Type/Dept', 'Venue', 'Date', 'Status'],
-                  [row.eventName, row.eventTypeDept, row.eventVenue, row.eventDate, row.status]
-              ]
-            : [
-                  ['Event Name', 'Dept', 'Requester Name', 'Requester Phone', 'Required Date', 'Status'],
-                  [row.eventName, row.department, row.requesterName, row.requesterPhone, row.requiredDate, row.status]
-              ]
-
-        const csv = lines
-            .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-            .join('\n')
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `food-${activeTab}-${(row.eventName || 'report').replaceAll(' ', '-')}.csv`
-        link.click()
-        URL.revokeObjectURL(url)
+        // Individual Requests — PDF via shared template (same as Faculty/Admin)
+        try {
+            const token = localStorage.getItem('token')
+            const res = await fetch(
+                `${API_BASE_URL}/api/individual-submissions/getrequest/${row.id}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            const json = await res.json()
+            // API returns { success, count, data: [ {...} ] } — take first element
+            const reqObj = Array.isArray(json.data) ? json.data[0] : (json.data || json)
+            if (reqObj && (reqObj.id || reqObj._id || reqObj.formType)) {
+                const htmlString = buildIndividualRequestTemplate(reqObj)
+                const iframe = document.createElement('iframe')
+                iframe.style.position = 'absolute'
+                iframe.style.width = '0'
+                iframe.style.height = '0'
+                iframe.style.border = 'none'
+                document.body.appendChild(iframe)
+                // Set onload BEFORE writing so we don't miss the event
+                iframe.onload = () => {
+                    iframe.contentWindow.focus()
+                    setTimeout(() => {
+                        iframe.contentWindow.print()
+                        setTimeout(() => {
+                            if (document.body.contains(iframe)) document.body.removeChild(iframe)
+                        }, 2000)
+                    }, 300)
+                }
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+                iframeDoc.open()
+                iframeDoc.write(htmlString)
+                iframeDoc.close()
+            } else {
+                console.error('[PDF Fetch] Failed to find individual request data:', json)
+                alert('Failed to fetch individual request details.')
+            }
+        } catch (err) {
+            console.error('[PDF Fetch] Error generating individual PDF:', err)
+            alert('Error connecting to API to generate PDF.')
+        }
     }
 
     return (
@@ -248,22 +269,25 @@ const FoodReportsPage = () => {
 
         ;(async () => {
             try {
-                const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
-                    headers: { Authorization: `Bearer ${token}` }
+                // Confirmed correct endpoint: returns real food individual submissions
+                const res = await fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=food`, {
+                    headers: { Authorization: `Bearer ${token}` },
                 })
                 const json = await res.json()
                 if (json.success && isMounted) {
                     setIndividualRows(
                         (json.data || []).map((req) => ({
                             id: req.id || req._id,
-                            eventName: req.eventName || req.event || req.employee || req.employeeDetail?.name || '-',
-                            department: req.department || req.organizingDepartment || '-',
-                            requesterName: req.employee || req.employeeDetail?.name || req.name || req.organizerName || '-',
-                            requesterPhone: req.employeePhone || req.phone || req.organizerPhone || '-',
-                            requiredDate: formatDate(req.createdAt || req.requiredDate),
-                            status: typeof req.status === 'string'
-                                ? req.status
-                                : Object.values(req.status || {}).find(Boolean) || req.acknowledgeStatus || 'Pending',
+                            // Map from confirmed response shape: employeeDetail.firstName, formType, status, createdAt
+                            eventName: req.employeeDetail?.firstName || req.employee || '-',
+                            department: req.employeeDetail?.department || req.department || '-',
+                            requesterName: req.employeeDetail?.firstName || req.employee || '-',
+                            requesterPhone: req.employeeDetail?.phone || req.employeePhone || '-',
+                            requiredDate: formatDate(req.createdAt),
+                            status:
+                                typeof req.status === 'string'
+                                    ? req.status
+                                    : Object.values(req.status || {}).find(Boolean) || 'Pending',
                         }))
                     )
                 }

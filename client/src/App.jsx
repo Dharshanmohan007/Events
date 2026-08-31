@@ -102,7 +102,13 @@ import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Facul
 import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
 import AdminExpenditureTable from "./Pages/Dashboards/Admin-Dashboard/AdminExpenditureTable.jsx";
 import EventsExpenditureDetailView from "./Components/EventsExpenditureDetailView.jsx";
+import FacultyExpendituresPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpendituresPage.jsx";
+import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpenditureDetailView.jsx";
 
+import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/IndividualVideoDetailPage.jsx";
+
+import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
+import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -392,6 +398,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <VideoIndividualDetailViewPage />
+            {/* <IndividualVideoDetailPage/> */}
           </ProtectedRoute>
         }
       />
@@ -407,6 +414,8 @@ function AppRoutes() {
         <Route index element={<AdminDashboard />} />
         <Route path="AdminEventsRequests" element={<AdminEventsListPage />} />
         <Route path="VenueManagement" element={<VenueManagementPage />} />
+        <Route path="RoomManagement" element={<RoomManagement/>}/>
+        <Route path="EventTypeManagement" element={<EventTypeManagement/>}/>
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
@@ -416,7 +425,10 @@ function AppRoutes() {
           element={<EventDetailsPage />}
         />
         <Route path="expenditures" element={<AdminExpenditureTable />} />
-        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
+        <Route
+          path="expenditures/EventExpenditureDetailView/:eventId"
+          element={<EventsExpenditureDetailView />}
+        />
       </Route>
       <Route
         path="/dashboard/AdminIndividualDetailView/v2/:eventId"
@@ -563,6 +575,23 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <FacultyReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard-faculty/expenditures"
+        element={
+          <ProtectedRoute>
+            <FacultyExpendituresPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard-faculty/expenditures/EventExpenditureDetailView/:eventId"
+        element={
+          <ProtectedRoute>
+            <FacultyExpenditureDetailView />
           </ProtectedRoute>
         }
       />
