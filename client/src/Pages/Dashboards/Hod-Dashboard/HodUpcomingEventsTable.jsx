@@ -54,6 +54,7 @@ const getStatusColor = (status = '') => {
     if (normalizedStatus.includes('approved')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
     if (normalizedStatus.includes('pending')) return { text: 'text-pink-600', dot: 'bg-pink-600' }
     if (normalizedStatus.includes('submitted')) return { text: 'text-yellow-400', dot: 'bg-yellow-400' }
+    if (normalizedStatus.includes('completed')) return { text: 'text-emerald-400', dot: 'bg-emerald-400' }
     return { text: 'text-white', dot: 'bg-white' }
 }
 
