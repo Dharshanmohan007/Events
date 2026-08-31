@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Search,
   Check,
@@ -6,9 +6,13 @@ import {
   CalendarDays,
   ExternalLink,
   Download,
+  Loader2,
 } from "lucide-react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import { mapSettlementData } from "../../../utils/settlementMapper.js";
+import { generateSettlementPdf } from "../../../utils/settlementPdfGenerator.js";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB CONFIGURATION
@@ -32,6 +36,9 @@ const AdminExpenditureTable = () => {
   // ── Search State Variables ───────────────────────────────────────────────
   const [eventsSearchQuery, setEventsSearchQuery] = useState("");
   const [individualSearchQuery, setIndividualSearchQuery] = useState("");
+
+  // ── PDF Download State ─────────────────────────────────────────────────
+  const [downloadingEventId, setDownloadingEventId] = useState(null);
 
   // ══════════════════════════════════════════════════════════════════════════
   // HELPER FUNCTIONS
@@ -188,6 +195,34 @@ const AdminExpenditureTable = () => {
       console.error(error);
     }
   };
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // PDF DOWNLOAD HANDLER
+  // ══════════════════════════════════════════════════════════════════════════
+
+  const downloadSettlementPdf = useCallback(
+    async (eventId) => {
+      if (!eventId) {
+        toast.error("Invalid event ID");
+        return;
+      }
+
+      setDownloadingEventId(eventId);
+
+      try {
+        await generateSettlementPdf(eventId, token, mapSettlementData);
+        toast.success("PDF downloaded successfully!");
+      } catch (err) {
+        console.error("Settlement PDF generation failed:", err);
+        toast.error(
+          err.message || "Failed to generate PDF. Please try again."
+        );
+      } finally {
+        setDownloadingEventId(null);
+      }
+    },
+    [token]
+  );
 
   // ══════════════════════════════════════════════════════════════════════════
   // EFFECTS
@@ -377,9 +412,19 @@ const AdminExpenditureTable = () => {
 
                           <button
                             type="button"
-                            className="text-[#8b93a5] transition hover:text-white"
+                            onClick={() =>
+                              downloadSettlementPdf(item?.eventId?._id)
+                            }
+                            disabled={
+                              downloadingEventId === item?.eventId?._id
+                            }
+                            className="text-[#8b93a5] transition hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <Download size={13} strokeWidth={1.8} />
+                            {downloadingEventId === item?.eventId?._id ? (
+                              <Loader2 size={13} strokeWidth={1.8} className="animate-spin" />
+                            ) : (
+                              <Download size={13} strokeWidth={1.8} />
+                            )}
                           </button>
                         </div>
                       </td>
