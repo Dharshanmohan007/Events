@@ -170,8 +170,9 @@ function AppRoutes() {
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
-        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
         
+        <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
+        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
 
       </Route>
       <Route path="/dashboard/AdminIndividualDetailView/v2/:eventId" element={< AdminIndividualDetailView />} />
