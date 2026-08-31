@@ -7,7 +7,7 @@ import { buildEventTemplate } from '../../../templates/eventTemplate'
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // ─── Status badge (mirrors AccommodationLatestEventsRequestTable) ──────────────────
-const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted']
+const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'acknowledged']
 
 const ReportStatus = ({ status }) => {
   const label = status || 'Pending'
@@ -15,12 +15,12 @@ const ReportStatus = ({ status }) => {
   return (
     <span
       className={`flex items-center gap-1.5 text-[11px] font-semibold ${
-        isPositive ? 'text-[#20D18C]' : 'text-[#F20768]'
+        isPositive ? 'text-[#34D399]' : 'text-[#F87171]'
       }`}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          isPositive ? 'bg-[#20D18C]' : 'bg-[#F20768]'
+          isPositive ? 'bg-[#34D399]' : 'bg-[#F87171]'
         }`}
       />
       {label}
@@ -28,7 +28,7 @@ const ReportStatus = ({ status }) => {
   )
 }
 
-// ─── Dropdown filter (mirrors AccommodationVenueListPage's SelectFilter) ────────────
+// ─── Dropdown filter ──────────────────────────────────────────────────────────
 const ReportSelectFilter = ({ value, onChange, options, label }) => {
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef(null)
@@ -104,76 +104,40 @@ const TableSkeleton = ({ cols = 6 }) => (
   </tbody>
 )
 
-// ─── CSV / PDF Download Helper ────────────────────────────────────────────────
-const downloadRow = async (row, tabContext) => {
-  if (tabContext === 'events') {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_BASE_URL}/api/events/${row.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      const json = await res.json()
+// ─── PDF Download Helper ──────────────────────────────────────────────────────
+const downloadRow = async (row) => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${API_BASE_URL}/api/events/${row.id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    const json = await res.json()
+    const eventData = json.data || json.event || (json.requestDetails ? json : null)
 
-
-      // The backend might return { success: true, data: {...} } or { success: true, event: {...} } 
-      // or just the raw event object containing requestDetails.
-      const eventData = json.data || json.event || (json.requestDetails ? json : null)
-
-      if (eventData) {
-        // Generate HTML from template
-        const html = buildEventTemplate(eventData)
-
-        // Create a hidden iframe to print the PDF
-        const iframe = document.createElement('iframe')
-        iframe.style.display = 'none'
-        document.body.appendChild(iframe)
-        
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
-        iframeDoc.open()
-        iframeDoc.write(html)
-        iframeDoc.close()
-
-        // Wait for images/styles to load then print
-        iframe.onload = () => {
-          iframe.contentWindow.focus()
-          iframe.contentWindow.print()
-          // Clean up iframe after print dialog opens
-          setTimeout(() => {
-            if (document.body.contains(iframe)) {
-              document.body.removeChild(iframe)
-            }
-          }, 1000)
-        }
-      } else {
-        console.error('[PDF Fetch] Failed to find event data in response:', json)
-        alert(`Failed to fetch event details. See console for API response.`)
+    if (eventData) {
+      const html = buildEventTemplate(eventData)
+      const iframe = document.createElement('iframe')
+      iframe.style.display = 'none'
+      document.body.appendChild(iframe)
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+      iframeDoc.open()
+      iframeDoc.write(html)
+      iframeDoc.close()
+      iframe.onload = () => {
+        iframe.contentWindow.focus()
+        iframe.contentWindow.print()
+        setTimeout(() => {
+          if (document.body.contains(iframe)) document.body.removeChild(iframe)
+        }, 1000)
       }
-    } catch (err) {
-      console.error('[PDF Fetch] Error generating PDF:', err)
-      alert('Error connecting to API to generate PDF.')
+    } else {
+      console.error('[PDF Fetch] Failed to find event data in response:', json)
+      alert('Failed to fetch event details. See console for API response.')
     }
-    return
+  } catch (err) {
+    console.error('[PDF Fetch] Error generating PDF:', err)
+    alert('Error connecting to API to generate PDF.')
   }
-
-  // Logic for Individual Requests (CSV Download)
-  const lines = [
-    ['Field', 'Value'],
-    ['Event Name', row.eventName || row.employee || '-'],
-    ['Dept', row.department || '-'],
-    ['Check In-Check Out', row.requiredDate || row.createdAt || '-'],
-    ['Status', row.status || '-'],
-  ]
-
-  const csv = lines
-    .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `report-${row.eventName || row.employee || 'row'}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 // ─── Format date helper ───────────────────────────────────────────────────────
@@ -187,16 +151,10 @@ const formatDate = (dateStr) => {
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 const AccommodationReportsPage = () => {
-  const [activeTab, setActiveTab] = useState('events')
-
   const [events, setEvents] = useState([])
   const [eventsLoading, setEventsLoading] = useState(true)
 
-  const [individualRows, setIndividualRows] = useState([])
-  const [individualLoading, setIndividualLoading] = useState(true)
-
   const [searchQuery, setSearchQuery] = useState('')
-  const [eventTypeFilter, setEventTypeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
 
   // ── Fetch event requests ────────────────────────────────────────────────────
@@ -221,7 +179,7 @@ const AccommodationReportsPage = () => {
               department: ev.organizingDepartment || ev.department || '-',
               requesterName: ev.requesterName || ev.employee || '-',
               requesterPhone: ev.requesterPhone || ev.phone || '-',
-              requiredDate: (Array.isArray(ev.dates) && ev.dates.length > 0) 
+              requiredDate: (Array.isArray(ev.dates) && ev.dates.length > 0)
                   ? `${formatDate(ev.dates[0])}${ev.dates.length > 1 ? ` +${ev.dates.length - 1}` : ''}`
                   : formatDate(ev.dates || ev.eventDate || ev.requiredDate),
               status: ev.eventStatus || ev.departmentStatus || ev.overallStatus || ev.status || '-',
@@ -238,63 +196,10 @@ const AccommodationReportsPage = () => {
     return () => { isMounted = false }
   }, [])
 
-  // ── Fetch individual submissions ────────────────────────────────────────────
-  useEffect(() => {
-    let isMounted = true
-    const token = localStorage.getItem('token')
-    if (!token) { setIndividualLoading(false); return }
-
-    ;(async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        const json = await res.json()
-
-        if (json.data && isMounted) {
-          setIndividualRows(
-            (json.data || []).map((req) => ({
-              id: req.id || req._id || req.submissionId,
-              eventName: req.eventName || req.requestDetails?.eventDetails?.eventName || '-',
-              department: req.department || req.organizingDepartment || '-',
-              requesterName: req.employee || req.requesterName || req.employeeDetail?.name || '-',
-              requesterPhone: req.phone || req.requesterPhone || '-',
-              requiredDate: (Array.isArray(req.dates) && req.dates.length > 0) 
-                  ? `${formatDate(req.dates[0])}${req.dates.length > 1 ? ` +${req.dates.length - 1}` : ''}`
-                  : formatDate(req.dates || req.createdAt || req.date || req.requiredDate),
-              status:
-                typeof req.status === 'string'
-                  ? req.status
-                  : Object.values(req.status || {}).find(Boolean) || req.overallStatus || 'Pending',
-            }))
-          )
-        }
-      } catch (err) {
-        console.warn('AccommodationReportsPage individual:', err.message)
-      } finally {
-        if (isMounted) setIndividualLoading(false)
-      }
-    })()
-
-    return () => { isMounted = false }
-  }, [])
-
   // ── Derived filter option lists ─────────────────────────────────────────────
-  const eventTypeOptions = useMemo(
-    () => [...new Set(events.map((e) => e.eventType).filter(Boolean))],
-    [events]
-  )
   const eventStatusOptions = useMemo(
-    () => [...new Set(events.map((e) => e.eventStatus).filter(Boolean))],
+    () => [...new Set(events.map((e) => e.status).filter(Boolean))],
     [events]
-  )
-  const individualFormTypeOptions = useMemo(
-    () => [...new Set(individualRows.map((r) => r.formType).filter(Boolean))],
-    [individualRows]
-  )
-  const individualStatusOptions = useMemo(
-    () => [...new Set(individualRows.map((r) => r.status).filter(Boolean))],
-    [individualRows]
   )
 
   // ── Client-side filtering ───────────────────────────────────────────────────
@@ -303,42 +208,14 @@ const AccommodationReportsPage = () => {
     return events.filter((e) => {
       const matchSearch =
         !q ||
-        [e.eventName, e.eventType, e.eventVenue, e.eventDate, e.eventStatus]
+        [e.eventName, e.department, e.requiredDate, e.status]
           .join(' ')
           .toLowerCase()
           .includes(q)
-      const matchType = eventTypeFilter === 'all' || e.eventType === eventTypeFilter
-      const matchStatus = statusFilter === 'all' || e.eventStatus === statusFilter
-      return matchSearch && matchType && matchStatus
+      const matchStatus = statusFilter === 'all' || e.status === statusFilter
+      return matchSearch && matchStatus
     })
-  }, [events, searchQuery, eventTypeFilter, statusFilter])
-
-  const filteredIndividual = useMemo(() => {
-    const q = searchQuery.toLowerCase()
-    return individualRows.filter((r) => {
-      const matchSearch =
-        !q ||
-        [r.employee, r.employeeEmail, r.formType, r.eventVenue, r.createdAt, r.status]
-          .join(' ')
-          .toLowerCase()
-          .includes(q)
-      const matchType = eventTypeFilter === 'all' || r.formType === eventTypeFilter
-      const matchStatus = statusFilter === 'all' || r.status === statusFilter
-      return matchSearch && matchType && matchStatus
-    })
-  }, [individualRows, searchQuery, eventTypeFilter, statusFilter])
-
-  // Reset filters when switching tabs
-  const handleTabSwitch = (tab) => {
-    setActiveTab(tab)
-    setSearchQuery('')
-    setEventTypeFilter('all')
-    setStatusFilter('all')
-  }
-
-  const isLoading = activeTab === 'events' ? eventsLoading : individualLoading
-  const typeOptions = activeTab === 'events' ? eventTypeOptions : individualFormTypeOptions
-  const statusOptions = activeTab === 'events' ? eventStatusOptions : individualStatusOptions
+  }, [events, searchQuery, statusFilter])
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -346,42 +223,14 @@ const AccommodationReportsPage = () => {
       <DashboardHeader basePath="/dashboard-accommodation" />
 
       <main className="px-6 pb-10">
-        {/* Page header row — title/subtitle left, pill-toggle right */}
-        <div className="flex items-center justify-between pt-5 pb-5">
-          <div>
-            <h1 className="text-[22px] font-semibold text-white">Reports</h1>
-            <p className="mt-1 text-sm text-[#FFFFFF80]">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry's standard dummy text
-              ever since the 1500s
-            </p>
-          </div>
-
-          {/* Pill-toggle (mirrors RequestListTable nav) */}
-          <nav className="flex rounded-md bg-[#1b2335] p-0.5" aria-label="Request type tabs">
-            <button
-              type="button"
-              onClick={() => handleTabSwitch('events')}
-              className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
-                activeTab === 'events'
-                  ? 'bg-[#8B3DFF] text-white shadow-sm'
-                  : 'text-[#8b93a7] hover:text-white'
-              }`}
-            >
-              Event Request Report
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTabSwitch('individual')}
-              className={`rounded px-3.5 py-1.5 text-xs font-medium transition ${
-                activeTab === 'individual'
-                  ? 'bg-[#8B3DFF] text-white shadow-sm'
-                  : 'text-[#8b93a7] hover:text-white'
-              }`}
-            >
-              Individual Request Report
-            </button>
-          </nav>
+        {/* Page header row — title/subtitle only, no tab toggle */}
+        <div className="pt-5 pb-5">
+          <h1 className="text-[22px] font-semibold text-white">Reports</h1>
+          <p className="mt-1 text-sm text-[#FFFFFF80]">
+            Lorem Ipsum is simply dummy text of the printing and typesetting
+            industry. Lorem Ipsum has been the industry's standard dummy text
+            ever since the 1500s
+          </p>
         </div>
 
         {/* Table card */}
@@ -400,134 +249,71 @@ const AccommodationReportsPage = () => {
               />
             </div>
 
-            {/* Event/form-type filter */}
-            <ReportSelectFilter
-              value={eventTypeFilter}
-              onChange={setEventTypeFilter}
-              options={typeOptions}
-              label={activeTab === 'events' ? 'Event Type' : 'Form Type'}
-            />
-
             {/* Status filter */}
             <ReportSelectFilter
               value={statusFilter}
               onChange={setStatusFilter}
-              options={statusOptions}
+              options={eventStatusOptions}
               label="Status"
             />
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto max-h-[calc(100vh-240px)] overflow-auto table-custom-scrollbar" >
-            {activeTab === 'events' ? (
-              <table className="w-full min-w-[700px]">
-                <thead>
-                  <tr className="border-y border-[#1d2638]">
-                    {['EVENT NAME', 'CHECK IN-CHECK OUT', 'DEPT', 'STATUS', 'ACTION'].map(
-                      (col) => (
-                        <th
-                          key={col}
-                          className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#FFFFFF66]"
-                        >
-                          {col}
-                        </th>
-                      )
-                    )}
-                  </tr>
-                </thead>
-
-                {isLoading ? (
-                  <TableSkeleton cols={6} />
-                ) : (
-                  <tbody>
-                    {filteredEvents.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
-                          No events found.
-                        </td>
-                      </tr>
-                    ) : (
-                      filteredEvents.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-[#1d2638] last:border-b-0 transition-colors hover:bg-[#161d2e]"
-                        >
-                          <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.eventName}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.requiredDate}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.department}</td>
-                          <td className="px-5 py-3.5">
-                            <ReportStatus status={row.status} />
-                          </td>
-                          <td className="px-5 py-3.5">
-                            <button
-                              type="button"
-                              title="Download row as CSV"
-                              onClick={() => downloadRow(row, 'events')}
-                              className="text-[#FFFFFF66] transition hover:text-white"
-                            >
-                              <Download size={15} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                )}
-              </table>
-            ) : (
-              <table className="w-full min-w-[700px]">
-                <thead>
-                  <tr className="border-y border-[#1d2638]">
-                    {['EVENT NAME', 'CHECK IN-CHECK OUT', 'DEPT', 'STATUS', 'ACTION'].map((col) => (
+          <div className="overflow-x-auto max-h-[calc(100vh-240px)] overflow-auto table-custom-scrollbar">
+            <table className="w-full min-w-[700px]">
+              <thead>
+                <tr className="border-y border-[#1d2638]">
+                  {['EVENT NAME', 'CHECK IN-CHECK OUT', 'DEPT', 'STATUS', 'ACTION'].map(
+                    (col) => (
                       <th
                         key={col}
                         className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#FFFFFF66]"
                       >
                         {col}
                       </th>
-                    ))}
-                  </tr>
-                </thead>
+                    )
+                  )}
+                </tr>
+              </thead>
 
-                {isLoading ? (
-                  <TableSkeleton cols={6} />
-                ) : (
-                  <tbody>
-                    {filteredIndividual.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
-                          No individual requests found.
+              {eventsLoading ? (
+                <TableSkeleton cols={5} />
+              ) : (
+                <tbody>
+                  {filteredEvents.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-12 text-center text-sm text-[#FFFFFF66]">
+                        No events found.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredEvents.map((row) => (
+                      <tr
+                        key={row.id}
+                        className="border-b border-[#1d2638] last:border-b-0 transition-colors hover:bg-[#161d2e]"
+                      >
+                        <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.eventName}</td>
+                        <td className="px-5 py-3.5 text-[12px] text-white">{row.requiredDate}</td>
+                        <td className="px-5 py-3.5 text-[12px] text-white">{row.department}</td>
+                        <td className="px-5 py-3.5">
+                          <ReportStatus status={row.status} />
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <button
+                            type="button"
+                            title="Download PDF"
+                            onClick={() => downloadRow(row)}
+                            className="text-[#FFFFFF66] transition hover:text-white"
+                          >
+                            <Download size={15} />
+                          </button>
                         </td>
                       </tr>
-                    ) : (
-                      filteredIndividual.map((row) => (
-                        <tr
-                          key={row.id}
-                          className="border-b border-[#1d2638] last:border-b-0 transition-colors hover:bg-[#161d2e]"
-                        >
-                          <td className="px-5 py-3.5 text-[12px] font-medium text-white">{row.eventName}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.requiredDate}</td>
-                          <td className="px-5 py-3.5 text-[12px] text-white">{row.department}</td>
-                          <td className="px-5 py-3.5">
-                            <ReportStatus status={row.status} />
-                          </td>
-                          <td className="px-5 py-3.5">
-                            <button
-                              type="button"
-                              title="Download row as CSV"
-                              onClick={() => downloadRow(row, 'individual')}
-                              className="text-[#FFFFFF66] transition hover:text-white"
-                            >
-                              <Download size={15} />
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                )}
-              </table>
-            )}
+                    ))
+                  )}
+                </tbody>
+              )}
+            </table>
           </div>
         </div>
       </main>

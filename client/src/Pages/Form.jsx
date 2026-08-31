@@ -91,6 +91,12 @@ const ensureLength = (items, length, factory) => {
   return result;
 };
 
+const ensureAtLeastLength = (items, length, factory) => {
+  const result = [...items];
+  while (result.length < length) result.push(factory());
+  return result;
+};
+
 // ── Validators ────────────────────────────────────────────────────────────────
 
 const validateEventRequisition = (data) => {
@@ -667,11 +673,16 @@ const validateFoodData = (foodData) => {
 };
 
 const validateAccommodationData = (accommodationData) => {
-  const errors = {};
-  if (!accommodationData.checkIn) errors.checkIn = "Check-in date is required";
-  if (!accommodationData.checkOut) errors.checkOut = "Check-out date is required";
-  if (!accommodationData.roomType) errors.roomType = "Room type is required";
-  return errors;
+  const blocks = accommodationData?.accommodations || [];
+  return blocks.map((acc) => {
+    const errors = {};
+    if (!acc.checkIn) errors.checkIn = "Check-in date is required";
+    if (!acc.checkOut) errors.checkOut = "Check-out date is required";
+    if (acc.accommodationNeeded === "Yes" && (!acc.roomSelections || acc.roomSelections.length === 0)) {
+      errors.roomSelections = "Select at least one room";
+    }
+    return errors;
+  });
 };
 
 // in Form.jsx, near the other buildXPayload helpers
@@ -691,6 +702,13 @@ const flattenGuestsForAccommodation = (eventDays = []) => {
   return result;
 };
 
+const formatAccommodationDateTime = (date) => {
+  if (!date) return "";
+  const value = new Date(date);
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+};
+
 const buildAccommodationPayload = (accommodationState, eventDays) => {
   const allGuests = flattenGuestsForAccommodation(eventDays);
   const accommodations = (accommodationState?.accommodations || []).map((acc) => {
@@ -698,14 +716,14 @@ const buildAccommodationPayload = (accommodationState, eventDays) => {
       (acc.selectedGuestIds || []).includes(g.guestId)
     );
 
-    const roomOccupancy = [];
-    if (parseInt(acc.singleRooms) > 0) roomOccupancy.push({ type: "Single", count: parseInt(acc.singleRooms) });
-    if (parseInt(acc.doubleRooms) > 0) roomOccupancy.push({ type: "Double", count: parseInt(acc.doubleRooms) });
-
-    const roomCategory = (acc.roomTypes || []).map((rt) => ({
-      type: rt,
-      count: parseInt(acc.roomCounts?.[rt]) || 0,
-    }));
+    const roomSelections = acc.accommodationNeeded === "Yes" ? (acc.roomSelections || []).map((room) => ({
+      roomId: room.roomId,
+      roomNumber: room.roomNumber,
+      venue: room.venue,
+      occupantCount: Number(room.occupantCount) || 0,
+      requiresAdminConfirmation: room.requiresAdminConfirmation === true,
+      adminContacted: room.adminContacted === true,
+    })) : [];
 
     const dineInCounts = [];
     if (acc.dine === "Yes") {
@@ -716,12 +734,12 @@ const buildAccommodationPayload = (accommodationState, eventDays) => {
     }
 
     return {
-      checkInDateTime: acc.checkIn ? new Date(acc.checkIn).toISOString() : "",
-      checkOutDateTime: acc.checkOut ? new Date(acc.checkOut).toISOString() : "",
+      checkInDateTime: formatAccommodationDateTime(acc.checkIn),
+      checkOutDateTime: formatAccommodationDateTime(acc.checkOut),
       guests: selectedGuests.map((g) => ({
         name: g.name || "", mobile: parseInt(g.mobile) || 0, gender: g.gender || "",
       })),
-      roomOccupancy, roomCategory,
+      roomSelections,
       dineInRequired: acc.dine === "Yes",
       dineInCounts,
       specialRequirements: acc.special || "",
@@ -813,7 +831,32 @@ function hydrateEventData(apiData) {
   const ed = rd.eventDetails || {};
   const reqd = rd.requirementDetails || {};
 
+  const asDate = (value) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : date;
+  };
+
+  const asDateOnly = (value) => {
+    if (!value) return "";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toISOString().slice(0, 10);
+  };
+
   // 1. Event requisition
+  const eventDays = (ed.eventSchedule || ed.eventDates || []).map((s) => ({
+    date: asDateOnly(s.eventDate || s.date),
+    startTime: s.startTime || "",
+    endTime: s.endTime || "",
+    numGuests: s.totalGuests ? String(s.totalGuests) : String(s.numGuests || ""),
+    guests: (s.guests || []).map((g) => ({
+      name: g.name || "",
+      organization: g.organization || "",
+      designation: g.designation || "",
+      mobile: g.mobile ? String(g.mobile) : "",
+      gender: g.gender || "",
+    })),
+  }));
   const event = {
     doc: od.previousEventDocumentation ? "Yes" : "No",
     reason: od.previousEventReason || "",
@@ -825,9 +868,9 @@ function hydrateEventData(apiData) {
     advanceToBeReceivedWithin: od.advanceToBeReceviedWithin ? String(od.advanceToBeReceviedWithin) : "",
     expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
-    file: null,
-    principalApprovalDocument: null,
-    numOrganizers: od.organizerCount ? String(od.organizerCount) : "",
+    file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
+    principalApprovalDocument: od.principalApprovalDocument || null,
+    numOrganizers: String(od.organizerCount ?? od.totalCoOrganizers ?? od.coOrganizerCount ?? 0),
     organizers: (od.organizers || []).map((o) => ({
       name: o.name || "",
       department: o.department || "",
@@ -846,20 +889,9 @@ function hydrateEventData(apiData) {
       logosOther: ed.logosOther || "",
       audience: ed.targetAudience || "",
       iic: ed.involvedIIC ? "Yes" : ed.iic ? "Yes" : "No",
+      eventDays,
     },
-    eventDays: (ed.eventSchedule || []).map((s) => ({
-      date: s.eventDate || null,
-      startTime: s.startTime || "",
-      endTime: s.endTime || "",
-      numGuests: s.totalGuests ? String(s.totalGuests) : "",
-      guests: (s.guests || []).map((g) => ({
-        name: g.name || "",
-        organization: g.organization || "",
-        designation: g.designation || "",
-        mobile: g.mobile ? String(g.mobile) : "",
-        gender: g.gender || "",
-      })),
-    })),
+    eventDays,
     requirements: {},
   };
 
@@ -878,12 +910,15 @@ function hydrateEventData(apiData) {
 
   // 3. Venue — group backend venues by dayIndex
   const venueBackend = apiData.venueDetails?.venues || [];
-  const numDays = ed.numberOfDays || event.eventDays.length || 1;
+  const numDays = ed.numberOfDays || ed.numberOfEventDays || event.eventDays.length || 1;
   const venue = Array.from({ length: numDays }, (_, dayIdx) => {
     const dayVenues = venueBackend.filter((v) => v.dayIndex === dayIdx);
     if (dayVenues.length === 0) return emptyVenueDay();
     return {
-      participants: dayVenues[0]?.numberOfParticipants ? String(dayVenues[0].numberOfParticipants) : "",
+      participants: String(dayVenues.reduce(
+        (total, venue) => total + (Number(venue.numberOfParticipants) || 0),
+        0
+      )),
       selectedVenues: dayVenues.map((v) => v.venueName),
       venueCards: dayVenues.map((v) => {
         const card = {
@@ -932,45 +967,151 @@ function hydrateEventData(apiData) {
     icts[dayKey][item.venueName] = card;
   });
 
-  // 5. Audio — stored directly
-  const audio = apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0
-    ? apiData.audioDetails
-    : defaultAudio;
+  // 5. Audio — the API stores a flat list; AudioForm reads day -> venue -> data.
+  const audio = {};
+  const audioKeyByLabel = {
+    "Hand Mic": "handMic",
+    "Collar Mic": "collarMic",
+    "Hand Speaker": "handSpeaker",
+    "Podium With Mic": "podiumWithMic",
+    "Wired Mic": "wiredMic",
+    "Speaker w/ Mixer": "speakerWithMixer",
+    "PA System": "paSystem",
+  };
+  (apiData.audioDetails?.audios || []).forEach((item) => {
+    const audioRequired = item.audioRequirements?.length
+      ? item.audioRequirements.map((requirement) => audioKeyByLabel[requirement] || requirement)
+      : (item.audioItems || []).map((audioItem) => ({
+          ...audioKeyByLabel,
+        }[audioItem.type] || audioItem.type));
+    const quantities = Object.entries(item.quantities || {}).reduce((result, [key, value]) => ({
+      ...result,
+      [audioKeyByLabel[key] || key]: String(value ?? ""),
+    }), {});
+    (item.audioItems || []).forEach((audioItem) => {
+      const key = audioKeyByLabel[audioItem.type] || audioItem.type;
+      if (key) quantities[key] = String(audioItem.quantity ?? "");
+    });
+    audio[item.dayIndex] = {
+      ...(audio[item.dayIndex] || {}),
+      [item.venueName]: {
+        audioRequired,
+        quantities,
+        others: item.otherRequirements || "",
+        specialRequirements: item.specialRequirements || "",
+      },
+    };
+  });
 
-  // 6. Transport — stored directly
-  const transport = Array.isArray(apiData.transportDetails) && apiData.transportDetails.length > 0
-    ? apiData.transportDetails
+  // 6. Transport — unwrap the API container and restore date-picker values.
+  const transportItems = apiData.transportDetails?.transports || apiData.transportDetails || [];
+  const transport = Array.isArray(transportItems) && transportItems.length > 0
+    ? transportItems.map((item) => ({
+        ...defaultTransport(),
+        pickupLocation: item.pickupLocation || "",
+        dropLocation: item.dropLocation || "",
+        totalPassengers: item.totalPassengers ?? "",
+        vistaTransport: (item.vehicles || []).map((vehicle) => vehicle.type),
+        vehicleCounts: (item.vehicles || []).reduce((counts, vehicle) => ({
+          ...counts,
+          [vehicle.type]: String(vehicle.count ?? ""),
+        }), {}),
+        staffCount: String((item.accompanyingStaff || []).length),
+        staffMembers: item.accompanyingStaff || [],
+        checkpoints: (item.checkpoints || []).map((checkpoint) => ({
+          name: checkpoint.name || checkpoint.location || "",
+        })),
+        specialRequirements: item.specialRequirements || "",
+        pickupDate: asDate(item.pickupDate || item.pickupDateTime),
+        dropDate: asDate(item.dropDate || item.dropDateTime),
+      }))
     : [defaultTransport()];
 
-  // 7. Food & Refreshments — stored directly
-  const foodandrefreshments = Array.isArray(apiData.foodDetails) && apiData.foodDetails.length > 0
-    ? apiData.foodDetails
+  // 7. Food & Refreshments — unwrap refreshmentDetails and map backend names.
+  const foodItems = apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || [];
+  const countValue = (group, aliases = []) => {
+    const value = group?.vegCount ?? group?.veg ?? group?.vegetarian ?? group?.vegParticipants
+      ?? group?.vegetarianCount ?? group?.veg?.count ?? group?.vegetarian?.count ?? group?.[aliases[0]];
+    return value === undefined || value === null ? "" : String(value);
+  };
+  const nonVegCountValue = (group, aliases = []) => {
+    const value = group?.nonVegCount ?? group?.nonVeg ?? group?.nonVegetarian ?? group?.nonVegParticipants
+      ?? group?.nonVegetarianCount ?? group?.nonVeg?.count ?? group?.nonVegetarian?.count ?? group?.[aliases[0]];
+    return value === undefined || value === null ? "" : String(value);
+  };
+  const hydrateMeal = (meal = {}) => ({
+    participants: {
+      vegCount: countValue(meal.participants, ["vegParticipants"] ) || String(meal.vegParticipants ?? ""),
+      nonVegCount: nonVegCountValue(meal.participants, ["nonVegParticipants"]) || String(meal.nonVegParticipants ?? ""),
+    },
+    vipGuests: {
+      vegCount: countValue(meal.vipGuests, ["vegGuest"]) || String(meal.vegGuest ?? ""),
+      nonVegCount: nonVegCountValue(meal.vipGuests, ["nonVegGuest"]) || String(meal.nonVegGuest ?? ""),
+    },
+    trainer: {
+      vegCount: countValue(meal.trainer, ["vegTrainer"]) || String(meal.vegTrainer ?? meal.trainerVegCount ?? meal.vegCountTrainer ?? meal.trainer?.vegParticipants ?? ""),
+      nonVegCount: nonVegCountValue(meal.trainer, ["nonVegTrainer"]) || String(meal.nonVegTrainer ?? meal.trainerNonVegCount ?? meal.nonVegCountTrainer ?? meal.trainer?.nonVegParticipants ?? ""),
+    },
+    placement: {
+      vegCount: countValue(meal.placement, ["vegPlacement"]) || String(meal.vegPlacement ?? ""),
+      nonVegCount: nonVegCountValue(meal.placement, ["nonVegPlacement"]) || String(meal.nonVegPlacement ?? ""),
+    },
+  });
+  const foodandrefreshments = Array.isArray(foodItems) && foodItems.length > 0
+    ? foodItems.map((item) => ({
+        ...emptyFoodDay(),
+        date: asDate(item.date),
+        resourcePersons: String(item.resourcePersons ?? item.numberOfResourcePersons ?? ""),
+        internalCount: String(item.internalCount ?? item.numberOfInternalAccompanyingStaff ?? ""),
+        staffList: item.staffList || item.accompanyingStaff || [],
+        resourcePersonType: item.resourcePersonType || [],
+        foodTypes: (item.foodTypes || []).map((food) => food.type),
+        breakfast: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Breakfast")),
+        lunch: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Lunch")),
+        dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
+        specialRequirements: item.specialRequirements || "",
+      }))
     : [emptyFoodDay()];
 
   // 8. Accommodation — reverse from payload shape
   const accBackend = apiData.accommodationDetails?.accommodations || [];
+  const normalizeGuestName = (value) => String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+  const normalizeGuestPhone = (value) => String(value || "").replace(/\D/g, "");
+  const savedGuestMatches = (guest, saved) => {
+    if (saved.guestId && saved.guestId === guest.guestId) return true;
+    const guestName = normalizeGuestName(guest.name || guest.guestName);
+    const savedName = normalizeGuestName(saved.name || saved.guestName);
+    if (!guestName || guestName !== savedName) return false;
+    const guestPhone = normalizeGuestPhone(guest.mobile || guest.phone || guest.phoneNumber);
+    const savedPhone = normalizeGuestPhone(saved.mobile || saved.phone || saved.phoneNumber);
+    return !guestPhone || !savedPhone || guestPhone === savedPhone;
+  };
   let accommodation;
   if (accBackend.length > 0) {
     accommodation = {
       accommodations: accBackend.map((acc) => {
         const entry = {
-          checkIn: acc.checkInDateTime || null,
-          checkOut: acc.checkOutDateTime || null,
-          singleRooms: "",
-          doubleRooms: "",
-          suiteRooms: "",
-          dBlockRooms: "",
-          roomType: "",
-          roomTypes: (acc.roomCategory || []).map((r) => r.type),
-          roomCounts: Object.fromEntries((acc.roomCategory || []).map((r) => [r.type, String(r.count)])),
+          checkIn: asDate(acc.checkInDateTime),
+          checkOut: asDate(acc.checkOutDateTime),
+          roomSelections: (acc.roomSelections || []).map((room) => ({
+            roomId: room.roomId,
+            roomNumber: room.roomNumber,
+            venue: room.venue,
+            occupantCount: room.occupantCount || room.capacity || 0,
+            requiresAdminConfirmation: room.requiresAdminConfirmation === true,
+            adminContacted: room.adminContacted === true,
+            adminMessage: room.message || "This room was occupied immediately before the requested time. Please contact the admin team to confirm room availability.",
+          })),
           dine: acc.dineInRequired ? "Yes" : "No",
           dineTypes: (acc.dineInCounts || []).map((d) => d.type),
           hostelGuests: String((acc.dineInCounts || []).find((d) => d.type === "Hostel")?.count || "1"),
           amenityGuests: String((acc.dineInCounts || []).find((d) => d.type === "Amenity")?.count || "1"),
-          selectedGuestIds: [],
+          selectedGuestIds: flattenGuestsForAccommodation(event.eventDays)
+            .filter((guest) => (acc.guests || []).some((saved) => savedGuestMatches(guest, saved)))
+            .map((guest) => guest.guestId),
           guests: acc.guests || [],
           special: acc.specialRequirements || "",
-          accommodationNeeded: (acc.roomCategory && acc.roomCategory.length > 0) ? "Yes" : "No",
+          accommodationNeeded: (acc.roomSelections && acc.roomSelections.length > 0) ? "Yes" : "No",
         };
         return entry;
       }),
@@ -995,10 +1136,15 @@ function hydrateEventData(apiData) {
           if (t.trophyType === "Elite") result.eliteTrophyQty = String(t.quantity);
         });
       }
+      if (gi.giftType === "Glass Cup") result.glassCupQty = String(gi.glassCupQty ?? gi.qty ?? "");
       if (gi.giftType === "Cash Prize") result.cashPrizeAmount = String(gi.cashPrizeAmount);
       if (gi.giftType === "Voucher") {
         const worths = (gi.voucher || []).map((v) => v.voucherWorth);
         result.voucherWorth = worths.length === 1 ? worths[0] : worths;
+        result.voucherWorthQty = (gi.voucher || []).reduce((quantities, voucher) => ({
+          ...quantities,
+          [voucher.voucherWorth]: String(voucher.quantity ?? voucher.qty ?? ""),
+        }), {});
       }
     });
     return result;
@@ -1050,7 +1196,7 @@ function hydrateEventData(apiData) {
             displayNeeded: m.poster?.displayNeeded || [],
             sizeForFlex: (m.poster?.sizes || []).find((s) => s.type === "Flex")?.value || "",
             sizeForGlass: (m.poster?.sizes || []).find((s) => s.type === "Glass Sticker")?.value || "",
-            deliveryDate: m.poster?.deliveryDate || "",
+            deliveryDate: asDateOnly(m.poster?.deliveryDate),
             priority: m.poster?.priority || "",
             specialReq: m.poster?.specialRequirements || "",
           },
@@ -1062,7 +1208,7 @@ function hydrateEventData(apiData) {
             specialVideos: m.video?.specialVideos || [],
             referenceVideo: null,
             referenceFiles: m.video?.referenceFiles || [],
-            deliveryDate: m.video?.deliveryDate || "",
+            deliveryDate: asDateOnly(m.video?.deliveryDate),
             priority: m.video?.priority || "",
             specialReq: m.video?.specialRequirements || "",
           },
@@ -1082,8 +1228,8 @@ function determineDraftStep(apiData, selectedRequirements) {
     venue: (apiData.venueDetails?.venues || []).length > 0,
     icts: (apiData.ictsDetails?.ictses || []).length > 0,
     audio: apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0,
-    transport: Array.isArray(apiData.transportDetails) && apiData.transportDetails.length > 0,
-    foodandrefreshments: Array.isArray(apiData.foodDetails) && apiData.foodDetails.length > 0,
+    transport: (apiData.transportDetails?.transports || apiData.transportDetails || []).length > 0,
+    foodandrefreshments: (apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || []).length > 0,
     accommodation: (apiData.accommodationDetails?.accommodations || []).length > 0,
     purchase: (apiData.purchaseDetails?.purchases || []).length > 0,
     media: (apiData.mediaRequirementDetails?.mediaRequirements || []).length > 0,
@@ -1209,6 +1355,7 @@ export default function Form() {
         const step = isEditMode ? 0 : determineDraftStep(apiData, hydratedReqs);
         setCurrentStep(step);
         setCompletedSteps(Array.from({ length: step }, (_, i) => i));
+        if (!isEditMode && step === hydratedReqs.length) setShowPreview(true);
       } catch (error) {
         console.error("Failed to load event data:", error);
         setApiError("Failed to load event data. Starting a fresh form.");
@@ -1230,7 +1377,7 @@ export default function Form() {
       venue:               ensureLength(prev.venue,               dayCount, emptyVenueDay),
       purchase:            ensureLength(prev.purchase,            dayCount, emptyPurchaseDay),
       media:               ensureLength(prev.media,               dayCount, emptyMediaDay),
-      foodandrefreshments: ensureLength(prev.foodandrefreshments, dayCount, emptyFoodDay),
+      foodandrefreshments: ensureAtLeastLength(prev.foodandrefreshments, dayCount, emptyFoodDay),
     }));
   }, [formData.event.eventDays.length]);
 

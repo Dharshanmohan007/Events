@@ -34,12 +34,35 @@ function validateVenueCard(card) {
   return e;
 }
 
-function validateDay(dayData) {
+function getTooManyVenuesError(selectedVenues = [], options = [], totalParticipants = 0) {
+  if (totalParticipants < 1 || selectedVenues.length < 2) return "";
+
+  const capacities = selectedVenues
+    .map((name) => options.find((venue) => venue.venue === name)?.capacity || 0)
+    .filter((capacity) => capacity > 0);
+
+  if (capacities.length < 2) return "";
+
+  const totalCapacity = capacities.reduce((sum, capacity) => sum + capacity, 0);
+  const smallestCapacity = Math.min(...capacities);
+
+  return totalCapacity - smallestCapacity >= totalParticipants
+    ? `Total number of participants is ${totalParticipants}, but you have selected too many venues. Please reduce the number of venues.`
+    : "";
+}
+
+function validateDay(dayData, options = []) {
   const e = {};
   if (!dayData.participants || parseInt(dayData.participants) < 1)
     e.participants = "Total number of participants is required";
   if (!dayData.selectedVenues || dayData.selectedVenues.length === 0)
     e.selectedVenues = "Please select at least one venue";
+  const tooManyVenuesError = getTooManyVenuesError(
+    dayData.selectedVenues,
+    options,
+    parseInt(dayData.participants) || 0
+  );
+  if (tooManyVenuesError) e.selectedVenues = tooManyVenuesError;
   if (dayData.selectedVenues?.length > 0) {
     const cards = dayData.venueCards || [];
     const cardErrors = cards.map((card) => validateVenueCard(card));
@@ -102,6 +125,12 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
   useEffect(() => {
     if (open && searchRef.current) searchRef.current.focus();
   }, [open]);
+
+  const tooManyVenuesError = getTooManyVenuesError(
+    selected,
+    options,
+    totalParticipants
+  );
 
   // const getSelectedCapacitySum = (selectedVenues) =>
   //   selectedVenues.reduce((sum, name) => {
@@ -261,7 +290,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             </div>
 
             {/* Capacity error */}
-            {capacityError && selected.length > 0 && (
+            {(capacityError || tooManyVenuesError) && selected.length > 0 && (
               <div className="mx-2 mt-2 flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
                   <svg
                       className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5"
@@ -276,7 +305,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                   </svg>
 
                   <p className="text-red-400 text-xs">
-                      {capacityError}
+                      {tooManyVenuesError || capacityError}
                   </p>
               </div>
             )}
@@ -326,7 +355,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
           </div>
         )}
       </div>
-      <ErrorMsg msg={error} />
+      <ErrorMsg msg={error || tooManyVenuesError} />
     </div>
   );
 }
@@ -1013,7 +1042,7 @@ export default function VenueForm({
     const { venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep } =
       stateRef.current;
     const dayData   = venueData[currentDayIndex];
-    const dayErrors = validateDay(dayData);
+    const dayErrors = validateDay(dayData, venuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;

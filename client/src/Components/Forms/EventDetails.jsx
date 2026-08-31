@@ -1,5 +1,5 @@
 import React, { useState,useEffect  } from 'react'
-import CustomSelect from "../CustomSelect";
+import CustomSelect, { SDG_GOALS } from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
@@ -216,6 +216,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             value={logosValue}
             onChange={handleLogosChange}
             options={["AICTE", "IIC","Viksit Bharat", "Skill India", "IEEE","ISTE","CSI","IETE","IEI","WICYS", "IGEN", "SDG", "Other"]}
+            nestedOptions={{ "SDG": SDG_GOALS }}
             placeholder="Select logos"
           />
           {errors.logos && <p className="text-red-400 text-xs mt-1">{errors.logos}</p>}

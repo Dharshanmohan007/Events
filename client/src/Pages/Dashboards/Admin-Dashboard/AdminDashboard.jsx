@@ -10,7 +10,7 @@ import hourglassFill from "../../../assets/hourglassFill.svg";
 import tick from "../../../assets/tick.svg";
 import circleTick from "../../../assets/circle-tick.svg";
 import AdminBarChart from "./AdminBarChart";
-import AddEventType from "./AddEventType";
+// import AddEventType from "./AddEventType";
 const statCardData = [
   {
     title: "Event Request",
@@ -89,7 +89,7 @@ const statCardData = [
 ];
 
 const AdminDashboard = () => {
-  const [isAddEventTypeOpen, setIsAddEventTypeOpen] = useState(false);
+  // const [isAddEventTypeOpen, setIsAddEventTypeOpen] = useState(false);
   return (
     <>
       <div className="main-body-container px-6">
@@ -105,14 +105,14 @@ const AdminDashboard = () => {
               ever since the 1500s
             </h1>
           </div>
-          <div>
+          {/* <div>
             <button 
               onClick={() => setIsAddEventTypeOpen(true)}
               className="flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]"
             >
               <Plus size={17} /> Add Event type
             </button>
-          </div>
+          </div> */}
         </div>
 
         {/* stat cards  */}
@@ -136,10 +136,10 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <AddEventType 
+      {/* <AddEventType 
         isOpen={isAddEventTypeOpen} 
         onClose={() => setIsAddEventTypeOpen(false)} 
-      />
+      /> */}
     </>
   );
 };
