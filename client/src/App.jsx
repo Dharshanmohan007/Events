@@ -102,6 +102,10 @@ import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Facul
 import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
 import AdminExpenditureTable from "./Pages/Dashboards/Admin-Dashboard/AdminExpenditureTable.jsx";
 import EventsExpenditureDetailView from "./Components/EventsExpenditureDetailView.jsx";
+import FacultyExpendituresPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpendituresPage.jsx";
+import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpenditureDetailView.jsx";
+
+import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/IndividualVideoDetailPage.jsx";
 
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
@@ -392,6 +396,7 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <VideoIndividualDetailViewPage />
+            {/* <IndividualVideoDetailPage/> */}
           </ProtectedRoute>
         }
       />
@@ -416,7 +421,10 @@ function AppRoutes() {
           element={<EventDetailsPage />}
         />
         <Route path="expenditures" element={<AdminExpenditureTable />} />
-        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
+        <Route
+          path="expenditures/EventExpenditureDetailView/:eventId"
+          element={<EventsExpenditureDetailView />}
+        />
       </Route>
       <Route
         path="/dashboard/AdminIndividualDetailView/v2/:eventId"
@@ -563,6 +571,23 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <FacultyReportsPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/dashboard-faculty/expenditures"
+        element={
+          <ProtectedRoute>
+            <FacultyExpendituresPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard-faculty/expenditures/EventExpenditureDetailView/:eventId"
+        element={
+          <ProtectedRoute>
+            <FacultyExpenditureDetailView />
           </ProtectedRoute>
         }
       />
