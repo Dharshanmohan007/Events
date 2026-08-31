@@ -126,7 +126,7 @@ export default function EventPreviewPage({
                 </h1>
 
                 <p className="text-sm text-white/70">
-                Lorem ipsum testing content
+                    Kindly verify your, final event details before submit...
                 </p>
             </div>
 
@@ -134,7 +134,7 @@ export default function EventPreviewPage({
             <div className="flex flex-1 overflow-hidden">
 
                 {/* Sidebar */}
-                <div className="w-[320px] p-5 overflow-y-auto">
+                <div className="w-[320px] p-5 overflow-y-auto custom-scrollbar">
                     <div
                         className="
                         border-2 border-[#2D2D4B]
@@ -173,7 +173,7 @@ export default function EventPreviewPage({
                     <div className="flex-1 flex flex-col overflow-hidden">
 
                     {/* Preview */}
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                         <div className="min-h-full">
                         {renderPreview()}
                         </div>

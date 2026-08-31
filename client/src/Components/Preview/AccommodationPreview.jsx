@@ -214,14 +214,14 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
           rightIcon={Calendar}
         />
 
-        <TwoColumnCard
+        {/* <TwoColumnCard
           leftLabel="Guest Name"
           leftValue={selectedGuests.length ? selectedGuests.map((g) => g.name).join(", ") : "—"}
           leftIcon={User}
           rightLabel="Guest Mobile Number"
           rightValue={selectedGuests.length ? selectedGuests.map((g) => g.mobile || "—").join(", ") : "—"}
           rightIcon={Phone}
-        />
+        /> */}
 
         <SectionCard title="Guests" icon={Users}>
           {selectedGuests.length === 0 ? (

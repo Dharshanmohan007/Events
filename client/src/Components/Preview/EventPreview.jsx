@@ -130,15 +130,20 @@ import {
                         <button
                             type="button"
                             onClick={() => {
-                                if (typeof file === "string") {
-                                    window.open(file, "_blank");
-                                } else if (file) {
+                                const fileUrl = file?.url || (typeof file === "string" ? file : null);
+                                if (fileUrl) {
+                                    window.open(fileUrl, "_blank");
+                                } else if (file instanceof File) {
                                     window.open(URL.createObjectURL(file), "_blank");
                                 }
                             }}
                             className="truncate text-blue-400 hover:underline"
                         >
-                            {typeof file === "string" ? file.split("/").pop() || "View Document" : file?.name || "-"}
+                            {file?.url
+                                ? (file.fileName || file.publicId?.split("/").pop() || "View Document")
+                                : typeof file === "string"
+                                    ? (file.split("/").pop() || "View Document")
+                                    : (file?.name || "View Document")}
                         </button>
                         </div>
                     ) : (
@@ -147,7 +152,7 @@ import {
                 </div>
             </div>
             </div>
-            {principalApprovalDocument && (
+            {(principalApprovalDocument?.url || principalApprovalDocument instanceof File || typeof principalApprovalDocument === "string") && (
                 <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4 mt-4">
                     <div className="grid md:grid-cols-2 gap-5">
                         <div className="flex justify-between border-r border-[#8e93a6] pr-4">
@@ -161,15 +166,20 @@ import {
                                 <button
                                     type="button"
                                     onClick={() => {
-                                        if (typeof principalApprovalDocument === "string") {
-                                            window.open(principalApprovalDocument, "_blank");
-                                        } else if (principalApprovalDocument) {
+                                        const docUrl = principalApprovalDocument?.url || (typeof principalApprovalDocument === "string" ? principalApprovalDocument : null);
+                                        if (docUrl) {
+                                            window.open(docUrl, "_blank");
+                                        } else if (principalApprovalDocument instanceof File) {
                                             window.open(URL.createObjectURL(principalApprovalDocument), "_blank");
                                         }
                                     }}
                                     className="truncate text-blue-400 hover:underline"
                                 >
-                                    {typeof principalApprovalDocument === "string" ? principalApprovalDocument.split("/").pop() || "View Document" : principalApprovalDocument?.name || "-"}
+                                    {principalApprovalDocument?.url
+                                        ? (principalApprovalDocument.fileName || principalApprovalDocument.publicId?.split("/").pop() || "View Document")
+                                        : typeof principalApprovalDocument === "string"
+                                            ? (principalApprovalDocument.split("/").pop() || "View Document")
+                                            : (principalApprovalDocument?.name || "View Document")}
                                 </button>
                             </div>
                         </div>
