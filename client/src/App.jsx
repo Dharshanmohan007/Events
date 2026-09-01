@@ -413,21 +413,21 @@ function AppRoutes() {
         <Route index element={<AdminDashboard />} />
         <Route path="AdminEventsRequests" element={<AdminEventsListPage />} />
         <Route path="VenueManagement" element={<VenueManagementPage />} />
-        <Route path="RoomManagement" element={<RoomManagement/>}/>
-        <Route path="EventTypeManagement" element={<EventTypeManagement/>}/>
+        <Route path="RoomManagement" element={<RoomManagement />} />
+        <Route path="EventTypeManagement" element={<EventTypeManagement />} />
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
         <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
-        
+
         <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
         <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
 
-        <Route
+        {/* <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
-        />
+        /> */}
         <Route path="expenditures" element={<AdminExpenditureTable />} />        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
         <Route path="expenditures/edit/:eventId" element={<AdminExpenditureEditPage />} />
       </Route>
