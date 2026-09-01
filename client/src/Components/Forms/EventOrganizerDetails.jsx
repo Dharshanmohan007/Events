@@ -285,7 +285,7 @@ export default function EventOrganizerDetails({
       {/* Principal Approval Form Upload */}
       <div className="mb-7">
         <label className="block mb-1 text-sm text-white">
-          Principal Approval Form *
+          Principal Approval Form
         </label>
 
         <div
@@ -305,11 +305,7 @@ export default function EventOrganizerDetails({
               rx="10"
               ry="10"
               fill="none"
-              stroke={
-                errors.principalApprovalDocument || principalFileError
-                  ? "#f87171"
-                  : "#3A3A5A"
-              }
+              stroke="#3A3A5A"
               strokeWidth="2"
               strokeDasharray="10 4"
             />
@@ -398,17 +394,7 @@ export default function EventOrganizerDetails({
           className="hidden"
         />
 
-        {principalFileError && (
-          <p className="text-red-400 text-xs mt-1">
-            {principalFileError}
-          </p>
-        )}
-
-        {errors.principalApprovalDocument && !principalFileError && (
-          <p className="text-red-400 text-xs mt-1">
-            {errors.principalApprovalDocument}
-          </p>
-        )}
+        {/* Validation for principal approval is optional now; errors are not displayed */}
       </div>
       {/* <div
         className={`${
