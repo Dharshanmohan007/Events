@@ -236,7 +236,7 @@ const IctsVenueDetails = ({ icts, dayIndex, allocationId }) => {
   )
 }
 
-const FacultyIctcsDetailsPanel = ({ ictsDetails, eventData, eventSchedule = [] }) => {
+const FacultyIctcsDetailsPanel = ({ ictsDetails, eventData, eventSchedule = [],allocationId }) => {
   const [activeDay, setActiveDay] = useState(0)
   const ictses = ictsDetails?.ictses ?? []
   if (!ictsDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No ICTS details are available.</p>
