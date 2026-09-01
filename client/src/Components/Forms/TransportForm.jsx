@@ -293,8 +293,6 @@ function VehicleMultiSelect({
   vehicleInventory,
   selected = [],
   onToggle,
-  loading = false,
-  onOpen,
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -335,12 +333,7 @@ function VehicleMultiSelect({
       <button
         type="button"
         onClick={() => {
-          const next = !open;
-          setOpen(next);
-
-          if (next && onOpen) {
-            onOpen();
-          }
+          setOpen(!open);
         }}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
           open ? "border-purple-500" : "border-[#3A3A5A]"
@@ -390,20 +383,13 @@ function VehicleMultiSelect({
               scrollbarColor: "#4a4a6a transparent",
             }}
           >
-            {loading ? (
-              <div className="px-4 py-3 text-sm text-gray-400">
-                Loading vehicles...
-              </div>
-            ) : filtered.length === 0 ? (
+            {filtered.length === 0 ? (
               <div className="px-4 py-3 text-sm text-gray-400">
                 No vehicles found
               </div>
             ) : (
               filtered.map((vehicle) => {
                 const isSelected = selected.includes(vehicle.vehicleType);
-                const avail = vehicle.availableCount;
-                const availLabel =
-                  avail === null ? "Outsource" : `Availability : ${avail}`;
 
                 return (
                   <button
@@ -419,11 +405,8 @@ function VehicleMultiSelect({
                     {/* Vehicle name */}
                     <span className="font-medium">{vehicle.vehicleType}</span>
 
-                    {/* Right side: availability label + checkmark */}
+                    {/* Right side: checkmark */}
                     <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className="text-sm text-gray-400">
-                        {availLabel}
-                      </span>
                       {isSelected && (
                         <Check size={16} className="text-purple-400" />
                       )}
@@ -469,12 +452,6 @@ function VehicleCountInputs({
         >
           {row.map((vehicleType) => {
             const enteredCount = parseInt(vehicleCounts?.[vehicleType]) || 0;
-            const available = availMap[vehicleType]; // null = outsource, number = actual
-            const showWarning =
-              available !== null &&
-              available !== undefined &&
-              enteredCount > available &&
-              enteredCount > 0;
 
             const isCar = vehicleType.toLowerCase().includes("car");
             const passengerExceeded = isCar && totalPassengers > 0 && enteredCount > totalPassengers;
@@ -492,13 +469,6 @@ function VehicleCountInputs({
                   }}
                   bgClass={cardBg}
                 />
-                {showWarning && (
-                  <p className="text-orange-400 text-xs mt-1 flex items-center gap-1">
-                    <AlertTriangle size={12} />
-                    Only {available} {vehicleType}
-                    {available === 1 ? "" : "s"} available
-                  </p>
-                )}
                 {passengerExceeded && (
                   <p className="text-red-400 text-xs mt-1 flex items-center gap-1">
                     <AlertTriangle size={12} />
@@ -717,8 +687,10 @@ export default function TransportForm({
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState("");
 
-  const [vehicleInventory, setVehicleInventory] = useState([]);
-  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const vehicleInventory = [
+    { _id: "1", vehicleType: "Car" },
+    { _id: "2", vehicleType: "Bus" },
+  ];
 
   const [pendingDelete, setPendingDelete] = useState(null);
 
@@ -752,55 +724,8 @@ export default function TransportForm({
       ".000Z"
     );
   }
-  // ── Fetch vehicle inventory ───────────────────────────────────────────────
-  const fetchVehicleInventory = useCallback(async (pickupDate, dropDate) => {
-    if (!pickupDate || !dropDate) return;
-
-    setInventoryLoading(true);
-
-    try {
-      const response = await fetch(
-        `${
-          import.meta.env.VITE_API_BASE_URL
-        }/api/transport-inventory/available?pickupDateTime=${formatLocalDateTime(
-          new Date(pickupDate),
-        )}&dropDateTime=${formatLocalDateTime(new Date(dropDate))}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch transport inventory");
-      }
-
-      const data = await response.json();
-
-      setVehicleInventory(Array.isArray(data.data) ? data.data : []);
-    } catch (err) {
-      console.error("Transport inventory fetch failed:", err);
-      setVehicleInventory([]);
-    } finally {
-      setInventoryLoading(false);
-    }
-  }, []);
-
-  // useEffect(() => {
-  //   fetchVehicleInventory();
-  // }, [fetchVehicleInventory]);
-
-  // ── Resolve vehicle options (Car → Outsource car when availableCount === 0) ─
   const getResolvedVehicleInventory = useCallback(() => {
-    return vehicleInventory
-      .filter((v) => v.isActive !== false)
-      .map((v) => {
-        if (v.vehicleType === "Car" && v.availableCount === 0) {
-          return { ...v, vehicleType: "Outsource car", availableCount: null };
-        }
-        return v;
-      });
+    return vehicleInventory;
   }, [vehicleInventory]);
 
   const handleChange = (index, field, value) => {
@@ -1310,10 +1235,6 @@ export default function TransportForm({
                     selected={form.vistaTransport}
                     onToggle={(vehicleType) =>
                       handleVehicleToggle(formIndex, vehicleType)
-                    }
-                    loading={inventoryLoading}
-                    onOpen={() =>
-                      fetchVehicleInventory(form.pickupDate, form.dropDate)
                     }
                   />
                   {getError(formIndex, "vistaTransport") && (

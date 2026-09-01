@@ -70,6 +70,11 @@ export default function ExternalTransportPreview({ data }) {
                      <InfoBlock icon={AlignLeft} label="Flight Class" value={item.classOrBerth} />
                    </>
                  )}
+                 {item.specialRequirements && item.specialRequirements !== "None" && (
+                   <div className="md:col-span-2">
+                     <InfoBlock icon={AlignLeft} label="Special Requirements" value={item.specialRequirements} />
+                   </div>
+                 )}
               </div>
 
               {item.passengers && item.passengers.length > 0 && (

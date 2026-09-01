@@ -95,21 +95,40 @@ export default function EventRequirements({
         <h1 className="text-white text-lg font-bold mb-6 playfair">Event Requirements</h1>
 
         <div className="grid grid-cols-2 gap-6 mb-6">
-          {Object.keys(values).map((key) => (
-            <div key={key}>
-              <CustomSelect
-                label={`${LABEL_MAP[key] || key} Required *`}
-                value={values[key]}
-                onChange={(val) => handleChange(key, val)}
-                options={["Yes", "No"]}
-              />
-              {(localErrors[key] || errors[key]) && (
-                <p className="text-red-400 text-xs mt-1">
-                  {localErrors[key] || errors[key]}
-                </p>
-              )}
-            </div>
-          ))}
+          {Object.keys(values)
+            .filter((key) => key !== "media")
+            .map((key) => (
+              <div key={key}>
+                <CustomSelect
+                  label={`${LABEL_MAP[key] || key} Required *`}
+                  value={values[key]}
+                  onChange={(val) => handleChange(key, val)}
+                  options={["Yes", "No"]}
+                />
+
+                {(localErrors[key] || errors[key]) && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {localErrors[key] || errors[key]}
+                  </p>
+                )}
+              </div>
+            ))}
+        </div>
+
+        {/* Media - Full Width */}
+        <div className="w-full mb-6">
+          <CustomSelect
+            label={`${LABEL_MAP.media} Required *`}
+            value={values.media}
+            onChange={(val) => handleChange("media", val)}
+            options={["Yes", "No"]}
+          />
+
+          {(localErrors.media || errors.media) && (
+            <p className="text-red-400 text-xs mt-1">
+              {localErrors.media || errors.media}
+            </p>
+          )}
         </div>
 
         {errors.requirements && (

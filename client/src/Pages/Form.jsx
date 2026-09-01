@@ -5,7 +5,7 @@ import EventRequistionDetails from "../Components/Forms/EventRequistionDetails";
 import VenueForm from "../Components/Forms/VenueForm";
 import ICTSForm from "../Components/Forms/IctsForm";
 import TransportForm from "../Components/Forms/TransportForm";
-import ExternalTransportForm from "../Components/Forms/ExternalTransportForm";
+import ExternalTransportForm, { validateExternalTransport } from "../Components/Forms/ExternalTransportForm";
 import FoodAndRefreshments from "../Components/Forms/FoodAndRefreshments";
 import AccommodationForm from "../Components/Forms/AccommodationForm";
 import Purchase from "../Components/Forms/Purchase";
@@ -156,7 +156,7 @@ const validateEventRequisition = (data) => {
     if (!day.startTime) e.startTime = `Start time is required`;
     if (!day.endTime) e.endTime = `End time is required`;
     if (day.startTime && day.endTime && day.endTime <= day.startTime) e.endTime = "End time must be after start time";
-    if (!day.numGuests || parseInt(day.numGuests) < 1) e.numGuests = "At least 1 guest is required";
+    if (day.numGuests === undefined || day.numGuests === null || day.numGuests === "" || parseInt(day.numGuests) < 0) e.numGuests = "Please enter a valid number of guests (0 or more)";
     const guestErrors = Array.from({ length: parseInt(day.numGuests) || 0 }, (_, i) => {
       const guest = (day.guests || [])[i] || {};
       const ge = {};
@@ -236,25 +236,28 @@ let decodedToken = jwtDecode(token);
       })),
     },
     requirementDetails: {
-    venueRequired: eventRequisition.requirements?.venue === "Yes",
-    audioRequired: eventRequisition.requirements?.audio === "Yes",
-    ictsRequired: eventRequisition.requirements?.icts === "Yes",
-    transportRequired: eventRequisition.requirements?.transport === "Yes",
-    refreshmentRequired: eventRequisition.requirements?.foodandrefreshments === "Yes",
-    accommodationRequired: eventRequisition.requirements?.accommodation === "Yes",
-    purchaseRequired: eventRequisition.requirements?.purchase === "Yes",
-    mediaRequired: eventRequisition.requirements?.media === "Yes",
-  },
+      venueRequired: eventRequisition.requirements?.venue === "Yes",
+      audioRequired: eventRequisition.requirements?.audio === "Yes",
+      ictsRequired: eventRequisition.requirements?.icts === "Yes",
+      transportRequired: eventRequisition.requirements?.transport === "Yes",
+      externalTransportRequired: eventRequisition.requirements?.externalTransport === "Yes",
+      refreshmentRequired: eventRequisition.requirements?.foodandrefreshments === "Yes",
+      accommodationRequired: eventRequisition.requirements?.accommodation === "Yes",
+      purchaseRequired: eventRequisition.requirements?.purchase === "Yes",
+      mediaRequired: eventRequisition.requirements?.media === "Yes",
+    },
   };
   fd.append("requestDetails", JSON.stringify(requestDetails));
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
   if (eventRequisition.principalApprovalDocument) {
+    if (eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob) {
       fd.append(
           "principalApprovalDocument",
           eventRequisition.principalApprovalDocument
       );
+    }
   }
   return fd;
 };
@@ -764,6 +767,42 @@ const buildAccommodationPayload = (accommodationState, eventDays) => {
   return { accommodations };
 };
 
+const formatExternalTransportPayload = (externalTransportData) => {
+  if (!Array.isArray(externalTransportData)) return [];
+  return externalTransportData.map((item) => {
+    const classOrBerthStr = Array.isArray(item.classOrBerth)
+      ? item.classOrBerth
+          .map((c) => {
+            const m = String(c).match(/\(([^)]+)\)/);
+            return m ? m[1] : String(c).trim();
+          })
+          .filter(Boolean)
+          .join(", ")
+      : (item.classOrBerth || (item.travelOption === "Flight" ? "Economy" : ""));
+
+    return {
+      travelOption: item.travelOption || "",
+      travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+      from: item.from || "",
+      to: item.to || "",
+      totalPassengers: Number(item.totalPassengers) || 0,
+      classOrBerth: classOrBerthStr,
+      trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
+      flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
+      specialRequirements: item.specialRequirements?.trim() || "None",
+      passengers: (item.passengers || []).map((p) => ({
+        name: p.name || "",
+        phone: String(p.phone || "").trim(),
+        email: p.email || "",
+        age: Number(p.age) || 0,
+        gender: p.gender || "",
+        designation: p.designation || "",
+        organization: p.organization || "",
+      })),
+    };
+  });
+};
+
 const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
@@ -772,26 +811,7 @@ const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
     case "media":               return buildMediaPayload(data);
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
-    case "externalTransport":   return { externalTransports: data.map(item => ({
-      travelOption: item.travelOption || "",
-      travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
-      from: item.from || "",
-      to: item.to || "",
-      totalPassengers: parseInt(item.totalPassengers) || 0,
-      classOrBerth: Array.isArray(item.classOrBerth) ? item.classOrBerth : item.classOrBerth || "",
-      trainNumber: item.trainNumber || "",
-      flightNumber: item.flightNumber || "",
-      specialRequirements: item.specialRequirements || "None",
-      passengers: (item.passengers || []).map(p => ({
-        name: p.name || "",
-        phone: p.phone || "",
-        email: p.email || "",
-        age: parseInt(p.age) || 0,
-        gender: p.gender || "",
-        designation: p.designation || "",
-        organization: p.organization || ""
-      }))
-    })) };
+    case "externalTransport":   return { externalTransportDetails: { externalTransports: formatExternalTransportPayload(data) } };
     case "foodandrefreshments": return { foodDetails: data };
     case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
@@ -807,6 +827,7 @@ const validateSection = (sectionKey, data, extras = {}) => {
     case "media":               return validateMediaData(data);
     case "audio":               return validateAudioData(data);
     case "transport":           return validateTransportData(data);
+    case "externalTransport":   return validateExternalTransport(data);
     case "foodandrefreshments": return validateFoodData(data);
     case "accommodation":       return validateAccommodationData(data);
     default:                    return {};
@@ -843,26 +864,9 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     ...media,
     audioDetails:        formData.audio,
     transportDetails:    formData.transport,
-    externalTransports:  formData.externalTransport.map(item => ({
-      travelOption: item.travelOption || "",
-      travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
-      from: item.from || "",
-      to: item.to || "",
-      totalPassengers: parseInt(item.totalPassengers) || 0,
-      classOrBerth: Array.isArray(item.classOrBerth) ? item.classOrBerth : item.classOrBerth || "",
-      trainNumber: item.trainNumber || "",
-      flightNumber: item.flightNumber || "",
-      specialRequirements: item.specialRequirements || "None",
-      passengers: (item.passengers || []).map(p => ({
-        name: p.name || "",
-        phone: p.phone || "",
-        email: p.email || "",
-        age: parseInt(p.age) || 0,
-        gender: p.gender || "",
-        designation: p.designation || "",
-        organization: p.organization || ""
-      }))
-    })),
+    externalTransportDetails: {
+      externalTransports: formatExternalTransportPayload(formData.externalTransport),
+    },
     foodDetails:         formData.foodandrefreshments,
     accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
@@ -888,6 +892,16 @@ function hydrateEventData(apiData) {
   const ed = rd.eventDetails || {};
   const reqd = rd.requirementDetails || {};
 
+  // DEBUG: find where principalApprovalDocument lives in the API response
+  console.log("[HYDRATE DEBUG] apiData keys:", Object.keys(apiData));
+  console.log("[HYDRATE DEBUG] rd keys:", Object.keys(rd));
+  console.log("[HYDRATE DEBUG] od keys:", Object.keys(od));
+  console.log("[HYDRATE DEBUG] od.principalApprovalDocument:", od.principalApprovalDocument);
+  console.log("[HYDRATE DEBUG] od.principalApprovalForm:", od.principalApprovalForm);
+  console.log("[HYDRATE DEBUG] rd.principalApprovalForm:", rd.principalApprovalForm);
+  console.log("[HYDRATE DEBUG] apiData.principalApprovalForm:", apiData.principalApprovalForm);
+  console.log("[HYDRATE DEBUG] apiData.principalApprovalDocument:", apiData.principalApprovalDocument);
+
   const asDate = (value) => {
     if (!value) return null;
     const date = new Date(value);
@@ -905,7 +919,7 @@ function hydrateEventData(apiData) {
     date: asDateOnly(s.eventDate || s.date),
     startTime: s.startTime || "",
     endTime: s.endTime || "",
-    numGuests: s.totalGuests ? String(s.totalGuests) : String(s.numGuests || ""),
+    numGuests: (s.totalGuests != null && s.totalGuests !== "") ? String(s.totalGuests) : (s.numGuests != null && s.numGuests !== "") ? String(s.numGuests) : "",
     guests: (s.guests || []).map((g) => ({
       name: g.name || "",
       organization: g.organization || "",
@@ -926,7 +940,7 @@ function hydrateEventData(apiData) {
     expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
-    principalApprovalDocument: od.principalApprovalDocument || null,
+    principalApprovalDocument: od.principalApprovalDocument || od.principalApprovalForm || rd.principalApprovalForm || rd.principalApprovalDocument || apiData.principalApprovalForm || apiData.principalApprovalDocument || null,
     numOrganizers: String(od.organizerCount ?? od.totalCoOrganizers ?? od.coOrganizerCount ?? 0),
     organizers: (od.organizers || []).map((o) => ({
       name: o.name || "",
@@ -1085,7 +1099,11 @@ function hydrateEventData(apiData) {
     : [defaultTransport()];
 
   // 6b. External Transport
-  const externalTransportBackend = apiData.externalTransports || [];
+  const externalTransportBackend =
+    apiData.externalTransportDetails?.externalTransports ||
+    (Array.isArray(apiData.externalTransportDetails) ? apiData.externalTransportDetails : []) ||
+    apiData.externalTransports ||
+    [];
   const externalTransport = externalTransportBackend.length > 0
     ? externalTransportBackend.map(item => ({
         id: crypto.randomUUID(),
@@ -1315,7 +1333,7 @@ function determineDraftStep(apiData, selectedRequirements) {
     icts: (apiData.ictsDetails?.ictses || []).length > 0,
     audio: apiData.audioDetails && Object.keys(apiData.audioDetails).length > 0,
     transport: (apiData.transportDetails?.transports || apiData.transportDetails || []).length > 0,
-    externalTransport: (apiData.externalTransports || []).length > 0,
+    externalTransport: (apiData.externalTransportDetails?.externalTransports || (Array.isArray(apiData.externalTransportDetails) ? apiData.externalTransportDetails : []) || apiData.externalTransports || []).length > 0,
     foodandrefreshments: (apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || []).length > 0,
     accommodation: (apiData.accommodationDetails?.accommodations || []).length > 0,
     purchase: (apiData.purchaseDetails?.purchases || []).length > 0,
@@ -1790,8 +1808,10 @@ export default function Form() {
     },
     externalTransport: {
       initialValues: formData.externalTransport,
+      externalTransportData: formData.externalTransport,
       onDataChange: handleExternalTransportDataChange,
-      eventId, errors: formErrors.externalTransport || {},
+      eventId,
+      errors: formErrors.externalTransport || {},
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,

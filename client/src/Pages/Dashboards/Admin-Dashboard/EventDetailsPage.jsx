@@ -14,6 +14,7 @@ import PurchaseDetailsPanel from './PurchaseDetailsPanel'
 import MediaDetailsPanel from './MediaDetailsPanel'
 import RejectionReasonPopup from './RejectionReasonPopup'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
+import ExternalTransportPreview from '../../../Components/Preview/ExternalTransportPreview'
 import { jwtDecode } from 'jwt-decode'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -23,6 +24,7 @@ const DEPARTMENT_TAB_MAP = {
   icts: { name: 'ICTCS Details', color: '#48E0CF' },
   audio: { name: 'Audio Details', color: '#8B3DFF' },
   transport: { name: 'Transportation Details', color: '#8B3DFF' },
+  externalTransport: { name: 'External Transport Details', color: '#8B3DFF' },
   refreshment: { name: 'Food Details', color: '#48E0CF' },
   accommodation: { name: 'Accommodation Details', color: '#48E0CF' },
   purchase: { name: 'Purchase Details', color: '#F20768' },
@@ -577,6 +579,19 @@ const EventDetailsPage = () => {
       if (transportLoading) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading transportation details...</p>
       if (transportError) return <p className="py-10 text-center text-sm text-[#FF4F91]">{transportError}</p>
       return <TransportationDetailsPanel transportDetails={transportDetails} eventSchedule={requestDetails?.eventDetails?.eventSchedule} />
+    }
+
+    if (activeTab === 'External Transport Details') {
+      const extTransports =
+        data?.externalTransportDetails?.externalTransports ||
+        (Array.isArray(data?.externalTransportDetails) ? data.externalTransportDetails : []) ||
+        data?.externalTransports ||
+        []
+      return (
+        <div className="bg-[#1F1F35] border border-[#2D2D4D] rounded-2xl p-6">
+          <ExternalTransportPreview data={extTransports} />
+        </div>
+      )
     }
 
     if (activeTab === 'Food Details') {

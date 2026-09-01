@@ -14,6 +14,7 @@ import FacultyPurchaseDetailsPanel from './FacultyPurchaseDetailsPanel'
 import FacultyStaticDetailsPanel from './FacultyStaticDetailsPanel'
 import FacultyTransportationDetailsPanel from './FacultyTransportationDetailsPanel'
 import FacultyVenueDetailsPanel from './FacultyVenueDetailsPanel'
+import ExternalTransportPreview from '../../../Components/Preview/ExternalTransportPreview'
 import axios from 'axios'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -23,6 +24,7 @@ const DEPARTMENT_TAB_MAP = {
   icts: { name: 'ICTCS Details', color: '#48E0CF' },
   audio: { name: 'Audio Details', color: '#8B3DFF' },
   transport: { name: 'Transportation Details', color: '#8B3DFF' },
+  externalTransport: { name: 'External Transport Details', color: '#8B3DFF' },
   refreshment: { name: 'Food Details', color: '#48E0CF' },
   accommodation: { name: 'Accommodation Details', color: '#48E0CF' },
   purchase: { name: 'Purchase Details', color: '#F20768' },
@@ -525,6 +527,19 @@ const FacultyEventsDetailViewPage = () => {
           transportDetails={transportDetails}
           eventSchedule={requestDetails?.eventDetails?.eventSchedule}
         />
+      )
+    }
+
+    if (activeTab === 'External Transport Details') {
+      const extTransports =
+        data?.externalTransportDetails?.externalTransports ||
+        (Array.isArray(data?.externalTransportDetails) ? data.externalTransportDetails : []) ||
+        data?.externalTransports ||
+        []
+      return (
+        <div className="bg-[#1F1F35] border border-[#2D2D4D] rounded-2xl p-6">
+          <ExternalTransportPreview data={extTransports} />
+        </div>
       )
     }
 

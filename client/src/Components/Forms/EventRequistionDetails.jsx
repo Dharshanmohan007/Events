@@ -46,8 +46,8 @@ function validateDay(day = {}, idx) {
   if (!day.endTime) e.endTime = `End time is required`;
   if (day.startTime && day.endTime && day.endTime <= day.startTime)
     e.endTime = "End time must be after start time";
-  if (!day.numGuests || parseInt(day.numGuests) < 1)
-    e.numGuests = "At least 1 guest is required";
+  if (day.numGuests === undefined || day.numGuests === null || day.numGuests === "" || parseInt(day.numGuests) < 0)
+    e.numGuests = "Please enter a valid number of guests (0 or more)";
 
   const guestCount = parseInt(day.numGuests) || 0;
   const guestErrors = Array.from({ length: guestCount }, (_, i) =>
