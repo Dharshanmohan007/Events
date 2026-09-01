@@ -308,6 +308,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+  console.log("login")
 
   return (
     <div className="min-h-screen w-full flex bg-[#F3F3F3] font-sans">
