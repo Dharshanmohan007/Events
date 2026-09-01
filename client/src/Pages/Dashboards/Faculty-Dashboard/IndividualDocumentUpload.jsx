@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
@@ -25,6 +25,56 @@ export default function IndividualDocumentUpload({
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const normalizeFormRow = (row = {}) => ({
+    name: row?.expenseName || row?.name || row?.mediaName || "",
+    billNo: row?.billNo || row?.billNumber || "",
+    billDate: row?.billDate || row?.date || "",
+    vendor: row?.vendorOrGuestName || row?.vendor || row?.guestName || "",
+    amount: row?.amount || row?.totalAmount || row?.cost || "",
+    file: null,
+    fileError: "",
+  });
+
+  useEffect(() => {
+    const fetchExistingData = async () => {
+      if (!eventId) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
+          method: "GET",
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) return;
+
+        const payload = await response.json();
+        const data = payload?.data ?? payload;
+        const requestData = data?.expenditure ?? data ?? {};
+
+        const sectionRows = Array.isArray(requestData?.[requestKey])
+          ? requestData[requestKey].map(normalizeFormRow)
+          : [];
+        const miscRows = Array.isArray(requestData?.others)
+          ? requestData.others.map(normalizeFormRow)
+          : [];
+
+        if (sectionRows.length) setFoodDetails(sectionRows);
+        if (miscRows.length) setMiscDetails(miscRows);
+        if (data?.remarks || requestData?.remarks) setRemarks(data?.remarks || requestData?.remarks || "");
+        setIsEditMode(true);
+      } catch (error) {
+        console.error("Failed to load individual expenditure for edit:", error);
+      }
+    };
+
+    fetchExistingData();
+  }, [eventId, requestKey]);
 
   const handleFoodChange = (index, field, value) => {
     setFoodDetails((currentDetails) => currentDetails.map((item, itemIndex) => (
@@ -146,8 +196,12 @@ export default function IndividualDocumentUpload({
       if (foodRows[0]?.file) formData.append(`${requestKey}File`, foodRows[0].file, foodRows[0].file.name);
       if (miscRows[0]?.file) formData.append("othersFile", miscRows[0].file, miscRows[0].file.name);
 
-      const response = await fetch(`${API_BASE}/api/individual/expenditure`, {
-        method: "POST",
+      const endpoint = isEditMode
+        ? `${API_BASE}/api/individual/expenditure/${eventId}`
+        : `${API_BASE}/api/individual/expenditure`;
+
+      const response = await fetch(endpoint, {
+        method: isEditMode ? "PUT" : "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
@@ -157,7 +211,9 @@ export default function IndividualDocumentUpload({
         throw new Error(errorBody.message || "Unable to upload expenditure details");
       }
 
-      setSubmitSuccess("Expenditure details uploaded successfully");
+      setSubmitSuccess(
+        isEditMode ? "Expenditure details updated successfully" : "Expenditure details uploaded successfully"
+      );
     } catch (error) {
       setSubmitError(error.message || "Unable to upload expenditure details");
     } finally {
@@ -492,7 +548,13 @@ export default function IndividualDocumentUpload({
           disabled={isSubmitting}
           className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-6 py-2 rounded text-sm font-medium transition"
         >
-          {isSubmitting ? "Uploading..." : "Continue →"}
+          {isSubmitting
+            ? isEditMode
+              ? "Saving..."
+              : "Uploading..."
+            : isEditMode
+              ? "Save"
+              : "Continue →"}
         </button>
       </div>
     </div>
