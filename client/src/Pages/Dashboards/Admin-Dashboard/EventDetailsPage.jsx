@@ -1,36 +1,37 @@
-import { Check, ChevronRight, Pencil, Trash, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
-import EventRequisitionDetailsPanel from "./EventRequisitionDetailsPanel";
-import EventDetailsSidePanel from "./EventDetailsSidePanel";
-import VenueDetailsPanel from "./VenueDetailsPanel";
-import IctcsDetailsPanel from "./IctcsDetailsPanel";
-import AudioDetailsPanel from "./AudioDetailsPanel";
-import TransportationDetailsPanel from "./TransportationDetailsPanel";
-import FoodRefreshmentDetailsPanel from "./FoodRefreshmentDetailsPanel";
-import AccommodationDetailsPanel from "./AccommodationDetailsPanel";
-import PurchaseDetailsPanel from "./PurchaseDetailsPanel";
-import MediaDetailsPanel from "./MediaDetailsPanel";
-import RejectionReasonPopup from "./RejectionReasonPopup";
-import DeleteConfirmationPopup from "./DeleteConfirmationPopup";
-import { jwtDecode } from "jwt-decode";
+import { Check, ChevronRight, Pencil, Trash, X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
+import EventRequisitionDetailsPanel from './EventRequisitionDetailsPanel'
+import EventDetailsSidePanel from './EventDetailsSidePanel'
+import VenueDetailsPanel from './VenueDetailsPanel'
+import IctcsDetailsPanel from './IctcsDetailsPanel'
+import AudioDetailsPanel from './AudioDetailsPanel'
+import TransportationDetailsPanel from './TransportationDetailsPanel'
+import FoodRefreshmentDetailsPanel from './FoodRefreshmentDetailsPanel'
+import AccommodationDetailsPanel from './AccommodationDetailsPanel'
+import PurchaseDetailsPanel from './PurchaseDetailsPanel'
+import MediaDetailsPanel from './MediaDetailsPanel'
+import RejectionReasonPopup from './RejectionReasonPopup'
+import DeleteConfirmationPopup from './DeleteConfirmationPopup'
+import ExternalTransportPreview from '../../../Components/Preview/ExternalTransportPreview'
+import { jwtDecode } from 'jwt-decode'
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const DEPARTMENT_TAB_MAP = {
-  venue: { name: "Venue Details", color: "#F20768" },
-  icts: { name: "ICTCS Details", color: "#48E0CF" },
-  audio: { name: "Audio Details", color: "#8B3DFF" },
-  transport: { name: "Transportation Details", color: "#8B3DFF" },
-  refreshment: { name: "Food Details", color: "#48E0CF" },
-  accommodation: { name: "Accommodation Details", color: "#48E0CF" },
-  purchase: { name: "Purchase Details", color: "#F20768" },
-  media: { name: "Media Details", color: "#F20768" },
-  poster: { name: "Media Details", color: "#F20768" },
-  video: { name: "Media Details", color: "#F20768" },
-};
+  venue: { name: 'Venue Details', color: '#F20768' },
+  icts: { name: 'ICTCS Details', color: '#48E0CF' },
+  audio: { name: 'Audio Details', color: '#8B3DFF' },
+  transport: { name: 'Transportation Details', color: '#8B3DFF' },
+  externalTransport: { name: 'External Transport Details', color: '#8B3DFF' },
+  refreshment: { name: 'Food Details', color: '#48E0CF' },
+  accommodation: { name: 'Accommodation Details', color: '#48E0CF' },
+  purchase: { name: 'Purchase Details', color: '#F20768' },
+  media: { name: 'Media Details', color: '#F20768' },
+  poster: { name: 'Media Details', color: '#F20768' },
+  video: { name: 'Media Details', color: '#F20768' },
+}
 
 const getStatusClassName = (status) => {
   if (!status || status === "-") return "bg-[#0e5149]/55 text-[#20D18C]";
@@ -797,6 +798,23 @@ const EventDetailsPage = () => {
       );
     }
 
+    if (activeTab === 'External Transport Details') {
+      const extTransports =
+        data?.externalTransportDetails?.externalTransports ||
+        (Array.isArray(data?.externalTransportDetails) ? data.externalTransportDetails : []) ||
+        data?.externalTransports ||
+        []
+      return (
+        <div className="bg-[#1F1F35] border border-[#2D2D4D] rounded-2xl p-6">
+          <ExternalTransportPreview data={extTransports} />
+        </div>
+      )
+    }
+
+    if (activeTab === 'Food Details') {
+      if (refreshmentLoading) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading food details...</p>
+      if (refreshmentError) return <p className="py-10 text-center text-sm text-[#FF4F91]">{refreshmentError}</p>
+      return <FoodRefreshmentDetailsPanel refreshmentDetails={refreshmentDetails} eventSchedule={requestDetails?.eventDetails?.eventSchedule} />
     if (activeTab === "Food Details") {
       if (refreshmentLoading)
         return (

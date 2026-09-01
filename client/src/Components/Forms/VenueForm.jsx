@@ -667,7 +667,7 @@ function VenueDetailCard({ venueName, venuesList, index, data, onChange, errors 
       <div>
         <div className="relative w-full">
           <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-            Special Requirements, if any *
+            Special Requirements, if any 
           </span>
           <textarea
             value={data.specialReqs || ""}

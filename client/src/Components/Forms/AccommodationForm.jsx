@@ -4,7 +4,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Phone, Plus, Trash2, Check, Search, ChevronDown, AlertTriangle, LoaderCircle } from "lucide-react";
+import { Phone, Plus, Trash2, Check, Search, ChevronDown, AlertTriangle, LoaderCircle, Building2 } from "lucide-react";
 import CustomSelect from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import CustomDateTimePicker from "../CustomDateTimePicker"; // your custom date-time picker
@@ -106,18 +106,32 @@ function validateAccommodation(acc) {
       e.dineTypes = "Select at least one dine-in option";
     }
 
-    if (
-      acc.dineTypes.includes("Hostel") &&
-      (!acc.hostelGuests || parseInt(acc.hostelGuests) <= 0)
-    ) {
-      e.hostelGuests = "Enter number of hostel dine-in guests";
+    const totalSelected = acc.selectedGuestIds ? acc.selectedGuestIds.length : 0;
+    const hostelCount = parseInt(acc.hostelGuests) || 0;
+    const amenityCount = parseInt(acc.amenityGuests) || 0;
+
+    // Validate individual counts
+    if (acc.dineTypes.includes("Hostel")) {
+      if (!acc.hostelGuests || hostelCount <= 0) {
+        e.hostelGuests = "Enter number of hostel dine-in guests";
+      } else if (hostelCount > totalSelected) {
+        e.hostelGuests = `Hostel dine-in guests (${hostelCount}) cannot exceed selected guests (${totalSelected})`;
+      }
     }
 
-    if (
-      acc.dineTypes.includes("Amenity") &&
-      (!acc.amenityGuests || parseInt(acc.amenityGuests) <= 0)
-    ) {
-      e.amenityGuests = "Enter number of amenity dine-in guests";
+    if (acc.dineTypes.includes("Amenity")) {
+      if (!acc.amenityGuests || amenityCount <= 0) {
+        e.amenityGuests = "Enter number of amenity dine-in guests";
+      } else if (amenityCount > totalSelected) {
+        e.amenityGuests = `Amenity dine-in guests (${amenityCount}) cannot exceed selected guests (${totalSelected})`;
+      }
+    }
+
+    // Combined validation
+    if (totalSelected === 1 && acc.dineTypes.length > 1) {
+      e.dineTypes = "Guest was 1 cannot choose two places for dine-in";
+    } else if (hostelCount + amenityCount > totalSelected) {
+      e.dineTypes = `Total dine-in guests (${hostelCount + amenityCount}) cannot exceed selected guests (${totalSelected})`;
     }
   }
 
@@ -653,6 +667,10 @@ function AccommodationBlock({
                   </div>
                   <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
                     <span className="flex items-center gap-1.5">
+                      <Building2 className="text-purple-500" gender={g.organization} />
+                      <span className="text-gray-300">{g.organization || "—"}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
                       <GenderIcon gender={g.gender} />
                       <span className="text-gray-300">{g.gender || "—"}</span>
                     </span>
@@ -741,7 +759,12 @@ function AccommodationBlock({
                 label="Select the Dine-in Wanted *"
                 options={DINE_OPTIONS}
                 value={acc.dineTypes}
-                onChange={(types) => onChange({ ...acc, dineTypes: types })}
+                onChange={(types) => {
+                  if (selectedCount === 1 && types.length > 1) {
+                    return;
+                  }
+                  onChange({ ...acc, dineTypes: types });
+                }}
                 labelBg="#1f1f38"
               />
               {errors.dineTypes && (
@@ -764,6 +787,8 @@ function AccommodationBlock({
                     onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
                     type="number"
                     labelBg="#1f1f38"
+                    min={1}
+                    max={selectedCount}
                   />
                   {errors.hostelGuests && (
                     <p className="text-red-400 text-xs mt-1">
@@ -780,6 +805,8 @@ function AccommodationBlock({
                     onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
                     type="number"
                     labelBg="#1f1f38"
+                    min={1}
+                    max={selectedCount}
                   />
                   {errors.amenityGuests && (
                     <p className="text-red-400 text-xs mt-1">
@@ -873,13 +900,40 @@ export default function AccommodationForm({
     setBlockErrors((prev) =>
       prev.map((e, i) => {
         if (i !== index) return e;
+        const newErrors = {};
         const pastCheckInTimeError = getPastCheckInTimeError(updated.checkIn);
-        return pastCheckInTimeError ? { checkIn: pastCheckInTimeError } : {};
+        if (pastCheckInTimeError) newErrors.checkIn = pastCheckInTimeError;
+
+        // Real-time dine-in validation
+        if (updated.dine === "Yes") {
+          const totalSelected = updated.selectedGuestIds ? updated.selectedGuestIds.length : 0;
+          const hostelCount = parseInt(updated.hostelGuests) || 0;
+          const amenityCount = parseInt(updated.amenityGuests) || 0;
+
+          if (updated.dineTypes.includes("Hostel") && hostelCount > totalSelected) {
+            newErrors.hostelGuests = `Hostel dine-in guests (${hostelCount}) cannot exceed selected guests (${totalSelected})`;
+          }
+          if (updated.dineTypes.includes("Amenity") && amenityCount > totalSelected) {
+            newErrors.amenityGuests = `Amenity dine-in guests (${amenityCount}) cannot exceed selected guests (${totalSelected})`;
+          }
+          if (totalSelected === 1 && updated.dineTypes.length > 1) {
+            newErrors.dineTypes = "Guest was 1 cannot choose two places for dine-in";
+          } else if (hostelCount + amenityCount > totalSelected && hostelCount > 0 && amenityCount > 0) {
+            newErrors.dineTypes = "You can choose one guest for one place or choose one place for dine-in";
+          }
+        }
+
+        return newErrors;
       })
     );
   };
 
   const addBlock = () => {
+    if (allGuests.length <= 1) {
+      setApiError("Only one guest is there, no access to create another day for the guest");
+      return;
+    }
+    setApiError("");
     setAccommodations((prev) => [...prev, emptyAccommodation()]);
     setBlockErrors((prev) => [...prev, {}]);
   };

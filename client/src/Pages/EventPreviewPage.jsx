@@ -4,6 +4,7 @@ import VenuePreview from "../Components/Preview/VenuePreview";
 import ICTSPreview from "../Components/Preview/ICTSPreview";
 import AudioPreview from "../Components/Preview/AudioPreview";
 import TransportPreview from "../Components/Preview/TransportPreview";
+import ExternalTransportPreview from "../Components/Preview/ExternalTransportPreview";
 import FoodRefreshmentPreview from "../Components/Preview/FoodPreview";
 import AccommodationPreview from "../Components/Preview/AccommodationPreview";
 import PurchasePreview from "../Components/Preview/PurchasePreview";
@@ -23,6 +24,7 @@ export default function EventPreviewPage({
         icts: "ICTS Details",
         audio: "Audio Details",
         transport: "Transport Details",
+        externalTransport: "External Transport",
         foodandrefreshments: "Food & Refreshments",
         accommodation: "Accommodation Details",
         purchase: "Purchase Details",
@@ -87,6 +89,12 @@ export default function EventPreviewPage({
                         transportData={formData?.transport}
                     />
                 );
+            case "externalTransport":
+                return (
+                    <ExternalTransportPreview
+                        data={formData?.externalTransport}
+                    />
+                );
             case "foodandrefreshments":
                 return (
                     <FoodRefreshmentPreview foodData={formData?.foodandrefreshments} />
@@ -126,7 +134,7 @@ export default function EventPreviewPage({
                 </h1>
 
                 <p className="text-sm text-white/70">
-                Lorem ipsum testing content
+                    Kindly verify your, final event details before submit...
                 </p>
             </div>
 
@@ -134,7 +142,7 @@ export default function EventPreviewPage({
             <div className="flex flex-1 overflow-hidden">
 
                 {/* Sidebar */}
-                <div className="w-[320px] p-5 overflow-y-auto">
+                <div className="w-[320px] p-5 overflow-y-auto custom-scrollbar">
                     <div
                         className="
                         border-2 border-[#2D2D4B]
@@ -173,7 +181,7 @@ export default function EventPreviewPage({
                     <div className="flex-1 flex flex-col overflow-hidden">
 
                     {/* Preview */}
-                    <div className="flex-1 overflow-y-auto p-6">
+                    <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
                         <div className="min-h-full">
                         {renderPreview()}
                         </div>

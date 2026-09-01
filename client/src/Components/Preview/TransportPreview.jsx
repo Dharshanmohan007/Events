@@ -108,10 +108,10 @@ function LocationStop({
   );
 }
 
-function Connector() {
+function Connector({ visible = true }) {
   return (
-    <div className="flex items-center w-12 flex-shrink-0">
-      <div className="w-full border-t-2 border-dashed border-[#62658B]" />
+    <div className="flex-1 flex items-center min-w-[2rem] px-2">
+      <div className={`w-full border-t-2 border-dashed border-[#62658B] ${visible ? '' : 'opacity-0'}`} />
     </div>
   );
 }
@@ -124,7 +124,7 @@ function PreviewHeader() {
           Transport Details
         </h2>
         <p className="text-xs text-gray-400 mt-1 max-w-xl">
-          Lorem ipsum is simply dummy text of the printing and typesetting
+          Preview your transport details for selected day.
         </p>
       </div>
       {/* <span className="flex items-center gap-1.5 bg-teal-500/15 text-teal-400 text-xs font-medium px-3 py-1.5 rounded-full flex-shrink-0">
@@ -277,24 +277,56 @@ export default function TransportPreview({ transportData = [] }) {
         </Card>
 
         {/* Row 2: Location flow — Pickup → Checkpoint(s) → Drop */}
-        <Card>
-          <div className="flex flex-wrap items-center gap-y-5">
-            {locations.map((loc, index) => {
-              const isCheckpoint = loc.type === "checkpoint";
+        <Card className="pb-2">
+          <div className="flex flex-col w-full">
+            {chunkPairs(locations, 3).map((row, r, rowsArr) => {
+              const isEven = r % 2 === 0;
+              
+              // Pad to exactly 3 items to maintain grid-like alignment using flex
+              const paddedRow = [...row];
+              while (paddedRow.length < 3) {
+                paddedRow.push(null);
+              }
 
-              const checkpointNumber = index;
+              const displayRow = isEven ? paddedRow : paddedRow.reverse();
 
               return (
-                <React.Fragment key={index}>
-                  <LocationStop
-                    label={loc.label}
-                    name={loc.name}
-                    type={isCheckpoint ? "checkpoint" : "location"}
-                    checkpointNumber={loc.number}
-                  />
+                <React.Fragment key={r}>
+                  {/* Main Row */}
+                  <div className="flex items-center w-full">
+                    {displayRow.map((loc, i) => {
+                      const isVisualLastInRow = i === displayRow.length - 1;
+                      const hasCurrent = !!displayRow[i];
+                      const hasNext = !!displayRow[i + 1];
 
-                  {index !== locations.length - 1 && (
-                    <Connector />
+                      return (
+                        <React.Fragment key={i}>
+                          {hasCurrent ? (
+                            <LocationStop
+                              label={loc.label}
+                              name={loc.name}
+                              type={loc.type === "checkpoint" ? "checkpoint" : "location"}
+                              checkpointNumber={loc.number}
+                            />
+                          ) : (
+                            <div className="w-[280px]" />
+                          )}
+
+                          {!isVisualLastInRow && (
+                            <Connector visible={hasCurrent && hasNext} />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+
+                  {/* Vertical Connector */}
+                  {r < rowsArr.length - 1 && (
+                    <div className={`flex w-full ${isEven ? "justify-end" : "justify-start"}`}>
+                      <div className="w-[280px] h-8 flex justify-center items-center">
+                        <div className="h-full border-l-2 border-dashed border-[#62658B]" />
+                      </div>
+                    </div>
                   )}
                 </React.Fragment>
               );

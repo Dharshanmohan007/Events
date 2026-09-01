@@ -46,8 +46,8 @@ function validateDay(day = {}, idx) {
   if (!day.endTime) e.endTime = `End time is required`;
   if (day.startTime && day.endTime && day.endTime <= day.startTime)
     e.endTime = "End time must be after start time";
-  if (!day.numGuests || parseInt(day.numGuests) < 1)
-    e.numGuests = "At least 1 guest is required";
+  if (day.numGuests === undefined || day.numGuests === null || day.numGuests === "" || parseInt(day.numGuests) < 0)
+    e.numGuests = "Please enter a valid number of guests (0 or more)";
 
   const guestCount = parseInt(day.numGuests) || 0;
   const guestErrors = Array.from({ length: guestCount }, (_, i) =>
@@ -61,8 +61,8 @@ function validateDay(day = {}, idx) {
 
 function validateOrganizerSection(state) {
   const e = {};
-  // if (!state.principalApprovalDocument)
-  // e.principalApprovalDocument = "Principal Approval Form is required";
+  if (!state.principalApprovalDocument)
+    e.principalApprovalDocument = "Principal Approval Form is required";
   // if (!state.doc) e.doc = "This field is required";
   // if (state.doc === "Yes" && !state.file)
   //   e.file = "Please upload the previous event documentation";
@@ -131,7 +131,25 @@ function validateEventDetails(data = {}, days = []) {
       : [];
   if (audienceArr.length === 0) e.audience = "Target audience is required"; 
 
-  const dayErrors = days.map((d, i) => validateDay(d, i + 1));
+  const dayErrors = days.map((d, i) => {
+    const errs = validateDay(d, i + 1);
+    
+    // Check for exact date/time duplication with previous days
+    for (let j = 0; j < i; j++) {
+      const prev = days[j];
+      if (
+        d.date && prev.date && d.date === prev.date &&
+        d.startTime && prev.startTime && d.startTime === prev.startTime &&
+        d.endTime && prev.endTime && d.endTime === prev.endTime
+      ) {
+        errs.startTime = `Cannot choose the start time and date as Day ${j + 1}`;
+        errs.endTime = `Cannot choose the end time and date as Day ${j + 1}`;
+      }
+    }
+    
+    return errs;
+  });
+
   if (dayErrors.some((de) => Object.keys(de).length > 0))
     e.days = dayErrors;
 
@@ -174,6 +192,7 @@ export default function EventRequisitionDetails({
   setEventRequisition,
   errors: parentErrors = {},
   isLoading: parentIsLoading = false,
+  registerChildNavigation,
 }) {
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
@@ -284,13 +303,23 @@ export default function EventRequisitionDetails({
       Object.keys(rErr).length > 0
     ) {
       window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
+      return false;
     }
 
     if (onSave) {
       await onSave(currentRequirements);
     }
   };
+
+  const navRef = useRef({ next: handleSaveAndNext });
+  useEffect(() => { navRef.current = { next: handleSaveAndNext }; });
+
+  useEffect(() => {
+    if (!registerChildNavigation) return;
+    const stableNext = (...args) => navRef.current.next(...args);
+    registerChildNavigation({ next: stableNext, isLoading: parentIsLoading });
+    return () => registerChildNavigation({ next: null, isLoading: false });
+  }, [registerChildNavigation, parentIsLoading]);
 
   const mergedOrgErrors = { ...orgErrors, ...parentErrors };
   const mergedEventErrors = { ...eventErrors, ...parentErrors };

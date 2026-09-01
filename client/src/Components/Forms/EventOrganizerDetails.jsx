@@ -53,15 +53,17 @@ export default function EventOrganizerDetails({
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
 
   const handleOrganizersChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 0)) {
-      setNumOrganizers(val);
-      const count = parseInt(val) || 0;
-      const newOrganizers = Array.from({ length: count + 1 }, (_, i) =>
-        organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }
-      );
-      setOrganizers(newOrganizers);
+    let val = e.target.value;
+    if (val !== "") {
+      const num = parseInt(val) || 0;
+      val = Math.max(0, Math.min(5, num)).toString();
     }
+    setNumOrganizers(val);
+    const count = val === "" ? 0 : parseInt(val);
+    const newOrganizers = Array.from({ length: count + 1 }, (_, i) =>
+      organizers[i] || { name: "", department: "", mobile: "", designation: "", empId: "", empEmail: "" }
+    );
+    setOrganizers(newOrganizers);
   };
 
   const organizerCount = parseInt(numOrganizers) >= 0 ? parseInt(numOrganizers) : 0;
@@ -167,6 +169,36 @@ export default function EventOrganizerDetails({
     }
   };
 
+  const handlePreviewPrincipal = (e) => {
+    e.stopPropagation();
+    if (!principalApprovalDocument) return;
+    if (typeof principalApprovalDocument === 'string') {
+      window.open(principalApprovalDocument, '_blank');
+    } else if (principalApprovalDocument.url || principalApprovalDocument.secure_url || principalApprovalDocument.path) {
+      window.open(principalApprovalDocument.url || principalApprovalDocument.secure_url || principalApprovalDocument.path, '_blank');
+    } else if (principalApprovalDocument instanceof File || principalApprovalDocument instanceof Blob) {
+      const url = URL.createObjectURL(principalApprovalDocument);
+      window.open(url, '_blank');
+    } else {
+      console.warn("Cannot preview document: Unknown format", principalApprovalDocument);
+    }
+  };
+
+  const handlePreviewFile = (e) => {
+    e.stopPropagation();
+    if (!file) return;
+    if (typeof file === 'string') {
+      window.open(file, '_blank');
+    } else if (file.url || file.secure_url || file.path) {
+      window.open(file.url || file.secure_url || file.path, '_blank');
+    } else if (file instanceof File || file instanceof Blob) {
+      const url = URL.createObjectURL(file);
+      window.open(url, '_blank');
+    } else {
+      console.warn("Cannot preview document: Unknown format", file);
+    }
+  };
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
 
@@ -253,7 +285,7 @@ export default function EventOrganizerDetails({
       {/* Principal Approval Form Upload */}
       <div className="mb-7">
         <label className="block mb-1 text-sm text-white">
-          Principal Approval Form
+          Principal Approval Form *
         </label>
 
         <div
@@ -306,13 +338,20 @@ export default function EventOrganizerDetails({
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
 
-                <span className="text-purple-300 text-sm font-medium">
-                  {principalApprovalDocument.name}
+                <span 
+                  className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer text-sm font-medium transition-colors"
+                  onClick={handlePreviewPrincipal}
+                >
+                  {typeof principalApprovalDocument === 'string'
+                    ? principalApprovalDocument.split('/').pop()
+                    : (principalApprovalDocument.name || principalApprovalDocument.filename || 'Uploaded Document')}
                 </span>
 
-                <span className="text-gray-400 text-xs">
-                  ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
-                </span>
+                {typeof principalApprovalDocument !== 'string' && principalApprovalDocument.size && (
+                  <span className="text-gray-400 text-xs">
+                    ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                )}
               </div>
 
               <button
@@ -424,8 +463,15 @@ export default function EventOrganizerDetails({
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
                   </svg>
-                  <span className="text-purple-300 text-sm font-medium">{file.name}</span>
-                  <span className="text-gray-400 text-xs">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  <span 
+                    className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer text-sm font-medium transition-colors"
+                    onClick={handlePreviewFile}
+                  >
+                    {typeof file === 'string' ? file.split('/').pop() : (file.name || file.filename || 'Uploaded Document')}
+                  </span>
+                  {typeof file !== 'string' && file.size && (
+                    <span className="text-gray-400 text-xs">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                  )}
                 </div>
                 <button
                   type="button"

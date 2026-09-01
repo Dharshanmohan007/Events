@@ -14,7 +14,7 @@ const REQUIREMENTS_OPTIONS = [
   "Webcam",
 ];
 
-const EQUIPMENT_OPTIONS = ["Desktop", "Laptop"];
+const LAPTOP_TYPE_OPTIONS = ["Windows", "Mac"];
 
 const INTERNET_FACILITY_OPTIONS = ["LAN", "Wi-Fi", "Both", "Not Required"];
 
@@ -45,8 +45,8 @@ const isPlacementDept = () => getDepartmentFromStorage() === "placement";
 
 function validateIctsCard(card, showProctoring) {
   const e = {};
-  if (!card.equipmentRequired || card.equipmentRequired.length === 0)
-    e.equipmentRequired = "Select at least one equipment";
+  if (!card.laptopTypes || card.laptopTypes.length === 0)
+    e.laptopTypes = "Select at least one laptop type";
   if (!card.internetFacility) e.internetFacility = "This field is required";
   if (
     card.expectedInternetUsers === "" ||
@@ -90,20 +90,20 @@ const buildIctsPayload = (ictsData) => {
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
     Object.entries(venues || {}).forEach(([venueName, card]) => {
-      const desktopLaptop = (card.equipmentRequired || []).map((type) => ({
+      const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
-          type === "Desktop"
-            ? parseInt(card.desktopCount) || 0
-            : type === "Laptop"
-            ? parseInt(card.laptopCount) || 0
+          type === "Windows"
+            ? parseInt(card.windowsCount) || 0
+            : type === "Mac"
+            ? parseInt(card.macCount) || 0
             : 0,
       }));
 
       ictses.push({
         dayIndex,
         venueName,
-        desktopLaptop,
+        laptopSpec,
         internetFacility:      card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
         proctoringUsers:       parseInt(card.proctorUsers) || 0,
@@ -237,16 +237,30 @@ function RequirementsSelect({
 
 // ── IctsVenueCard ─────────────────────────────────────────────────────────────
 
-function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProctoring, onInfoClick }) {
+function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProctoring, onInfoClick, venueParticipants }) {
   const update      = (field) => (val) => onChange({ ...data, [field]: val });
   const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
+
+  // Auto-fill expectedInternetUsers from venue form's participants
+  useEffect(() => {
+    if (venueParticipants !== undefined && venueParticipants !== null && venueParticipants !== "") {
+      let valNum = Number(venueParticipants);
+      if (valNum < 0) valNum = 0;
+      if (valNum > 500) valNum = 500;
+      const val = String(valNum);
+      if (data.expectedInternetUsers !== val) {
+        onChange({ ...data, expectedInternetUsers: val });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [venueParticipants]);
 
   const showGuestWifiExceed  = data.guestWifi === "Yes";
   const showTotalGuestCount  = data.guestWifi === "Yes" && data.guestWifiExceed5 === "Yes";
 
-  const equipmentRequired = data.equipmentRequired || [];
-  const showDesktopCount  = equipmentRequired.includes("Desktop");
-  const showLaptopCount   = equipmentRequired.includes("Laptop");
+  const laptopTypes = data.laptopTypes || [];
+  const showWindowsCount  = laptopTypes.includes("Windows");
+  const showMacCount   = laptopTypes.includes("Mac");
 
   return (
     <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
@@ -273,18 +287,18 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <RequirementsSelect
-            label="Equipment Required *"
-            options={EQUIPMENT_OPTIONS}
-            placeholder="Select equipment..."
-            selected={equipmentRequired}
+            label="Guest Laptop Types *"
+            options={LAPTOP_TYPE_OPTIONS}
+            placeholder="Select laptop types..."
+            selected={laptopTypes}
             onChange={(val) => {
-              // Clear the count for any equipment that just got de-selected
-              const patch = { equipmentRequired: val };
-              if (!val.includes("Desktop")) patch.desktopCount = "";
-              if (!val.includes("Laptop"))  patch.laptopCount  = "";
+              // Clear the count for any type that just got de-selected
+              const patch = { laptopTypes: val };
+              if (!val.includes("Windows")) patch.windowsCount = "";
+              if (!val.includes("Mac"))  patch.macCount  = "";
               onChange({ ...data, ...patch });
             }}
-            error={errors.equipmentRequired}
+            error={errors.laptopTypes}
           />
         </div>
         <div>
@@ -302,23 +316,23 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         </div>
       </div>
 
-      {/* ── Row 1b: Desktop Count · Laptop Count (conditional on Equipment Required) ──
+      {/* ── Row 1b: Windows Count · Mac Count (conditional on Guest Laptop Types) ──
            Not required fields — no validation, just clamped to >= 0. ── */}
-      {(showDesktopCount || showLaptopCount) && (
+      {(showWindowsCount || showMacCount) && (
         <div
           className={`grid gap-4 ${
-            showDesktopCount && showLaptopCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
+            showWindowsCount && showMacCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"
           }`}
         >
-          {showDesktopCount && (
+          {showWindowsCount && (
             <div>
               <CustomInput
                 labelBg="#1E1E35"
-                label="Desktop Count"
+                label="Windows Users Count"
                 type="number"
-                value={data.desktopCount || ""}
+                value={data.windowsCount || ""}
                 onChange={(e) =>
-                  updateInput("desktopCount")({
+                  updateInput("windowsCount")({
                     target: { value: Math.max(0, Number(e.target.value)) },
                   })
                 }
@@ -326,15 +340,15 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
               />
             </div>
           )}
-          {showLaptopCount && (
+          {showMacCount && (
             <div>
               <CustomInput
                 labelBg="#1E1E35"
-                label="Laptop Count"
+                label="Mac Users Count"
                 type="number"
-                value={data.laptopCount || ""}
+                value={data.macCount || ""}
                 onChange={(e) =>
-                  updateInput("laptopCount")({
+                  updateInput("macCount")({
                     target: { value: Math.max(0, Number(e.target.value)) },
                   })
                 }
@@ -353,13 +367,15 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
             label="Expected Internet Users *"
             type="number"
             value={data.expectedInternetUsers || ""}
-            onChange={(e) =>
-              updateInput("expectedInternetUsers")({
-                target: {
-                  value: Math.max(0, Number(e.target.value)),
-                },
-              })
-            }
+            onChange={(e) => {
+              const strVal = e.target.value;
+              let val = strVal === "" ? "" : Number(strVal);
+              if (val !== "") {
+                if (val < 0) val = 0;
+                if (val > 500) val = 500;
+              }
+              onChange({ ...data, expectedInternetUsers: val === "" ? "" : String(val) });
+            }}
             placeholder="e.g. 50"
           />
           {errors.expectedInternetUsers && (
@@ -757,6 +773,11 @@ export default function IctsForm({
                 errors={currentDayErrors[venueName] || {}}
                 showProctoring={showProctoring}
                 onInfoClick={handleInfoClick}
+                venueParticipants={
+                  venueData[currentDayIndex]?.venueCards?.find(
+                    (c) => c.venueName === venueName
+                  )?.participants ?? venueData[currentDayIndex]?.participants ?? ""
+                }
               />
             ))}
           </div>

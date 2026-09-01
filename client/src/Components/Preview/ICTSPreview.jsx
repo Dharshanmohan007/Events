@@ -124,9 +124,9 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
         </div>
       ) : (
         activeCards.map(({ venueName, card }) => {
-          const equipmentRequired = card.equipmentRequired || [];
-          const hasDesktop = equipmentRequired.includes("Desktop");
-          const hasLaptop = equipmentRequired.includes("Laptop");
+          const laptopTypes = card.laptopTypes || [];
+          const hasWindows = laptopTypes.includes("Windows");
+          const hasMac = laptopTypes.includes("Mac");
 
           return (
             <div key={`${activeDay}-${venueName}`} className="flex flex-col gap-3">
@@ -141,14 +141,14 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
                   title="Basic Requirement"
                 >
                   <div className="flex flex-col py-1">
-                    <InfoRow label="Desktop" value={hasDesktop ? "Yes" : "No"} />
-                    {hasDesktop && (
-                      <InfoRow label="Desktop Count" value={card.desktopCount || 0} />
+                    <InfoRow label="Windows" value={hasWindows ? "Yes" : "No"} />
+                    {hasWindows && (
+                      <InfoRow label="Windows Count" value={card.windowsCount || 0} />
                     )}
 
-                    <InfoRow label="Laptop" value={hasLaptop ? "Yes" : "No"} />
-                    {hasLaptop && (
-                      <InfoRow label="Laptop Count" value={card.laptopCount || 0} />
+                    <InfoRow label="Mac" value={hasMac ? "Yes" : "No"} />
+                    {hasMac && (
+                      <InfoRow label="Mac Count" value={card.macCount || 0} />
                     )}
 
                     <InfoRow

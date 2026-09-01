@@ -50,21 +50,13 @@ const SpecialRequirement = ({ text }) => (
 );
 
 const buildGiftRows = (data) => {
-  const giftItems = data.giftItems || [];
-  const trophies = giftItems.flatMap((g) => g.trophy || []);
-  const cashPrize = giftItems.reduce(
-    (sum, g) => sum + (Number(g.cashPrizeAmount) || 0),
-    0,
-  );
-  const glassCup = giftItems.reduce(
-    (sum, g) => sum + (Number(g.glassCupQty) || 0),
-    0,
-  );
-  const vouchers = giftItems.flatMap((g) =>
-    (g.voucher || []).filter((v) => Number(v.quantity) > 0),
-  );
+  const giftItems = data.giftItems || []
+  const trophies = giftItems.flatMap((g) => g.trophy || [])
+  const cashPrize = giftItems.reduce((sum, g) => sum + (Number(g.cashPrizeAmount) || 0), 0)
+  const giftsCount = giftItems.reduce((sum, g) => sum + (Number(g.giftsQty ?? g.glassCupQty) || 0), 0)
+  const vouchers = giftItems.flatMap((g) => (g.voucher || []).filter((v) => Number(v.quantity) > 0))
 
-  const rows = [];
+  const rows = []
 
   for (let i = 0; i < trophies.length; i += 2) {
     rows.push(
@@ -77,15 +69,10 @@ const buildGiftRows = (data) => {
     );
   }
 
-  const prizeItems = [];
-  if (cashPrize > 0) prizeItems.push(["Cash Prize Amount", `₹${cashPrize}`]);
-  if (glassCup > 0)
-    prizeItems.push(["Glass Cup Quantity", displayValue(glassCup)]);
-  if (data.registrationKitNeeded)
-    prizeItems.push([
-      "Registration Kit Quantity",
-      displayValue(data.registrationKitQty),
-    ]);
+  const prizeItems = []
+  if (cashPrize > 0) prizeItems.push(['Cash Prize Amount', `₹${cashPrize}`])
+  if (giftsCount > 0) prizeItems.push(['Gift Count', displayValue(giftsCount)])
+  if (data.registrationKitNeeded) prizeItems.push(['Registration Kit Quantity', displayValue(data.registrationKitQty)])
   for (let i = 0; i < prizeItems.length; i += 2) {
     rows.push(prizeItems.slice(i, i + 2));
   }

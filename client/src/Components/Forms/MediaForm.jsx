@@ -48,8 +48,8 @@ function emptyDayData() {
 function validatePoster(data, showCertificate = false) {
   const e = {};
   if (!data.contentPoster?.trim())  e.contentPoster = "Content for poster is required";
-  // if (showCertificate && !data.contentCertificate?.trim())
-  //   e.contentCertificate = "Content for certificate is required";
+  if (showCertificate && !data.contentCertificate?.trim())
+    e.contentCertificate = "Content for certificate is required";
   if (!data.contentTrophy?.trim())  e.contentTrophy = "Content for trophy is required";
   if (!data.displayNeeded || data.displayNeeded.length === 0)
     e.displayNeeded = "Select at least one display option";
@@ -551,7 +551,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
           <div>
             <div className="relative w-full">
               <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-                Content for Certificate 
+                Content for Certificate *
               </span>
               <textarea
                 value={data.contentCertificate || ""}
@@ -847,10 +847,7 @@ export default function MediaForm({
 
     const isLast = idx === total - 1;
 
-    const certFlag  = !!(latestPurchase[idx]?.requirementNeeded?.includes
-      ? latestPurchase[idx].requirementNeeded.includes("Certificate")
-      : false);
-    const dayErrors = validateDay(latestData[idx] ?? emptyDayData(), certFlag);
+    const dayErrors = validateDay(latestData[idx] ?? emptyDayData(), true);
     if (Object.keys(dayErrors).length > 0) {
       setErrors((prev) => ({ ...prev, [idx]: dayErrors }));
       return;
@@ -871,10 +868,7 @@ export default function MediaForm({
     // Last day: validate all
     const allErrors = {};
     latestData.forEach((day, i) => {
-      const pd  = latestPurchase[i];
-      const req = pd?.requirementNeeded;
-      const cf  = Array.isArray(req) ? req.includes("Certificate") : false;
-      const e   = validateDay(day, cf);
+      const e   = validateDay(day, true);
       if (Object.keys(e).length > 0) allErrors[i] = e;
     });
     if (Object.keys(allErrors).length > 0) {

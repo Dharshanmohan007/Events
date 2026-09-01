@@ -20,7 +20,10 @@ import {
         finance,
         advanceAmount,
         purposeOfAdvance,
-        // principalApprovalDocument,
+        principalApprovalDocument,
+        advanceToBeReceivedWithin,
+        expectedEventOutcome,
+        estimatedBudget,
         budget,
         department,
         organizers = [],
@@ -126,10 +129,21 @@ import {
 
                         <button
                             type="button"
-                            onClick={() => window.open(URL.createObjectURL(file), "_blank")}
+                            onClick={() => {
+                                const fileUrl = file?.url || (typeof file === "string" ? file : null);
+                                if (fileUrl) {
+                                    window.open(fileUrl, "_blank");
+                                } else if (file instanceof File) {
+                                    window.open(URL.createObjectURL(file), "_blank");
+                                }
+                            }}
                             className="truncate text-blue-400 hover:underline"
                         >
-                            {file?.name || "-"}
+                            {file?.url
+                                ? (file.fileName || file.publicId?.split("/").pop() || "View Document")
+                                : typeof file === "string"
+                                    ? (file.split("/").pop() || "View Document")
+                                    : (file?.name || "View Document")}
                         </button>
                         </div>
                     ) : (
@@ -138,6 +152,40 @@ import {
                 </div>
             </div>
             </div>
+            {(principalApprovalDocument?.url || principalApprovalDocument instanceof File || typeof principalApprovalDocument === "string") && (
+                <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4 mt-4">
+                    <div className="grid md:grid-cols-2 gap-5">
+                        <div className="flex justify-between border-r border-[#8e93a6] pr-4">
+                            <span className="text-gray-400 text-sm">
+                                Principal Approval Form
+                            </span>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2 text-green-400">
+                                <FileText size={18} />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const docUrl = principalApprovalDocument?.url || (typeof principalApprovalDocument === "string" ? principalApprovalDocument : null);
+                                        if (docUrl) {
+                                            window.open(docUrl, "_blank");
+                                        } else if (principalApprovalDocument instanceof File) {
+                                            window.open(URL.createObjectURL(principalApprovalDocument), "_blank");
+                                        }
+                                    }}
+                                    className="truncate text-blue-400 hover:underline"
+                                >
+                                    {principalApprovalDocument?.url
+                                        ? (principalApprovalDocument.fileName || principalApprovalDocument.publicId?.split("/").pop() || "View Document")
+                                        : typeof principalApprovalDocument === "string"
+                                            ? (principalApprovalDocument.split("/").pop() || "View Document")
+                                            : (principalApprovalDocument?.name || "View Document")}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
 
         {/* ==========================================================
@@ -228,6 +276,12 @@ import {
                         ? eventData.audience.join(", ")
                         : eventData.audience
                     }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow
+                    title="Expected Outcome"
+                    value={expectedEventOutcome}
+                    className="border-b border-[#363D57] pb-3"
                 />
                 <PreviewRow
                     title="Poster Logos"
@@ -236,15 +290,24 @@ import {
                         ? eventData.logos.join(", ")
                         : eventData.logos
                     }
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow
+                    title="Estimated Budget"
+                    value={estimatedBudget ? `₹ ${estimatedBudget}` : "-"}
+                    className="border-b border-[#363D57] pb-3"
                 />
                 {finance === "Yes" && (
                     <>
                     <PreviewRow
                         title="Advance Amount"
                         value={advanceAmount ? `₹ ${advanceAmount}` : "-"}
+                        className="border-b border-[#363D57] pb-3"
                     />
 
-                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} />
+                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} className="border-b border-[#363D57] pb-3"/>
+                    
+                    <PreviewRow title="Advance Expected Within" value={advanceToBeReceivedWithin} className="border-b border-[#363D57] pb-3"/>
                     </>
                 )}
             </div>

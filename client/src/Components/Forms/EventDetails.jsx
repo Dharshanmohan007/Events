@@ -32,30 +32,33 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
   }, []);
 
   const handleDaysChange = (e) => {
-    const val = e.target.value;
-    if (val === "" || (/^\d+$/.test(val) && parseInt(val) >= 1)) {
-      const count = parseInt(val) || 0;
-      // Preserve existing days data — only add new empty days or trim from the end
-      const existing = eventData.eventDays || [];
-      let newDays;
-      if (count > existing.length) {
-        // Adding more days: keep all existing, append new empty ones
-        const extra = Array.from({ length: count - existing.length }, () => ({
-          date: "",
-          startTime: "",
-          endTime: "",
-          numGuests: "1",
-          guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
-        }));
-        newDays = [...existing, ...extra];
-      } else {
-        // Reducing days: trim from the END only
-        newDays = existing.slice(0, count);
-      }
-      setEventDays(newDays);
-      setEventData((prev) => ({ ...prev, eventDays: newDays }));
-      if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
+    let val = e.target.value;
+    if (val !== "") {
+      const num = parseInt(val) || 0;
+      val = Math.max(0, Math.min(10, num)).toString();
     }
+    const count = val === "" ? 0 : parseInt(val);
+    
+    // Preserve existing days data — only add new empty days or trim from the end
+    const existing = eventData.eventDays || [];
+    let newDays;
+    if (count > existing.length) {
+      // Adding more days: keep all existing, append new empty ones
+      const extra = Array.from({ length: count - existing.length }, () => ({
+        date: "",
+        startTime: "",
+        endTime: "",
+        numGuests: "1",
+        guests: [{ name: "", designation: "", organization: "", mobile: "", gender: "" }],
+      }));
+      newDays = [...existing, ...extra];
+    } else {
+      // Reducing days: trim from the END only
+      newDays = existing.slice(0, count);
+    }
+    setEventDays(newDays);
+    setEventData((prev) => ({ ...prev, eventDays: newDays }));
+    if (setErrors) setErrors((prev) => ({ ...prev, numDays: "" }));
   };
 
   const handle = (field) => (e) => {
@@ -299,6 +302,38 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
               updated[i] = updatedDay;
               setEventDays(updated);
               setEventData((prev) => ({ ...prev, eventDays: updated }));
+
+              if (setErrors) {
+                setErrors((prev) => {
+                  const currentDaysErrors = prev.days ? prev.days.slice(0, updated.length) : [];
+                  while (currentDaysErrors.length < updated.length) currentDaysErrors.push({});
+                  
+                  const newDaysErrors = currentDaysErrors.map((errObj, idx) => {
+                    const newErr = { ...errObj };
+                    // Clear only overlap messages
+                    if (newErr.startTime?.includes("Cannot choose the same time and date as Day")) delete newErr.startTime;
+                    if (newErr.endTime?.includes("Cannot choose the end time and date as Day")) delete newErr.endTime;
+                    
+                    const d = updated[idx];
+                    if (!d) return newErr;
+                    for (let j = 0; j < idx; j++) {
+                      const prevDay = updated[j];
+                      if (!prevDay) continue;
+                      if (
+                        d.date && prevDay.date && d.date === prevDay.date &&
+                        d.startTime && prevDay.startTime && d.startTime === prevDay.startTime &&
+                        d.endTime && prevDay.endTime && d.endTime === prevDay.endTime
+                      ) {
+                        newErr.startTime = `Cannot choose the same time and date as Day ${j + 1}`;
+                        newErr.endTime = `Cannot choose the end time and date as Day ${j + 1}`;
+                      }
+                    }
+                    return newErr;
+                  });
+                  
+                  return { ...prev, days: newDaysErrors };
+                });
+              }
             }}
           />
         );

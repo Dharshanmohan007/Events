@@ -7,7 +7,7 @@ import { DayTimeline } from "./VenueForm";
 const REQUIREMENT_OPTIONS        = ["Certificate", "Id Card"];
 const PERSON_OPTIONS             = ["Students", "Guest", "Both"];
 const STUDENT_GIFT_TYPE_OPTIONS  = ["Trophy", "Cash Prize", "Voucher"];
-const GUEST_GIFT_TYPE_OPTIONS    = ["Trophy", "Glass Cup", "Voucher"];
+const GUEST_GIFT_TYPE_OPTIONS    = ["Trophy", "Gifts", "Voucher"];
 const TROPHY_TYPE_OPTIONS        = ["Basic", "Elite"];
 const VOUCHER_WORTH_OPTIONS      = ["₹ 500", "₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"];
 
@@ -28,7 +28,7 @@ const emptyPurchaseDay = () => ({
   },
   guestData: {
     giftType: [], registrationKitNeeded: "", trophyType: [],
-    basicTrophyQty: "", eliteTrophyQty: "", glassCupQty: "",
+    basicTrophyQty: "", eliteTrophyQty: "", giftsQty: "",
     voucherWorth: [], voucherWorthQty: {}, registrationKitQty: "", specialRequirements: "",
   },
 });
@@ -80,14 +80,14 @@ function buildGuestGiftItems(personData = {}) {
       trophy.push({ trophyType: "Basic", quantity: parseInt(personData.basicTrophyQty) || 0 });
     if (personData.trophyType?.includes("Elite"))
       trophy.push({ trophyType: "Elite", quantity: parseInt(personData.eliteTrophyQty) || 0 });
-    giftItems.push({ giftType: "Trophy", trophy, glassCupQty: 0, voucher: [] });
+    giftItems.push({ giftType: "Trophy", trophy, giftsQty: 0, voucher: [] });
   }
 
-  if (personData.giftType?.includes("Glass Cup")) {
+  if (personData.giftType?.includes("Gifts")) {
     giftItems.push({
-      giftType: "Glass Cup",
+      giftType: "Gifts",
       trophy: [],
-      glassCupQty: parseInt(personData.glassCupQty) || 0,
+      giftsQty: parseInt(personData.giftsQty ?? personData.glassCupQty) || 0,
       voucher: [],
     });
   }
@@ -101,7 +101,7 @@ function buildGuestGiftItems(personData = {}) {
       voucherWorth: w,
       quantity: parseInt(worthQty[w]) || 0,
     }));
-    giftItems.push({ giftType: "Voucher", trophy: [], glassCupQty: 0, voucher });
+    giftItems.push({ giftType: "Voucher", trophy: [], giftsQty: 0, voucher });
   }
 
   return giftItems;
@@ -461,7 +461,7 @@ function validateGuestCard(data) {
     if (data.trophyType?.includes("Basic") && !data.basicTrophyQty?.trim()) e.basicTrophyQty = "Basic trophy quantity is required";
     if (data.trophyType?.includes("Elite") && !data.eliteTrophyQty?.trim()) e.eliteTrophyQty = "Elite trophy quantity is required";
   }
-  if (data.giftType?.includes("Glass Cup") && !data.glassCupQty?.trim()) e.glassCupQty = "Glass cup quantity is required";
+  if (data.giftType?.includes("Gifts") && !data.giftsQty?.trim()) e.giftsQty = "Gift count is required";
   if (data.giftType?.includes("Voucher")) {
     const selectedWorths = Array.isArray(data.voucherWorth) ? data.voucherWorth : (data.voucherWorth ? [data.voucherWorth] : []);
     if (selectedWorths.length === 0) {
@@ -679,13 +679,13 @@ function StudentCard({ data, onChange, errors = {} }) {
 
 function GuestCard({ data, onChange, errors = {} }) {
   const hasTrophy   = data.giftType?.includes("Trophy");
-  const hasGlassCup = data.giftType?.includes("Glass Cup");
+  const hasGifts    = data.giftType?.includes("Gifts");
   const hasVoucher  = data.giftType?.includes("Voucher");
   const showBasic   = data.trophyType?.includes("Basic");
   const showElite   = data.trophyType?.includes("Elite");
 
   const trophyBothSelected  = showBasic && showElite;
-  const glassCupVoucherBoth = hasGlassCup && hasVoucher;
+  const giftsVoucherBoth    = hasGifts && hasVoucher;
 
   const selectedWorths = Array.isArray(data.voucherWorth) ? data.voucherWorth : (data.voucherWorth ? [data.voucherWorth] : []);
   const worthQty       = data.voucherWorthQty || {};
@@ -717,7 +717,7 @@ function GuestCard({ data, onChange, errors = {} }) {
             onChange={(val) => {
               const updated = { ...data, giftType: val };
               if (!val.includes("Trophy"))    { updated.trophyType = []; updated.basicTrophyQty = ""; updated.eliteTrophyQty = ""; }
-              if (!val.includes("Glass Cup"))  updated.glassCupQty = "";
+              if (!val.includes("Gifts"))     updated.giftsQty = "";
               if (!val.includes("Voucher"))    { updated.voucherWorth = []; updated.voucherWorthQty = {}; }
               onChange(updated);
             }}
@@ -777,16 +777,16 @@ function GuestCard({ data, onChange, errors = {} }) {
         </div>
       )}
 
-      {/* Glass Cup + Voucher Worth: both = 2 cols, single = full width */}
-      {(hasGlassCup || hasVoucher) && (
-        <div className={`grid gap-4 ${glassCupVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
-          {hasGlassCup && (
+      {/* Gifts + Voucher Worth: both = 2 cols, single = full width */}
+      {(hasGifts || hasVoucher) && (
+        <div className={`grid gap-4 ${giftsVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+          {hasGifts && (
             <MinZeroInput
               labelBg="#1E1E35"
-              label="Glass Cup Quantity *"
-              value={data.glassCupQty || ""}
-              onChange={(val) => onChange({ ...data, glassCupQty: val })}
-              error={errors.glassCupQty}
+              label="Gift Count *"
+              value={data.giftsQty ?? data.glassCupQty ?? ""}
+              onChange={(val) => onChange({ ...data, giftsQty: val, glassCupQty: val })}
+              error={errors.giftsQty || errors.glassCupQty}
             />
           )}
           {hasVoucher && (
@@ -858,14 +858,13 @@ export default function Purchase({
 }) {
   const dayCount = eventDays.length;
 
-  // Sanitize loaded guestData: strip "Cash Prize" (replaced by "Glass Cup")
-  // so old saved data never shows a stale gift type in the Guest card.
-  // Also normalize voucherWorth to always be an array.
+  // Sanitize loaded guestData: strip stale legacy gift types and map older
+  // glass-cup data to the new Gifts concept so older saved records still render.
   const sanitizeDay = (day) => {
     if (!day) return emptyPurchaseDay();
-    const guestGiftType = (day.guestData?.giftType || []).filter(
-      (g) => g !== "Cash Prize"
-    );
+    const guestGiftType = (day.guestData?.giftType || [])
+      .filter((g) => g !== "Cash Prize" && g !== "Glass Cup")
+      .map((g) => (g === "Glass Cup" ? "Gifts" : g));
     const normalizeVoucherWorth = (vw) => {
       if (!vw) return [];
       if (Array.isArray(vw)) return vw;
@@ -883,6 +882,7 @@ export default function Purchase({
         ...emptyPurchaseDay().guestData,
         ...(day.guestData || {}),
         giftType: guestGiftType,
+        giftsQty: day.guestData?.giftsQty ?? day.guestData?.glassCupQty ?? "",
         cashPrizeAmount: "",
         voucherWorth: normalizeVoucherWorth(day.guestData?.voucherWorth),
         voucherWorthQty: day.guestData?.voucherWorthQty || {},
