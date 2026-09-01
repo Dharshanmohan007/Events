@@ -16,7 +16,7 @@ function getFirstDayOfMonth(year, month) {
 // ─── Scroll Drum ─────────────────────────────────────────────────────────────
 // A vertically-scrollable drum picker with hidden scrollbar.
 // items: array of display strings; value: currently selected index; onChange(index)
-function ScrollDrum({ items, value, onChange }) {
+function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
   const containerRef = useRef(null);
   const ITEM_H = 40; // px per item
   const isScrollingRef = useRef(false);
@@ -38,12 +38,15 @@ function ScrollDrum({ items, value, onChange }) {
     scrollTimerRef.current = setTimeout(() => {
       const idx = Math.round(el.scrollTop / ITEM_H);
       const clamped = Math.max(0, Math.min(items.length - 1, idx));
+      let nextIndex = clamped;
+      while (nextIndex < items.length - 1 && isItemDisabled(nextIndex)) nextIndex += 1;
+      while (nextIndex > 0 && isItemDisabled(nextIndex)) nextIndex -= 1;
       // Snap
-      el.scrollTop = clamped * ITEM_H;
-      if (clamped !== value) onChange(clamped);
+      el.scrollTop = nextIndex * ITEM_H;
+      if (nextIndex !== value) onChange(nextIndex);
       isScrollingRef.current = false;
     }, 80);
-  }, [items.length, onChange, value]);
+  }, [isItemDisabled, items.length, onChange, value]);
 
   return (
     <div className="relative flex flex-col items-center" style={{ width: 56 }}>
@@ -100,12 +103,17 @@ function ScrollDrum({ items, value, onChange }) {
             <div
               key={i}
               onClick={() => {
+                if (isItemDisabled(i)) return;
                 onChange(i);
                 containerRef.current.scrollTop = i * ITEM_H;
               }}
               style={{ height: ITEM_H }}
-              className={`flex items-center justify-center text-base font-mono cursor-pointer select-none transition-colors ${
-                i === value ? "text-white font-semibold" : "text-gray-500 hover:text-gray-300"
+              className={`flex items-center justify-center text-base font-mono select-none transition-colors ${
+                isItemDisabled(i)
+                  ? "text-gray-700 cursor-not-allowed"
+                  : i === value
+                  ? "text-white font-semibold cursor-pointer"
+                  : "text-gray-500 hover:text-gray-300 cursor-pointer"
               }`}
             >
               {item}
@@ -125,6 +133,7 @@ export default function CustomDateTimePicker({
   onChange,
   placeholder,
   minDate,
+  minDateTime,
   maxDate,
 }) {
   const [open, setOpen] = useState(false);
@@ -145,15 +154,18 @@ export default function CustomDateTimePicker({
   const MINUTES = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
 
   const getHourIdx = (d) => {
+    if (!d) d = minDateTime;
     if (!d) return 11; // display "12"
     const h = d.getHours() % 12; // 0 for 12:xx
     return h === 0 ? 0 : h; // index 0 → "12", index 1 → "01", ...
   };
 
   const [hourIdx, setHourIdx] = useState(() => getHourIdx(value));
-  const [minuteIdx, setMinuteIdx] = useState(() => (value ? value.getMinutes() : 0));
+  const [minuteIdx, setMinuteIdx] = useState(() =>
+    (value || minDateTime)?.getMinutes() || 0
+  );
   const [ampm, setAmpm] = useState(() =>
-    value ? (value.getHours() >= 12 ? "PM" : "AM") : "AM"
+    (value || minDateTime)?.getHours() >= 12 ? "PM" : "AM"
   );
 
   const ref = useRef(null);
@@ -200,10 +212,31 @@ export default function CustomDateTimePicker({
       let hours = hIdx % 12; // 0 for 12:xx, 1 for 1:xx, ...
       if (ap === "PM") hours += 12;
       d.setHours(hours, mIdx, 0, 0);
+      if (minDateTime) {
+        const minimum = new Date(minDateTime);
+        minimum.setSeconds(0, 0);
+        if (d < minimum) return;
+      }
       onChange(d);
     },
-    [onChange]
+    [minDateTime, onChange]
   );
+
+  const isSameDate = (firstDate, secondDate) =>
+    firstDate &&
+    secondDate &&
+    firstDate.getFullYear() === secondDate.getFullYear() &&
+    firstDate.getMonth() === secondDate.getMonth() &&
+    firstDate.getDate() === secondDate.getDate();
+
+  const isTimeBeforeMin = (hour, minute, ap) => {
+    if (!minDateTime || !selectedDate) return false;
+    const candidate = new Date(selectedDate);
+    candidate.setHours((hour % 12) + (ap === "PM" ? 12 : 0), minute, 0, 0);
+    const minimum = new Date(minDateTime);
+    minimum.setSeconds(0, 0);
+    return isSameDate(candidate, minimum) && candidate < minimum;
+  };
 
   const handleDayClick = (day) => {
     const newDate = new Date(displayYear, displayMonth, day);
@@ -412,6 +445,7 @@ export default function CustomDateTimePicker({
                     setHourIdx(i);
                     if (selectedDate) commitDateTime(selectedDate, i, minuteIdx, ampm);
                   }}
+                  isItemDisabled={(i) => isTimeBeforeMin(i % 12, 59, ampm)}
                 />
 
                 <span className="text-white text-2xl font-mono mb-1 select-none">:</span>
@@ -424,6 +458,7 @@ export default function CustomDateTimePicker({
                     setMinuteIdx(i);
                     if (selectedDate) commitDateTime(selectedDate, hourIdx, i, ampm);
                   }}
+                  isItemDisabled={(i) => isTimeBeforeMin(hourIdx, i, ampm)}
                 />
 
                 {/* AM / PM */}
@@ -432,6 +467,7 @@ export default function CustomDateTimePicker({
                     <button
                       key={ap}
                       type="button"
+                      disabled={isTimeBeforeMin(hourIdx, minuteIdx, ap)}
                       onClick={() => {
                         setAmpm(ap);
                         if (selectedDate) commitDateTime(selectedDate, hourIdx, minuteIdx, ap);

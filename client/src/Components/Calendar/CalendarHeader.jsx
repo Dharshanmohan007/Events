@@ -1,10 +1,11 @@
-import { ChevronLeft, ChevronRight, ListFilter } from "lucide-react";
+import { ChevronLeft, ChevronRight, ListFilter, Maximize2 } from "lucide-react";
 import { formatMonthYear } from "../../utils/dateUtils";
 
 const VIEWS = [
   { key: "week", label: "Week" },
   { key: "month", label: "Month" },
   { key: "day", label: "Day" },
+  { key: "allVenues", label: "All Venues" },
 ];
 
 export default function CalendarHeader({
@@ -23,10 +24,24 @@ export default function CalendarHeader({
       <h1 className="text-xl font-semibold text-white">
         {formatMonthYear(currentDate)}
         <span className="text-slate-500"> - </span>
-        <span className="text-violet-400">{venue}</span>
+        <span className="text-violet-400">
+          {view === "allVenues" ? "All Venues" : venue}
+        </span>
       </h1>
 
       <div className="flex items-center gap-3">
+        {view === "allVenues" && (
+          <a
+            href={`/calendar/all-venues-fullscreen?date=${currentDate.toISOString()}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold text-white uppercase tracking-wider bg-violet-600 hover:bg-violet-500 rounded-lg shadow shadow-violet-500/20 transition hover:scale-105"
+          >
+            <Maximize2 size={13} />
+            Enlarge
+          </a>
+        )}
+
         <div className="flex rounded-lg bg-white/5 p-1 text-xs font-medium">
           {VIEWS.map((v) => (
             <button
@@ -44,44 +59,46 @@ export default function CalendarHeader({
           ))}
         </div>
 
-        <div className="relative">
-          <select
-            value={venue}
-            onChange={(e) => onChangeVenue(e.target.value)}
-            className="appearance-none rounded-lg b bg-white/5 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-200 outline-none hover:bg-white/10 focus:ring-2 focus:ring-gray-500"
-          >
-            {venues.map((v) => (
-              <option key={v} value={v} className="bg-[#0b0f1a]">
-                {v}
-              </option>
-            ))}
-          </select>
-          <ListFilter
-            size={14}
-            className="pointer-events-none absolute left-3 top-1/2 text-xs -translate-y-1/2 text-slate-400"
-          />
-        </div>
+        {view !== "allVenues" && (
+          <div className="relative">
+            <select
+              value={venue}
+              onChange={(e) => onChangeVenue(e.target.value)}
+              className="appearance-none rounded-lg b bg-white/5 py-1.5 pl-9 pr-8 text-sm font-medium text-slate-200 outline-none hover:bg-white/10 focus:ring-2 focus:ring-gray-500"
+            >
+              {venues.map((v) => (
+                <option key={v} value={v} className="bg-[#0b0f1a]">
+                  {v}
+                </option>
+              ))}
+            </select>
+            <ListFilter
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 text-xs -translate-y-1/2 text-slate-400"
+            />
+          </div>
+        )}
 
-        <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5">
-          <button
-            onClick={onPrev}
-            className="rounded-md p-2 text-slate-300 hover:bg-white/10"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={onToday}
-            className="border-x border-white/10 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/10"
-          >
-            Today
-          </button>
-          <button
-            onClick={onNext}
-            className="rounded-md p-2 text-slate-300 hover:bg-white/10"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
+          <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5">
+            <button
+              onClick={onPrev}
+              className="rounded-md p-2 text-slate-300 hover:bg-white/10"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              onClick={onToday}
+              className="border-x border-white/10 px-3 py-2 text-xs font-medium text-slate-200 hover:bg-white/10"
+            >
+              Today
+            </button>
+            <button
+              onClick={onNext}
+              className="rounded-md p-2 text-slate-300 hover:bg-white/10"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
       </div>
     </div>
   );
