@@ -40,15 +40,13 @@ const toFileRef = (name) => `doc_${toKey(name)}_file`;
 // Initial states for each form section
 const initialIncomeData = {
   registrationFees: {
-    requirements: "",
-    calculations: "",
     amount: "",
     details: "",
   },
-  scholarship: { requirements: "", calculations: "", amount: "", details: "" },
+  scholarship: { amount: "", details: "" },
   institutionalAmount: { selectRequired: "", amount: "", details: "" },
   departmentFund: { details: "", amount: "" },
-  others: { requirements: "", calculations: "", amount: "", details: "" },
+  others: { amount: "", details: "" },
 };
 
 const initialExpenditureData = {
@@ -418,13 +416,9 @@ const FacultyDocumentUploadPage = () => {
         others,
       } = incomeData;
 
-      // Helper to build income details by concatenating details, calculations, requirements
+      // Helper to build income details
       const buildIncomeDetails = (data) => {
-        const parts = [];
-        if (data.details) parts.push(data.details);
-        if (data.calculations) parts.push(data.calculations);
-        if (data.requirements) parts.push(data.requirements);
-        return parts.join(", ");
+        return data.details || "";
       };
 
       if (registrationFees.amount) {
@@ -446,6 +440,7 @@ const FacultyDocumentUploadPage = () => {
           type: "Institutional Amount",
           amount: Number(institutionalAmount.amount) || 0,
           details: buildIncomeDetails(institutionalAmount),
+          selectRequired: institutionalAmount.selectRequired || "",
         });
       }
       if (departmentFund.amount) {

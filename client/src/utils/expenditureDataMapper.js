@@ -7,6 +7,23 @@
  * and OtherDetailsForm.
  */
 
+/**
+ * Converts DD-MM-YYYY to YYYY-MM-DD for HTML date inputs.
+ * Returns the original string if it's already in YYYY-MM-DD format or empty.
+ */
+const toISODate = (dateStr) => {
+  if (!dateStr) return "";
+  // Already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+  // DD-MM-YYYY or DD/MM/YYYY
+  const match = dateStr.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/);
+  if (match) {
+    const [, day, month, year] = match;
+    return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+  }
+  return dateStr;
+};
+
 // ─── Income Type → Form Key mapping ─────────────────────────────────────────
 const INCOME_TYPE_TO_KEY = {
   "Registration Fees": "registrationFees",
@@ -20,19 +37,15 @@ const INCOME_TYPE_TO_KEY = {
  * Maps API income array → incomeData form shape.
  *
  * API:  [{ type: "Registration Fees", details: "Dev Testing, 45, 800", amount: 878 }]
- * Form: { registrationFees: { requirements: "", calculations: "", amount: "878", details: "Dev Testing, 45, 800" } }
- *
- * NOTE: requirements & calculations are lossy on round-trip (the POST
- * concatenates them into `details`). On edit we put the full string in
- * `details` and leave the other two blank.
+ * Form: { registrationFees: { amount: "878", details: "Dev Testing, 45, 800" } }
  */
 export const apiIncomeToFormData = (incomeArray = []) => {
   const formData = {
-    registrationFees: { requirements: "", calculations: "", amount: "", details: "" },
-    scholarship: { requirements: "", calculations: "", amount: "", details: "" },
+    registrationFees: { amount: "", details: "" },
+    scholarship: { amount: "", details: "" },
     institutionalAmount: { selectRequired: "", amount: "", details: "" },
     departmentFund: { details: "", amount: "" },
-    others: { requirements: "", calculations: "", amount: "", details: "" },
+    others: { amount: "", details: "" },
   };
 
   incomeArray.forEach((item) => {
@@ -41,6 +54,10 @@ export const apiIncomeToFormData = (incomeArray = []) => {
 
     formData[key].amount = item.amount != null ? String(item.amount) : "";
     formData[key].details = item.details || "";
+    // Map selectRequired for institutionalAmount if present
+    if (key === 'institutionalAmount' && item.selectRequired) {
+      formData[key].selectRequired = item.selectRequired;
+    }
   });
 
   return formData;
@@ -82,7 +99,7 @@ export const apiExpenditureToFormData = (expenditureObj = {}) => {
     formData[cat] = items.map((item) => ({
       expenseName: item.name || "",
       billNo: item.billNo || "",
-      billDate: item.date || "",
+      billDate: toISODate(item.date),
       vendorGuestName: item.guestName || "",
       amount: item.billAmount != null ? String(item.billAmount) : "",
       file: null, // File objects can't be round-tripped from URLs
