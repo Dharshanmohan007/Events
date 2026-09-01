@@ -58,12 +58,15 @@ const TableSkeleton = ({ cols = 5 }) => (
   </tbody>
 )
 
+const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'acknowledged']
+
 const ReportStatus = ({ status }) => {
-  const isCompleted = String(status).toLowerCase() === 'completed' || String(status).toLowerCase() === 'acknowledged'
+  const label = status || 'Pending'
+  const isPositive = POSITIVE_STATUSES.includes(label.toLowerCase())
   return (
-    <span className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${isCompleted ? 'text-[#34D399]' : 'text-[#B32058]'}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${isCompleted ? 'bg-[#34D399]' : 'bg-[#B32058]'}`} />
-      {status || '-'}
+    <span className={`flex items-center gap-1.5 text-[11px] font-semibold ${isPositive ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${isPositive ? 'bg-[#34D399]' : 'bg-[#F87171]'}`} />
+      {label}
     </span>
   )
 }

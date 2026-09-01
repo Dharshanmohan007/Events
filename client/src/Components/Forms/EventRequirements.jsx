@@ -13,14 +13,14 @@ const LABEL_MAP = {
 };
 
 const defaultValues = {
-  venue: "",
-  icts: "",
-  audio: "",
-  transport: "",
-  foodandrefreshments: "",
-  accommodation: "",
-  purchase: "",
-  media: "",
+  venue: "No",
+  icts: "No",
+  audio: "No",
+  transport: "No",
+  foodandrefreshments: "No",
+  accommodation: "No",
+  purchase: "No",
+  media: "No",
 };
 
 export default function EventRequirements({

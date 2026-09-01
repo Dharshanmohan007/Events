@@ -144,7 +144,7 @@ const IctcsEventsDetailViewPage = () => {
               <>
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-medium text-[#8B3DFF]">ICTCS Details</h2>
+                    <h2 className="text-lg font-medium text-[#8B3DFF]">ICTCS Details </h2>
                     <p className="mt-2 text-xs leading-6 text-[#CBC3D7]/55">
                       Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the 1500s
                     </p>
@@ -161,6 +161,7 @@ const IctcsEventsDetailViewPage = () => {
                     ictsDetails={ictsDetails}
                     eventSchedule={eventSchedule}
                     eventData={eventData}
+                    allocationId={eventId}
                   />
                 </div>
               </>

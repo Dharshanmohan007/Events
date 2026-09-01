@@ -22,56 +22,55 @@ const FacultyExpenditureTable = () => {
   const [selectedTab, setSelectedTab] = useState("Event expenditures");
   const [searchQuery, setSearchQuery] = useState("");
 
-
   const getStatusColor = (status = "") => {
-  const normalizedStatus = String(status).toLowerCase();
+    const normalizedStatus = String(status).toLowerCase();
 
-  if (normalizedStatus.includes("rejected")) {
-    return {
-      text: "text-red-400",
-      dot: "bg-red-400",
-    };
-  }
+    if (normalizedStatus.includes("rejected")) {
+      return {
+        text: "text-red-400",
+        dot: "bg-red-400",
+      };
+    }
 
-  if (normalizedStatus.includes("acknowledged")) {
-    return {
-      text: "text-emerald-400",
-      dot: "bg-emerald-400",
-    };
-  }
+    if (normalizedStatus.includes("acknowledged")) {
+      return {
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+      };
+    }
 
-  if (normalizedStatus.includes("approved")) {
-    return {
-      text: "text-emerald-400",
-      dot: "bg-emerald-400",
-    };
-  }
+    if (normalizedStatus.includes("approved")) {
+      return {
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+      };
+    }
 
-  if (normalizedStatus.includes("pending")) {
-    return {
-      text: "text-pink-600",
-      dot: "bg-pink-600",
-    };
-  }
+    if (normalizedStatus.includes("pending")) {
+      return {
+        text: "text-pink-600",
+        dot: "bg-pink-600",
+      };
+    }
 
-  if (normalizedStatus.includes("submitted")) {
-    return {
-      text: "text-yellow-400",
-      dot: "bg-yellow-400",
-    };
-  }
-  if (normalizedStatus.includes("completed")) {
-    return {
-      text: "text-emerald-400",
-      dot: "bg-emerald-400",
-    };
-  }
+    if (normalizedStatus.includes("submitted")) {
+      return {
+        text: "text-yellow-400",
+        dot: "bg-yellow-400",
+      };
+    }
+    if (normalizedStatus.includes("completed")) {
+      return {
+        text: "text-emerald-400",
+        dot: "bg-emerald-400",
+      };
+    }
 
-  return {
-    text: "text-white",
-    dot: "bg-white",
+    return {
+      text: "text-white",
+      dot: "bg-white",
+    };
   };
-};
 
   // ── Fetch Event Expenditures from API ────────────────────────────────────
   useEffect(() => {
@@ -132,8 +131,11 @@ const FacultyExpenditureTable = () => {
     const q = searchQuery.toLowerCase();
     return eventsExpenditureData.filter((item) => {
       const eventName = item?.basicDetails?.eventName || "";
-      const eventType = item?.eventId?.requestDetails?.eventDetails?.eventType || "";
-      const status = item?.eventId?.documentExpenditureApproved ? "approved" : "pending";
+      const eventType =
+        item?.eventId?.requestDetails?.eventDetails?.eventType || "";
+      const status = item?.eventId?.documentExpenditureApproved
+        ? "approved"
+        : "pending";
       return (
         eventName.toLowerCase().includes(q) ||
         eventType.toLowerCase().includes(q) ||
@@ -409,56 +411,57 @@ const FacultyExpenditureTable = () => {
               <tbody>
                 {filteredIndividualData.length > 0 ? (
                   filteredIndividualData.map((item) => {
-                  return (
-                    <tr className="h-[50px] border-b border-[#252d40] hover:bg-[#192235]">
-                      <td className="px-3 text-[14px] font-medium text-white">
-                        {item?.module}
-                      </td>
-                      <td className="px-3 text-[14px] text-[#d1d5db]">
-                        {formatDate(item?.requestDate)}
-                      </td>
-                      <td className="px-3 text-[14px] text-[#d1d5db]">
-                        {item?.faculty?.department}
-                      </td>
-                      <td className="px-3 text-[14px] text-[#d1d5db]">
-                        {formatDate(item?.expenditure?.createdAt)}
-                      </td>
-                      <td className="px-3">
-                        <div
-                          className={`flex items-center gap-1 text-[14px] font-medium ${
-                            getStatusColor(item?.expenditure?.approvalStatus)
-                              .text
-                          }`}
-                        >
-                          <span
-                            className={`h-[5px] w-[5px] rounded-full ${
+                    return (
+                      <tr className="h-[50px] border-b border-[#252d40] hover:bg-[#192235]">
+                        <td className="px-3 text-[14px] font-medium text-white">
+                          {item?.module}
+                        </td>
+                        <td className="px-3 text-[14px] text-[#d1d5db]">
+                          {formatDate(item?.requestDate)}
+                        </td>
+                        <td className="px-3 text-[14px] text-[#d1d5db]">
+                          {item?.faculty?.department}
+                        </td>
+                        <td className="px-3 text-[14px] text-[#d1d5db]">
+                          {formatDate(item?.expenditure?.createdAt)}
+                        </td>
+                        <td className="px-3">
+                          <div
+                            className={`flex items-center gap-1 text-[14px] font-medium ${
                               getStatusColor(item?.expenditure?.approvalStatus)
-                                .dot
+                                .text
                             }`}
-                          />
+                          >
+                            <span
+                              className={`h-[5px] w-[5px] rounded-full ${
+                                getStatusColor(
+                                  item?.expenditure?.approvalStatus,
+                                ).dot
+                              }`}
+                            />
 
-                          {item?.expenditure?.approvalStatus}
-                        </div>
-                      </td>
-                      <td className="px-3">
-                        <div className="flex items-center justify-center gap-3">
-                          <button
-                            type="button"
-                            className="text-[#8b93a5] hover:text-white"
-                          >
-                            <ExternalLink size={13} strokeWidth={1.8} />
-                          </button>
-                          <button
-                            type="button"
-                            className="text-[#8b93a5] hover:text-white"
-                          >
-                            <Download size={13} strokeWidth={1.8} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
+                            {item?.expenditure?.approvalStatus}
+                          </div>
+                        </td>
+                        <td className="px-3">
+                          <div className="flex items-center justify-center gap-3">
+                            <button
+                              type="button"
+                              className="text-[#8b93a5] hover:text-white"
+                            >
+                              <ExternalLink size={13} strokeWidth={1.8} />
+                            </button>
+                            <button
+                              type="button"
+                              className="text-[#8b93a5] hover:text-white"
+                            >
+                              <Download size={13} strokeWidth={1.8} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
                     <td

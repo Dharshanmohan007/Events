@@ -3,11 +3,12 @@ import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { Search, ListFilter, Download, ChevronDown } from 'lucide-react'
 import DashboardHeader from '../ICTC-Dashboard/DashboardHeader'
 import { buildEventTemplate } from '../../../templates/eventTemplate'
+import { buildIndividualRequestTemplate } from '../../../templates/individualRequestTemplate'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 // ─── Status badge (mirrors TransportLatestEventsRequestTable) ──────────────────
-const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted']
+const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'acknowledged']
 
 const ReportStatus = ({ status }) => {
   const label = status || 'Pending'
@@ -15,12 +16,12 @@ const ReportStatus = ({ status }) => {
   return (
     <span
       className={`flex items-center gap-1.5 text-[11px] font-semibold ${
-        isPositive ? 'text-[#20D18C]' : 'text-[#F20768]'
+        isPositive ? 'text-[#34D399]' : 'text-[#F87171]'
       }`}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          isPositive ? 'bg-[#20D18C]' : 'bg-[#F20768]'
+          isPositive ? 'bg-[#34D399]' : 'bg-[#F87171]'
         }`}
       />
       {label}
@@ -155,27 +156,46 @@ const downloadRow = async (row, tabContext) => {
     return
   }
 
-  // Logic for Individual Requests (CSV Download)
-  const lines = [
-    ['Field', 'Value'],
-    ['Event Name', row.eventName || '-'],
-    ['Dept', row.department || '-'],
-    ['Requester Name', row.requesterName || '-'],
-    ['Requester Phone', row.requesterPhone || '-'],
-    ['Required Date', row.requiredDate || '-'],
-    ['Status', row.status || '-'],
-  ]
-
-  const csv = lines
-    .map((r) => r.map((c) => `"${String(c ?? '').replace(/"/g, '""')}"`).join(','))
-    .join('\n')
-  const blob = new Blob([csv], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `report-${row.eventName || row.employee || 'row'}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  // Individual Requests — PDF via shared template (same as Faculty/Food/Purchase/Admin)
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(
+      `${API_BASE_URL}/api/individual-submissions/getrequest/${row.id}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    const json = await res.json()
+    // API returns { success, count, data: [ {...} ] } — take first element
+    const reqObj = Array.isArray(json.data) ? json.data[0] : (json.data || json)
+    if (reqObj && (reqObj.id || reqObj._id || reqObj.formType)) {
+      const htmlString = buildIndividualRequestTemplate(reqObj)
+      const iframe = document.createElement('iframe')
+      iframe.style.position = 'absolute'
+      iframe.style.width = '0'
+      iframe.style.height = '0'
+      iframe.style.border = 'none'
+      document.body.appendChild(iframe)
+      // Set onload BEFORE writing so we don't miss the event
+      iframe.onload = () => {
+        iframe.contentWindow.focus()
+        setTimeout(() => {
+          iframe.contentWindow.print()
+          setTimeout(() => {
+            if (document.body.contains(iframe)) document.body.removeChild(iframe)
+          }, 2000)
+        }, 300)
+      }
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document
+      iframeDoc.open()
+      iframeDoc.write(htmlString)
+      iframeDoc.close()
+    } else {
+      console.error('[PDF Fetch] Failed to find individual request data:', json)
+      alert('Failed to fetch individual request details.')
+    }
+  } catch (err) {
+    console.error('[PDF Fetch] Error generating individual PDF:', err)
+    alert('Error connecting to API to generate PDF.')
+  }
 }
 
 // ─── Format date helper ───────────────────────────────────────────────────────
@@ -248,22 +268,23 @@ const TransportsReportsPage = () => {
 
     ;(async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/individual-submissions`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        // Confirmed correct endpoint — same pattern as Food/Purchase
+        const res = await fetch(
+          `${API_BASE_URL}/api/individual-submissions/getrequest?module=transport`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
         const json = await res.json()
 
-        if (json.data && isMounted) {
+        if (json.success && isMounted) {
           setIndividualRows(
             (json.data || []).map((req) => ({
               id: req.id || req._id || req.submissionId,
-              eventName: req.eventName || req.requestDetails?.eventDetails?.eventName || '-',
-              department: req.department || req.organizingDepartment || '-',
-              requesterName: req.employee || req.requesterName || req.employeeDetail?.name || '-',
-              requesterPhone: req.phone || req.requesterPhone || '-',
-              requiredDate: (Array.isArray(req.dates) && req.dates.length > 0) 
-                  ? `${formatDate(req.dates[0])}${req.dates.length > 1 ? ` +${req.dates.length - 1}` : ''}`
-                  : formatDate(req.dates || req.createdAt || req.date || req.requiredDate),
+              // Map from confirmed response shape: employeeDetail.firstName, department, phone
+              eventName: req.employeeDetail?.firstName || req.employee || '-',
+              department: req.employeeDetail?.department || req.department || req.organizingDepartment || '-',
+              requesterName: req.employeeDetail?.firstName || req.employee || req.requesterName || '-',
+              requesterPhone: req.employeeDetail?.phone || req.phone || req.requesterPhone || '-',
+              requiredDate: formatDate(req.createdAt),
               status:
                 typeof req.status === 'string'
                   ? req.status

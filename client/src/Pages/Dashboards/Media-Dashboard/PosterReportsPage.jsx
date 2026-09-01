@@ -65,12 +65,15 @@ const derivePosterStatus = (posterRequirements = []) => {
 
 // ── Components ───────────────────────────────────────────────────────────────
 
+const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'acknowledged']
+
 const ReportStatus = ({ status }) => {
-  const completed = String(status).toLowerCase().includes('completed')
+  const label = status || 'Pending'
+  const isPositive = POSITIVE_STATUSES.includes(String(label).toLowerCase())
   return (
-    <span className={`inline-flex items-center gap-2 font-semibold ${completed ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
-      <span className={`h-1.5 w-1.5 rounded-full ${completed ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
-      {status || '-'}
+    <span className={`flex items-center gap-1.5 text-[11px] font-semibold ${isPositive ? 'text-[#34D399]' : 'text-[#F87171]'}`}>
+      <span className={`h-1.5 w-1.5 rounded-full ${isPositive ? 'bg-[#34D399]' : 'bg-[#F87171]'}`} />
+      {label}
     </span>
   )
 }

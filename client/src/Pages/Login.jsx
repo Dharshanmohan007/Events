@@ -6,7 +6,6 @@ import { MoveRight } from "lucide-react";
 import { showSuccessToast } from "../Components/CustomToast";
 import { decodeToken } from "../utils/tokenUtils";
 import { getRouteForRole } from "../utils/roleRoutes";
-import blurImg1 from "../assets/blur-img1.svg";
 import Logo from "../assets/logo-black.svg";
 import LoginBackground from "../assets/login_Background.svg";
 
@@ -17,7 +16,7 @@ async function loginApi(email, password) {
   //   "LOGIN URL:",
   //   `${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`
   // );
-  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`, {
+  const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -161,8 +160,6 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [mounted, setMounted] = useState(false);
   const [mode, setMode] = useState("login");
-  const [step, setStep] = useState("login");
-  const [otp, setOtp] = useState("");
 
   const { login } = useAuth();
 
@@ -193,81 +190,6 @@ export default function LoginPage() {
 
       // console.log("LOGIN RESPONSE:", data);
 
-      if (data.otpRequired) {
-        showSuccessToast(data.message || "OTP sent successfully");
-        setStep("otp");
-      } else {
-        throw new Error("OTP was not generated");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFieldChange = (field, val) => {
-    if (field === "email") setEmail(val);
-    else setPassword(val);
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => {
-        const c = { ...prev };
-        delete c[field];
-        return c;
-      });
-    }
-    if (error) setError("");
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-
-    setError("");
-
-    if (!otp.trim()) {
-      setError("OTP is required");
-      return;
-    }
-
-    if (otp.length !== 6) {
-      setError("Enter a valid OTP");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/auth/verify-login-otp`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            email,
-            otp,
-          }),
-        }
-      );
-
-      const text = await res.text();
-
-      let data = {};
-
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        throw new Error("Invalid server response");
-      }
-
-      // console.log("VERIFY OTP RESPONSE:", data);
-
-      if (!res.ok) {
-        throw new Error(data.message || "OTP verification failed");
-      }
-
       if (!data.token) {
         throw new Error("Token not received");
       }
@@ -293,9 +215,7 @@ export default function LoginPage() {
       };
 
       localStorage.setItem("user", JSON.stringify(userData));
-
       login(userData);
-
       showSuccessToast("Login Successful");
 
       navigate(getRouteForRole(role, department), {
@@ -307,6 +227,19 @@ export default function LoginPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFieldChange = (field, val) => {
+    if (field === "email") setEmail(val);
+    else setPassword(val);
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const c = { ...prev };
+        delete c[field];
+        return c;
+      });
+    }
+    if (error) setError("");
   };
 
   return (
@@ -327,7 +260,7 @@ export default function LoginPage() {
               Welcome to Evomira👋
             </h1>
             <p className="text-gray-500 text-sm mb-8">
-              Kindly fill in your details below to {step === "login" ? "Login" : "verify your OTP"}
+              Kindly fill in your details below to Login
             </p>
           </div>
 
@@ -343,7 +276,6 @@ export default function LoginPage() {
           )}
 
           {mode === "login" ? (
-            step === "login" ? (
               <form onSubmit={handleLogin} noValidate className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-gray-400 text-sm font-medium">Email Address</label>
@@ -403,40 +335,6 @@ export default function LoginPage() {
                 </button>
                 
               </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp} className="flex flex-col gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-gray-400 text-sm font-medium">OTP</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="Enter 6-digit OTP"
-                    className="w-full rounded-xl px-4 py-3 text-sm text-gray-900 bg-white border border-gray-100 outline-none transition-all duration-200 shadow-sm focus:border-[#7C5CFF]"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full mt-2 py-3.5 rounded-xl text-white font-medium text-sm bg-[#7C5CFF] hover:bg-[#684be3] disabled:opacity-70 transition-all duration-200"
-                >
-                  {loading ? "Verifying..." : "Verify OTP"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("login");
-                    setOtp("");
-                    setError("");
-                  }}
-                  className="mt-2 text-sm text-[#7C5CFF] hover:underline"
-                >
-                  Back to Login
-                </button>
-              </form>
-            )
           ) : (
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
               <ForgetPassword onBack={() => setMode("login")} embedded />

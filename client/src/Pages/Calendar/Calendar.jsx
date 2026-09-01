@@ -4,6 +4,7 @@ import CalendarHeader from "../../Components/Calendar/CalendarHeader.jsx";
 import WeekView from "../../Components/Calendar/WeekView.jsx";
 import MonthView from "../../Components/Calendar/MonthView.jsx";
 import DayView from "../../Components/Calendar/DayView.jsx";
+import AllVenuesView from "../../Components/Calendar/AllVenuesView.jsx";
 import { fetchEvents, fetchVenues } from "../../api/calendarApi.js";
 import { addDays, addMonths } from "../../utils/dateUtils.js";
 import DashboardHeader from "../Dashboards/ICTC-Dashboard/DashboardHeader.jsx";
@@ -28,9 +29,9 @@ export default function Calendar() {
       .catch(() => setError("Couldn't load venues"));
   }, []);
 
-  // reload events whenever venue / view / date changes
+  // reload events whenever venue / view / date changes (skip for allVenues)
   useEffect(() => {
-    if (!venue) return;
+    if (!venue || view === "allVenues") return;
     setLoading(true);
     setError(null);
     fetchEvents({ venue, view, date: currentDate })
@@ -43,7 +44,7 @@ export default function Calendar() {
     setCurrentDate((d) => {
       if (view === "day") return addDays(d, -1);
       if (view === "week") return addDays(d, -7);
-      return addMonths(d, -1);
+      return addMonths(d, -1); // month & allVenues
     });
   }, [view]);
 
@@ -51,7 +52,7 @@ export default function Calendar() {
     setCurrentDate((d) => {
       if (view === "day") return addDays(d, 1);
       if (view === "week") return addDays(d, 7);
-      return addMonths(d, 1);
+      return addMonths(d, 1); // month & allVenues
     });
   }, [view]);
 
@@ -113,6 +114,12 @@ export default function Calendar() {
                   <DayView
                     currentDate={currentDate}
                     events={events}
+                    onSelectEvent={handleSelectEvent}
+                  />
+                )}
+                {view === "allVenues" && (
+                  <AllVenuesView
+                    currentDate={currentDate}
                     onSelectEvent={handleSelectEvent}
                   />
                 )}

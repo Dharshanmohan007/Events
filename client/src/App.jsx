@@ -91,8 +91,11 @@ import IndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/Indiv
 import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/PurchaseIndividualDocumentUpload";
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
+import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
+
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
+import AllVenuesFullscreenPage from "./Pages/Calendar/AllVenuesFullscreenPage.jsx";
 import { AuthProvider, useAuth } from "./Components/AuthContext";
 import { ProtectedRoute } from "./utils/ProtectedRoute";
 
@@ -108,6 +111,8 @@ import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/F
 
 import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/IndividualVideoDetailPage.jsx";
 
+import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
+import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -413,10 +418,17 @@ function AppRoutes() {
         <Route index element={<AdminDashboard />} />
         <Route path="AdminEventsRequests" element={<AdminEventsListPage />} />
         <Route path="VenueManagement" element={<VenueManagementPage />} />
+        <Route path="RoomManagement" element={<RoomManagement/>}/>
+        <Route path="EventTypeManagement" element={<EventTypeManagement/>}/>
         <Route path="AdminManagement" element={<AdminManagementPage />} />
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
+        <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
+        
+        <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
+        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
+
         <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
@@ -594,7 +606,7 @@ function AppRoutes() {
         path="/dashboard-faculty/IndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
-            <IndividualDocumentUpload />
+            <IndividualDocumentUpload requestType="Food Request" sectionTitle="Food Details" />
           </ProtectedRoute>
         }
       />
@@ -610,7 +622,7 @@ function AppRoutes() {
         path="/dashboard-faculty/TransportIndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
-            <IndividualDocumentUpload />
+            <TransportIndividualDocumentUpload />
           </ProtectedRoute>
         }
       />
@@ -764,6 +776,8 @@ function AppRoutes() {
         }
       />
       <Route path="/calendar" element={<Calendar />} />
+      <Route path="/calendar/all-venues-fullscreen" element={<AllVenuesFullscreenPage />} />
+      <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} />
       {/* Purchase individual detail view v2 */}
       <Route
         path="/dashboard-purchase/events/individualDetailView/:eventId"
