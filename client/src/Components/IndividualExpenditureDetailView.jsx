@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Megaphone,
   CalendarDays,
@@ -17,9 +17,39 @@ import { API_BASE } from "../utils/apiConfig";
 
 const EventRequestDetails = () => {
   const { requestId } = useParams();
+  const navigate = useNavigate();
   const [detailData, setDetailData] = useState(null);
   const [isApproving, setIsApproving] = useState(false);
   const expenditureId = detailData?.expenditure?._id || "6a9552ebf8a412f5ec3babdb";
+
+  const goToEditForm = () => {
+    if (!requestId) return;
+
+    const moduleName = String(
+      detailData?.module ||
+      detailData?.requestType ||
+      detailData?.requestDetails?.module ||
+      detailData?.data?.module ||
+      ""
+    ).toLowerCase();
+
+    if (moduleName.includes("media")) {
+      navigate(`/dashboard-faculty/MediaIndividualDocumentUpload/${requestId}`);
+      return;
+    }
+
+    if (moduleName.includes("purchase")) {
+      navigate(`/dashboard-faculty/PurchaseIndividualDocumentUpload/${requestId}`);
+      return;
+    }
+
+    if (moduleName.includes("transport")) {
+      navigate(`/dashboard-faculty/TransportIndividualDocumentUpload/${requestId}`);
+      return;
+    }
+
+    navigate(`/dashboard-faculty/IndividualDocumentUpload/${requestId}`);
+  };
 
   const handleApprove = async () => {
     try {
@@ -42,6 +72,35 @@ const EventRequestDetails = () => {
       }
 
       const result = await response.json();
+      const nextStatus = result?.status || result?.approvalStatus || "Approved";
+
+      setDetailData((prev) => {
+        if (!prev) return prev;
+
+        const updated = {
+          ...prev,
+          approvalStatus: nextStatus,
+          status: nextStatus,
+        };
+
+        console.log("Code updated ")
+          
+        const updatedExpenditure = {
+          ...(prev?.expenditure || prev?.data?.expenditure || {}),
+          approvalStatus: nextStatus,
+          status: nextStatus,
+        };
+
+        updated.expenditure = updatedExpenditure;
+        if (updated?.data) {
+          updated.data.expenditure = updatedExpenditure;
+          updated.data.approvalStatus = nextStatus;
+          updated.data.status = nextStatus;
+        }
+
+        return updated;
+      });
+
       console.log("Approval successful:", result);
       alert("Approved successfully");
     } catch (error) {
@@ -58,20 +117,47 @@ const EventRequestDetails = () => {
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/individual/expenditure/${requestId}`, {
-          method: "GET",
-          headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            "Content-Type": "application/json",
-          },
-        });
+        const endpointCandidates = [
+          `${API_BASE}/api/individual/expenditure/${requestId}`,
+          `${API_BASE}/api/individual/expenditure/request/${requestId}`,
+          `${API_BASE}/api/individual/expenditure?id=${requestId}`,
+        ];
 
-        if (!response.ok) {
+        let loadedData = null;
+
+        for (const endpoint of endpointCandidates) {
+          try {
+            const response = await fetch(endpoint, {
+              method: "GET",
+              headers: {
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                "Content-Type": "application/json",
+              },
+            });
+
+            if (!response.ok) continue;
+
+            const payload = await response.json();
+            const normalized =
+              Array.isArray(payload) ? payload[0] :
+              payload?.data && typeof payload.data === "object" ? payload.data :
+              payload?.result && typeof payload.result === "object" ? payload.result :
+              payload || {};
+
+            if (normalized && Object.keys(normalized).length) {
+              loadedData = normalized;
+              break;
+            }
+          } catch (innerError) {
+            console.error("Retry fetch failed for individual expenditure details:", innerError);
+          }
+        }
+
+        if (!loadedData) {
           throw new Error("Failed to fetch expenditure details");
         }
 
-        const payload = await response.json();
-        setDetailData(payload?.data ?? payload);
+        setDetailData(loadedData);
       } catch (error) {
         console.error("Error fetching individual expenditure details:", error);
       }
@@ -79,32 +165,38 @@ const EventRequestDetails = () => {
 
     fetchExpenditure();
   }, [requestId]);
-  const faculty = detailData?.faculty || detailData?.data?.faculty || {};
+
+  const faculty = detailData?.faculty || detailData?.data?.faculty || detailData?.requester || detailData?.user || {};
   const organizer = faculty || {};
-  const expenditure = detailData?.expenditure ?? {};
+  const expenditure = detailData?.expenditure ?? detailData?.data?.expenditure ?? {};
   const purchaseRows = Array.isArray(expenditure?.purchase) ? expenditure.purchase : [];
   const othersRows = Array.isArray(expenditure?.others) ? expenditure.others : [];
   const foodRows = Array.isArray(expenditure?.food) ? expenditure.food : [];
   const transportRows = Array.isArray(expenditure?.transport) ? expenditure.transport : [];
-  const expenseRows = transportRows.length
-    ? transportRows
-    : purchaseRows.length
-      ? purchaseRows
-      : othersRows.length
-        ? othersRows
-        : foodRows;
+  const mediaRows = Array.isArray(expenditure?.media) ? expenditure.media : [];
+  const expenseRows = mediaRows.length
+    ? mediaRows
+    : transportRows.length
+      ? transportRows
+      : purchaseRows.length
+        ? purchaseRows
+        : othersRows.length
+          ? othersRows
+          : foodRows;
   const expenseItem = expenseRows[0] ?? {};
 
   const moduleLabel =
-    transportRows.length
-      ? "Transport Details"
-      : purchaseRows.length
-        ? "Purchase Details"
-        : othersRows.length
-          ? "Other Details"
-          : foodRows.length
-            ? "Food Details"
-            : "Expenditure Details";
+    mediaRows.length
+      ? "Media Details"
+      : transportRows.length
+        ? "Transport Details"
+        : purchaseRows.length
+          ? "Purchase Details"
+          : othersRows.length
+            ? "Other Details"
+            : foodRows.length
+              ? "Food Details"
+              : "Expenditure Details";
 
   const nameCandidates = [
     detailData?.name,
@@ -257,6 +349,7 @@ const EventRequestDetails = () => {
 
           <button
             type="button"
+            onClick={goToEditForm}
             className="
               ml-[5px]
               flex
@@ -518,7 +611,7 @@ const EventRequestDetails = () => {
                 </label>
                 <input
                   type="text"
-                  value={expenseItem?.expenseName || ""}
+                  value={expenseItem?.expenseName || expenseItem?.name || expenseItem?.mediaName || ""}
                   readOnly
                   className="w-full rounded-[8px] border border-[#4b5670] bg-transparent px-[12px] py-[10px] text-[12px] text-[#dfe3ec] placeholder:text-[#7d8ba4]"
                 />
@@ -531,7 +624,7 @@ const EventRequestDetails = () => {
                   </label>
                   <input
                     type="text"
-                    value={expenseItem?.billNo || ""}
+                    value={expenseItem?.billNo || expenseItem?.billNumber || ""}
                     readOnly
                     className="w-full rounded-[8px] border border-[#4b5670] bg-transparent px-[12px] py-[10px] text-[12px] text-[#dfe3ec]"
                   />
@@ -544,7 +637,7 @@ const EventRequestDetails = () => {
                   <div className="relative">
                     <input
                       type="text"
-                      value={expenseItem?.billDate ? formatDisplayDate(expenseItem.billDate) : ""}
+                      value={expenseItem?.billDate ? formatDisplayDate(expenseItem.billDate) : expenseItem?.date ? formatDisplayDate(expenseItem.date) : ""}
                       readOnly
                       className="w-full rounded-[8px] border border-[#4b5670] bg-transparent px-[12px] py-[10px] pr-[42px] text-[12px] text-[#dfe3ec]"
                     />
@@ -562,7 +655,7 @@ const EventRequestDetails = () => {
                   </label>
                   <input
                     type="text"
-                    value={expenseItem?.vendorOrGuestName || ""}
+                    value={expenseItem?.vendorOrGuestName || expenseItem?.vendor || expenseItem?.guestName || ""}
                     readOnly
                     className="w-full rounded-[8px] border border-[#4b5670] bg-transparent px-[12px] py-[10px] text-[12px] text-[#dfe3ec]"
                   />
@@ -578,7 +671,7 @@ const EventRequestDetails = () => {
                     </span>
                     <input
                       type="text"
-                      value={expenseItem?.amount || ""}
+                      value={expenseItem?.amount || expenseItem?.totalAmount || expenseItem?.cost || ""}
                       readOnly
                       className="w-full rounded-[8px] border border-[#4b5670] bg-transparent px-[36px] py-[10px] text-[12px] text-[#dfe3ec]"
                     />

@@ -131,6 +131,36 @@ const AdminExpenditureTable = () => {
    * Filter individual expenditure data based on search query
    * Searches in: module, department, status
    */
+  const getIndividualRequestId = (item) =>
+    item?._id ||
+    item?.requestId ||
+    item?.request?.id ||
+    item?.request?._id ||
+    item?.expenditure?._id ||
+    item?.expenditureId ||
+    item?.id ||
+    "";
+
+  const getIndividualModule = (item) =>
+    item?.module ||
+    item?.requestType ||
+    item?.requestDetails?.module ||
+    item?.expenditure?.module ||
+    "Individual request";
+
+  const getIndividualDepartment = (item) =>
+    item?.faculty?.department ||
+    item?.department ||
+    item?.facultyDetails?.department ||
+    item?.expenditure?.faculty?.department ||
+    "-";
+
+  const getIndividualStatus = (item) =>
+    item?.expenditure?.approvalStatus ||
+    item?.approvalStatus ||
+    item?.status ||
+    "Pending";
+
   const filteredIndividualData = useMemo(() => {
     if (!individualSearchQuery.trim()) {
       return individualExpenditureData;
@@ -139,10 +169,9 @@ const AdminExpenditureTable = () => {
     const query = individualSearchQuery.toLowerCase().trim();
 
     return individualExpenditureData.filter((item) => {
-      const module = item?.module?.toLowerCase() || "";
-      const department = item?.faculty?.department?.toLowerCase() || "";
-      const status =
-        item?.expenditure?.approvalStatus?.toLowerCase() || "";
+      const module = getIndividualModule(item).toLowerCase();
+      const department = getIndividualDepartment(item).toLowerCase();
+      const status = getIndividualStatus(item).toLowerCase();
 
       return (
         module.includes(query) ||
@@ -156,24 +185,45 @@ const AdminExpenditureTable = () => {
   // API FETCH FUNCTIONS
   // ══════════════════════════════════════════════════════════════════════════
 
+  const normalizeListResponse = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (Array.isArray(payload?.overall)) return payload.overall;
+    if (Array.isArray(payload?.items)) return payload.items;
+    if (Array.isArray(payload?.result)) return payload.result;
+    return [];
+  };
+
   /**
    * Fetch individual expenditure list from API
    */
   const fetchIndividualList = async () => {
-    try {
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_BASE_URL}/api/individual/expenditure/overall`,
-        {
+    const endpoints = [
+      `${import.meta.env.VITE_API_BASE_URL}/api/individual/expenditure`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/individual/expenditure/overall`,
+    ];
+
+    for (const url of endpoints) {
+      try {
+        const res = await axios.get(url, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+        });
+
+        const list = normalizeListResponse(res.data);
+        console.log("individual expenditure list : ", list);
+
+        if (list.length > 0 || url.includes("/overall") || !url.includes("/overall")) {
+          setIndividualExpenditureData(list);
+          return;
         }
-      );
-      console.log("individual expenditure list : ", res.data.data);
-      setIndividualExpenditureData(res.data.data);
-    } catch (error) {
-      console.error(error);
+      } catch (error) {
+        console.error(`Failed to fetch individual expenditure list from ${url}:`, error);
+      }
     }
+
+    setIndividualExpenditureData([]);
   };
 
   /**
@@ -512,39 +562,37 @@ const AdminExpenditureTable = () => {
                     >
                       {/* Module Name */}
                       <td className="px-3 text-[14px] font-medium text-white">
-                        {item?.module}
+                        {getIndividualModule(item)}
                       </td>
 
                       {/* Requested Date */}
                       <td className="px-3 text-[14px] text-[#d1d5db]">
-                        15-03-2026
+                        {formatDate(item?.createdAt || item?.submittedAt || item?.requestDate)}
                       </td>
 
                       {/* Department */}
                       <td className="px-3 text-[14px] text-[#d1d5db]">
-                        {item?.faculty?.department}
+                        {getIndividualDepartment(item)}
                       </td>
 
                       {/* Expenditure Submission Date */}
                       <td className="px-3 text-[14px] text-[#d1d5db]">
-                        {formatDate(item?.expenditure?.createdAt)}
+                        {formatDate(item?.expenditure?.createdAt || item?.createdAt || item?.submittedAt)}
                       </td>
 
                       {/* Status */}
                       <td className="px-3">
                         <div
                           className={`flex items-center gap-1 text-[14px] font-medium ${
-                            getStatusColor(item?.expenditure?.approvalStatus)
-                              .text
+                            getStatusColor(getIndividualStatus(item)).text
                           }`}
                         >
                           <span
                             className={`h-[5px] w-[5px] rounded-full ${
-                              getStatusColor(item?.expenditure?.approvalStatus)
-                                .dot
+                              getStatusColor(getIndividualStatus(item)).dot
                             }`}
                           />
-                          {item?.expenditure?.approvalStatus}
+                          {getIndividualStatus(item)}
                         </div>
                       </td>
 
@@ -552,7 +600,7 @@ const AdminExpenditureTable = () => {
                       <td className="px-3">
                         <div className="flex items-center justify-center gap-3">
                           <Link
-                            to={`/dashboard-admin/expenditures/IndividualExpenditureDetailView/${item?.expenditure?._id}`}
+                            to={`/dashboard-admin/expenditures/IndividualExpenditureDetailView/${getIndividualRequestId(item)}`}
                             className="text-[#8b93a5] hover:text-white"
                           >
                             <ExternalLink size={13} strokeWidth={1.8} />
