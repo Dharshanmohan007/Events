@@ -770,7 +770,7 @@ function AppRoutes() {
       />
       <Route path="/calendar" element={<Calendar />} />
       <Route path="/calendar/all-venues-fullscreen" element={<AllVenuesFullscreenPage />} />
-      <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} />
+      {/* <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} /> */}
       {/* Purchase individual detail view v2 */}
       <Route
         path="/dashboard-purchase/events/individualDetailView/:eventId"
