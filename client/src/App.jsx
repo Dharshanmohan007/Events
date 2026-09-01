@@ -103,7 +103,7 @@ function AppRoutes() {
   return (
     <Routes>
       {/* ── Always show login at "/" ── */}
-      <Route path="/" element={<PublicRoute><Login1 /></PublicRoute>} />
+      <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/forget-password" element={<ForgetPassword />} />
 
       {/* ── Protected routes (just need to be logged in) ── */}
