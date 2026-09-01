@@ -811,10 +811,6 @@ const EventDetailsPage = () => {
       )
     }
 
-    if (activeTab === 'Food Details') {
-      if (refreshmentLoading) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">Loading food details...</p>
-      if (refreshmentError) return <p className="py-10 text-center text-sm text-[#FF4F91]">{refreshmentError}</p>
-      return <FoodRefreshmentDetailsPanel refreshmentDetails={refreshmentDetails} eventSchedule={requestDetails?.eventDetails?.eventSchedule} />
     if (activeTab === "Food Details") {
       if (refreshmentLoading)
         return (
@@ -1101,5 +1097,5 @@ const EventDetailsPage = () => {
     </>
   );
 };
-}
+
 export default EventDetailsPage;
