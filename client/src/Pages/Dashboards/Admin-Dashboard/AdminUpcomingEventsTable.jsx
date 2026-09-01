@@ -303,16 +303,16 @@ const AdminUpcomingEventsTable = ({ events, viewAllLink, title = "Upcoming Event
                                             <StatusBadge status={row.status} />
                                         </td>
                                     <td className="px-6 py-4">
-                                        <Link
+                                        {/* <Link
                                             to={`/dashboard/IndividualEvents/${row.id}`}
                                             className="mx-auto flex h-8 w-8 items-center justify-center text-[#8b93a7] hover:text-white"
                                             title="Open request details"
                                         >
                                             <ExternalLink size={17} />
-                                        </Link>
+                                        </Link> */}
                                         <Link
                                             to={`/dashboard/AdminIndividualDetailView/v2/${row.id}`}
-                                            className="mx-auto flex h-8 w-8 items-center justify-center text-red-400 hover:text-white"
+                                            className="mx-auto flex h-8 w-8 items-center justify-center text-white hover:text-white"
                                             title="Open request details"
                                         >
                                             <ExternalLink size={17} />

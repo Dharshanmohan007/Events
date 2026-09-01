@@ -467,16 +467,16 @@ const FacultyLatestEventsRequestTable = () => {
                                         <IndividualStatus status={request.status} />
                                     </td>
                                     <td className="px-4 py-3">
-                                        <Link
+                                        {/* <Link
                                             to={`/dashboard-faculty/individual-requests/${request.id}`}
                                             className="inline-flex text-[#FFFFFF80] transition hover:text-white"
                                             title="Open request"
                                         >
                                             <ExternalLink size={14} />
-                                        </Link>
+                                        </Link> */}
                                         <Link
                                             to={`/dashboard-faculty/individual-detailView/v2/${request.id}`}
-                                            className="inline-flex text-red-500 transition hover:text-white"
+                                            className="inline-flex text-white transition hover:text-white"
                                             title="Open request"
                                         >
                                             <ExternalLink size={14} />
