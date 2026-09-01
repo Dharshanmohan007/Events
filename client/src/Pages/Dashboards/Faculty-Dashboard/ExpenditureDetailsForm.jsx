@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import { Upload, Plus } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Upload, Plus, File } from 'lucide-react'
 
 const EXPENDITURE_CATEGORIES = [
   { key: 'food', label: 'Food' },
@@ -51,8 +51,18 @@ const FloatingTextarea = ({ label, value, onChange, placeholder = '', rows = 3 }
   </div>
 )
 
-const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData }) => {
-  const [selectedCategories, setSelectedCategories] = useState([])
+const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSelectedCategories = [] }) => {
+  const [selectedCategories, setSelectedCategories] = useState(initialSelectedCategories)
+
+  // Sync categories when initialSelectedCategories arrive asynchronously
+  useEffect(() => {
+    if (initialSelectedCategories.length > 0) {
+      setSelectedCategories((prev) => {
+        const merged = [...new Set([...prev, ...initialSelectedCategories])]
+        return merged
+      })
+    }
+  }, [initialSelectedCategories])
 
   const toggleCategory = (key) => {
     setSelectedCategories((prev) => {
@@ -221,12 +231,37 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData }) => {
                     <label className="block text-[11px] text-[#CBC3D7]/60 mb-2">
                       Upload ( if have any supporting document )
                     </label>
+                    
+                    {/* Show existing uploaded documents */}
+                    {bill._existingDocuments && bill._existingDocuments.length > 0 && !bill.file && (
+                      <div className="mb-3">
+                        {bill._existingDocuments.map((doc, docIdx) => (
+                          <div key={docIdx} className="flex items-center gap-2 text-sm text-green-400 bg-green-500/10 rounded-md px-3 py-2 mb-2">
+                            <File size={14} className="text-green-500" />
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline truncate"
+                            >
+                              {doc.filename || doc.originalName || 'Uploaded document'}
+                            </a>
+                            <span className="text-xs text-green-500/60 ml-auto">(Existing)</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
                     <div className="rounded-lg border border-dashed border-gray-700 bg-[#0b1326] px-5 py-5 relative flex flex-col items-center justify-center overflow-hidden">
                       <label className="flex items-center gap-2 text-sm text-[#CBC3D7]/70 hover:text-white cursor-pointer transition-colors">
                         <Upload size={20} className="text-[#CBC3D7]/70" />
                         <p>
-                          Drag and drop the files here or{' '}
-                          <span className="text-[#8B5CF6] hover:underline">choose file</span>
+                          {bill._existingDocuments && bill._existingDocuments.length > 0 && !bill.file
+                            ? 'Replace document or drag and drop a new file'
+                            : 'Drag and drop the files here or'}
+                          {!bill.file && (
+                            <span className="text-[#8B5CF6] hover:underline"> choose file</span>
+                          )}
                         </p>
                       </label>
                       <input
@@ -236,7 +271,19 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData }) => {
                         onChange={(e) => handleFileChange(categoryKey, index, e.target.files[0])}
                       />
                       {bill.file && (
-                        <p className="mt-2 text-xs text-[#CBC3D7]/50 truncate max-w-md">{bill.file.name}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <p className="text-xs text-[#CBC3D7]/50 truncate max-w-md">{bill.file.name}</p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleFileChange(categoryKey, index, null);
+                            }}
+                            className="text-xs text-red-400 hover:text-red-300"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>

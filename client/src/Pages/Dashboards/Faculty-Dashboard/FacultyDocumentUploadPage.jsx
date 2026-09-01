@@ -40,15 +40,13 @@ const toFileRef = (name) => `doc_${toKey(name)}_file`;
 // Initial states for each form section
 const initialIncomeData = {
   registrationFees: {
-    requirements: "",
-    calculations: "",
     amount: "",
     details: "",
   },
-  scholarship: { requirements: "", calculations: "", amount: "", details: "" },
+  scholarship: { amount: "", details: "" },
   institutionalAmount: { selectRequired: "", amount: "", details: "" },
   departmentFund: { details: "", amount: "" },
-  others: { requirements: "", calculations: "", amount: "", details: "" },
+  others: { amount: "", details: "" },
 };
 
 const initialExpenditureData = {
@@ -86,16 +84,10 @@ const validateIncome = (incomeData) => {
   // Registration Fees
   if (
     registrationFees.amount ||
-    registrationFees.requirements ||
-    registrationFees.calculations ||
     registrationFees.details
   ) {
     if (!registrationFees.amount)
       errors.push("Registration Fees: Amount is required");
-    if (!registrationFees.requirements)
-      errors.push("Registration Fees: Requirements is required");
-    if (!registrationFees.calculations)
-      errors.push("Registration Fees: Calculations is required");
     if (!registrationFees.details)
       errors.push("Registration Fees: Details is required");
   }
@@ -103,15 +95,9 @@ const validateIncome = (incomeData) => {
   // Scholarship
   if (
     scholarship.amount ||
-    scholarship.requirements ||
-    scholarship.calculations ||
     scholarship.details
   ) {
     if (!scholarship.amount) errors.push("Scholarship: Amount is required");
-    if (!scholarship.requirements)
-      errors.push("Scholarship: Requirements is required");
-    if (!scholarship.calculations)
-      errors.push("Scholarship: Calculations is required");
     if (!scholarship.details) errors.push("Scholarship: Details is required");
   }
 
@@ -140,13 +126,9 @@ const validateIncome = (incomeData) => {
   // Others
   if (
     others.amount ||
-    others.requirements ||
-    others.calculations ||
     others.details
   ) {
     if (!others.amount) errors.push("Others: Amount is required");
-    if (!others.requirements) errors.push("Others: Requirements is required");
-    if (!others.calculations) errors.push("Others: Calculations is required");
     if (!others.details) errors.push("Others: Details is required");
   }
 
@@ -434,13 +416,9 @@ const FacultyDocumentUploadPage = () => {
         others,
       } = incomeData;
 
-      // Helper to build income details by concatenating details, calculations, requirements
+      // Helper to build income details
       const buildIncomeDetails = (data) => {
-        const parts = [];
-        if (data.details) parts.push(data.details);
-        if (data.calculations) parts.push(data.calculations);
-        if (data.requirements) parts.push(data.requirements);
-        return parts.join(", ");
+        return data.details || "";
       };
 
       if (registrationFees.amount) {
@@ -462,6 +440,7 @@ const FacultyDocumentUploadPage = () => {
           type: "Institutional Amount",
           amount: Number(institutionalAmount.amount) || 0,
           details: buildIncomeDetails(institutionalAmount),
+          selectRequired: institutionalAmount.selectRequired || "",
         });
       }
       if (departmentFund.amount) {
