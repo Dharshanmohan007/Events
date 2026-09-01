@@ -102,6 +102,7 @@ import FacultyIndividualDetailiew from "./Pages/IndividualDetailViewFolder/Facul
 import HeadIndividualDetailView from "./Pages/IndividualDetailViewFolder/Head-IndividualDetailView/HeadIndividualDetailView.jsx";
 import AdminExpenditureTable from "./Pages/Dashboards/Admin-Dashboard/AdminExpenditureTable.jsx";
 import EventsExpenditureDetailView from "./Components/EventsExpenditureDetailView.jsx";
+import AdminExpenditureEditPage from "./Pages/Dashboards/Admin-Dashboard/AdminExpenditureEditPage.jsx";
 import FacultyExpendituresPage from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpendituresPage.jsx";
 import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/FacultyExpenditureDetailView.jsx";
 
@@ -420,11 +421,8 @@ function AppRoutes() {
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
         />
-        <Route path="expenditures" element={<AdminExpenditureTable />} />
-        <Route
-          path="expenditures/EventExpenditureDetailView/:eventId"
-          element={<EventsExpenditureDetailView />}
-        />
+        <Route path="expenditures" element={<AdminExpenditureTable />} />        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
+        <Route path="expenditures/edit/:eventId" element={<AdminExpenditureEditPage />} />
       </Route>
       <Route
         path="/dashboard/AdminIndividualDetailView/v2/:eventId"

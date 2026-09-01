@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Upload, Plus } from 'lucide-react'
 
 const EXPENDITURE_CATEGORIES = [
@@ -51,8 +51,18 @@ const FloatingTextarea = ({ label, value, onChange, placeholder = '', rows = 3 }
   </div>
 )
 
-const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData }) => {
-  const [selectedCategories, setSelectedCategories] = useState([])
+const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSelectedCategories = [] }) => {
+  const [selectedCategories, setSelectedCategories] = useState(initialSelectedCategories)
+
+  // Sync categories when initialSelectedCategories arrive asynchronously
+  useEffect(() => {
+    if (initialSelectedCategories.length > 0) {
+      setSelectedCategories((prev) => {
+        const merged = [...new Set([...prev, ...initialSelectedCategories])]
+        return merged
+      })
+    }
+  }, [initialSelectedCategories])
 
   const toggleCategory = (key) => {
     setSelectedCategories((prev) => {

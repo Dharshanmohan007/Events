@@ -14,7 +14,7 @@ import {
   Venus,
 } from "lucide-react";
 import { jwtDecode } from "jwt-decode";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
@@ -63,6 +63,7 @@ const incomeDetails = [
 
 const EventsExpenditureDetailView = () => {
   const { eventId } = useParams();
+  const navigate = useNavigate();
 
   // Auth
   const token = localStorage.getItem("token");
@@ -218,6 +219,7 @@ const EventsExpenditureDetailView = () => {
             {role?.toLowerCase() !== "faculty" && (
               <button
                 type="button"
+                onClick={() => navigate(`/dashboard-admin/expenditures/edit/${eventId}`)}
                 className="ml-1 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
               >
                 <Pencil size={14} strokeWidth={2} />
