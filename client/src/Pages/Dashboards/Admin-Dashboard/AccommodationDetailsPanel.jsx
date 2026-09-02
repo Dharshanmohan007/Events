@@ -50,9 +50,9 @@ const GuestRow = ({ name, gender, phone }) => (
 )
 
 const AccommodationDayDetails = ({ accommodation }) => {
+  console.log("accomodation details admin : ", accommodation)
   const guests = accommodation.guests || []
-  const roomOccupancy = accommodation.roomOccupancy || []
-  const roomCategory = accommodation.roomCategory || []
+  const roomSelections = accommodation.roomSelections || []
   const dineInCounts = accommodation.dineInCounts || []
 
   const stayDates = [
@@ -61,24 +61,6 @@ const AccommodationDayDetails = ({ accommodation }) => {
     { icon: CalendarDays, label: 'Check-out Date', value: formatDateTime(accommodation.checkOutDateTime, { day: '2-digit', month: '2-digit', year: 'numeric' }) },
     { icon: Clock3, label: 'Check-out Time', value: formatDateTime(accommodation.checkOutDateTime, { hour: '2-digit', minute: '2-digit', hour12: true }) },
   ]
-
-  const occupancyMap = {}
-  roomOccupancy.forEach((item) => { occupancyMap[item.type] = item.count })
-  const categoryMap = {}
-  roomCategory.forEach((item) => { categoryMap[item.type] = item.count })
-
-  const roomRows = [
-    [['No. of Single Rooms', displayValue(occupancyMap['Single'] || 0)], ['No. of Double Rooms', displayValue(occupancyMap['Double'] || 0)]],
-    [['No. of Suite Rooms', displayValue(occupancyMap['Suite'] || 0)], ['No. of D - Block Rooms', displayValue(occupancyMap['D Block'] || 0)]],
-  ]
-
-  if (roomCategory.length) {
-    roomCategory.forEach((cat) => {
-      if (!roomRows.some((row) => row.some(([label]) => label.includes(cat.type)))) {
-        roomRows.push([[`No. of ${cat.type}`, displayValue(cat.count)]])
-      }
-    })
-  }
 
   const dineInRows = []
   for (let i = 0; i < dineInCounts.length; i += 2) {
@@ -99,9 +81,29 @@ const AccommodationDayDetails = ({ accommodation }) => {
         <GuestRow key={`${guest.name}-${index}`} name={guest.name} gender={guest.gender} phone={guest.mobile} />
       ))}
 
-      {roomRows.map((row, i) => (
-        <SplitInfoRow key={i} items={row} />
-      ))}
+      {roomSelections.length > 0 && (
+        <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-4">
+          <h3 className="text-lg font-semibold text-[#8F5BFF] mb-4">Room Selections</h3>
+          <div className="space-y-3">
+            {roomSelections.map((room, index) => (
+              <div key={index} className="grid grid-cols-3 rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Venue</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{displayValue(room.venue)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Room No</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{displayValue(room.roomNumber)}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Occupant Count</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{displayValue(room.occupantCount)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {dineInRows.map((row, i) => (
         <SplitInfoRow key={i} items={row} />
@@ -121,6 +123,7 @@ const AccommodationDayDetails = ({ accommodation }) => {
 }
 
 const AccommodationDetailsPanel = ({ accommodationDetails, eventSchedule = [] }) => {
+  console.log("accomodation : ", accommodationDetails)
   const [activeDay, setActiveDay] = useState(0)
   const accommodations = accommodationDetails?.accommodations || []
   if (!accommodationDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No accommodation details are available.</p>
