@@ -9,10 +9,82 @@ import {
   ChevronDown,
   AlertTriangle,
   Search,
+  Building2,
 } from "lucide-react";
 import CustomDateTimePicker from "../CustomDateTimePicker";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function flattenGuests(eventDays = []) {
+  const seen = new Set();
+  const result = [];
+  eventDays.forEach((day, dayIdx) => {
+    (day.guests || []).forEach((g, gIdx) => {
+      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
+        .replace(/\s+/g, "")
+        .toLowerCase()}`;
+      if (!seen.has(guestId)) {
+        seen.add(guestId);
+        result.push({ ...g, guestId });
+      }
+    });
+  });
+  return result;
+}
+
+// ─── Custom Checkbox ──────────────────────────────────────────────────────────
+function PurpleCheckbox({ checked, onChange }) {
+  return (
+    <div
+      onClick={onChange}
+      className="cursor-pointer flex-shrink-0"
+      style={{
+        width: 20,
+        height: 20,
+        borderRadius: 5,
+        border: checked ? "none" : "2px solid #ab45ff",
+        backgroundColor: checked ? "#ab45ff" : "transparent",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.15s ease",
+      }}
+    >
+      {checked && <Check size={13} color="#fff" strokeWidth={3} />}
+    </div>
+  );
+}
+
+// ─── Gender Icon ──────────────────────────────────────────────────────────────
+function GenderIcon({ gender }) {
+  const g = (gender || "").toLowerCase();
+
+  if (g === "female") {
+    return (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="6" r="3.5" />
+        <path d="M7 21c0-3.5 1.5-7 5-8.5C16.5 14 17 17.5 17 21H7z" />
+        <path d="M9.5 12.5 Q12 10.5 14.5 12.5" fill="none" stroke="#ab45ff" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="6" r="3.5" />
+      <path d="M8 13h8c.5 0 1 .4 1 1v7H7v-7c0-.6.4-1 1-1z" />
+    </svg>
+  );
+}
+
+// ─── Phone Icon ───────────────────────────────────────────────────────────────
+function PhoneIconFilled() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#ab45ff" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+    </svg>
+  );
+}
 
 function createEmptyForm() {
   return {
@@ -20,6 +92,7 @@ function createEmptyForm() {
     dropDate: null,
     pickupLocation: "",
     dropLocation: "",
+    selectedGuestIds: [],
     vistaTransport: [],
     vehicleCounts: {},
     staffCount: "",
@@ -36,6 +109,7 @@ function sanitiseForm(f) {
     dropDate: f.dropDate ?? null,
     pickupLocation: f.pickupLocation ?? "",
     dropLocation: f.dropLocation ?? "",
+    selectedGuestIds: Array.isArray(f.selectedGuestIds) ? f.selectedGuestIds : [],
     vistaTransport: Array.isArray(f.vistaTransport) ? f.vistaTransport : [],
     vehicleCounts:
       f.vehicleCounts && typeof f.vehicleCounts === "object"
@@ -86,6 +160,8 @@ function validateTransport(forms) {
       err.pickupLocation = "Pickup location is required";
     if (!form.dropLocation?.trim())
       err.dropLocation = "Drop location is required";
+    if (!form.selectedGuestIds || form.selectedGuestIds.length === 0)
+      err.selectedGuestIds = "Select at least one guest";
     if (!form.vistaTransport || form.vistaTransport.length === 0)
       err.vistaTransport = "Vehicle type is required";
     if (!String(form.totalPassengers).trim())
@@ -676,8 +752,10 @@ export default function TransportForm({
   transportData: initialTransportData,
   onTransportDataChange,
   eventId,
+  eventDays: eventDaysProp,
   errors: propErrors = {},
 }) {
+  const allGuests = flattenGuests(eventDaysProp || []);
   const [forms, setForms] = useState(() => {
     if (initialTransportData && initialTransportData.length > 0)
       return initialTransportData.map(sanitiseForm);
@@ -969,29 +1047,42 @@ export default function TransportForm({
     setIsLoading(true);
     setApiError("");
     try {
+      const latestGuests = allGuests;
       const payload = {
         transportDetails: {
-          transports: latest.map((form) => ({
-            pickupDateTime: form.pickupDate
-              ? form.pickupDate.toISOString()
-              : "",
-            dropDateTime: form.dropDate ? form.dropDate.toISOString() : "",
-            pickupLocation: form.pickupLocation || "",
-            checkpoints: (form.checkpoints || [])
-              .filter((cp) => cp.name?.trim())
-              .map((cp) => ({ location: cp.name })),
-            dropLocation: form.dropLocation || "",
-            totalPassengers: Number(form.totalPassengers) || 0,
-            vehicles: (form.vistaTransport || []).map((type) => ({
-              type,
-              count: Number(form.vehicleCounts?.[type]) || 0,
-            })),
-            accompanyingStaff: (form.staffMembers || []).map((s) => ({
-              name: s.name || "",
-              mobile: Number(s.mobile) || 0,
-            })),
-            specialRequirements: form.specialRequirements || "",
-          })),
+          transports: latest.map((form) => {
+            const selectedGuests = latestGuests.filter((g) =>
+              form.selectedGuestIds.includes(g.guestId)
+            );
+            return {
+              pickupDateTime: form.pickupDate
+                ? form.pickupDate.toISOString()
+                : "",
+              dropDateTime: form.dropDate ? form.dropDate.toISOString() : "",
+              pickupLocation: form.pickupLocation || "",
+              checkpoints: (form.checkpoints || [])
+                .filter((cp) => cp.name?.trim())
+                .map((cp) => ({ location: cp.name })),
+              dropLocation: form.dropLocation || "",
+              guests: selectedGuests.map((g) => ({
+                name: g.name || "",
+                mobile: parseInt(g.mobile) || 0,
+                organization: g.organization || "",
+                designation: g.designation || "",
+                gender: g.gender || "",
+              })),
+              totalPassengers: Number(form.totalPassengers) || 0,
+              vehicles: (form.vistaTransport || []).map((type) => ({
+                type,
+                count: Number(form.vehicleCounts?.[type]) || 0,
+              })),
+              accompanyingStaff: (form.staffMembers || []).map((s) => ({
+                name: s.name || "",
+                mobile: Number(s.mobile) || 0,
+              })),
+              specialRequirements: form.specialRequirements || "",
+            };
+          }),
         },
       };
       // console.log("transport payload data :", payload);
@@ -1145,6 +1236,74 @@ export default function TransportForm({
                   )}
                 </div>
               </div>
+
+              {/* Guest Selection */}
+              <div className="flex justify-between mb-2">
+                <p className="text-purple-400 text-sm">
+                  Select the Guest who needed Transport
+                </p>
+                <p className="text-xs text-gray-400">
+                  Selected Guest : {(form.selectedGuestIds || []).length}{" "}
+                  <span className="text-purple-400">/ {allGuests.length}</span>
+                </p>
+              </div>
+              <div className="mb-6">
+                {allGuests.length === 0 ? (
+                  <p className="text-gray-500 text-xs py-2 px-1">
+                    No guests found. Please add guests in the Event Requisition step.
+                  </p>
+                ) : (
+                  allGuests.map((g) => {
+                    const checked = (form.selectedGuestIds || []).includes(g.guestId);
+                    return (
+                      <div
+                        key={g.guestId}
+                        className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
+                        onClick={() => {
+                          const current = form.selectedGuestIds || [];
+                          const next = current.includes(g.guestId)
+                            ? current.filter((id) => id !== g.guestId)
+                            : [...current, g.guestId];
+                          handleChange(formIndex, "selectedGuestIds", next);
+                        }}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <PurpleCheckbox
+                            checked={checked}
+                            onChange={() => {
+                              const current = form.selectedGuestIds || [];
+                              const next = current.includes(g.guestId)
+                                ? current.filter((id) => id !== g.guestId)
+                                : [...current, g.guestId];
+                              handleChange(formIndex, "selectedGuestIds", next);
+                            }}
+                          />
+                          <span className="text-sm text-white truncate">{g.name}</span>
+                        </div>
+                        <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
+                          {/* <span className="flex items-center gap-1.5">
+                            <Building2 className="text-purple-500" size={16} />
+                            <span className="text-gray-300">{g.organization || "—"}</span>
+                          </span> */}
+                          <span className="flex items-center gap-1.5">
+                            <GenderIcon gender={g.gender} />
+                            <span className="text-gray-300">{g.gender || "—"}</span>
+                          </span>
+                          <span className="flex items-center gap-1.5">
+                            <PhoneIconFilled />
+                            <span className="text-gray-300">{g.mobile || "—"}</span>
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              {getError(formIndex, "selectedGuestIds") && (
+                <p className="text-red-400 text-xs mt-1">
+                  {getError(formIndex, "selectedGuestIds")}
+                </p>
+              )}
 
               {/* Row 2: Pickup Location */}
               <div className="mb-4">

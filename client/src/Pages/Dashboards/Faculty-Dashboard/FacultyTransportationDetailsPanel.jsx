@@ -196,6 +196,7 @@ const FacultyTransportationDetailsPanel = ({
   eventData,
   eventSchedule = [],
 }) => {
+  // console.log("ebentd data : ", eventData)
   const [activeDay, setActiveDay] = useState(0);
   const transports = transportDetails?.transports || [];
   if (!transportDetails)
