@@ -20,6 +20,7 @@ import {
 
 import {
   updateEventType,
+  getEventTypeById,
 } from "../../../services/events/eventTypesService";
 
 export default function ViewEventDocumentMapping({
@@ -762,25 +763,53 @@ const handleSyncDocuments = async () => {
                 <button
                   key={id}
                   type="button"
-                  onClick={() => {
-                    const selectedDocumentIds =
-                      getSavedDocumentIds(eventType);
-
-                    setSelectedEventType(eventType);
-                    setDocuments((previousDocuments) => {
-                      const documentsForEventType =
-                        previousDocuments.map((document) => ({
+                  onClick={async () => {
+                    const eventTypeId = eventType._id || eventType.id;
+                    try {
+                      // Fetch the fresh event type from backend to get saved order
+                      const fullEventType = await getEventTypeById(eventTypeId);
+                      const backendDocuments = fullEventType?.documents || eventType.documents || [];
+                      
+                      setSelectedEventType(fullEventType || eventType);
+                      
+                      setDocuments((previousDocuments) => {
+                        // Match backend documents by name to get original IDs
+                        const selectedDocumentIds = backendDocuments
+                          .filter(doc => doc.isActive)
+                          .sort((a, b) => a.order - b.order)
+                          .map(doc => {
+                             const matchingDoc = previousDocuments.find(pd => pd.name === doc.name);
+                             return matchingDoc ? getDocumentId(matchingDoc) : null;
+                          })
+                          .filter(Boolean);
+                          
+                        // Save locally for consistency
+                        documentSelectionsRef.current.set(eventTypeId, selectedDocumentIds);
+                        saveDocumentIds(eventTypeId, selectedDocumentIds);
+                        
+                        const documentsForEventType = previousDocuments.map((document) => ({
                           ...document,
-                          checked: selectedDocumentIds.includes(
-                            getDocumentId(document)
-                          ),
+                          checked: selectedDocumentIds.includes(getDocumentId(document)),
                         }));
 
-                      return orderDocumentsBySelection(
-                        documentsForEventType,
-                        selectedDocumentIds
-                      );
-                    });
+                        return orderDocumentsBySelection(
+                          documentsForEventType,
+                          selectedDocumentIds
+                        );
+                      });
+                    } catch (error) {
+                      console.error("Error fetching event type details:", error);
+                      // Fallback logic
+                      const selectedDocumentIds = getSavedDocumentIds(eventType);
+                      setSelectedEventType(eventType);
+                      setDocuments((previousDocuments) => {
+                        const documentsForEventType = previousDocuments.map((document) => ({
+                          ...document,
+                          checked: selectedDocumentIds.includes(getDocumentId(document)),
+                        }));
+                        return orderDocumentsBySelection(documentsForEventType, selectedDocumentIds);
+                      });
+                    }
                   }}
                   className={`
                     w-full
