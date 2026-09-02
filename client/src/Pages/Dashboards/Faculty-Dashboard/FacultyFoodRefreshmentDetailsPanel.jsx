@@ -44,32 +44,39 @@ const SplitInfoRow = ({ items }) => (
 
 const MealSection = ({ title, foodType }) => {
   if (!foodType) return null;
-  const { participants = {}, vipGuests = {} } = foodType;
+  const { participants = {}, vipGuests = {}, refreshmentCount } = foodType;
+
+  // For Morning/Evening Refreshment - show only refreshment count
+  const isRefreshment = foodType.type === 'Morning Refreshment' || foodType.type === 'Evening Refreshment';
+
   return (
     <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-4">
       <h3 className="text-lg font-semibold text-[#8F5BFF]">{title}</h3>
       <div className="mt-4 space-y-3">
-        <SplitInfoRow
-          items={[
-            [
-              "No. of veg In Participants Menu",
-              displayValue(participants.vegCount),
-            ],
-            ["No. of veg In Guest/VIP Menu", displayValue(vipGuests.vegCount)],
-          ]}
-        />
-        <SplitInfoRow
-          items={[
-            [
-              "No. of Non-veg In Participants Menu",
-              displayValue(participants.nonVegCount),
-            ],
-            [
-              "No. of Non-veg In Guest/VIP Menu",
-              displayValue(vipGuests.nonVegCount),
-            ],
-          ]}
-        />
+        {isRefreshment ? (
+          <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+            <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Refreshment Count</p>
+            <p className="mt-1 text-sm font-semibold text-white">{displayValue(refreshmentCount)}</p>
+          </div>
+        ) : (
+          <>
+            <SplitInfoRow
+              items={[
+                ['No. of veg In Participants Menu', displayValue(participants.vegCount)],
+                ['No. of veg In Guest/VIP Menu', displayValue(vipGuests.vegCount)],
+              ]}
+            />
+            {/* Only show non-veg section for Lunch, not for Breakfast/Dinner */}
+            {foodType.type !== 'Breakfast' && foodType.type !== 'Dinner' && (
+              <SplitInfoRow
+                items={[
+                  ['No. of Non-veg In Participants Menu', displayValue(participants.nonVegCount)],
+                  ['No. of Non-veg In Guest/VIP Menu', displayValue(vipGuests.nonVegCount)],
+                ]}
+              />
+            )}
+          </>
+        )}
       </div>
     </section>
   );
