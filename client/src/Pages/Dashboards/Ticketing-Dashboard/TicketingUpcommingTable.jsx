@@ -94,11 +94,10 @@ const TicketingUpcommingTable = () => {
 
               <td className="px-2 py-2 text-center">
                 <button className="text-[#aab3c3] hover:text-white">
-                  <ArrowUpRight size={11} />
+                  <ArrowUpRight size={18} />
                 </button>
               </td>
             </tr>
-
           </tbody>
         </table>
       </div>
