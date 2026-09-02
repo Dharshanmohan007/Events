@@ -120,28 +120,28 @@ const defaultSections = [
         title: 'Purchase Overview',
         stats: [
             {
-                label: 'Total Purchases',
+                label: 'Total',
                 value: 50,
                 cardClass: 'from-[#2e2754] via-[#3d216f] to-[#5f1b89] border-l-[#7357ff]',
                 iconClass: 'bg-[#a98cff]',
                 icon: <ShoppingCartIcon />,
             },
             {
-                label: 'Completed Orders',
+                label: 'Completed',
                 value: 50,
                 cardClass: 'from-[#163e46] via-[#0f5e4a] to-[#07864d] border-l-[#20d18c]',
                 iconClass: 'bg-[#36d99b]',
                 icon: <CheckBadgeIcon />,
             },
             {
-                label: 'Active Orders',
+                label: 'Approved',
                 value: 50,
                 cardClass: 'from-[#252d5c] via-[#25258a] to-[#2116a5] border-l-[#7181ff]',
                 iconClass: 'bg-[#8292ff]',
                 icon: <CheckIcon />,
             },
             {
-                label: 'Pending Orders',
+                label: 'Pending ',
                 value: 50,
                 cardClass: 'from-[#342238] via-[#652049] to-[#9b1b59] border-l-[#eb3f99]',
                 iconClass: 'bg-[#ef68ad]',
@@ -203,7 +203,7 @@ const PurchaseStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setEventStats(responseData.modules?.purchase ?? responseData.events ?? null)
+                    setEventStats(responseData.events ?? null)
                 }
             })
             .catch((error) => {
@@ -221,7 +221,7 @@ const PurchaseStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setIndividualStats(responseData.stats ?? responseData ?? null)
+                    setIndividualStats(responseData.modules?.purchase ?? responseData.stats ?? responseData ?? null)
                 }
             })
             .catch((error) => {
