@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { CalendarDays, FileText, Phone, User } from "lucide-react";
-import EventDataHeader from '../../Dashboards/EventHeaderData'
+import EventDataHeader from "../../Dashboards/EventHeaderData";
 
 const displayValue = (value) =>
   value === null || value === undefined || value === "" ? "-" : String(value);
@@ -169,8 +169,7 @@ const FacultyFoodRefreshmentDetailsPanel = ({
 
   return (
     <div className="space-y-5">
-
-      <EventDataHeader data={eventData?.requestDetails}/>
+      <EventDataHeader data={eventData?.requestDetails} />
 
       {dayCount > 1 && (
         <nav
@@ -195,7 +194,9 @@ const FacultyFoodRefreshmentDetailsPanel = ({
       )}
 
       {dayRefreshment ? (
-        <FoodDetails refreshment={dayRefreshment} />
+        <>
+          <FoodDetails refreshment={dayRefreshment} />
+        </>
       ) : (
         <p className="py-8 text-center text-sm text-[#CBC3D7]/65">
           No food details were submitted for Day {selectedDay + 1}.
