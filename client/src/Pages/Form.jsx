@@ -1824,6 +1824,7 @@ export default function Form() {
       transportData: formData.transport,
       onTransportDataChange: handleTransportDataChange,
       eventId, errors: formErrors.transport || {},
+      eventDays: formData.event.eventDays,
     },
     externalTransport: {
       initialValues: formData.externalTransport,

@@ -196,6 +196,7 @@ const FacultyTransportationDetailsPanel = ({
   eventData,
   eventSchedule = [],
 }) => {
+  // console.log("ebentd data : ", eventData)
   const [activeDay, setActiveDay] = useState(0);
   const transports = transportDetails?.transports || [];
   if (!transportDetails)
@@ -210,7 +211,7 @@ const FacultyTransportationDetailsPanel = ({
 
   return (
     <div className="space-y-5">
-      <EventHeaderData  data={eventData.requestDetails}/>
+      <EventHeaderData  data={eventData?.requestDetails}/>
       {dayCount > 1 && (
         <nav
           className="flex border-b border-[#374155]"
