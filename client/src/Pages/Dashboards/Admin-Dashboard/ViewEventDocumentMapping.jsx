@@ -54,11 +54,43 @@ export default function ViewEventDocumentMapping({
   );
 
   const orderDocumentsBySelection = (
-    documentList
-  ) => [
-    ...documentList.filter((document) => document.checked),
-    ...documentList.filter((document) => !document.checked),
+  documentList,
+  selectedDocumentIds = []
+) => {
+  const selectedIds = selectedDocumentIds.map(
+    String
+  );
+
+  // Selected documents in the exact order
+  // in which the user selected them
+  const selectedDocuments = selectedIds
+    .map((documentId) =>
+      documentList.find(
+        (document) =>
+          String(
+            document._id || document.id
+          ) === String(documentId)
+      )
+    )
+    .filter(Boolean);
+
+  // Remaining unchecked documents
+  const unselectedDocuments = documentList.filter(
+    (document) => {
+      const documentId =
+        document._id || document.id;
+
+      return !selectedIds.includes(
+        String(documentId)
+      );
+    }
+  );
+
+  return [
+    ...selectedDocuments,
+    ...unselectedDocuments,
   ];
+};
 
   const getDocumentId = (document) =>
     document?._id ||
@@ -225,7 +257,10 @@ export default function ViewEventDocumentMapping({
           : [];
 
       setDocuments(
-        orderDocumentsBySelection(formattedDocuments)
+        orderDocumentsBySelection(
+          formattedDocuments,
+          selectedDocumentIds
+        )
       );
     } catch (error) {
       console.error(
@@ -271,87 +306,120 @@ export default function ViewEventDocumentMapping({
     loadMapping();
   }, [refreshKey]);
 
-  // ============================================
-  // CHECKBOX CHANGE
-  // ============================================
+ // ============================================
+// CHECKBOX CHANGE
+// ============================================
 
-  const handleCheckboxChange = (
-    documentId
-  ) => {
+const handleCheckboxChange = (documentId) => {
+  if (!selectedEventType) {
+    return;
+  }
+
+  const eventTypeId =
+    selectedEventType._id ||
+    selectedEventType.id;
+
+  setDocuments((previousDocuments) => {
     const clickedDocument =
-      documents.find(
+      previousDocuments.find(
         (document) =>
-          (document._id || document.id) ===
-          documentId
+          String(
+            document._id || document.id
+          ) === String(documentId)
       );
 
-    if (!clickedDocument || !selectedEventType) {
-      return;
+    if (!clickedDocument) {
+      return previousDocuments;
     }
 
-    let updatedDocuments = documents.map(
-      (document) => {
-        const id = document._id || document.id;
+    const isCurrentlyChecked =
+      clickedDocument.checked;
 
-        return id === documentId
-          ? { ...document, checked: !document.checked }
-          : document;
-      }
-    );
+    // Get the current selected order
+    let selectedDocumentIds =
+      previousDocuments
+        .filter((document) => document.checked)
+        .map(
+          (document) =>
+            document._id || document.id
+        );
+
+    if (isCurrentlyChecked) {
+      /*
+        USER IS UNCHECKING
+
+        Remove only this document
+        and keep the remaining order unchanged.
+      */
+      selectedDocumentIds =
+        selectedDocumentIds.filter(
+          (id) =>
+            String(id) !==
+            String(documentId)
+        );
+    } else {
+      /*
+        USER IS CHECKING
+
+        Add the document at the END.
+
+        Example:
+
+        First click:
+        [Document A]
+
+        Second click:
+        [Document A, Document B]
+
+        So A stays order 1
+        and B becomes order 2.
+      */
+      selectedDocumentIds.push(
+        documentId
+      );
+    }
+
+    // Update checkbox state
+    const updatedDocuments =
+      previousDocuments.map(
+        (document) => {
+          const id =
+            document._id || document.id;
+
+          return String(id) ===
+            String(documentId)
+            ? {
+                ...document,
+                checked: !isCurrentlyChecked,
+              }
+            : document;
+        }
+      );
+
+    // Arrange using CLICK ORDER
+    const orderedDocuments =
+      orderDocumentsBySelection(
+        updatedDocuments,
+        selectedDocumentIds
+      );
 
     /*
-      If the user is CHECKING a document:
-
-      1. Find the clicked document.
-      2. Move that exact document to the top.
-      3. Keep its checked state.
-      4. Serial number automatically becomes 1.
+      SAVE THE EXACT CLICK ORDER
     */
-
-    updatedDocuments = orderDocumentsBySelection(
-      updatedDocuments
-    );
-
-    setDocuments(updatedDocuments);
-
-    const eventTypeId =
-      selectedEventType._id || selectedEventType.id;
-    const updatedDocumentIds = updatedDocuments
-      .filter((document) => document.checked)
-      .map((document) => document._id || document.id);
-    const updatedEventType = {
-      ...selectedEventType,
-      documents: updatedDocumentIds,
-    };
 
     documentSelectionsRef.current.set(
       eventTypeId,
-      updatedDocumentIds
+      selectedDocumentIds
     );
+
     saveDocumentIds(
       eventTypeId,
-      updatedDocumentIds
+      selectedDocumentIds
     );
 
-    setEventTypes((previousEventTypes) =>
-      previousEventTypes.map((eventType) =>
-        (eventType._id || eventType.id) === eventTypeId
-          ? updatedEventType
-          : eventType
-      )
-    );
-    setSelectedEventType(updatedEventType);
-
-    updateEventType(eventTypeId, {
-      eventType: selectedEventType.eventType,
-      documents: updatedDocumentIds,
-    }).catch((error) => {
-      console.error(
-        "Error saving event document mapping:",
-        error
-      );
-    });
-  };
+    return orderedDocuments;
+  });
+};
 
   // ============================================
   // DRAG START
@@ -475,6 +543,93 @@ export default function ViewEventDocumentMapping({
   const handleDragEnd = () => {
     setDraggedDocumentId(null);
   };
+
+// ============================================
+// SYNC DOCUMENTS
+// ============================================
+
+const handleSyncDocuments = async () => {
+  if (!selectedEventType) {
+    alert("Please select an event type");
+    return;
+  }
+
+  try {
+    const eventTypeId =
+      selectedEventType._id || selectedEventType.id;
+
+    // ONLY GET CHECKED DOCUMENTS
+    const selectedDocuments = documents
+      .filter((document) => document.checked)
+      .map((document, index) => ({
+        name: document.name,
+        isActive: true,
+        order: index + 1,
+      }));
+
+    const payload = {
+      eventType: selectedEventType.eventType,
+      documents: selectedDocuments,
+    };
+
+    console.log("========== SYNC DOCUMENTS ==========");
+    console.log("Event Type ID:", eventTypeId);
+    console.log(
+      "Selected Documents:",
+      selectedDocuments
+    );
+    console.log(
+      "Payload:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    const response = await updateEventType(
+      eventTypeId,
+      payload
+    );
+
+    console.log(
+      "Sync Documents Response:",
+      response
+    );
+
+    // Save selected document IDs locally
+    const selectedDocumentIds = documents
+      .filter((document) => document.checked)
+      .map(
+        (document) =>
+          document._id || document.id
+      );
+
+    documentSelectionsRef.current.set(
+      eventTypeId,
+      selectedDocumentIds
+    );
+
+    saveDocumentIds(
+      eventTypeId,
+      selectedDocumentIds
+    );
+
+    alert("Documents synced successfully");
+
+  } catch (error) {
+    console.error(
+      "Error syncing event documents:",
+      error
+    );
+
+    console.error(
+      "API Error:",
+      error?.response?.data
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Failed to sync documents"
+    );
+  }
+};
 
   // ============================================
   // FILTER EVENT TYPES
@@ -622,7 +777,8 @@ export default function ViewEventDocumentMapping({
                         }));
 
                       return orderDocumentsBySelection(
-                        documentsForEventType
+                        documentsForEventType,
+                        selectedDocumentIds
                       );
                     });
                   }}
@@ -695,6 +851,9 @@ export default function ViewEventDocumentMapping({
                 </span>
               </p>
             )}
+          </div>
+          <div className="text-right">
+            <button onClick={handleSyncDocuments} className="bg-[#7637DC] text-white px-4 py-2 rounded-lg text-sm cursor-pointer">Sync Documents</button>
           </div>
         </div>
 

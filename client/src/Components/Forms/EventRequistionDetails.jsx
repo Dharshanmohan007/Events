@@ -199,13 +199,13 @@ export default function EventRequisitionDetails({
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
   const [advanceAmount, setAdvanceAmount] = useState(
-    initialEventRequisition.advanceAmount || ""
+    initialEventRequisition.advanceAmount ?? ""
   );
   const [purposeOfAdvance, setPurposeOfAdvance] = useState(
     initialEventRequisition.purposeOfAdvance || ""
   );
   const [estimatedBudget, setEstimatedBudget] = useState(
-    initialEventRequisition.estimatedBudget || ""
+    initialEventRequisition.estimatedBudget ?? ""
   );
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
   const [department, setDepartment] = useState(initialEventRequisition.department || "");
@@ -214,10 +214,10 @@ export default function EventRequisitionDetails({
   );
   const [file, setFile] = useState(initialEventRequisition.file || null);
   const [reason, setReason] = useState(initialEventRequisition.reason || "");
-  const [numOrganizers, setNumOrganizers] = useState(initialEventRequisition.numOrganizers || "");
+  const [numOrganizers, setNumOrganizers] = useState(initialEventRequisition.numOrganizers ?? "");
   const [organizers, setOrganizers] = useState(initialEventRequisition.organizers || []);
   const [advanceToBeReceivedWithin, setAdvanceToBeReceivedWithin] = useState(
-    initialEventRequisition.advanceToBeReceivedWithin || ""
+    initialEventRequisition.advanceToBeReceivedWithin ?? ""
   );
   const [expectedEventOutcome, setExpectedEventOutcome] = useState(
     initialEventRequisition.expectedEventOutcome || ""
