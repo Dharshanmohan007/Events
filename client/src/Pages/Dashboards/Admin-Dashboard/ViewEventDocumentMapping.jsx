@@ -272,86 +272,34 @@ export default function ViewEventDocumentMapping({
   }, [refreshKey]);
 
   // ============================================
-  // CHECKBOX CHANGE
-  // ============================================
+// CHECKBOX CHANGE
+// ============================================
 
-  const handleCheckboxChange = (
-    documentId
-  ) => {
-    const clickedDocument =
-      documents.find(
-        (document) =>
-          (document._id || document.id) ===
-          documentId
-      );
+const handleCheckboxChange = (documentId) => {
+  if (!selectedEventType) {
+    return;
+  }
 
-    if (!clickedDocument || !selectedEventType) {
-      return;
-    }
-
-    let updatedDocuments = documents.map(
+  setDocuments((previousDocuments) => {
+    const updatedDocuments = previousDocuments.map(
       (document) => {
         const id = document._id || document.id;
 
         return id === documentId
-          ? { ...document, checked: !document.checked }
+          ? {
+              ...document,
+              checked: !document.checked,
+            }
           : document;
       }
     );
 
-    /*
-      If the user is CHECKING a document:
-
-      1. Find the clicked document.
-      2. Move that exact document to the top.
-      3. Keep its checked state.
-      4. Serial number automatically becomes 1.
-    */
-
-    updatedDocuments = orderDocumentsBySelection(
+    // Keep checked documents at the top
+    return orderDocumentsBySelection(
       updatedDocuments
     );
-
-    setDocuments(updatedDocuments);
-
-    const eventTypeId =
-      selectedEventType._id || selectedEventType.id;
-    const updatedDocumentIds = updatedDocuments
-      .filter((document) => document.checked)
-      .map((document) => document._id || document.id);
-    const updatedEventType = {
-      ...selectedEventType,
-      documents: updatedDocumentIds,
-    };
-
-    documentSelectionsRef.current.set(
-      eventTypeId,
-      updatedDocumentIds
-    );
-    saveDocumentIds(
-      eventTypeId,
-      updatedDocumentIds
-    );
-
-    setEventTypes((previousEventTypes) =>
-      previousEventTypes.map((eventType) =>
-        (eventType._id || eventType.id) === eventTypeId
-          ? updatedEventType
-          : eventType
-      )
-    );
-    setSelectedEventType(updatedEventType);
-
-    updateEventType(eventTypeId, {
-      eventType: selectedEventType.eventType,
-      documents: updatedDocumentIds,
-    }).catch((error) => {
-      console.error(
-        "Error saving event document mapping:",
-        error
-      );
-    });
-  };
+  });
+};
 
   // ============================================
   // DRAG START
@@ -475,6 +423,93 @@ export default function ViewEventDocumentMapping({
   const handleDragEnd = () => {
     setDraggedDocumentId(null);
   };
+
+// ============================================
+// SYNC DOCUMENTS
+// ============================================
+
+const handleSyncDocuments = async () => {
+  if (!selectedEventType) {
+    alert("Please select an event type");
+    return;
+  }
+
+  try {
+    const eventTypeId =
+      selectedEventType._id || selectedEventType.id;
+
+    // ONLY GET CHECKED DOCUMENTS
+    const selectedDocuments = documents
+      .filter((document) => document.checked)
+      .map((document, index) => ({
+        name: document.name,
+        isActive: true,
+        order: index + 1,
+      }));
+
+    const payload = {
+      eventType: selectedEventType.eventType,
+      documents: selectedDocuments,
+    };
+
+    console.log("========== SYNC DOCUMENTS ==========");
+    console.log("Event Type ID:", eventTypeId);
+    console.log(
+      "Selected Documents:",
+      selectedDocuments
+    );
+    console.log(
+      "Payload:",
+      JSON.stringify(payload, null, 2)
+    );
+
+    const response = await updateEventType(
+      eventTypeId,
+      payload
+    );
+
+    console.log(
+      "Sync Documents Response:",
+      response
+    );
+
+    // Save selected document IDs locally
+    const selectedDocumentIds = documents
+      .filter((document) => document.checked)
+      .map(
+        (document) =>
+          document._id || document.id
+      );
+
+    documentSelectionsRef.current.set(
+      eventTypeId,
+      selectedDocumentIds
+    );
+
+    saveDocumentIds(
+      eventTypeId,
+      selectedDocumentIds
+    );
+
+    alert("Documents synced successfully");
+
+  } catch (error) {
+    console.error(
+      "Error syncing event documents:",
+      error
+    );
+
+    console.error(
+      "API Error:",
+      error?.response?.data
+    );
+
+    alert(
+      error?.response?.data?.message ||
+        "Failed to sync documents"
+    );
+  }
+};
 
   // ============================================
   // FILTER EVENT TYPES
@@ -695,6 +730,9 @@ export default function ViewEventDocumentMapping({
                 </span>
               </p>
             )}
+          </div>
+          <div className="text-right">
+            <button onClick={handleSyncDocuments} className="bg-[#7637DC] text-white px-4 py-2 rounded-lg text-sm cursor-pointer">Sync Documents</button>
           </div>
         </div>
 
