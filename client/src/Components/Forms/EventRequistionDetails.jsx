@@ -12,9 +12,10 @@ function validateOrganizer(data = {}) {
   const mobile = data.mobile != null ? String(data.mobile).trim() : "";
   if (!mobile) {
     e.mobile = "Mobile number is required";
-  } else if (!/^[6-9]\d{9}$/.test(mobile)) {
-    e.mobile = "Enter a valid 10-digit Indian mobile number";
-  }
+  } 
+  // else if (!/^[6-9]\d{9}$/.test(mobile)) {
+  //   e.mobile = "Enter a valid 10-digit Indian mobile number";
+  // }
   if (!data.designation?.trim()) e.designation = "Designation is required";
   if (!data.empId?.trim()) e.empId = "Employee ID is required";
   return e;
@@ -32,9 +33,10 @@ function validateGuest(data = {}) {
   const mobile = data.mobile != null ? String(data.mobile).trim() : "";
   if (!mobile) {
     e.mobile = "Mobile number is required";
-  } else if (!/^[6-9]\d{9}$/.test(mobile)) {
-    e.mobile = "Enter a valid 10-digit Indian mobile number";
-  }
+  } 
+  // else if (!/^[6-9]\d{9}$/.test(mobile)) {
+  //   e.mobile = "Enter a valid 10-digit Indian mobile number";
+  // }
   if (!data.gender) e.gender = "Gender is required";
   return e;
 }
@@ -61,9 +63,8 @@ function validateDay(day = {}, idx) {
 
 function validateOrganizerSection(state) {
   const e = {};
-  // Principal Approval Form is now optional — validation removed
-  // if (!state.principalApprovalDocument)
-  //   e.principalApprovalDocument = "Principal Approval Form is required";
+  if (state.finance === "Yes" && !state.principalApprovalDocument)
+    e.principalApprovalDocument = "Principal Approval Form is required";
   // if (!state.doc) e.doc = "This field is required";
   // if (state.doc === "Yes" && !state.file)
   //   e.file = "Please upload the previous event documentation";

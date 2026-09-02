@@ -927,7 +927,7 @@ function hydrateEventData(apiData) {
       name: g.name || "",
       organization: g.organization || "",
       designation: g.designation || "",
-      mobile: g.mobile ? String(g.mobile) : "",
+      mobile: g.mobile != null ? String(g.mobile) : "",
       gender: g.gender || "",
     })),
   }));
@@ -943,34 +943,12 @@ function hydrateEventData(apiData) {
   const event = {
     doc: od.previousEventDocumentation === true ? "Yes" : (od.previousEventDocumentation === false && od.previousEventReason?.trim() ? "No" : ""),
     reason: od.previousEventReason || "",
-    budget: normalizeYesNo(od.isBudgetApproved),
-    finance: normalizeYesNo(od.financeRequired),
-    // NOTE: if these still come back empty after this fix, check the
-    // "[HYDRATE DEBUG] od" console log for the *actual* key name the
-    // backend returns and add it to the candidate list below.
-    estimatedBudget: firstValue(
-      od.estimatedBudget,
-      od.estimateBudget,
-      od.eventEstimatedBudget,
-      od.budgetEstimated
-    ),
-    advanceAmount: firstValue(
-      od.advanceAmount,
-      od.advanceAmountRequired,
-      od.cashAdvanceAmount,
-      od.requiredAdvanceAmount
-    ),
-    purposeOfAdvance: firstValue(
-      od.purposeOfAdvance,
-      od.advancePurpose,
-      od.purposeOfTheAdvance
-    ),
-    advanceToBeReceivedWithin: firstValue(
-      od.advanceToBeReceviedWithin,   // the (mis)spelled key your buildPayload currently sends
-      od.advanceToBeReceivedWithin,   // correctly-spelled variant, in case backend normalizes it
-      od.clearAdvanceWithinDays,
-      od.advanceClearWithinDays
-    ),
+    budget: od.isBudgetApproved ? "Yes" : "No",
+    finance: od.financeRequired ? "Yes" : "No",
+    estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
+    advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
+    purposeOfAdvance: od.purposeOfAdvance || "",
+    advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
     expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
@@ -979,7 +957,7 @@ function hydrateEventData(apiData) {
     organizers: (od.organizers || []).map((o) => ({
       name: o.name || "",
       department: o.department || "",
-      mobile: o.mobile ? String(o.mobile) : "",
+      mobile: o.mobile != null ? String(o.mobile) : "",
       designation: o.designation || "",
       empEmail: o.email || "",
       empId: o.empId || "",
