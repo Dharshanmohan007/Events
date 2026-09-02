@@ -290,8 +290,10 @@ const TransportDetailsPage = () => {
 
   const handleUploadDragOver = (e) => e.preventDefault();
 
-  const getVehicleOptions = (totalPassengers) =>
-    Number(totalPassengers) > 5 ? ["Bus"] : ["Car"];
+  const getVehicleOptions = (totalPassengers) => {
+    const passengerCount = Number(totalPassengers) || 0;
+    return passengerCount > 4 ? ["Car", "Bus"] : ["Car"];
+  };
 
   // =========================
   // ADD FORM
@@ -346,6 +348,13 @@ const TransportDetailsPage = () => {
           allowedVehicles.includes(vehicle),
         ),
       );
+
+      if (Number(value) <= 4 && nextForm.selectedVehicles.includes("Bus")) {
+        nextForm.selectedVehicles = nextForm.selectedVehicles.filter(
+          (vehicle) => vehicle !== "Bus",
+        );
+        delete nextForm.vehicleCounts.Bus;
+      }
     }
 
     if (isDateField) {
@@ -767,9 +776,32 @@ const TransportDetailsPage = () => {
         errors.push(`Form ${index + 1}: Vehicle type required`);
       }
 
+      const totalPassengers = Number(form.totalPassengers) || 0;
+
       (form.selectedVehicles || []).forEach((vehicle) => {
+        const vehicleCount = Number(form.vehicleCounts?.[vehicle]) || 0;
+
         if (!form.vehicleCounts?.[vehicle]) {
           errors.push(`Form ${index + 1}: ${vehicle} count required`);
+          return;
+        }
+
+        if (vehicle === "Car") {
+          if (totalPassengers === 1 && vehicleCount > 1) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed 1 when total passengers is 1.`);
+          }
+
+          if (totalPassengers > 1 && totalPassengers <= 4 && vehicleCount > totalPassengers) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed ${totalPassengers} when total passengers are ${totalPassengers}.`);
+          }
+
+          if (totalPassengers === 4 && vehicleCount > 4) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed 4 when total passengers are 4.`);
+          }
+        }
+
+        if (vehicle === "Bus" && totalPassengers <= 4) {
+          errors.push(`Form ${index + 1}: Bus is allowed only when total passengers are more than 4.`);
         }
       });
 
