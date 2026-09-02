@@ -114,6 +114,7 @@ import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/Indivi
 
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
 import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
+import Dashboard from "./Pages/Dashboards/Ticketing-Dashboard/Dashboard.jsx";
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -771,6 +772,7 @@ function AppRoutes() {
         }
       />
       <Route path="/calendar" element={<Calendar />} />
+      <Route path="/ticketing-dashboard" element={<Dashboard />} />
       <Route path="/calendar/all-venues-fullscreen" element={<AllVenuesFullscreenPage />} />
       {/* <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} /> */}
       {/* Purchase individual detail view v2 */}
