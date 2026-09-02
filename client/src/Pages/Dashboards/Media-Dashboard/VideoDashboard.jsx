@@ -54,7 +54,7 @@ const statGroups = [
     cards: [
       { label: 'Total Request', value: 50, icon: Calendar, className: 'from-[#3A286F] to-[#5B1B8F]', iconBg: 'bg-[#A78BFA]' },
       { label: 'Completed Request', value: 50, icon: Check, className: 'from-[#143D40] to-[#0B8C64]', iconBg: 'bg-[#45D6A4]' },
-      { label: 'Acknowledged', value: 50, icon: Check, className: 'from-[#1A2A63] to-[#2921A3]', iconBg: 'bg-[#8EA0FF]' },
+      { label: 'Approved', value: 50, icon: Check, className: 'from-[#1A2A63] to-[#2921A3]', iconBg: 'bg-[#8EA0FF]' },
       { label: 'Pending Acknowledgement', value: 50, icon: Hourglass, className: 'from-[#3B213A] to-[#8C174B]', iconBg: 'bg-[#FF6DB3]' },
     ],
   },
@@ -173,7 +173,7 @@ const VideoDashboard = () => {
       ]))
       .then(([eventData, individualData]) => {
         if (isMounted) {
-          setEventStats(eventData.modules?.video ?? eventData.events ?? null)
+          setEventStats(eventData.modules?.video ?? eventData.stats ?? null)
           setIndividualStats(individualData.stats ?? null)
         }
       })
@@ -267,8 +267,8 @@ const VideoDashboard = () => {
             return { ...card, value: stats.pending ?? 0 }
           }
 
-          if (label.includes('acknowledged')) {
-            return { ...card, value: stats.approved ?? 0 }
+          if (label.includes('acknowledged') || label.includes('approved')) {
+            return { ...card, value: stats.acknowledged ?? stats.approved ?? 0 }
           }
 
           return card

@@ -32,7 +32,7 @@ const statCardData = [
         iconBg: 'bg-[#818cf8]',
     },
     {
-        lable: 'Completed Stays',
+        lable: 'Completed Requests',
         value: 50,
         icon: circleTick,
         bgColor: 'bg-gradient-to-r from-[#162d36] to-[#146147]',

@@ -210,7 +210,7 @@ const FacultyTransportationDetailsPanel = ({
 
   return (
     <div className="space-y-5">
-      <EventHeaderData  data={eventData.requestDetails}/>
+      <EventHeaderData  data={eventData?.requestDetails}/>
       {dayCount > 1 && (
         <nav
           className="flex border-b border-[#374155]"
