@@ -54,11 +54,43 @@ export default function ViewEventDocumentMapping({
   );
 
   const orderDocumentsBySelection = (
-    documentList
-  ) => [
-    ...documentList.filter((document) => document.checked),
-    ...documentList.filter((document) => !document.checked),
+  documentList,
+  selectedDocumentIds = []
+) => {
+  const selectedIds = selectedDocumentIds.map(
+    String
+  );
+
+  // Selected documents in the exact order
+  // in which the user selected them
+  const selectedDocuments = selectedIds
+    .map((documentId) =>
+      documentList.find(
+        (document) =>
+          String(
+            document._id || document.id
+          ) === String(documentId)
+      )
+    )
+    .filter(Boolean);
+
+  // Remaining unchecked documents
+  const unselectedDocuments = documentList.filter(
+    (document) => {
+      const documentId =
+        document._id || document.id;
+
+      return !selectedIds.includes(
+        String(documentId)
+      );
+    }
+  );
+
+  return [
+    ...selectedDocuments,
+    ...unselectedDocuments,
   ];
+};
 
   const getDocumentId = (document) =>
     document?._id ||
@@ -225,7 +257,10 @@ export default function ViewEventDocumentMapping({
           : [];
 
       setDocuments(
-        orderDocumentsBySelection(formattedDocuments)
+        orderDocumentsBySelection(
+          formattedDocuments,
+          selectedDocumentIds
+        )
       );
     } catch (error) {
       console.error(
@@ -271,7 +306,7 @@ export default function ViewEventDocumentMapping({
     loadMapping();
   }, [refreshKey]);
 
-  // ============================================
+ // ============================================
 // CHECKBOX CHANGE
 // ============================================
 
@@ -280,24 +315,109 @@ const handleCheckboxChange = (documentId) => {
     return;
   }
 
+  const eventTypeId =
+    selectedEventType._id ||
+    selectedEventType.id;
+
   setDocuments((previousDocuments) => {
-    const updatedDocuments = previousDocuments.map(
-      (document) => {
-        const id = document._id || document.id;
+    const clickedDocument =
+      previousDocuments.find(
+        (document) =>
+          String(
+            document._id || document.id
+          ) === String(documentId)
+      );
 
-        return id === documentId
-          ? {
-              ...document,
-              checked: !document.checked,
-            }
-          : document;
-      }
+    if (!clickedDocument) {
+      return previousDocuments;
+    }
+
+    const isCurrentlyChecked =
+      clickedDocument.checked;
+
+    // Get the current selected order
+    let selectedDocumentIds =
+      previousDocuments
+        .filter((document) => document.checked)
+        .map(
+          (document) =>
+            document._id || document.id
+        );
+
+    if (isCurrentlyChecked) {
+      /*
+        USER IS UNCHECKING
+
+        Remove only this document
+        and keep the remaining order unchanged.
+      */
+      selectedDocumentIds =
+        selectedDocumentIds.filter(
+          (id) =>
+            String(id) !==
+            String(documentId)
+        );
+    } else {
+      /*
+        USER IS CHECKING
+
+        Add the document at the END.
+
+        Example:
+
+        First click:
+        [Document A]
+
+        Second click:
+        [Document A, Document B]
+
+        So A stays order 1
+        and B becomes order 2.
+      */
+      selectedDocumentIds.push(
+        documentId
+      );
+    }
+
+    // Update checkbox state
+    const updatedDocuments =
+      previousDocuments.map(
+        (document) => {
+          const id =
+            document._id || document.id;
+
+          return String(id) ===
+            String(documentId)
+            ? {
+                ...document,
+                checked: !isCurrentlyChecked,
+              }
+            : document;
+        }
+      );
+
+    // Arrange using CLICK ORDER
+    const orderedDocuments =
+      orderDocumentsBySelection(
+        updatedDocuments,
+        selectedDocumentIds
+      );
+
+    /*
+      SAVE THE EXACT CLICK ORDER
+    */
+
+    documentSelectionsRef.current.set(
+      eventTypeId,
+      selectedDocumentIds
     );
 
-    // Keep checked documents at the top
-    return orderDocumentsBySelection(
-      updatedDocuments
+    saveDocumentIds(
+      eventTypeId,
+      selectedDocumentIds
     );
+
+    return orderedDocuments;
   });
 };
 
@@ -657,7 +777,8 @@ const handleSyncDocuments = async () => {
                         }));
 
                       return orderDocumentsBySelection(
-                        documentsForEventType
+                        documentsForEventType,
+                        selectedDocumentIds
                       );
                     });
                   }}
