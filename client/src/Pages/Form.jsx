@@ -95,7 +95,7 @@ const defaultAudio = {};
 
 const defaultTransport = () => ({
   pickupDate: null, dropDate: null, pickupLocation: "", dropLocation: "",
-  vistaTransport: [], staffCount: "", totalPassengers: "", busCount: "",
+  selectedGuestIds: [], vistaTransport: [], staffCount: "", totalPassengers: "", busCount: "",
   accompanyingStaffName: "", accompanyingStaffMobile: "",
   specialRequirements: "", checkpoints: [],
 });
@@ -600,6 +600,49 @@ const getArrayValue = (arr1, arr2) => {
   return Array.isArray(arr1) ? arr1 : Array.isArray(arr2) ? arr2 : [];
 };
 
+const normalizeGuestValue = (value) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
+const resolveTransportGuestIds = (savedGuests = [], allGuests = []) => {
+  if (!Array.isArray(savedGuests) || savedGuests.length === 0) return [];
+
+  const matchedIds = [];
+
+  savedGuests.forEach((guest) => {
+    const savedName = normalizeGuestValue(guest.name);
+    const savedMobile = String(guest.mobile ?? "").replace(/\D/g, "");
+    const savedOrg = normalizeGuestValue(guest.organization);
+    const savedDesignation = normalizeGuestValue(guest.designation);
+    const savedGender = normalizeGuestValue(guest.gender);
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    allGuests.forEach((candidate) => {
+      const candidateMobile = String(candidate.mobile ?? "").replace(/\D/g, "");
+      const candidateName = normalizeGuestValue(candidate.name);
+      const candidateOrg = normalizeGuestValue(candidate.organization);
+      const candidateDesignation = normalizeGuestValue(candidate.designation);
+      const candidateGender = normalizeGuestValue(candidate.gender);
+
+      let score = 0;
+      if (savedMobile && candidateMobile && savedMobile === candidateMobile) score += 5;
+      if (savedName && candidateName && savedName === candidateName) score += 4;
+      if (savedOrg && candidateOrg && savedOrg === candidateOrg) score += 2;
+      if (savedDesignation && candidateDesignation && savedDesignation === candidateDesignation) score += 2;
+      if (savedGender && candidateGender && savedGender === candidateGender) score += 1;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = candidate.guestId;
+      }
+    });
+
+    if (bestMatch && bestScore > 0) matchedIds.push(bestMatch);
+  });
+
+  return [...new Set(matchedIds)];
+};
+
 const buildMediaPayload = (mediaData) => {
   const mediaRequirements = mediaData.map((day, dayIndex) => {
     const typeOfMedia = [];
@@ -1093,6 +1136,7 @@ function hydrateEventData(apiData) {
         ...defaultTransport(),
         pickupLocation: item.pickupLocation || "",
         dropLocation: item.dropLocation || "",
+        selectedGuestIds: resolveTransportGuestIds(item.guests || [], flattenGuestsForAccommodation(eventDays)),
         totalPassengers: item.totalPassengers ?? "",
         vistaTransport: (item.vehicles || []).map((vehicle) => vehicle.type),
         vehicleCounts: (item.vehicles || []).reduce((counts, vehicle) => ({

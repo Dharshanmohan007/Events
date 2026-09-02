@@ -109,7 +109,11 @@ function sanitiseForm(f) {
     dropDate: f.dropDate ?? null,
     pickupLocation: f.pickupLocation ?? "",
     dropLocation: f.dropLocation ?? "",
-    selectedGuestIds: Array.isArray(f.selectedGuestIds) ? f.selectedGuestIds : [],
+    selectedGuestIds: Array.isArray(f.selectedGuestIds)
+      ? f.selectedGuestIds
+      : Array.isArray(f.selectedGuests)
+        ? f.selectedGuests
+        : [],
     vistaTransport: Array.isArray(f.vistaTransport) ? f.vistaTransport : [],
     vehicleCounts:
       f.vehicleCounts && typeof f.vehicleCounts === "object"
