@@ -901,9 +901,9 @@ function hydrateEventData(apiData) {
   const reqd = rd.requirementDetails || {};
 
   // DEBUG: find where principalApprovalDocument lives in the API response
-  console.log("[HYDRATE DEBUG] FULL apiData:", JSON.stringify(apiData, null, 2));
-  console.log("[HYDRATE DEBUG] od (organizerDetails):", JSON.stringify(od, null, 2));
-  console.log("[HYDRATE DEBUG] rd (requestDetails):", JSON.stringify(rd, null, 2));
+  // console.log("[HYDRATE DEBUG] FULL apiData:", JSON.stringify(apiData, null, 2));
+  // console.log("[HYDRATE DEBUG] od (organizerDetails):", JSON.stringify(od, null, 2));
+  // console.log("[HYDRATE DEBUG] rd (requestDetails):", JSON.stringify(rd, null, 2));
 
   const asDate = (value) => {
     if (!value) return null;
@@ -1735,7 +1735,7 @@ export default function Form() {
 
   // ── handleSaveAndContinue ─────────────────────────────────────────────────
   const handleSaveAndContinue = async () => {
-    console.log("save and next was clicking");
+    // console.log("save and next was clicking");
     if (childNav.next) {
       await childNav.next();
       return;
