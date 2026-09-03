@@ -942,7 +942,12 @@ const EventDetailsPage = () => {
               <>
                 {data?.status?.toLowerCase() !== "closed" && (
                   <Link
-                    to={`/forms/edit/${eventId}`}
+                    to={
+                      activeTab === "Transportation Details" &&
+                      (transportDetails?.transports?.[0]?._id || transportDetails?.transports?.[0]?.id)
+                        ? `/transports/edit/${transportDetails.transports[0]._id || transportDetails.transports[0].id}`
+                        : `/forms/edit/${eventId}`
+                    }
                     className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer "
                   >
                     <Pencil size={14} className="text-[#34D399]  " />
