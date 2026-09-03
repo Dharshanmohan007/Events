@@ -29,9 +29,9 @@ const SplitInfoRow = ({ items }) => (
 
 const MealSection = ({ title, foodType }) => {
   if (!foodType) return null
-  const { participants = {}, vipGuests = {}, refreshmentCount } = foodType
+  const { participants = {}, vipGuests = {}, refreshmentCount, venueWiseDetails = [] } = foodType
   
-  // For Morning/Evening Refreshment - show only refreshment count
+  // For Morning/Evening Refreshment - show refreshment count and venue wise details
   const isRefreshment = foodType.type === 'Morning Refreshment' || foodType.type === 'Evening Refreshment'
   
   return (
@@ -39,10 +39,25 @@ const MealSection = ({ title, foodType }) => {
       <h3 className="text-lg font-semibold text-[#8F5BFF]">{title}</h3>
       <div className="mt-4 space-y-3">
         {isRefreshment ? (
-          <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
-            <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Refreshment Count</p>
-            <p className="mt-1 text-sm font-semibold text-white">{displayValue(refreshmentCount)}</p>
-          </div>
+          <>
+            <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Refreshment Count</p>
+              <p className="mt-1 text-sm font-semibold text-white">{displayValue(refreshmentCount)}</p>
+            </div>
+            {venueWiseDetails.length > 0 && (
+              <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45 mb-3">Venue Wise Details</p>
+                <div className="space-y-2">
+                  {venueWiseDetails.map((venue, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="text-white capitalize">{displayValue(venue.venueName)}</span>
+                      <span className="text-[#CBC3D7]/70">{displayValue(venue.count)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <>
             <SplitInfoRow
@@ -104,6 +119,8 @@ const FoodDetails = ({ refreshment }) => {
       {summaryRows.map((row, i) => (
         <SplitInfoRow key={i} items={row} />
       ))}
+
+      {console.log("refreshment details : ", refreshment)}
 
       {foodTypes.map((foodType) => (
         <MealSection
