@@ -92,6 +92,9 @@ const SplitRow = ({ items }) => (
 const TransportDetails = ({ transport, guestTransportDetails }) => {
   const vehicles = transport.vehicles || [];
   const staff = transport.accompanyingStaff || [];
+  const guests = Array.isArray(transport.guests)
+    ? transport.guests
+    : (guestTransportDetails || []).flatMap((item) => item?.guests || []);
   const transportSummary = [
     {
       icon: CalendarDays,
@@ -169,10 +172,9 @@ const TransportDetails = ({ transport, guestTransportDetails }) => {
 
       <div className="guest-details-container space-y-2 bg-[#293246] p-4 rounded-lg">
         <h1 className=" text-purple-500">Guest details</h1>
-        {guestTransportDetails?.map((item, itemIndex) =>
-          item?.guests?.map((guest, guestIndex) => (
+        {guests.map((guest, guestIndex) => (
             <div
-              key={`${itemIndex}-${guestIndex}`}
+              key={guest._id || guest.id || guestIndex}
               className="w-full rounded-xl border border-[#3b465c] bg-[#29303f] px-4 py-3"
             >
               <div className="grid grid-cols-1 divide-y divide-[#536078] md:grid-cols-5 md:divide-x md:divide-y-0">
@@ -247,8 +249,7 @@ const TransportDetails = ({ transport, guestTransportDetails }) => {
                 </div>
               </div>
             </div>
-          )),
-        )}
+          ))}
       </div>
 
       <TransportTimeline transport={transport} />

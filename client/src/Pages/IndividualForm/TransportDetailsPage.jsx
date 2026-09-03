@@ -28,6 +28,9 @@ const createTransportForm = () => ({
   checkpoints: [],
   draggedIndex: null,
   totalPassengers: "",
+  numberOfGuests: "",
+  guests: [],
+  guestCountError: "",
 
   // VEHICLES
   selectedVehicles: [],
@@ -123,6 +126,17 @@ const TransportDetailsPage = () => {
       checkpoints: checkpointsList,
       draggedIndex: null,
       totalPassengers: String(transport.totalPassengers ?? ""),
+      numberOfGuests: String(transport.numberOfGuests ?? transport.totalGuests ?? ""),
+      guests: Array.isArray(transport.guests)
+        ? transport.guests.map((guest) => ({
+            name: guest.name || "",
+            mobile: String(guest.mobile || ""),
+            organization: guest.organization || guest.organizationName || "",
+            gender: guest.gender || "",
+            designation: guest.designation || "",
+          }))
+        : [],
+      guestCountError: "",
 
       selectedVehicles: selectedVehicles,
       vehicleCounts: vehicleCounts,
@@ -290,8 +304,10 @@ const TransportDetailsPage = () => {
 
   const handleUploadDragOver = (e) => e.preventDefault();
 
-  const getVehicleOptions = (totalPassengers) =>
-    Number(totalPassengers) > 5 ? ["Bus"] : ["Car"];
+  const getVehicleOptions = (totalPassengers) => {
+    const passengerCount = Number(totalPassengers) || 0;
+    return passengerCount > 4 ? ["Car", "Bus"] : ["Car"];
+  };
 
   // =========================
   // ADD FORM
@@ -346,6 +362,27 @@ const TransportDetailsPage = () => {
           allowedVehicles.includes(vehicle),
         ),
       );
+
+      if (Number(value) <= 4 && nextForm.selectedVehicles.includes("Bus")) {
+        nextForm.selectedVehicles = nextForm.selectedVehicles.filter(
+          (vehicle) => vehicle !== "Bus",
+        );
+        delete nextForm.vehicleCounts.Bus;
+      }
+    }
+
+    if (field === "numberOfGuests") {
+      const guestCount = Math.max(0, Math.min(10, Number(value) || 0));
+      nextForm.guestCountError = Number(value) > 10
+        ? "Number of guests cannot exceed 10."
+        : "";
+      nextForm.guests = Array.from({ length: guestCount }, (_, index) => ({
+        name: nextForm.guests?.[index]?.name || "",
+        mobile: nextForm.guests?.[index]?.mobile || "",
+        organization: nextForm.guests?.[index]?.organization || "",
+        gender: nextForm.guests?.[index]?.gender || "",
+        designation: nextForm.guests?.[index]?.designation || "",
+      }));
     }
 
     if (isDateField) {
@@ -440,6 +477,12 @@ const TransportDetailsPage = () => {
 
     updatedForms[formIndex].staffDetails[staffIndex][field] = value;
 
+    setTransportForms(updatedForms);
+  };
+
+  const updateGuestDetail = (formIndex, guestIndex, field, value) => {
+    const updatedForms = [...transportForms];
+    updatedForms[formIndex].guests[guestIndex][field] = value;
     setTransportForms(updatedForms);
   };
 
@@ -678,6 +721,20 @@ const TransportDetailsPage = () => {
 
     formData.append("totalPassengers", Number(form.totalPassengers) || 0);
 
+    formData.append("numberOfGuests", Number(form.numberOfGuests) || 0);
+    formData.append(
+      "guests",
+      JSON.stringify(
+        (form.guests || []).map((guest) => ({
+          name: guest.name,
+          mobile: Number(guest.mobile) || 0,
+          organization: guest.organization,
+          gender: guest.gender,
+          designation: guest.designation,
+        })),
+      ),
+    );
+
     formData.append(
       "vehicles",
       JSON.stringify(
@@ -763,13 +820,59 @@ const TransportDetailsPage = () => {
         errors.push(`Form ${index + 1}: Total passengers required`);
       }
 
+      const numberOfGuests = Number(form.numberOfGuests) || 0;
+      if (numberOfGuests > 10) {
+        errors.push(`Form ${index + 1}: Number of guests cannot exceed 10.`);
+      }
+
+      (form.guests || []).slice(0, numberOfGuests).forEach((guest, guestIndex) => {
+        if (!guest.name?.trim()) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} name is required`);
+        }
+        if (!guest.mobile?.trim()) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} mobile number is required`);
+        }
+        if (!guest.organization?.trim()) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} organization name is required`);
+        }
+        if (!guest.gender) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} gender is required`);
+        }
+        if (!guest.designation?.trim()) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} designation is required`);
+        }
+      });
+
       if (!form.selectedVehicles || form.selectedVehicles.length === 0) {
         errors.push(`Form ${index + 1}: Vehicle type required`);
       }
 
+      const totalPassengers = Number(form.totalPassengers) || 0;
+
       (form.selectedVehicles || []).forEach((vehicle) => {
+        const vehicleCount = Number(form.vehicleCounts?.[vehicle]) || 0;
+
         if (!form.vehicleCounts?.[vehicle]) {
           errors.push(`Form ${index + 1}: ${vehicle} count required`);
+          return;
+        }
+
+        if (vehicle === "Car") {
+          if (totalPassengers === 1 && vehicleCount > 1) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed 1 when total passengers is 1.`);
+          }
+
+          if (totalPassengers > 1 && totalPassengers <= 4 && vehicleCount > totalPassengers) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed ${totalPassengers} when total passengers are ${totalPassengers}.`);
+          }
+
+          if (totalPassengers === 4 && vehicleCount > 4) {
+            errors.push(`Form ${index + 1}: Car count cannot exceed 4 when total passengers are 4.`);
+          }
+        }
+
+        if (vehicle === "Bus" && totalPassengers <= 4) {
+          errors.push(`Form ${index + 1}: Bus is allowed only when total passengers are more than 4.`);
         }
       });
 
@@ -1507,6 +1610,144 @@ const TransportDetailsPage = () => {
               />
             </div>
           </div>
+
+          {/* GUEST COUNT */}
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Number of Guests</label>
+
+            <input
+              type="number"
+              min="0"
+              max="10"
+              value={form.numberOfGuests}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (Number(value) > 99) return;
+                updateFormField(formIndex, "numberOfGuests", value);
+              }}
+              placeholder="Enter number of guests"
+              onInput={(e) => {
+                e.target.value = e.target.value.replace(/[^0-9]/g, "");
+              }}
+              className="
+                    w-full
+                    border
+                    border-[#2F2F47]
+                    rounded-md
+                    px-4
+                    py-3
+                    text-white
+                    outline-none
+                    focus:border-[#3b82f6]
+                    focus:ring-0
+                    transition-all
+                  "
+            />
+            {form.guestCountError && (
+              <p className="mt-1 text-sm text-red-400">{form.guestCountError}</p>
+            )}
+          </div>
+
+          {/* GUEST DETAILS */}
+          {(form.guests || []).length > 0 && (
+            <div className="mt-5 space-y-5">
+              {(form.guests || []).map((guest, guestIndex) => (
+                <div
+                  key={guestIndex}
+                  className="bg-[#26264a] border border-[#34345c] rounded-2xl p-5"
+                >
+                  <h3 className="text-[#b06cff] font-semibold mb-4">
+                    Guest {guestIndex + 1}
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>Guest Name *</label>
+                      <input
+                        type="text"
+                        value={guest.name}
+                        onChange={(e) =>
+                          updateGuestDetail(formIndex, guestIndex, "name", e.target.value)
+                        }
+                        placeholder="Enter guest name"
+                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>Mobile Number *</label>
+                      <input
+                        type="tel"
+                        value={guest.mobile}
+                        onChange={(e) =>
+                          updateGuestDetail(
+                            formIndex,
+                            guestIndex,
+                            "mobile",
+                            e.target.value.replace(/[^0-9]/g, ""),
+                          )
+                        }
+                        placeholder="Enter mobile number"
+                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>Organization Name *</label>
+                      <input
+                        type="text"
+                        value={guest.organization}
+                        onChange={(e) =>
+                          updateGuestDetail(
+                            formIndex,
+                            guestIndex,
+                            "organization",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Enter organization name"
+                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                      />
+                    </div>
+
+                    <div className="relative">
+                      <label className={staffFloatingLabelClass}>Gender *</label>
+                      <select
+                        value={guest.gender}
+                        onChange={(e) =>
+                          updateGuestDetail(formIndex, guestIndex, "gender", e.target.value)
+                        }
+                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                      >
+                        <option value="">Select gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    <div className="relative md:col-span-2">
+                      <label className={staffFloatingLabelClass}>Designation *</label>
+                      <input
+                        type="text"
+                        value={guest.designation}
+                        onChange={(e) =>
+                          updateGuestDetail(
+                            formIndex,
+                            guestIndex,
+                            "designation",
+                            e.target.value,
+                          )
+                        }
+                        placeholder="Enter designation"
+                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* PASSENGERS + VEHICLES */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">

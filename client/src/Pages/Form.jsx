@@ -66,6 +66,7 @@ const emptyFoodDay = () => ({
   internalCount: "", staffName: "", mobileNumber: "",
   foodTypes: [], specialRequirements: "",
   morningRefreshmentCount: "", eveningRefreshmentCount: "",
+  morningRefreshmentVenues: [], eveningRefreshmentVenues: [],
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -944,9 +945,9 @@ function hydrateEventData(apiData) {
   const reqd = rd.requirementDetails || {};
 
   // DEBUG: find where principalApprovalDocument lives in the API response
-  console.log("[HYDRATE DEBUG] FULL apiData:", JSON.stringify(apiData, null, 2));
-  console.log("[HYDRATE DEBUG] od (organizerDetails):", JSON.stringify(od, null, 2));
-  console.log("[HYDRATE DEBUG] rd (requestDetails):", JSON.stringify(rd, null, 2));
+  // console.log("[HYDRATE DEBUG] FULL apiData:", JSON.stringify(apiData, null, 2));
+  // console.log("[HYDRATE DEBUG] od (organizerDetails):", JSON.stringify(od, null, 2));
+  // console.log("[HYDRATE DEBUG] rd (requestDetails):", JSON.stringify(rd, null, 2));
 
   const asDate = (value) => {
     if (!value) return null;
@@ -1229,6 +1230,8 @@ function hydrateEventData(apiData) {
         dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
         morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
         eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
+        morningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
+        eveningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
         specialRequirements: item.specialRequirements || "",
       }))
     : [emptyFoodDay()];
@@ -1779,7 +1782,7 @@ export default function Form() {
 
   // ── handleSaveAndContinue ─────────────────────────────────────────────────
   const handleSaveAndContinue = async () => {
-    console.log("save and next was clicking");
+    // console.log("save and next was clicking");
     if (childNav.next) {
       await childNav.next();
       return;
@@ -1879,6 +1882,7 @@ export default function Form() {
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,
+      venues: formData.venue,
       onFoodDataChange: handleFoodDataChange,
       eventId, errors: formErrors.foodandrefreshments || {},
     },

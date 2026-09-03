@@ -573,26 +573,26 @@ const handleSyncDocuments = async () => {
       documents: selectedDocuments,
     };
 
-    console.log("========== SYNC DOCUMENTS ==========");
-    console.log("Event Type ID:", eventTypeId);
-    console.log(
-      "Selected Documents:",
-      selectedDocuments
-    );
-    console.log(
-      "Payload:",
-      JSON.stringify(payload, null, 2)
-    );
+    // console.log("========== SYNC DOCUMENTS ==========");
+    // console.log("Event Type ID:", eventTypeId);
+    // console.log(
+    //   "Selected Documents:",
+    //   selectedDocuments
+    // );
+    // console.log(
+    //   "Payload:",
+    //   JSON.stringify(payload, null, 2)
+    // );
 
     const response = await updateEventType(
       eventTypeId,
       payload
     );
 
-    console.log(
-      "Sync Documents Response:",
-      response
-    );
+    // console.log(
+    //   "Sync Documents Response:",
+    //   response
+    // );
 
     // Save selected document IDs locally
     const selectedDocumentIds = documents
@@ -620,10 +620,10 @@ const handleSyncDocuments = async () => {
       error
     );
 
-    console.error(
-      "API Error:",
-      error?.response?.data
-    );
+    // console.error(
+    //   "API Error:",
+    //   error?.response?.data
+    // );
 
     alert(
       error?.response?.data?.message ||
@@ -767,7 +767,8 @@ const handleSyncDocuments = async () => {
                     const eventTypeId = eventType._id || eventType.id;
                     try {
                       // Fetch the fresh event type from backend to get saved order
-                      const fullEventType = await getEventTypeById(eventTypeId);
+                      const responseData = await getEventTypeById(eventTypeId);
+                      const fullEventType = responseData?.eventType || responseData?.data || responseData;
                       const backendDocuments = fullEventType?.documents || eventType.documents || [];
                       
                       setSelectedEventType(fullEventType || eventType);

@@ -88,6 +88,8 @@ const createFoodFormCard = () => ({
       nonVegGuest: "",
     },
   },
+  morningRefreshmentCount: "",
+  eveningRefreshmentCount: "",
   selectDate: null,
   totalResourcePerson: "",
   internalAccompanyingCount: "1",
@@ -830,12 +832,20 @@ const IndividualFoodAndRefreshment = () => {
       "Morning Refreshment": false,
       "Evening Refreshment": false,
     };
+    let morningRefreshmentCount = "";
+    let eveningRefreshmentCount = "";
 
     if (Array.isArray(food.foodTypes)) {
       food.foodTypes.forEach((item) => {
         const typeName = item.type || (item.foodTypes && item.foodTypes[0]?.type) || (typeof item === "string" ? item : null);
         if (typeName && selectedFoodTypesObj.hasOwnProperty(typeName)) {
           selectedFoodTypesObj[typeName] = true;
+        }
+        if (typeName === "Morning Refreshment") {
+          morningRefreshmentCount = item.refreshmentCount !== undefined ? String(item.refreshmentCount) : "";
+        }
+        if (typeName === "Evening Refreshment") {
+          eveningRefreshmentCount = item.refreshmentCount !== undefined ? String(item.refreshmentCount) : "";
         }
         if (typeName && foodDetailsObj[typeName]) {
           foodDetailsObj[typeName] = {
@@ -871,6 +881,8 @@ const IndividualFoodAndRefreshment = () => {
       resourceType: resourceTypes,
       selectedFoodTypes: selectedFoodTypesObj,
       foodDetails: foodDetailsObj,
+      morningRefreshmentCount,
+      eveningRefreshmentCount,
       selectDate: parsedDate,
       totalResourcePerson: String(food.numberOfResourcePersons ?? ""),
       internalAccompanyingCount: String(food.numberOfInternalAccompanyingStaff ?? "1"),
@@ -1092,7 +1104,6 @@ useEffect(() => {
     );
 
     const foodTypesPayload = selectedFoodList.map((type) => {
-      // For Breakfast, Lunch, Dinner - include all details
       if (["Breakfast", "Lunch", "Dinner"].includes(type)) {
         return {
           foodTypes: [
@@ -1109,16 +1120,37 @@ useEffect(() => {
             nonVegCount: Number(card.foodDetails[type].nonVegGuest) || 0,
           },
         };
-      } else {
-        // For Morning/Evening Refreshment - only type (no details needed)
+      }
+
+      if (type === "Morning Refreshment") {
         return {
           foodTypes: [
             {
               type,
             },
           ],
+          refreshmentCount: Number(card.morningRefreshmentCount) || 0,
         };
       }
+
+      if (type === "Evening Refreshment") {
+        return {
+          foodTypes: [
+            {
+              type,
+            },
+          ],
+          refreshmentCount: Number(card.eveningRefreshmentCount) || 0,
+        };
+      }
+
+      return {
+        foodTypes: [
+          {
+            type,
+          },
+        ],
+      };
     });
 
     return {
@@ -1210,19 +1242,66 @@ useEffect(() => {
       if (selectedFoodList.length === 0)
         errors.push(`${formLabel}Select at least one Food Type.`);
 
+      const totalPeople = Number(card.totalResourcePerson || 0) + Number(card.internalAccompanyingCount || 0);
+
       const mealTypes = ["Breakfast", "Lunch", "Dinner"];
       selectedFoodList.forEach((type) => {
+        if (type === "Morning Refreshment") {
+          if (!card.morningRefreshmentCount || Number(card.morningRefreshmentCount) <= 0) {
+            errors.push(`${formLabel}Morning Refreshment count is required.`);
+          }
+        }
+
+        if (type === "Evening Refreshment") {
+          if (!card.eveningRefreshmentCount || Number(card.eveningRefreshmentCount) <= 0) {
+            errors.push(`${formLabel}Evening Refreshment count is required.`);
+          }
+        }
+
         if (mealTypes.includes(type)) {
-          if (!card.foodDetails[type].vegParticipants)
-            errors.push(`${formLabel}${type}: Veg Participants count is required.`);
-          if (!card.foodDetails[type].nonVegParticipants)
-            errors.push(`${formLabel}${type}: Non-Veg Participants count is required.`);
-          if (!card.foodDetails[type].vegGuest)
-            errors.push(`${formLabel}${type}: Veg Guest count is required.`);
-          if (!card.foodDetails[type].nonVegGuest)
-            errors.push(`${formLabel}${type}: Non-Veg Guest count is required.`);
+          const mealData = card.foodDetails[type];
+          const mealTotal =
+            Number(mealData.vegParticipants || 0) +
+            Number(mealData.vegGuest || 0) +
+            (type === "Lunch"
+              ? Number(mealData.nonVegParticipants || 0) + Number(mealData.nonVegGuest || 0)
+              : 0);
+
+          if (type === "Breakfast" || type === "Dinner") {
+            if (!mealData.vegParticipants && mealData.vegParticipants !== 0)
+              errors.push(`${formLabel}${type}: Veg Participants count is required.`);
+            if (!mealData.vegGuest && mealData.vegGuest !== 0)
+              errors.push(`${formLabel}${type}: Veg Guest count is required.`);
+          }
+
+          if (type === "Lunch") {
+            if (!mealData.vegParticipants && mealData.vegParticipants !== 0)
+              errors.push(`${formLabel}${type}: Veg Participants count is required.`);
+            if (!mealData.nonVegParticipants && mealData.nonVegParticipants !== 0)
+              errors.push(`${formLabel}${type}: Non-Veg Participants count is required.`);
+            if (!mealData.vegGuest && mealData.vegGuest !== 0)
+              errors.push(`${formLabel}${type}: Veg Guest count is required.`);
+            if (!mealData.nonVegGuest && mealData.nonVegGuest !== 0)
+              errors.push(`${formLabel}${type}: Non-Veg Guest count is required.`);
+          }
+
+          if (mealTotal > totalPeople) {
+            errors.push(
+              `${formLabel}${type} count cannot exceed the total resource persons and accompanying staff (${totalPeople}).`,
+            );
+          }
         }
       });
+
+      const refreshmentTotal =
+        (card.selectedFoodTypes["Morning Refreshment"] ? Number(card.morningRefreshmentCount || 0) : 0) +
+        (card.selectedFoodTypes["Evening Refreshment"] ? Number(card.eveningRefreshmentCount || 0) : 0);
+
+      if (refreshmentTotal > totalPeople) {
+        errors.push(
+          `${formLabel}Morning and Evening Refreshment count cannot exceed the total resource persons and accompanying staff (${totalPeople}).`,
+        );
+      }
 
       // Finance validation
       if (card.financeRequired === "Yes") {
@@ -2270,7 +2349,44 @@ if (loadError) {
           )}
         </div>
 
-        {/* SEPARATE FOOD SECTIONS - ONLY FOR BREAKFAST, LUNCH, DINNER */}
+        {card.selectedFoodTypes["Morning Refreshment"] && (
+          <div className="bg-[#282846] border border-[#383847] rounded-2xl p-5 mt-5">
+            <h2 className="text-[#c084fc] text-lg font-semibold mb-4">Morning Refreshment</h2>
+            <div className="relative">
+              <label className={foodSectionFloatingLabelClass}>Count</label>
+              <input
+                type="number"
+                min="0"
+                value={card.morningRefreshmentCount}
+                onChange={(e) =>
+                  updateFormCard(card.id, { morningRefreshmentCount: e.target.value })
+                }
+                placeholder="10"
+                className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+              />
+            </div>
+          </div>
+        )}
+
+        {card.selectedFoodTypes["Evening Refreshment"] && (
+          <div className="bg-[#282846] border border-[#383847] rounded-2xl p-5 mt-5">
+            <h2 className="text-[#c084fc] text-lg font-semibold mb-4">Evening Refreshment</h2>
+            <div className="relative">
+              <label className={foodSectionFloatingLabelClass}>Count</label>
+              <input
+                type="number"
+                min="0"
+                value={card.eveningRefreshmentCount}
+                onChange={(e) =>
+                  updateFormCard(card.id, { eveningRefreshmentCount: e.target.value })
+                }
+                placeholder="10"
+                className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+              />
+            </div>
+          </div>
+        )}
+
         {["Breakfast", "Lunch", "Dinner"].map(
           (type) =>
             card.selectedFoodTypes[type] && (
@@ -2290,7 +2406,6 @@ if (loadError) {
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Veg Participants */}
                   <div className="relative">
                     <label className={foodSectionFloatingLabelClass}>
                       No. of veg In Participants Menu*
@@ -2303,31 +2418,18 @@ if (loadError) {
                         updateFormCard(card.id, {
                           foodDetails: {
                             ...card.foodDetails,
-                          [type]: {
+                            [type]: {
                               ...card.foodDetails[type],
-                            vegParticipants: e.target.value,
-                          },
+                              vegParticipants: e.target.value,
+                            },
                           },
                         })
                       }
                       placeholder="10"
-                      className="
-                        w-full
-                        bg-[#282846]
-                        border
-                        border-[#383847]
-                        rounded-md
-                        px-4
-                        py-3
-                        text-white
-                        outline-none
-                        focus:border-[#3b82f6]
-                        transition-all
-                      "
+                      className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
                     />
                   </div>
 
-                  {/* Veg VIP */}
                   <div className="relative">
                     <label className={foodSectionFloatingLabelClass}>
                       No. of veg In Guest/VIP Menu*
@@ -2340,103 +2442,69 @@ if (loadError) {
                         updateFormCard(card.id, {
                           foodDetails: {
                             ...card.foodDetails,
-                          [type]: {
+                            [type]: {
                               ...card.foodDetails[type],
-                            vegGuest: e.target.value,
-                          },
+                              vegGuest: e.target.value,
+                            },
                           },
                         })
                       }
                       placeholder="10"
-                      className="
-                        w-full
-                        bg-[#282846]
-                        border
-                        border-[#383847]
-                        rounded-md
-                        px-4
-                        py-3
-                        text-white
-                        outline-none
-                        focus:border-[#3b82f6]
-                        transition-all
-                      "
+                      className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
                     />
                   </div>
 
-                  {/* Non Veg Participants */}
-                  <div className="relative">
-                    <label className={foodSectionFloatingLabelClass}>
-                      No. of Non-veg In Participants Menu*
-                    </label>
+                  {type === "Lunch" && (
+                    <>
+                      <div className="relative">
+                        <label className={foodSectionFloatingLabelClass}>
+                          No. of Non-veg In Participants Menu*
+                        </label>
 
-                    <input
-                      type="number"
-                      value={card.foodDetails[type].nonVegParticipants}
-                      onChange={(e) =>
-                        updateFormCard(card.id, {
-                          foodDetails: {
-                            ...card.foodDetails,
-                          [type]: {
-                              ...card.foodDetails[type],
-                            nonVegParticipants: e.target.value,
-                          },
-                          },
-                        })
-                      }
-                      placeholder="10"
-                      className="
-                        w-full
-                        bg-[#282846]
-                        border
-                        border-[#383847]
-                        rounded-md
-                        px-4
-                        py-3
-                        text-white
-                        outline-none
-                        focus:border-[#3b82f6]
-                        transition-all
-                      "
-                    />
-                  </div>
+                        <input
+                          type="number"
+                          value={card.foodDetails[type].nonVegParticipants}
+                          onChange={(e) =>
+                            updateFormCard(card.id, {
+                              foodDetails: {
+                                ...card.foodDetails,
+                                [type]: {
+                                  ...card.foodDetails[type],
+                                  nonVegParticipants: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          placeholder="10"
+                          className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                        />
+                      </div>
 
-                  {/* Non Veg VIP */}
-                  <div className="relative">
-                    <label className={foodSectionFloatingLabelClass}>
-                      No. of Non-veg In Guest/VIP Menu*
-                    </label>
+                      <div className="relative">
+                        <label className={foodSectionFloatingLabelClass}>
+                          No. of Non-veg In Guest/VIP Menu*
+                        </label>
 
-                    <input
-                      type="number"
-                      value={card.foodDetails[type].nonVegGuest}
-                      onChange={(e) =>
-                        updateFormCard(card.id, {
-                          foodDetails: {
-                            ...card.foodDetails,
-                          [type]: {
-                              ...card.foodDetails[type],
-                            nonVegGuest: e.target.value,
-                          },
-                          },
-                        })
-                      }
-                      placeholder="10"
-                      className="
-                        w-full
-                        bg-[#282846]
-                        border
-                        border-[#383847]
-                        rounded-md
-                        px-4
-                        py-3
-                        text-white
-                        outline-none
-                        focus:border-[#3b82f6]
-                        transition-all
-                      "
-                    />
-                  </div>
+                        <input
+                          type="number"
+                          value={card.foodDetails[type].nonVegGuest}
+                          onChange={(e) =>
+                            updateFormCard(card.id, {
+                              foodDetails: {
+                                ...card.foodDetails,
+                                [type]: {
+                                  ...card.foodDetails[type],
+                                  nonVegGuest: e.target.value,
+                                },
+                              },
+                            })
+                          }
+                          placeholder="10"
+                          className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )

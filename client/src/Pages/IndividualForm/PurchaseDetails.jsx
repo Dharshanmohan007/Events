@@ -395,7 +395,7 @@ export default function PurchaseDetails() {
     trophyType: [],
     basicTrophyQty: "",
     eliteTrophyQty: "",
-    cashPrizeAmount: "",
+    giftCount: "",
     voucherQty: {},
     voucherWorth: [],
     registrationKitQty: "",
@@ -439,7 +439,7 @@ export default function PurchaseDetails() {
     const trophyTypes = [];
     let basicQty = "";
     let eliteQty = "";
-    let cashPrize = "";
+    let giftQty = "";
     const voucherWorths = [];
     const voucherQtys = {};
 
@@ -460,9 +460,9 @@ export default function PurchaseDetails() {
           });
         }
 
-        if (gift.giftType === "Cash Prize" || gift.cashPrizeAmount !== undefined) {
-          if (!giftTypes.includes("Cash Prize")) giftTypes.push("Cash Prize");
-          cashPrize = String(gift.cashPrizeAmount || "");
+        if (gift.giftType === "Gifts" || gift.giftCount !== undefined || gift.quantity !== undefined) {
+          if (!giftTypes.includes("Gifts")) giftTypes.push("Gifts");
+          giftQty = String(gift.giftCount ?? gift.quantity ?? "");
         }
 
         if (gift.giftType === "voucherWorth" || gift.voucher || gift.giftType === "Voucher") {
@@ -487,7 +487,7 @@ export default function PurchaseDetails() {
       trophyType: trophyTypes,
       basicTrophyQty: basicQty,
       eliteTrophyQty: eliteQty,
-      cashPrizeAmount: cashPrize,
+      giftCount: giftQty,
       voucherQty: voucherQtys,
       voucherWorth: voucherWorths,
       registrationKitQty: String(sectionData.registrationKitQty ?? ""),
@@ -748,8 +748,8 @@ export default function PurchaseDetails() {
         }
       }
 
-      if (giftTypes.includes("Cash Prize") && !data.cashPrizeAmount?.toString().trim()) {
-        nextErrors[`${prefix}cashPrizeAmount`] = "This field is required.";
+      if (giftTypes.includes("Gifts") && !data.giftCount?.toString().trim()) {
+        nextErrors[`${prefix}giftCount`] = "This field is required.";
       }
 
       if (giftTypes.includes("Voucher")) {
@@ -834,11 +834,11 @@ export default function PurchaseDetails() {
       }
     }
 
-    /* CASH PRIZE */
-    if (section.giftType?.includes("Cash Prize")) {
+    /* GIFTS */
+    if (section.giftType?.includes("Gifts")) {
       giftItems.push({
-        giftType: "Cash Prize",
-        cashPrizeAmount: parseInt(section.cashPrizeAmount) || 0,
+        giftType: "Gifts",
+        quantity: parseInt(section.giftCount) || 0,
       });
     }
 
@@ -1662,7 +1662,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
 
   const hasTrophy = data.giftType?.includes("Trophy");
 
-  const hasCash = data.giftType?.includes("Cash Prize");
+  const hasGifts = data.giftType?.includes("Gifts");
 
   const hasVoucher = data.giftType?.includes("Voucher");
 
@@ -1701,7 +1701,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
               giftType: value,
             })
           }
-          options={["Trophy", "Cash Prize", "Voucher"]}
+          options={["Trophy", "Gifts", "Voucher"]}
           placeholder="Select Gift Type"
           labelBgClass="bg-[#1b1b35]"
           error={getError("giftType")}
@@ -1780,15 +1780,15 @@ function PersonSection({ title, data, errors = {}, onChange }) {
         </>
       )}
 
-      {hasCash && (
+      {hasGifts && (
         <div className="mb-4">
           <InputField
-            label="Cash Prize Amount *"
-            placeholder="₹ 5000"
-            value={data.cashPrizeAmount}
-            onChange={handleFieldChange("cashPrizeAmount")}
+            label="Gift Count *"
+            placeholder="10"
+            value={data.giftCount}
+            onChange={handleFieldChange("giftCount")}
             labelBgClass="bg-[#1b1b35]"
-            error={getError("cashPrizeAmount")}
+            error={getError("giftCount")}
           />
         </div>
       )}

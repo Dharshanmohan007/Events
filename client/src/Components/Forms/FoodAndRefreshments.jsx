@@ -299,6 +299,8 @@ function createForm() {
     foodTypes: [],
     morningRefreshmentCount: "",
     eveningRefreshmentCount: "",
+    morningRefreshmentVenues: [],
+    eveningRefreshmentVenues: [],
     breakfast: {
       participants: { vegCount: "", nonVegCount: "" },
       vipGuests: { vegCount: "", nonVegCount: "" },
@@ -374,6 +376,54 @@ function validateFoodForms(forms) {
       }
     });
 
+    // Validate Morning Refreshment venues sum
+    if (form.foodTypes?.includes("Morning Refreshment")) {
+      const totalStr = form.morningRefreshmentCount || "";
+      if (!totalStr) {
+        err.morningRefreshmentCount = "Total count is required";
+      } else {
+        const total = parseInt(totalStr, 10);
+        const sum = (form.morningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
+        if (sum > total) {
+          err.morningRefreshmentCount = `Sum of venue counts (${sum}) exceeds total count (${total})`;
+        }
+        
+        const venueErrs = (form.morningRefreshmentVenues || []).map(v => {
+          const vErr = {};
+          if (!v.venue) vErr.venue = "Venue is required";
+          if (!v.count) vErr.count = "Count is required";
+          return vErr;
+        });
+        if (venueErrs.some(e => Object.keys(e).length > 0)) {
+          err.morningRefreshmentVenues = venueErrs;
+        }
+      }
+    }
+
+    // Validate Evening Refreshment venues sum
+    if (form.foodTypes?.includes("Evening Refreshment")) {
+      const totalStr = form.eveningRefreshmentCount || "";
+      if (!totalStr) {
+        err.eveningRefreshmentCount = "Total count is required";
+      } else {
+        const total = parseInt(totalStr, 10);
+        const sum = (form.eveningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
+        if (sum > total) {
+          err.eveningRefreshmentCount = `Sum of venue counts (${sum}) exceeds total count (${total})`;
+        }
+        
+        const venueErrs = (form.eveningRefreshmentVenues || []).map(v => {
+          const vErr = {};
+          if (!v.venue) vErr.venue = "Venue is required";
+          if (!v.count) vErr.count = "Count is required";
+          return vErr;
+        });
+        if (venueErrs.some(e => Object.keys(e).length > 0)) {
+          err.eveningRefreshmentVenues = venueErrs;
+        }
+      }
+    }
+
     Object.assign(err, mealErrors);
     const count = parseInt(form.internalCount) || 0;
     if (count > 0) {
@@ -420,6 +470,7 @@ export default function FoodAndRefreshments({
   prevStep,
   registerChildNavigation,
   foodData: initialFoodData,
+  venues = [],
   onFoodDataChange,
   eventId,
   errors: propErrors = {},
@@ -585,6 +636,53 @@ export default function FoodAndRefreshments({
     });
   };
 
+  const handleVenueChange = (id, field, venueIndex, key, value) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        const updatedVenues = currentVenues.map((v, i) =>
+          i === venueIndex ? { ...v, [key]: value } : v
+        );
+        return { ...form, [field]: updatedVenues };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const formErr = { ...(updated[idx] || {}) };
+      if (formErr[field]) {
+        const fieldErrs = [...formErr[field]];
+        fieldErrs[venueIndex] = { ...(fieldErrs[venueIndex] || {}), [key]: "" };
+        formErr[field] = fieldErrs;
+      }
+      updated[idx] = formErr;
+      return updated;
+    });
+  };
+
+  const handleAddVenue = (id, field) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        return { ...form, [field]: [...currentVenues, { venue: "", count: "" }] };
+      })
+    );
+  };
+
+  const handleRemoveVenue = (id, field, venueIndex) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        return { ...form, [field]: currentVenues.filter((_, i) => i !== venueIndex) };
+      })
+    );
+  };
+
   const handleAdd = () => setForms((prev) => [...prev, createForm()]);
 
   // ── Delete form card (with popup) ───────────────────────────────────────────
@@ -677,9 +775,15 @@ export default function FoodAndRefreshments({
               return payloadObj;
             }
             if (type === "Morning Refreshment" || type === "Evening Refreshment") {
+              const venuesData = type === "Morning Refreshment" ? form.morningRefreshmentVenues : form.eveningRefreshmentVenues;
+              const totalCount = parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0;
               return {
                 type,
-                refreshmentCount: parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0
+                refreshmentCount: totalCount,
+                venueWiseDetails: (venuesData || []).map(v => ({
+                  venueName: v.venue,
+                  count: parseInt(v.count) || 0
+                }))
               };
             }
             return {
@@ -768,6 +872,11 @@ export default function FoodAndRefreshments({
     "Evening Refreshment",
   ];
   const MEAL_SECTIONS = ["Breakfast", "Lunch", "Dinner"];
+
+  const uniqueVenues = Array.from(new Set(
+    venues.flatMap(day => (day.selectedVenues || [])).map(v => typeof v === 'string' ? v : v.roomName || v.venueName || String(v))
+  ));
+  const VENUE_OPTIONS = uniqueVenues.length > 0 ? uniqueVenues : ["Main Hall", "Auditorium", "Seminar Room"];
 
   return (
     <div className="w-full">
@@ -1001,43 +1110,127 @@ export default function FoodAndRefreshments({
             })}
 
             {/* Refreshment Counts */}
-            {form.foodTypes.includes("Morning Refreshment") && (
-              <div className="col-span-1 md:col-span-2">
-                <CustomInput
-                  label="Morning Refreshment Count *"
-                  labelBg="#1f1f38"
-                  value={form.morningRefreshmentCount || ""}
-                  onChange={(e) =>
-                    handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))
-                  }
-                  type="text"
-                />
-                {getError(form.id, "morningRefreshmentCount") && (
-                  <p className="text-red-400 text-xs mt-1">
-                    {getError(form.id, "morningRefreshmentCount")}
-                  </p>
-                )}
-              </div>
-            )}
+            {form.foodTypes.includes("Morning Refreshment") && (() => {
+              const morningTotal = parseInt(form.morningRefreshmentCount) || 0;
+              const morningSum = (form.morningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
+              const morningExceeds = morningTotal > 0 && morningSum > morningTotal;
+              return (
+              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
+                  <button type="button" onClick={() => handleAddVenue(form.id, "morningRefreshmentVenues")} className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add Venue</button>
+                </div>
+                
+                <div className="mb-4">
+                  <CustomInput
+                    label="Total Morning Refreshment Count *"
+                    labelBg="#2a2a4a"
+                    value={form.morningRefreshmentCount || ""}
+                    onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                    type="text"
+                  />
+                  {getError(form.id, "morningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentCount")}</p>}
+                </div>
+                
+                {(form.morningRefreshmentVenues || []).map((venueObj, vIndex) => (
+                  <div key={vIndex} className="flex gap-4 items-center mb-3">
+                    <div className="flex-1">
+                      <CustomInput
+                        label={`Venue ${vIndex + 1} Name *`}
+                        labelBg="#2a2a4a"
+                        value={venueObj.venue}
+                        onChange={(e) => handleVenueChange(form.id, "morningRefreshmentVenues", vIndex, "venue", e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <CustomInput
+                        label="Count *"
+                        labelBg="#2a2a4a"
+                        value={venueObj.count}
+                        onChange={(e) => handleVenueChange(form.id, "morningRefreshmentVenues", vIndex, "count", e.target.value.replace(/\D/g, ""))}
+                        type="text"
+                      />
+                    </div>
+                    <button type="button" onClick={() => handleRemoveVenue(form.id, "morningRefreshmentVenues", vIndex)} className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-full transition-all flex-shrink-0">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
 
-            {form.foodTypes.includes("Evening Refreshment") && (
-              <div className="col-span-1 md:col-span-2">
-                <CustomInput
-                  label="Evening Refreshment Count *"
-                  labelBg="#1f1f38"
-                  value={form.eveningRefreshmentCount || ""}
-                  onChange={(e) =>
-                    handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))
-                  }
-                  type="text"
-                />
-                {getError(form.id, "eveningRefreshmentCount") && (
-                  <p className="text-red-400 text-xs mt-1">
-                    {getError(form.id, "eveningRefreshmentCount")}
+                {morningExceeds && (
+                  <p className="text-red-400 text-sm mt-2 font-medium">
+                    ⚠ Venue count total ({morningSum}) exceeds the allowed total ({morningTotal})
+                  </p>
+                )}
+                {!morningExceeds && (form.morningRefreshmentVenues || []).length > 0 && (
+                  <p className="text-gray-400 text-xs mt-2">
+                    Allocated: {morningSum} / {morningTotal}
                   </p>
                 )}
               </div>
-            )}
+              );
+            })()}
+
+            {form.foodTypes.includes("Evening Refreshment") && (() => {
+              const eveningTotal = parseInt(form.eveningRefreshmentCount) || 0;
+              const eveningSum = (form.eveningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
+              const eveningExceeds = eveningTotal > 0 && eveningSum > eveningTotal;
+              return (
+              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
+                  <button type="button" onClick={() => handleAddVenue(form.id, "eveningRefreshmentVenues")} className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add Venue</button>
+                </div>
+                
+                <div className="mb-4">
+                  <CustomInput
+                    label="Total Evening Refreshment Count *"
+                    labelBg="#2a2a4a"
+                    value={form.eveningRefreshmentCount || ""}
+                    onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                    type="text"
+                  />
+                  {getError(form.id, "eveningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentCount")}</p>}
+                </div>
+                
+                {(form.eveningRefreshmentVenues || []).map((venueObj, vIndex) => (
+                  <div key={vIndex} className="flex gap-4 items-center mb-3">
+                    <div className="flex-1">
+                      <CustomInput
+                        label={`Venue ${vIndex + 1} Name *`}
+                        labelBg="#2a2a4a"
+                        value={venueObj.venue}
+                        onChange={(e) => handleVenueChange(form.id, "eveningRefreshmentVenues", vIndex, "venue", e.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <CustomInput
+                        label="Count *"
+                        labelBg="#2a2a4a"
+                        value={venueObj.count}
+                        onChange={(e) => handleVenueChange(form.id, "eveningRefreshmentVenues", vIndex, "count", e.target.value.replace(/\D/g, ""))}
+                        type="text"
+                      />
+                    </div>
+                    <button type="button" onClick={() => handleRemoveVenue(form.id, "eveningRefreshmentVenues", vIndex)} className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-full transition-all flex-shrink-0">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+
+                {eveningExceeds && (
+                  <p className="text-red-400 text-sm mt-2 font-medium">
+                    ⚠ Venue count total ({eveningSum}) exceeds the allowed total ({eveningTotal})
+                  </p>
+                )}
+                {!eveningExceeds && (form.eveningRefreshmentVenues || []).length > 0 && (
+                  <p className="text-gray-400 text-xs mt-2">
+                    Allocated: {eveningSum} / {eveningTotal}
+                  </p>
+                )}
+              </div>
+              );
+            })()}
 
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
