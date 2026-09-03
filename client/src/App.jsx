@@ -112,6 +112,11 @@ import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/F
 
 import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/IndividualVideoDetailPage.jsx";
 
+import IndividualExternalTransportDetails from "./Pages/IndividualForm/IndividualExternalTransportDetails.jsx";
+
+
+
+
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
 import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
@@ -424,6 +429,9 @@ function AppRoutes() {
         <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
         <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
 
+
+
+        <Route path="IndividualExternalTransportDetails" element={<IndividualExternalTransportDetails />} /> 
         {/* <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
