@@ -21,6 +21,16 @@ export const getEventTypes = async () => {
   }
 };
 
+export const getEventTypeById = async (id) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/api/eventTypes/${id}`, getHeaders());
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching event type ${id}:`, error.response?.data || error.message);
+    throw error;
+  }
+};
+
 export const createEventType = async (data) => {
   try {
     const response = await axios.post(`${BASE_URL}/api/eventTypes/`, data, getHeaders());

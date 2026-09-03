@@ -95,7 +95,7 @@ const defaultAudio = {};
 
 const defaultTransport = () => ({
   pickupDate: null, dropDate: null, pickupLocation: "", dropLocation: "",
-  vistaTransport: [], staffCount: "", totalPassengers: "", busCount: "",
+  selectedGuestIds: [], vistaTransport: [], staffCount: "", totalPassengers: "", busCount: "",
   accompanyingStaffName: "", accompanyingStaffMobile: "",
   specialRequirements: "", checkpoints: [],
 });
@@ -185,6 +185,8 @@ let decodedToken = jwtDecode(token);
   const fd = new FormData();
   const organizerId = decodedToken?.facultyId || existingOrganizerId || decodedToken?.id || decodedToken?._id || user?._id;
   fd.append("organizerId", organizerId);
+    const isFileLike = eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob;
+
   const requestDetails = {
     organizerDetails: {
       previousEventDocumentation: eventRequisition.doc === "Yes" ? true : eventRequisition.doc === "No" ? false : null,
@@ -203,6 +205,11 @@ let decodedToken = jwtDecode(token);
         mobile: parseInt(o.mobile) || 0, designation: o.designation || "",
         email: o.empEmail || "", empId: o.empId || "", facultyId: user?._id ?? "",
       })),
+      // Single canonical JSON location for the doc reference. Only written when
+      // it's NOT a fresh File (i.e. it's already a saved URL/object from a prior upload).
+      ...(eventRequisition.principalApprovalDocument && !isFileLike
+        ? { principalApprovalDocument: eventRequisition.principalApprovalDocument }
+        : {}),
     },
     eventDetails: {
       eventName: eventRequisition.eventData.eventName || "",
@@ -246,18 +253,19 @@ let decodedToken = jwtDecode(token);
       purchaseRequired: eventRequisition.requirements?.purchase === "Yes",
       mediaRequired: eventRequisition.requirements?.media === "Yes",
     },
+    // ...(eventRequisition.principalApprovalDocument && !(eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob)
+    //   ? { 
+    //       principalApprovalForm: eventRequisition.principalApprovalDocument,
+    //       principalApprovalFormName: eventRequisition.principalApprovalDocument.name || eventRequisition.principalApprovalDocument.filename || null
+    //     }
+    //   : {}),
   };
   fd.append("requestDetails", JSON.stringify(requestDetails));
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
-  if (eventRequisition.principalApprovalDocument) {
-    if (eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob) {
-      fd.append(
-          "principalApprovalDocument",
-          eventRequisition.principalApprovalDocument
-      );
-    }
+    if (isFileLike) {
+    fd.append("principalApprovalForm", eventRequisition.principalApprovalDocument);
   }
   return fd;
 };
@@ -592,6 +600,49 @@ const getArrayValue = (arr1, arr2) => {
   return Array.isArray(arr1) ? arr1 : Array.isArray(arr2) ? arr2 : [];
 };
 
+const normalizeGuestValue = (value) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
+const resolveTransportGuestIds = (savedGuests = [], allGuests = []) => {
+  if (!Array.isArray(savedGuests) || savedGuests.length === 0) return [];
+
+  const matchedIds = [];
+
+  savedGuests.forEach((guest) => {
+    const savedName = normalizeGuestValue(guest.name);
+    const savedMobile = String(guest.mobile ?? "").replace(/\D/g, "");
+    const savedOrg = normalizeGuestValue(guest.organization);
+    const savedDesignation = normalizeGuestValue(guest.designation);
+    const savedGender = normalizeGuestValue(guest.gender);
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    allGuests.forEach((candidate) => {
+      const candidateMobile = String(candidate.mobile ?? "").replace(/\D/g, "");
+      const candidateName = normalizeGuestValue(candidate.name);
+      const candidateOrg = normalizeGuestValue(candidate.organization);
+      const candidateDesignation = normalizeGuestValue(candidate.designation);
+      const candidateGender = normalizeGuestValue(candidate.gender);
+
+      let score = 0;
+      if (savedMobile && candidateMobile && savedMobile === candidateMobile) score += 5;
+      if (savedName && candidateName && savedName === candidateName) score += 4;
+      if (savedOrg && candidateOrg && savedOrg === candidateOrg) score += 2;
+      if (savedDesignation && candidateDesignation && savedDesignation === candidateDesignation) score += 2;
+      if (savedGender && candidateGender && savedGender === candidateGender) score += 1;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestMatch = candidate.guestId;
+      }
+    });
+
+    if (bestMatch && bestScore > 0) matchedIds.push(bestMatch);
+  });
+
+  return [...new Set(matchedIds)];
+};
+
 const buildMediaPayload = (mediaData) => {
   const mediaRequirements = mediaData.map((day, dayIndex) => {
     const typeOfMedia = [];
@@ -893,14 +944,9 @@ function hydrateEventData(apiData) {
   const reqd = rd.requirementDetails || {};
 
   // DEBUG: find where principalApprovalDocument lives in the API response
-  console.log("[HYDRATE DEBUG] apiData keys:", Object.keys(apiData));
-  console.log("[HYDRATE DEBUG] rd keys:", Object.keys(rd));
-  console.log("[HYDRATE DEBUG] od keys:", Object.keys(od));
-  console.log("[HYDRATE DEBUG] od.principalApprovalDocument:", od.principalApprovalDocument);
-  console.log("[HYDRATE DEBUG] od.principalApprovalForm:", od.principalApprovalForm);
-  console.log("[HYDRATE DEBUG] rd.principalApprovalForm:", rd.principalApprovalForm);
-  console.log("[HYDRATE DEBUG] apiData.principalApprovalForm:", apiData.principalApprovalForm);
-  console.log("[HYDRATE DEBUG] apiData.principalApprovalDocument:", apiData.principalApprovalDocument);
+  console.log("[HYDRATE DEBUG] FULL apiData:", JSON.stringify(apiData, null, 2));
+  console.log("[HYDRATE DEBUG] od (organizerDetails):", JSON.stringify(od, null, 2));
+  console.log("[HYDRATE DEBUG] rd (requestDetails):", JSON.stringify(rd, null, 2));
 
   const asDate = (value) => {
     if (!value) return null;
@@ -924,28 +970,37 @@ function hydrateEventData(apiData) {
       name: g.name || "",
       organization: g.organization || "",
       designation: g.designation || "",
-      mobile: g.mobile ? String(g.mobile) : "",
+      mobile: g.mobile != null ? String(g.mobile) : "",
       gender: g.gender || "",
     })),
   }));
+    // Helper: return the first defined/non-empty value among several possible
+  // backend key spellings, coerced to a string (or "" if none match).
+  const firstValue = (...candidates) => {
+    for (const c of candidates) {
+      if (c !== undefined && c !== null && c !== "") return String(c);
+    }
+    return "";
+  };
+
   const event = {
     doc: od.previousEventDocumentation === true ? "Yes" : (od.previousEventDocumentation === false && od.previousEventReason?.trim() ? "No" : ""),
     reason: od.previousEventReason || "",
     budget: od.isBudgetApproved ? "Yes" : "No",
     finance: od.financeRequired ? "Yes" : "No",
-    estimatedBudget: od.estimatedBudget ? String(od.estimatedBudget) : "",
-    advanceAmount: od.advanceAmount ? String(od.advanceAmount) : "",
+    estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
+    advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
-    advanceToBeReceivedWithin: od.advanceToBeReceviedWithin ? String(od.advanceToBeReceviedWithin) : "",
+    advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
     expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
-    principalApprovalDocument: od.principalApprovalDocument || od.principalApprovalForm || rd.principalApprovalForm || rd.principalApprovalDocument || apiData.principalApprovalForm || apiData.principalApprovalDocument || null,
+    principalApprovalDocument: od.principalApprovalDocument || apiData.principalApprovalForm || apiData.principalApprovalDocument || null,
     numOrganizers: String(od.organizerCount ?? od.totalCoOrganizers ?? od.coOrganizerCount ?? 0),
     organizers: (od.organizers || []).map((o) => ({
       name: o.name || "",
       department: o.department || "",
-      mobile: o.mobile ? String(o.mobile) : "",
+      mobile: o.mobile != null ? String(o.mobile) : "",
       designation: o.designation || "",
       empEmail: o.email || "",
       empId: o.empId || "",
@@ -1081,6 +1136,7 @@ function hydrateEventData(apiData) {
         ...defaultTransport(),
         pickupLocation: item.pickupLocation || "",
         dropLocation: item.dropLocation || "",
+        selectedGuestIds: resolveTransportGuestIds(item.guests || [], flattenGuestsForAccommodation(eventDays)),
         totalPassengers: item.totalPassengers ?? "",
         vistaTransport: (item.vehicles || []).map((vehicle) => vehicle.type),
         vehicleCounts: (item.vehicles || []).reduce((counts, vehicle) => ({
@@ -1561,7 +1617,13 @@ export default function Form() {
         if (!response.ok) throw new Error(`Server error ${response.status}. Check your backend logs.`);
       }
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
-      if (sectionKey === "event") setEventId(data.data?._id || eventId);
+            if (sectionKey === "event") {
+        setEventId(data.data?._id || eventId);
+        const savedDoc = data.data?.requestDetails?.organizerDetails?.principalApprovalDocument;
+        if (savedDoc) {
+          updateFormSection("event", { ...formDataRef.current.event, principalApprovalDocument: savedDoc });
+        }
+      }
       if (sectionKey === "media" && data.data?.mediaRequirementDetails?.mediaRequirements) {
         const backendReqs = data.data.mediaRequirementDetails.mediaRequirements;
         setFormData((prev) => {
@@ -1717,6 +1779,7 @@ export default function Form() {
 
   // ── handleSaveAndContinue ─────────────────────────────────────────────────
   const handleSaveAndContinue = async () => {
+    console.log("save and next was clicking");
     if (childNav.next) {
       await childNav.next();
       return;
@@ -1805,6 +1868,7 @@ export default function Form() {
       transportData: formData.transport,
       onTransportDataChange: handleTransportDataChange,
       eventId, errors: formErrors.transport || {},
+      eventDays: formData.event.eventDays,
     },
     externalTransport: {
       initialValues: formData.externalTransport,
