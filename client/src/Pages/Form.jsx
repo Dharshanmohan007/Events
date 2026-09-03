@@ -66,6 +66,7 @@ const emptyFoodDay = () => ({
   internalCount: "", staffName: "", mobileNumber: "",
   foodTypes: [], specialRequirements: "",
   morningRefreshmentCount: "", eveningRefreshmentCount: "",
+  morningRefreshmentVenues: [], eveningRefreshmentVenues: [],
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -1185,6 +1186,8 @@ function hydrateEventData(apiData) {
         dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
         morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
         eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
+        morningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
+        eveningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
         specialRequirements: item.specialRequirements || "",
       }))
     : [emptyFoodDay()];
@@ -1835,6 +1838,7 @@ export default function Form() {
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,
+      venues: formData.venue,
       onFoodDataChange: handleFoodDataChange,
       eventId, errors: formErrors.foodandrefreshments || {},
     },
