@@ -29,7 +29,7 @@ const SplitInfoRow = ({ items }) => (
 
 const MealSection = ({ title, foodType }) => {
   if (!foodType) return null
-  const { participants = {}, vipGuests = {}, refreshmentCount, venueWiseDetails = [] } = foodType
+  const { participants = {}, vipGuests = {}, trainer = {}, refreshmentCount, venueWiseDetails = [] } = foodType
   
   // For Morning/Evening Refreshment - show refreshment count and venue wise details
   const isRefreshment = foodType.type === 'Morning Refreshment' || foodType.type === 'Evening Refreshment'
@@ -66,14 +66,24 @@ const MealSection = ({ title, foodType }) => {
                 ['No. of veg In Guest/VIP Menu', displayValue(vipGuests.vegCount)],
               ]}
             />
+            <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of veg In Trainer Menu</p>
+              <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.vegCount)}</p>
+            </div>
             {/* Only show non-veg section for Lunch, not for Breakfast/Dinner */}
             {foodType.type !== 'Breakfast' && foodType.type !== 'Dinner' && (
-              <SplitInfoRow
-                items={[
-                  ['No. of Non-veg In Participants Menu', displayValue(participants.nonVegCount)],
-                  ['No. of Non-veg In Guest/VIP Menu', displayValue(vipGuests.nonVegCount)],
-                ]}
-              />
+              <>
+                <SplitInfoRow
+                  items={[
+                    ['No. of Non-veg In Participants Menu', displayValue(participants.nonVegCount)],
+                    ['No. of Non-veg In Guest/VIP Menu', displayValue(vipGuests.nonVegCount)],
+                  ]}
+                />
+                <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                  <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of Non-veg In Trainer Menu</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.nonVegCount)}</p>
+                </div>
+              </>
             )}
           </>
         )}
@@ -144,6 +154,7 @@ const FoodDetails = ({ refreshment }) => {
 }
 
 const FoodRefreshmentDetailsPanel = ({ refreshmentDetails, eventSchedule = [] }) => {
+  console.log("Food details from Admin : ", refreshmentDetails)
   const [activeDay, setActiveDay] = useState(0)
   const refreshments = refreshmentDetails?.refreshments || []
   if (!refreshmentDetails) return <p className="py-10 text-center text-sm text-[#CBC3D7]/65">No food details are available.</p>
