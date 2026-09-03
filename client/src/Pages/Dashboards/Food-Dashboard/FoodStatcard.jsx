@@ -56,44 +56,50 @@ const individualTargetTitles = ["Individual Requests"];
 // }
 
 const applyEventStats = (sections, eventStats) => {
-    const stats = eventStats ?? EMPTY_STATS;
+  const stats = eventStats ?? EMPTY_STATS;
 
-    return sections.map((section) => ({
-        ...section,
-        stats: section.stats.map((item) => {
-            const label = item.label.trim().toLowerCase();
+  return sections.map((section) => ({
+    ...section,
+    stats: section.stats.map((item) => {
+      const label = item.label.trim().toLowerCase();
 
-            if (label === 'total') {
-                return {
-                    ...item,
-                    value: stats.total ?? 0,
-                };
-            }
+      if (label === "total") {
+        return {
+          ...item,
+          value: stats.total ?? 0,
+        };
+      }
 
-            if (label === 'approved') {
-                return {
-                    ...item,
-                    value: stats.approved ?? 0,
-                };
-            }
+      if (label === "approved") {
+        return {
+          ...item,
+          value: stats.approved ?? 0,
+        };
+      }
+      if (label === "acknowledged") {
+        return {
+          ...item,
+          value: stats.acknowledged ?? 0,
+        };
+      }
 
-            if (label === 'completed') {
-                return {
-                    ...item,
-                    value: stats.completed ?? 0,
-                };
-            }
+      if (label === "completed") {
+        return {
+          ...item,
+          value: stats.completed ?? 0,
+        };
+      }
 
-            if (label === 'pending') {
-                return {
-                    ...item,
-                    value: stats.pending ?? 0,
-                };
-            }
+      if (label === "pending") {
+        return {
+          ...item,
+          value: stats.pending ?? 0,
+        };
+      }
 
-            return item;
-        }),
-    }));
+      return item;
+    }),
+  }));
 };
 
 const applyIndividualStats = (sections, individualStats) => {
@@ -250,7 +256,7 @@ const defaultSections = [
         icon: <UtensilsIcon />,
       },
       {
-        label: "Approved",
+        label: "Acknowledged",
         value: 0,
         cardClass:
           "from-[#163e46] via-[#0f5e4a] to-[#07864d] border-l-[#20d18c]",
@@ -334,7 +340,7 @@ const FoodStatcard = ({ sections = defaultSections }) => {
       .then((responseData) => {
         if (isMounted) {
           setEventStats(
-            responseData.modules?.food ?? responseData.events ?? null,
+            responseData.modules?.refreshment ?? responseData.events ?? null,
           );
         }
       })
