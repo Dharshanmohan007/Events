@@ -78,6 +78,8 @@ const FacultyEventsDetailViewPage = () => {
   const [closeLoading, setCloseLoading] = useState(false)
   const navigate = useNavigate();
 
+  const [eventData, setEventData] = useState(null)
+
 
 
   useEffect(() => {
@@ -264,6 +266,7 @@ const FacultyEventsDetailViewPage = () => {
         const eventData = payload.data || payload
         if (!eventData.transportDetails) throw new Error('Transportation details are not available')
         setTransportDetails(eventData.transportDetails)
+         setEventData(eventData)
 
         const transportStatus = eventData.transportDetails.status?.status
         if (transportStatus) {
@@ -447,7 +450,7 @@ const FacultyEventsDetailViewPage = () => {
         const eventData = payload.data || payload
         if (!eventData.purchaseDetails) throw new Error('Purchase details are not available')
         setPurchaseDetails(eventData.purchaseDetails)
-
+       
         const purchaseStatus = eventData.purchaseDetails.status?.status
         if (purchaseStatus) {
           setDetailTabs((tabs) => tabs.map((tab) => (
@@ -571,6 +574,7 @@ const FacultyEventsDetailViewPage = () => {
       return (
         <FacultyTransportationDetailsPanel
           transportDetails={transportDetails}
+          eventData={eventData}
           eventSchedule={requestDetails?.eventDetails?.eventSchedule}
         />
       )
