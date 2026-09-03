@@ -53,6 +53,8 @@ async function fetchTemplateHtml() {
   return res.text();
 }
 
+
+console.log("")
 /**
  * Sanitize a string for use as a PDF filename.
  * Keeps alphanumeric, spaces, hyphens, and underscores only.
