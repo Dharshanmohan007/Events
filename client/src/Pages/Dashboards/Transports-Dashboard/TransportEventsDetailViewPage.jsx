@@ -129,10 +129,10 @@ const TransportEventsDetailViewPage = () => {
         </header>
 
         <section className="mt-3">
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+          {/* <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
             <span className={`h-3 w-3 rounded-full ${status === 'Completed' ? 'bg-[#6D3BD8]' : status === 'Acknowledged' ? 'bg-[#25A987]' : 'bg-[#B32058]'}`} />
             {status === 'Completed' ? 'COMPLETED' : status === 'Acknowledged' ? 'ACKNOWLEDGED' : 'PENDING'} (1)
-          </div>
+          </div> */}
         </section>
 
         <section className="mt-3 overflow-hidden">

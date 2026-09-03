@@ -6,6 +6,10 @@ import {
   MapPin,
   Phone,
   User,
+  UserRound,
+  BriefcaseBusiness,
+  Building2,
+  VenusAndMars,
 } from "lucide-react";
 import ExpenditureDetailsForm from "./ExpenditureDetailsForm";
 import EventHeaderData from "../EventHeaderData";
@@ -196,6 +200,10 @@ const FacultyTransportationDetailsPanel = ({
   eventData,
   eventSchedule = [],
 }) => {
+  
+  const [guestDetails, setGuestDetails] = useState(transportDetails?.transports)
+  
+
   const [activeDay, setActiveDay] = useState(0);
   const transports = transportDetails?.transports || [];
   if (!transportDetails)
@@ -210,7 +218,91 @@ const FacultyTransportationDetailsPanel = ({
 
   return (
     <div className="space-y-5">
-      <EventHeaderData  data={eventData?.requestDetails}/>
+      <EventHeaderData data={eventData?.requestDetails} />
+
+      <div className="guest-details border border-gray-700 rounded-xl space-y-2 bg-[#20283a] p-4 ">
+        <h1 className="text-[#8b3dff] font-medium text-lg mb-2">
+          Guest details
+        </h1>
+        {guestDetails?.map((schedule, scheduleIndex) =>
+          schedule.guests?.map((guest, guestIndex) => (
+            <div className="w-full rounded-xl border border-[#3b465c] bg-[#293246] px-4 py-3">
+              <div className="grid grid-cols-1 divide-y divide-[#536078] md:grid-cols-5 md:divide-x md:divide-y-0">
+                {/* Name */}
+                <div className="flex items-center gap-4 py-3 md:px-4 md:py-2 first:pl-0">
+                  <UserRound className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                      Guest Name
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {guest.name}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Mobile */}
+                <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                  <Phone className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                      Mobile Number
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {guest.mobile || "Not Provided"}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Designation */}
+                <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                  <BriefcaseBusiness className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                      Designation
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {guest.designation}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Organization */}
+                <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                  <Building2 className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                      Organization
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {guest.organization}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Gender */}
+                <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                  <VenusAndMars className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                  <div>
+                    <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                      Gender
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {guest.gender}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )),
+        )}
+      </div>
+
       {dayCount > 1 && (
         <nav
           className="flex border-b border-[#374155]"
