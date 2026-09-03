@@ -431,7 +431,6 @@ function AppRoutes() {
 
 
 
-        <Route path="IndividualExternalTransportDetails" element={<IndividualExternalTransportDetails />} /> 
         {/* <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
@@ -439,6 +438,9 @@ function AppRoutes() {
         <Route path="expenditures" element={<AdminExpenditureTable />} />        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
         <Route path="expenditures/edit/:eventId" element={<AdminExpenditureEditPage />} />
       </Route>
+
+        <Route path="IndividualExternalTransportDetails" element={<IndividualExternalTransportDetails />} /> 
+
       <Route
         path="/dashboard/AdminIndividualDetailView/v2/:eventId"
         element={<AdminIndividualDetailView />}

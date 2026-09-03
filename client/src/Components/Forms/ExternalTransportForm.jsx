@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Plus, Trash2, ChevronDown, Check, AlertTriangle } from "lucide-react";
 import CustomDatePicker from "../CustomDatePicker";
 import CustomSelect from "../CustomSelect";
+import { API_BASE } from "../../utils/apiConfig";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -390,7 +391,7 @@ export default function ExternalTransportForm({
     }
     setErrors({});
 
-    if (!eventId) {
+    if (!eventId && nextStep) {
       setApiError("Event must be created before saving external transport details.");
       return;
     }
@@ -399,9 +400,7 @@ export default function ExternalTransportForm({
     setApiError("");
 
     try {
-      const payload = {
-        externalTransportDetails: {
-          externalTransports: formsRef.current.map((item) => ({
+      const externalTransports = formsRef.current.map((item) => ({
             travelOption: item.travelOption || "",
             travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
             from: item.from || "",
@@ -420,12 +419,19 @@ export default function ExternalTransportForm({
               designation: p.designation || "",
               organization: p.organization || "",
             })),
-          })),
-        },
-      };
+          }));
+
+      const payload = nextStep
+        ? { externalTransportDetails: { externalTransports } }
+        : {
+            externalTransports,
+            facultyId: JSON.parse(localStorage.getItem("user") || "{}")?.facultyId || undefined,
+          };
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`,
+        nextStep
+          ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`
+          : `${API_BASE}/api/individual-ticketing`,
         {
           method: "PUT",
           headers: {
@@ -594,6 +600,10 @@ export default function ExternalTransportForm({
         </div>
       )}
 
+      <div className="header-container">
+        <h1 className="text-white text-3xl font-bold">External Transport Details</h1>
+
+      </div>
       {!disabled && (
         <div className="flex justify-end mb-6">
           <button
@@ -918,6 +928,19 @@ export default function ExternalTransportForm({
           </div>
         </div>
       ))}
+
+      {!nextStep && (
+        <div className="flex justify-end mt-6">
+          <button
+            type="button"
+            onClick={handleNext}
+            disabled={isLoading || disabled}
+            className="px-6 py-3 rounded-lg bg-[#9810FA] text-white font-medium text-sm hover:bg-[#850ee0] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isLoading ? "Submitting..." : "Submit"}
+          </button>
+        </div>
+      )}
 
       <ConfirmDeleteModal
         isOpen={deleteIndex !== null}

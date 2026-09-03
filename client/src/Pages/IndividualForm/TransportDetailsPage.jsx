@@ -795,7 +795,11 @@ const TransportDetailsPage = () => {
     const errors = [];
 
     // Principal approval validation
-    if (!principalApprovalDocument && !existingPrincipalDocument) {
+    if (
+      transportForms.some((form) => isFinanceYes(form.financeRequired)) &&
+      !principalApprovalDocument &&
+      !existingPrincipalDocument
+    ) {
       errors.push("Principal Approval Form is required.");
     }
 
@@ -1198,6 +1202,7 @@ const TransportDetailsPage = () => {
         )}
       </div>
 
+      {transportForms.some((form) => isFinanceYes(form.financeRequired)) && (
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
           Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
@@ -1336,6 +1341,7 @@ const TransportDetailsPage = () => {
           <p className="text-red-400 text-xs mt-1">{principalFileError}</p>
         )}
       </div>
+      )}
 
       {/* ADD BUTTON */}
       {!isEditMode && (
@@ -1609,6 +1615,52 @@ const TransportDetailsPage = () => {
                     "
               />
             </div>
+          </div>
+
+          <div className="relative mt-5">
+            <label className={formFloatingLabelClass}>Finance Required *</label>
+            <button
+              type="button"
+              onClick={() =>
+                updateTransportForm(formIndex, {
+                  showFinanceDropdown: !form.showFinanceDropdown,
+                })
+              }
+              className="transport-select-control w-full border border-[#2F2F47] rounded-md px-4 py-3 flex justify-between items-center cursor-pointer focus:border-[#3b82f6] transition-all"
+            >
+              <span className={form.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+                {form.financeRequired}
+              </span>
+              <ChevronDown size={18} />
+            </button>
+
+            {form.showFinanceDropdown && (
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+                {["Yes", "No"].map((value) => (
+                  <div
+                    key={value}
+                    onClick={() =>
+                      updateTransportForm(formIndex, {
+                        showFinanceDropdown: false,
+                        financeRequired: value,
+                        advanceAmount: value === "No" ? "" : undefined,
+                        advancePurpose: value === "No" ? "" : undefined,
+                        advanceToBeReceviedWithin: value === "No" ? "" : undefined,
+                        estimatedEventBudget: value === "No" ? "" : undefined,
+                      })
+                    }
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      form.financeRequired === value
+                        ? "bg-[#492A6F] text-white"
+                        : "text-white hover:bg-[#492A6F]"
+                    }`}
+                  >
+                    <span>{value}</span>
+                    {form.financeRequired === value && <span>✓</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* GUEST COUNT */}
@@ -2140,7 +2192,7 @@ const TransportDetailsPage = () => {
             </div>
           )}
 
-          <div className="relative mt-5">
+          <div className="hidden">
             <label className={formFloatingLabelClass}>Finance Required *</label>
 
             <button
