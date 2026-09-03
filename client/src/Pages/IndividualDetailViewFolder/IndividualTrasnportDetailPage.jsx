@@ -11,6 +11,10 @@ import {
   Clock3,
   MapPin,
   ClipboardList,
+  BriefcaseBusiness,
+  Building2,
+  VenusAndMars,
+  Pencil,
 } from "lucide-react";
 import Modal from "../../Components/Modal";
 
@@ -22,8 +26,7 @@ const IndividualTrasnportDetailPage = ({ data }) => {
 
   // ─── Get the submission ID from the URL ──────────────────────────────
   const { eventId } = useParams();
-  const navigate = useNavigate()
-
+  const navigate = useNavigate();
 
   // ─── Decode the user's role from the JWT token ──────────────────────
   let token = localStorage.getItem("token");
@@ -54,7 +57,7 @@ const IndividualTrasnportDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "approve" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -85,7 +88,7 @@ const IndividualTrasnportDetailPage = ({ data }) => {
             action: "reject",
             reason: rejectReason.trim(),
           }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -112,7 +115,7 @@ const IndividualTrasnportDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "acknowledge" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -137,7 +140,7 @@ const IndividualTrasnportDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "complete" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -154,19 +157,22 @@ const IndividualTrasnportDetailPage = ({ data }) => {
 
   // ─── Empty handler for faculty (to be implemented later) ────────────
   async function handleFacultyClose() {
-    navigate(`/dashboard-faculty/TransportIndividualDocumentUpload/${eventId}`)
-
+    navigate(`/dashboard-faculty/TransportIndividualDocumentUpload/${eventId}`);
   }
 
   // ─── Status color helper ────────────────────────────────────────────
   function renderStatusColors(status) {
     if (!status) return "";
     if (status.toLowerCase() == "pending") return "bg-red-300/20 text-red-400";
-    if (status.toLowerCase() == "approved") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "approved")
+      return "bg-green-300/20 text-green-400";
     if (status.toLowerCase() == "rejected") return "bg-red-400/20 text-red-400";
-    if (status.toLowerCase() == "closed") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "acknowledged") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "completed") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "closed")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "acknowledged")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "completed")
+      return "bg-green-300/20 text-green-400";
     return "";
   }
 
@@ -205,18 +211,37 @@ const IndividualTrasnportDetailPage = ({ data }) => {
           <ChevronRight size={16} />
 
           {/* ── Status badge (role-based) ── */}
-          {(role.toLowerCase() == "admin" || role.toLowerCase() == "super admin 1" || role.toLowerCase() == "super admin 2") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}>
-              {data?.superAdminApproval?.status}
-            </button>
+          {(role.toLowerCase() == "admin" ||
+            role.toLowerCase() == "super admin 1" ||
+            role.toLowerCase() == "super admin 2") && (
+            <>
+              <div className="flex items-center gap-2">
+                <button
+                  className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
+                >
+                  {data?.superAdminApproval?.status}
+                </button>
+
+                <Link
+                  to={`/individual-transport/edit/${eventId}`}
+                  className="edit-icon bg-green-100/20 rounded-lg flex items-center justify-center gap-2 w-8 h-8"
+                >
+                  <Pencil className="text-green-600" size={14} />
+                </Link>
+              </div>
+            </>
           )}
-          {(role.toLowerCase() == "faculty") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}>
+          {role.toLowerCase() == "faculty" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}
+            >
               {data?.finalStatus}
             </button>
           )}
-          {(role.toLowerCase() == "head") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}>
+          {role.toLowerCase() == "head" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}
+            >
               {data?.headApproval?.status}
             </button>
           )}
@@ -292,7 +317,9 @@ const IndividualTrasnportDetailPage = ({ data }) => {
 
       {/* ─── Detail view content ─────────────────────────────────────── */}
       <div className="bg-[#232a3c]/30 mt-4 p-4 rounded-xl border border-gray-700 w-full">
-        <h1 className="text-lg text-[#853FF9] font-medium">Transport Details</h1>
+        <h1 className="text-lg text-[#853FF9] font-medium">
+          Transport Details
+        </h1>
 
         <div className="mt-3">
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-3">
@@ -302,17 +329,33 @@ const IndividualTrasnportDetailPage = ({ data }) => {
               <div className="rounded-lg bg-[#2a3347] p-2.5">
                 <div className="grid grid-cols-2">
                   <div className="flex items-start gap-2 border-r border-slate-500/40 pr-3">
-                    <CalendarDays size={12} strokeWidth={1.8} className="mt-0.5 text-purple-300" />
+                    <CalendarDays
+                      size={12}
+                      strokeWidth={1.8}
+                      className="mt-0.5 text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Pickup Date</p>
-                      <p className="text-[14px] font-semibold text-white">{date(data?.data?.pickupDateTime)}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Pickup Date
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {date(data?.data?.pickupDateTime)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2 pl-3">
-                    <Clock3 size={12} strokeWidth={1.8} className="mt-0.5 text-purple-300" />
+                    <Clock3
+                      size={12}
+                      strokeWidth={1.8}
+                      className="mt-0.5 text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Pickup Time</p>
-                      <p className="text-[14px] font-semibold text-white">{time(data?.data?.pickupDateTime)}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Pickup Time
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {time(data?.data?.pickupDateTime)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -322,21 +365,120 @@ const IndividualTrasnportDetailPage = ({ data }) => {
               <div className="rounded-lg bg-[#2a3347] p-2.5">
                 <div className="grid grid-cols-2">
                   <div className="flex items-start gap-2 border-r border-slate-500/40 pr-3">
-                    <CalendarDays size={12} strokeWidth={1.8} className="mt-0.5 text-purple-300" />
+                    <CalendarDays
+                      size={12}
+                      strokeWidth={1.8}
+                      className="mt-0.5 text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Drop Date</p>
-                      <p className="text-[14px] font-semibold text-white">{date(data?.data?.dropDateTime)}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Drop Date
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {date(data?.data?.dropDateTime)}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2 pl-3">
-                    <Clock3 size={12} strokeWidth={1.8} className="mt-0.5 text-purple-300" />
+                    <Clock3
+                      size={12}
+                      strokeWidth={1.8}
+                      className="mt-0.5 text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Drop Time</p>
-                      <p className="text-[14px] font-semibold text-white">{time(data?.data?.dropDateTime)}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Drop Time
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {time(data?.data?.dropDateTime)}
+                      </p>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Guest section  */}
+
+            <div className="main-container space-y-2 p-4 bg-[#2a3347] rounded-lg mt-2">
+              <h1 className="text-purple-500">Guest details</h1>
+              {data?.data?.guests?.map((guest) => {
+                return (
+                  <div className="w-full rounded-xl border border-[#3b465c] bg-[#35415a] px-4 py-3">
+                    <div className="grid grid-cols-1 divide-y divide-[#536078] md:grid-cols-5 md:divide-x md:divide-y-0">
+                      {/* Name */}
+                      <div className="flex items-center gap-4 py-3 md:px-4 md:py-2 first:pl-0">
+                        <UserRound className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                            Guest Name
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {guest.name || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Mobile */}
+                      <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                        <Phone className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                            Mobile Number
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {guest.mobile || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Designation */}
+                      <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                        <BriefcaseBusiness className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                            Designation
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {guest.designation || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Organization */}
+                      <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                        <Building2 className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                            Organization
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {guest.organization || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Gender */}
+                      <div className="flex items-center gap-4 py-3 md:px-4 md:py-2">
+                        <VenusAndMars className="h-5 w-5 shrink-0 text-[#b9a7f5]" />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-[#a8b0c0]">
+                            Gender
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {guest.gender || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* ── Location Section ── */}
@@ -349,21 +491,36 @@ const IndividualTrasnportDetailPage = ({ data }) => {
                   <MapPin size={10} className="text-white" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[14px] uppercase text-slate-400">Pickup Location</p>
-                  <p className="truncate text-[12px] font-semibold text-white">{data?.data?.pickupLocation || "--"}</p>
+                  <p className="text-[14px] uppercase text-slate-400">
+                    Pickup Location
+                  </p>
+                  <p className="truncate text-[12px] font-semibold text-white">
+                    {data?.data?.pickupLocation || "--"}
+                  </p>
                 </div>
               </div>
 
               {/* Checkpoints */}
               <div className="checkpoint-container flex items-center flex-wrap gap-2">
                 {data?.data?.checkpoints?.map((item, index) => (
-                  <div key={index} className="relative z-10 flex w-fit items-center gap-2 rounded-lg bg-[#2a3347] px-4 py-2">
+                  <div
+                    key={index}
+                    className="relative z-10 flex w-fit items-center gap-2 rounded-lg bg-[#2a3347] px-4 py-2"
+                  >
                     <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-purple-600">
-                      <MapPin size={10} className="text-white" strokeWidth={2} />
+                      <MapPin
+                        size={10}
+                        className="text-white"
+                        strokeWidth={2}
+                      />
                     </div>
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Checkpoint</p>
-                      <p className="text-[12px] font-semibold text-white">{item?.location}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Checkpoint
+                      </p>
+                      <p className="text-[12px] font-semibold text-white">
+                        {item?.location}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -375,8 +532,12 @@ const IndividualTrasnportDetailPage = ({ data }) => {
                   <MapPin size={10} className="text-white" strokeWidth={2} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[14px] uppercase text-slate-400">Drop Location</p>
-                  <p className="truncate text-[12px] font-semibold text-white">{data?.data?.dropLocation}</p>
+                  <p className="text-[14px] uppercase text-slate-400">
+                    Drop Location
+                  </p>
+                  <p className="truncate text-[12px] font-semibold text-white">
+                    {data?.data?.dropLocation}
+                  </p>
                 </div>
               </div>
             </div>
@@ -384,11 +545,17 @@ const IndividualTrasnportDetailPage = ({ data }) => {
             {/* ── Members / Vehicle ── */}
             <div className="mb-2 grid grid-cols-2 mt-4 rounded-lg border border-slate-600/30 bg-[#2a3347]">
               <div className="flex items-center justify-between border-r border-slate-500/40 px-3 py-3">
-                <span className="text-[14px] text-slate-300">Total Number of Members</span>
-                <span className="text-[14px] font-semibold text-white">{data?.data?.totalPassengers || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Total Number of Members
+                </span>
+                <span className="text-[14px] font-semibold text-white">
+                  {data?.data?.totalPassengers || "--"}
+                </span>
               </div>
               <div className="flex items-center justify-between px-3 py-3">
-                <span className="text-[14px] text-slate-300">Types of Vehicle needed</span>
+                <span className="text-[14px] text-slate-300">
+                  Types of Vehicle needed
+                </span>
                 <span className="text-[14px] font-semibold flex items-center gap-2 text-white">
                   {data?.data?.vehicles?.map((item, index) => (
                     <p key={index}>{item.type}</p>
@@ -400,31 +567,60 @@ const IndividualTrasnportDetailPage = ({ data }) => {
             {/* ── Vehicle Count ── */}
             <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-600/30 bg-[#2a3347]">
               <div className="flex items-center justify-between border-r border-slate-500/40 px-3 py-3">
-                <span className="text-[14px] text-slate-300">Total bus needed</span>
-                <span className="text-[14px] font-semibold text-white">{data?.data?.numberOfBusNeeded}</span>
+                <span className="text-[14px] text-slate-300">
+                  Total bus needed
+                </span>
+                <span className="text-[14px] font-semibold text-white">
+                  {data?.data?.numberOfBusNeeded}
+                </span>
               </div>
               <div className="flex items-center justify-between px-3 py-3">
-                <span className="text-[14px] text-slate-300">Total car needed</span>
-                <span className="text-[14px] font-semibold text-white">{car?.count || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Total car needed
+                </span>
+                <span className="text-[14px] font-semibold text-white">
+                  {car?.count || "--"}
+                </span>
               </div>
             </div>
 
             {/* ── Staff Details ── */}
-            <div className={`staff-container p-2 ${data?.data?.accompanyingStaff?.length > 0 ? "" : "hidden"} bg-[#2a3347] p-2 mb-2 rounded-lg`}>
+            <div
+              className={`staff-container p-2 ${data?.data?.accompanyingStaff?.length > 0 ? "" : "hidden"} bg-[#2a3347] p-2 mb-2 rounded-lg`}
+            >
               {data?.data?.accompanyingStaff?.map((item, index) => (
-                <div key={index} className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-600/30 bg-[#2a3347]">
+                <div
+                  key={index}
+                  className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-600/30 bg-[#2a3347]"
+                >
                   <div className="flex items-center gap-2 border-r border-slate-500/40 px-3 py-2.5">
-                    <UserRound size={13} strokeWidth={1.7} className="text-purple-300" />
+                    <UserRound
+                      size={13}
+                      strokeWidth={1.7}
+                      className="text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Accompanying Staff Name</p>
-                      <p className="text-[14px] font-semibold text-white">{item.name}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Accompanying Staff Name
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {item.name}
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-2.5">
-                    <Phone size={13} strokeWidth={1.7} className="text-purple-300" />
+                    <Phone
+                      size={13}
+                      strokeWidth={1.7}
+                      className="text-purple-300"
+                    />
                     <div>
-                      <p className="text-[14px] uppercase text-slate-400">Accompanying Mobile Number</p>
-                      <p className="text-[14px] font-semibold text-white">{item.mobile}</p>
+                      <p className="text-[14px] uppercase text-slate-400">
+                        Accompanying Mobile Number
+                      </p>
+                      <p className="text-[14px] font-semibold text-white">
+                        {item.mobile}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -434,10 +630,18 @@ const IndividualTrasnportDetailPage = ({ data }) => {
             {/* ── Special Requirement ── */}
             <div className="rounded-lg border border-slate-500/40 bg-[#2a3347] px-3 py-3">
               <div className="mb-2 flex items-center gap-1.5">
-                <ClipboardList size={12} strokeWidth={1.8} className="text-slate-200" />
-                <span className="text-[14px] font-medium text-white">Special Requirement</span>
+                <ClipboardList
+                  size={12}
+                  strokeWidth={1.8}
+                  className="text-slate-200"
+                />
+                <span className="text-[14px] font-medium text-white">
+                  Special Requirement
+                </span>
               </div>
-              <p className="text-[14px] leading-5 text-slate-300">{data?.data?.specialRequirements || "--"}</p>
+              <p className="text-[14px] leading-5 text-slate-300">
+                {data?.data?.specialRequirements || "--"}
+              </p>
             </div>
           </div>
         </div>

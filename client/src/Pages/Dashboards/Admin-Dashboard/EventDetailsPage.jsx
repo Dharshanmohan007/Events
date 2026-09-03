@@ -1030,7 +1030,6 @@ const EventDetailsPage = () => {
 
         {/* Main content: sidebar + panel */}
         <section className="mt-2 flex min-h-[calc(100vh-160px)] gap-2">
-          {console.log("Added a console for testing ")}
           <EventDetailsSidePanel
             tabs={detailTabs}
             activeTab={activeTab}
