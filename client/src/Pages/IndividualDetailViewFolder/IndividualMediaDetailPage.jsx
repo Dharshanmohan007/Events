@@ -6,6 +6,7 @@ import {
   Phone,
   FileText,
   FileCheck2,
+  Pencil,
 } from "lucide-react";
 import React, { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -20,8 +21,7 @@ const IndividualMediaDetailPage = ({ data }) => {
 
   // ─── Get the submission ID from the URL ──────────────────────────────
   const { eventId } = useParams();
-    const navigate = useNavigate()
-
+  const navigate = useNavigate();
 
   // ─── Decode the user's role from the JWT token ──────────────────────
   let token = localStorage.getItem("token");
@@ -52,7 +52,7 @@ const IndividualMediaDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "approve" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -83,7 +83,7 @@ const IndividualMediaDetailPage = ({ data }) => {
             action: "reject",
             reason: rejectReason.trim(),
           }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -110,7 +110,7 @@ const IndividualMediaDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "acknowledge" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -135,7 +135,7 @@ const IndividualMediaDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "complete" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -152,18 +152,22 @@ const IndividualMediaDetailPage = ({ data }) => {
 
   // ─── Empty handler for faculty (to be implemented later) ────────────
   async function handleFacultyClose() {
-        navigate(`/dashboard-faculty/MediaIndividualDocumentUpload/${eventId}`)
-   }
+    navigate(`/dashboard-faculty/MediaIndividualDocumentUpload/${eventId}`);
+  }
 
   // ─── Status color helper ────────────────────────────────────────────
   function renderStatusColors(status) {
     if (!status) return "";
     if (status.toLowerCase() == "pending") return "bg-red-300/20 text-red-400";
-    if (status.toLowerCase() == "approved") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "approved")
+      return "bg-green-300/20 text-green-400";
     if (status.toLowerCase() == "rejected") return "bg-red-400/20 text-red-400";
-    if (status.toLowerCase() == "closed") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "acknowledged") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "completed") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "closed")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "acknowledged")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "completed")
+      return "bg-green-300/20 text-green-400";
     return "";
   }
 
@@ -189,18 +193,35 @@ const IndividualMediaDetailPage = ({ data }) => {
           <ChevronRight size={16} />
 
           {/* ── Status badge (role-based) ── */}
-          {(role.toLowerCase() == "admin" || role.toLowerCase() == "super admin 1" || role.toLowerCase() == "super admin 2") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}>
-              {data?.superAdminApproval?.status}
-            </button>
+          {(role.toLowerCase() == "admin" ||
+            role.toLowerCase() == "super admin 1" ||
+            role.toLowerCase() == "super admin 2") && (
+            <>
+              <button
+                className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
+              >
+                {data?.superAdminApproval?.status}
+              </button>
+
+              <Link
+                to={`/individual-media/edit/${eventId}`}
+                className="edit-icon bg-green-100/20 rounded-lg flex items-center justify-center gap-2 w-8 h-8"
+              >
+                <Pencil className="text-green-600" size={14} />
+              </Link>
+            </>
           )}
-          {(role.toLowerCase() == "faculty") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}>
+          {role.toLowerCase() == "faculty" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}
+            >
               {data?.finalStatus}
             </button>
           )}
-          {(role.toLowerCase() == "head") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}>
+          {role.toLowerCase() == "head" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}
+            >
               {data?.headApproval?.status}
             </button>
           )}
@@ -281,13 +302,17 @@ const IndividualMediaDetailPage = ({ data }) => {
         {/* ── Poster section ── */}
         <div className="mt-4">
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-4">
-            <h2 className="mb-2 px-1 text-lg font-medium text-[#853FF9]">Poster</h2>
+            <h2 className="mb-2 px-1 text-lg font-medium text-[#853FF9]">
+              Poster
+            </h2>
 
             {/* Content for Poster */}
             <div className="mb-2 rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Content for Poster</span>
+                <span className="text-[14px] font-medium text-white">
+                  Content for Poster
+                </span>
               </div>
               <p className="text-[14px] leading-4 text-white/60">
                 {data?.data?.poster?.posterContent}
@@ -300,10 +325,16 @@ const IndividualMediaDetailPage = ({ data }) => {
                 <span className="text-[13px] text-white">Reference poster</span>
               </div>
               <div className="flex items-center gap-2 border-l border-slate-500/40 px-3 py-2.5">
-                <FileCheck2 size={12} strokeWidth={1.8} className="text-emerald-400" />
+                <FileCheck2
+                  size={12}
+                  strokeWidth={1.8}
+                  className="text-emerald-400"
+                />
                 {data?.data?.poster?.referencePosterFiles.map((item) => (
                   <button
-                    onClick={() => window.open(item.url, "_blank", "noopener, norefferrer")}
+                    onClick={() =>
+                      window.open(item.url, "_blank", "noopener, norefferrer")
+                    }
                     className="text-[13px] font-medium underline cursor-pointer text-white"
                   >
                     Reference-file
@@ -316,40 +347,66 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="mb-2 rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Content for Certificate</span>
+                <span className="text-[14px] font-medium text-white">
+                  Content for Certificate
+                </span>
               </div>
-              <p className="text-[13px] leading-4 text-white">{data?.data?.poster?.certificateContent}</p>
+              <p className="text-[13px] leading-4 text-white">
+                {data?.data?.poster?.certificateContent}
+              </p>
             </div>
 
             {/* Content for Trophy */}
             <div className="mb-2 rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Content for Trophy</span>
+                <span className="text-[14px] font-medium text-white">
+                  Content for Trophy
+                </span>
               </div>
-              <p className="text-[13px] leading-4 text-white">{data?.data?.poster?.trophyContent}</p>
+              <p className="text-[13px] leading-4 text-white">
+                {data?.data?.poster?.trophyContent}
+              </p>
             </div>
 
             {/* Display & Size Requirements */}
             <div className="mb-2 grid grid-cols-2 gap-2">
               <div className="rounded-lg border border-slate-500/30 bg-[#2a3347] p-3">
                 <div className="mb-2 flex items-center gap-1.5">
-                  <FileText size={11} strokeWidth={1.8} className="text-white" />
-                  <span className="text-[14px] font-medium text-white">Display Requirement</span>
+                  <FileText
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
+                  <span className="text-[14px] font-medium text-white">
+                    Display Requirement
+                  </span>
                 </div>
                 {data?.data?.poster?.displayNeeded?.map((item) => (
-                  <p className="mb-2 text-[13px] font-medium text-white">{item}</p>
+                  <p className="mb-2 text-[13px] font-medium text-white">
+                    {item}
+                  </p>
                 ))}
               </div>
               <div className="rounded-lg border border-slate-500/30 bg-[#2a3347] p-3">
                 <div className="mb-2 flex items-center gap-1.5">
-                  <FileText size={11} strokeWidth={1.8} className="text-white" />
-                  <span className="text-[14px] font-medium text-white">Size Requirement</span>
+                  <FileText
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
+                  <span className="text-[14px] font-medium text-white">
+                    Size Requirement
+                  </span>
                 </div>
                 {data?.data?.poster?.sizes.map((item) => (
                   <div className="mb-2 flex items-center justify-between">
-                    <span className="text-[13px] text-white">Size for {item.type}</span>
-                    <span className="text-[13px] font-semibold text-white">{item.value} cm</span>
+                    <span className="text-[13px] text-white">
+                      Size for {item.type}
+                    </span>
+                    <span className="text-[13px] font-semibold text-white">
+                      {item.value} cm
+                    </span>
                   </div>
                 ))}
               </div>
@@ -359,14 +416,22 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-500/30 bg-[#2a3347]">
               <div className="flex items-center justify-between border-r border-slate-500/40 px-3 py-3">
                 <div className="flex items-center gap-1.5">
-                  <CalendarDays size={11} strokeWidth={1.8} className="text-white" />
+                  <CalendarDays
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
                   <span className="text-[13px] text-white">Delivery Date</span>
                 </div>
-                <span className="text-[13px] font-semibold text-white">{formatDate(data?.data?.poster?.deliveryDate)}</span>
+                <span className="text-[13px] font-semibold text-white">
+                  {formatDate(data?.data?.poster?.deliveryDate)}
+                </span>
               </div>
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[13px] text-white">Priority</span>
-                <span className={`text-[13px] font-semibold ${data?.data?.poster?.priority == "High" ? "text-red-500" : "text-green-500"}`}>
+                <span
+                  className={`text-[13px] font-semibold ${data?.data?.poster?.priority == "High" ? "text-red-500" : "text-green-500"}`}
+                >
                   {data?.data?.poster?.priority}
                 </span>
               </div>
@@ -376,9 +441,13 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Special Requirement</span>
+                <span className="text-[14px] font-medium text-white">
+                  Special Requirement
+                </span>
               </div>
-              <p className="text-[13px] leading-4 text-white">{data?.data?.poster?.specialRequirements || "--"}</p>
+              <p className="text-[13px] leading-4 text-white">
+                {data?.data?.poster?.specialRequirements || "--"}
+              </p>
             </div>
           </div>
         </div>
@@ -386,14 +455,20 @@ const IndividualMediaDetailPage = ({ data }) => {
         {/* ── Video section ── */}
         <div className="mt-4">
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-4">
-            <h2 className="mb-2 px-1 text-lg font-medium text-[#853FF9]">Video</h2>
+            <h2 className="mb-2 px-1 text-lg font-medium text-[#853FF9]">
+              Video
+            </h2>
 
             <div className="mb-2 rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Content for Video</span>
+                <span className="text-[14px] font-medium text-white">
+                  Content for Video
+                </span>
               </div>
-              <p className="text-[14px] leading-4 text-white/60">{data?.data?.video?.videoContent}</p>
+              <p className="text-[14px] leading-4 text-white/60">
+                {data?.data?.video?.videoContent}
+              </p>
             </div>
 
             <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-500/30 bg-[#2a3347]">
@@ -401,10 +476,16 @@ const IndividualMediaDetailPage = ({ data }) => {
                 <span className="text-[13px] text-white">Reference Video</span>
               </div>
               <div className="flex items-center flex-wrap gap-2 border-l border-slate-500/40 px-3 py-2.5">
-                <FileCheck2 size={12} strokeWidth={1.8} className="text-emerald-400" />
+                <FileCheck2
+                  size={12}
+                  strokeWidth={1.8}
+                  className="text-emerald-400"
+                />
                 {data?.data?.video?.referenceFiles.map((item) => (
                   <button
-                    onClick={() => window.open(item.url, "_blank", "noopener, norefferrer")}
+                    onClick={() =>
+                      window.open(item.url, "_blank", "noopener, norefferrer")
+                    }
                     className="text-[13px] font-medium underline cursor-pointer text-white"
                   >
                     Reference-file
@@ -416,17 +497,31 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="mb-2 grid grid-cols-2 gap-2">
               <div className="rounded-lg border border-slate-500/30 bg-[#2a3347] p-3">
                 <div className="mb-2 flex items-center gap-1.5">
-                  <FileText size={11} strokeWidth={1.8} className="text-white" />
-                  <span className="text-[14px] font-medium text-white">Pre-Event Videos</span>
+                  <FileText
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
+                  <span className="text-[14px] font-medium text-white">
+                    Pre-Event Videos
+                  </span>
                 </div>
                 {data?.data?.video?.preEventVideos?.map((item) => (
-                  <p className="mb-2 text-[13px] font-medium text-white">{item}</p>
+                  <p className="mb-2 text-[13px] font-medium text-white">
+                    {item}
+                  </p>
                 ))}
               </div>
               <div className="rounded-lg border border-slate-500/30 bg-[#2a3347] p-3">
                 <div className="mb-2 flex items-center gap-1.5">
-                  <FileText size={11} strokeWidth={1.8} className="text-white" />
-                  <span className="text-[14px] font-medium text-white">Post-Event Videos</span>
+                  <FileText
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
+                  <span className="text-[14px] font-medium text-white">
+                    Post-Event Videos
+                  </span>
                 </div>
                 {data?.data?.video?.postEventVideos?.map((item) => (
                   <div className="mb-2 flex items-center justify-between">
@@ -439,14 +534,22 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="mb-2 grid grid-cols-2 overflow-hidden rounded-lg border border-slate-500/30 bg-[#2a3347]">
               <div className="flex items-center justify-between border-r border-slate-500/40 px-3 py-3">
                 <div className="flex items-center gap-1.5">
-                  <CalendarDays size={11} strokeWidth={1.8} className="text-white" />
+                  <CalendarDays
+                    size={11}
+                    strokeWidth={1.8}
+                    className="text-white"
+                  />
                   <span className="text-[13px] text-white">Delivery Date</span>
                 </div>
-                <span className="text-[13px] font-semibold text-white">{formatDate(data?.data?.video?.deliveryDate)}</span>
+                <span className="text-[13px] font-semibold text-white">
+                  {formatDate(data?.data?.video?.deliveryDate)}
+                </span>
               </div>
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[13px] text-white">Priority</span>
-                <span className={`text-[13px] font-semibold ${data?.data?.video?.priority == "High" ? "text-red-500" : "text-green-500"}`}>
+                <span
+                  className={`text-[13px] font-semibold ${data?.data?.video?.priority == "High" ? "text-red-500" : "text-green-500"}`}
+                >
                   {data?.data?.video?.priority}
                 </span>
               </div>
@@ -455,9 +558,13 @@ const IndividualMediaDetailPage = ({ data }) => {
             <div className="rounded-lg border border-slate-500/40 bg-[#2a3347] p-3">
               <div className="mb-2 flex items-center gap-1.5">
                 <FileText size={11} strokeWidth={1.8} className="text-white" />
-                <span className="text-[14px] font-medium text-white">Special Requirement</span>
+                <span className="text-[14px] font-medium text-white">
+                  Special Requirement
+                </span>
               </div>
-              <p className="text-[13px] leading-4 text-white">{data?.data?.video?.specialRequirements || "--"}</p>
+              <p className="text-[13px] leading-4 text-white">
+                {data?.data?.video?.specialRequirements || "--"}
+              </p>
             </div>
           </div>
         </div>

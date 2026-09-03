@@ -9,6 +9,7 @@ import {
   Phone,
   FileText,
   ClipboardList,
+  Pencil,
 } from "lucide-react";
 import Modal from "../../Components/Modal";
 
@@ -20,7 +21,7 @@ const IndividualPurchaseDetailPage = ({ data }) => {
 
   // ─── Get the submission ID from the URL ──────────────────────────────
   const { eventId } = useParams();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   // ─── Decode the user's role from the JWT token ──────────────────────
   let token = localStorage.getItem("token");
@@ -51,7 +52,7 @@ const IndividualPurchaseDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "approve" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -82,7 +83,7 @@ const IndividualPurchaseDetailPage = ({ data }) => {
             action: "reject",
             reason: rejectReason.trim(),
           }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -109,7 +110,7 @@ const IndividualPurchaseDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "acknowledge" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -134,7 +135,7 @@ const IndividualPurchaseDetailPage = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "complete" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -151,18 +152,22 @@ const IndividualPurchaseDetailPage = ({ data }) => {
 
   // ─── Empty handler for faculty (to be implemented later) ────────────
   async function handleFacultyClose() {
-    navigate(`/dashboard-faculty/PurchaseIndividualDocumentUpload/${eventId}`)
+    navigate(`/dashboard-faculty/PurchaseIndividualDocumentUpload/${eventId}`);
   }
 
   // ─── Status color helper ────────────────────────────────────────────
   function renderStatusColors(status) {
     if (!status) return "";
     if (status.toLowerCase() == "pending") return "bg-red-300/20 text-red-400";
-    if (status.toLowerCase() == "approved") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "approved")
+      return "bg-green-300/20 text-green-400";
     if (status.toLowerCase() == "rejected") return "bg-red-400/20 text-red-400";
-    if (status.toLowerCase() == "closed") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "acknowledged") return "bg-green-300/20 text-green-400";
-    if (status.toLowerCase() == "completed") return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "closed")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "acknowledged")
+      return "bg-green-300/20 text-green-400";
+    if (status.toLowerCase() == "completed")
+      return "bg-green-300/20 text-green-400";
     return "";
   }
 
@@ -170,17 +175,37 @@ const IndividualPurchaseDetailPage = ({ data }) => {
   const students = data?.data?.purchases?.[0]?.students;
   const guests = data?.data?.purchases?.[0]?.guests;
 
-  const trophyGift = students?.giftItems?.find((item) => item.giftType === "Trophy");
-  const cashPrice = students?.giftItems?.find((item) => item.giftType == "Cash Prize");
-  const basicTrophy = trophyGift?.trophy?.find((item) => item.trophyType === "Basic");
-  const eliteTrophy = trophyGift?.trophy?.find((item) => item.trophyType === "Elite");
-  const voucher = students?.giftItems?.find((item) => item.giftType === "Voucher");
+  const trophyGift = students?.giftItems?.find(
+    (item) => item.giftType === "Trophy",
+  );
+  const cashPrice = students?.giftItems?.find(
+    (item) => item.giftType == "Cash Prize",
+  );
+  const basicTrophy = trophyGift?.trophy?.find(
+    (item) => item.trophyType === "Basic",
+  );
+  const eliteTrophy = trophyGift?.trophy?.find(
+    (item) => item.trophyType === "Elite",
+  );
+  const voucher = students?.giftItems?.find(
+    (item) => item.giftType === "Voucher",
+  );
 
-  const guestsTrophyGift = guests?.giftItems?.find((item) => item.giftType === "Trophy");
-  const guestsVoucher = guests?.giftItems?.find((item) => item.giftType == "Voucher");
-  const guestsCashPrice = guests?.giftItems?.find((item) => item.giftType == "Cash Prize");
-  const guestsBasicTrophy = guestsTrophyGift?.trophy?.find((item) => item.trophyType === "Basic");
-  const guestsEliteTrophy = guestsTrophyGift?.trophy?.find((item) => item.trophyType === "Elite");
+  const guestsTrophyGift = guests?.giftItems?.find(
+    (item) => item.giftType === "Trophy",
+  );
+  const guestsVoucher = guests?.giftItems?.find(
+    (item) => item.giftType == "Voucher",
+  );
+  const guestsCashPrice = guests?.giftItems?.find(
+    (item) => item.giftType == "Cash Prize",
+  );
+  const guestsBasicTrophy = guestsTrophyGift?.trophy?.find(
+    (item) => item.trophyType === "Basic",
+  );
+  const guestsEliteTrophy = guestsTrophyGift?.trophy?.find(
+    (item) => item.trophyType === "Elite",
+  );
 
   // ─── JSX ────────────────────────────────────────────────────────────
   return (
@@ -196,18 +221,35 @@ const IndividualPurchaseDetailPage = ({ data }) => {
           <ChevronRight size={16} />
 
           {/* ── Status badge (role-based) ── */}
-          {(role.toLowerCase() == "admin" || role.toLowerCase() == "super admin 1" || role.toLowerCase() == "super admin 2") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}>
-              {data?.superAdminApproval?.status}
-            </button>
+          {(role.toLowerCase() == "admin" ||
+            role.toLowerCase() == "super admin 1" ||
+            role.toLowerCase() == "super admin 2") && (
+            <>
+              <button
+                className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
+              >
+                {data?.superAdminApproval?.status}
+              </button>
+
+              <Link
+                to={`/individual-purchase/edit/${eventId}`}
+                className="edit-icon bg-green-100/20 rounded-lg flex items-center justify-center gap-2 w-8 h-8"
+              >
+                <Pencil className="text-green-600" size={14} />
+              </Link>
+            </>
           )}
-          {(role.toLowerCase() == "faculty") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}>
+          {role.toLowerCase() == "faculty" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.finalStatus)}`}
+            >
               {data?.finalStatus}
             </button>
           )}
-          {(role.toLowerCase() == "head") && (
-            <button className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}>
+          {role.toLowerCase() == "head" && (
+            <button
+              className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.headApproval?.status)}`}
+            >
               {data?.headApproval?.status}
             </button>
           )}
@@ -290,54 +332,91 @@ const IndividualPurchaseDetailPage = ({ data }) => {
           {/* Top Row */}
           <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#222b3e]">
             <div className="flex items-center justify-between px-4 py-4">
-              <span className="text-[14px] text-slate-300">Id Card&nbsp; Hard copy Quantity</span>
-              <span className="text-[13px] font-semibold text-white">{data?.data?.purchases?.[0]?.requirementNeeded?.[0]?.hardCount}</span>
+              <span className="text-[14px] text-slate-300">
+                Id Card&nbsp; Hard copy Quantity
+              </span>
+              <span className="text-[13px] font-semibold text-white">
+                {data?.data?.purchases?.[0]?.requirementNeeded?.[0]?.hardCount}
+              </span>
             </div>
             <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-              <span className="text-[14px] text-slate-300">Certificate Hard Copy Quantity</span>
-              <span className="text-[13px] font-semibold text-white">{data?.data?.purchases?.[0]?.requirementNeeded?.[1]?.hardCount}</span>
+              <span className="text-[14px] text-slate-300">
+                Certificate Hard Copy Quantity
+              </span>
+              <span className="text-[13px] font-semibold text-white">
+                {data?.data?.purchases?.[0]?.requirementNeeded?.[1]?.hardCount}
+              </span>
             </div>
           </div>
 
           {/* Students Container */}
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-3">
-            <h2 className="mb-3 text-[16px] font-medium text-[#853FF9]">Students</h2>
+            <h2 className="mb-3 text-[16px] font-medium text-[#853FF9]">
+              Students
+            </h2>
 
             {/* Row 1: Trophies */}
             <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
               <div className="flex items-center justify-between px-4 py-4">
-                <span className="text-[14px] text-slate-300">Basic Trophy Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{basicTrophy?.quantity}</span>
+                <span className="text-[14px] text-slate-300">
+                  Basic Trophy Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {basicTrophy?.quantity}
+                </span>
               </div>
               <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                <span className="text-[14px] text-slate-300">Elite Trophy Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{eliteTrophy?.quantity}</span>
+                <span className="text-[14px] text-slate-300">
+                  Elite Trophy Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {eliteTrophy?.quantity}
+                </span>
               </div>
             </div>
 
             {/* Row 2: Cash Prize & Kit */}
             <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
               <div className="flex items-center justify-between px-4 py-4">
-                <span className="text-[14px] text-slate-300">Cash Prize Amount</span>
-                <span className="text-[13px] font-semibold text-white">₹ {cashPrice?.cashPrizeAmount}</span>
+                <span className="text-[14px] text-slate-300">
+                  Cash Prize Amount
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  ₹ {cashPrice?.cashPrizeAmount}
+                </span>
               </div>
               <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                <span className="text-[14px] text-slate-300">Registration Kit Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{data?.data?.purchases?.[0]?.students?.registrationKitQty}</span>
+                <span className="text-[14px] text-slate-300">
+                  Registration Kit Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {data?.data?.purchases?.[0]?.students?.registrationKitQty}
+                </span>
               </div>
             </div>
 
             {/* Row 3: Vouchers */}
             <div className="voucher-container bg-[#2c3548] p-3 mb-2 border border-gray-600 rounded-lg">
               {voucher?.voucher?.map((item, index) => (
-                <div key={index} className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
+                <div
+                  key={index}
+                  className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]"
+                >
                   <div className="flex items-center justify-between px-4 py-4">
-                    <span className="text-[14px] text-slate-300">Voucher worth</span>
-                    <span className="text-[13px] font-semibold text-white">₹ {item?.voucherWorth}</span>
+                    <span className="text-[14px] text-slate-300">
+                      Voucher worth
+                    </span>
+                    <span className="text-[13px] font-semibold text-white">
+                      ₹ {item?.voucherWorth}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                    <span className="text-[14px] text-slate-300">Voucher worth Quantity ( ₹ {item?.voucherWorth} )</span>
-                    <span className="text-[13px] font-semibold text-white">{item?.quantity}</span>
+                    <span className="text-[14px] text-slate-300">
+                      Voucher worth Quantity ( ₹ {item?.voucherWorth} )
+                    </span>
+                    <span className="text-[13px] font-semibold text-white">
+                      {item?.quantity}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -346,10 +425,19 @@ const IndividualPurchaseDetailPage = ({ data }) => {
             {/* Special Requirement */}
             <div className="rounded-xl border border-slate-500/40 bg-[#2c3548] px-4 py-4">
               <div className="mb-3 flex items-center gap-1.5">
-                <ClipboardList size={14} strokeWidth={1.8} className="text-slate-200" />
-                <span className="text-[13px] font-medium text-slate-200">Special Requirement</span>
+                <ClipboardList
+                  size={14}
+                  strokeWidth={1.8}
+                  className="text-slate-200"
+                />
+                <span className="text-[13px] font-medium text-slate-200">
+                  Special Requirement
+                </span>
               </div>
-              <p className="text-[14px] leading-6 text-slate-300">{data?.data?.purchases?.[0]?.students?.specialRequirements || "--"}</p>
+              <p className="text-[14px] leading-6 text-slate-300">
+                {data?.data?.purchases?.[0]?.students?.specialRequirements ||
+                  "--"}
+              </p>
             </div>
           </div>
         </div>
@@ -357,40 +445,72 @@ const IndividualPurchaseDetailPage = ({ data }) => {
         {/* ── Guests ── */}
         <div className="bg-[#141c30] mt-3">
           <div className="rounded-lg border border-slate-600/40 bg-[#1d2639] p-3">
-            <h2 className="mb-3 text-[16px] font-medium text-[#853FF9]">Guests</h2>
+            <h2 className="mb-3 text-[16px] font-medium text-[#853FF9]">
+              Guests
+            </h2>
 
             <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
               <div className="flex items-center justify-between px-4 py-4">
-                <span className="text-[14px] text-slate-300">Basic Trophy Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{guestsBasicTrophy?.quantity || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Basic Trophy Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {guestsBasicTrophy?.quantity || "--"}
+                </span>
               </div>
               <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                <span className="text-[14px] text-slate-300">Elite Trophy Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{guestsEliteTrophy?.quantity || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Elite Trophy Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {guestsEliteTrophy?.quantity || "--"}
+                </span>
               </div>
             </div>
 
             <div className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
               <div className="flex items-center justify-between px-4 py-4">
-                <span className="text-[14px] text-slate-300">Cash Prize Amount</span>
-                <span className="text-[13px] font-semibold text-white">₹ {guestsCashPrice?.cashPrizeAmount || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Cash Prize Amount
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  ₹ {guestsCashPrice?.cashPrizeAmount || "--"}
+                </span>
               </div>
               <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                <span className="text-[14px] text-slate-300">Registration Kit Quantity</span>
-                <span className="text-[13px] font-semibold text-white">{data?.data?.purchases?.[0]?.guests?.registrationKitQty || "--"}</span>
+                <span className="text-[14px] text-slate-300">
+                  Registration Kit Quantity
+                </span>
+                <span className="text-[13px] font-semibold text-white">
+                  {data?.data?.purchases?.[0]?.guests?.registrationKitQty ||
+                    "--"}
+                </span>
               </div>
             </div>
 
-            <div className={`${guestsVoucher?.voucher?.length > 0 ? "" : "hidden"} voucher-container bg-[#2c3548] p-3 mb-2 border border-gray-600 rounded-lg`}>
+            <div
+              className={`${guestsVoucher?.voucher?.length > 0 ? "" : "hidden"} voucher-container bg-[#2c3548] p-3 mb-2 border border-gray-600 rounded-lg`}
+            >
               {guestsVoucher?.voucher?.map((item, index) => (
-                <div key={index} className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]">
+                <div
+                  key={index}
+                  className="mb-3 grid grid-cols-2 overflow-hidden rounded-xl border border-slate-600/40 bg-[#2c3548]"
+                >
                   <div className="flex items-center justify-between px-4 py-4">
-                    <span className="text-[14px] text-slate-300">Voucher worth</span>
-                    <span className="text-[13px] font-semibold text-white">₹ {item?.voucherWorth}</span>
+                    <span className="text-[14px] text-slate-300">
+                      Voucher worth
+                    </span>
+                    <span className="text-[13px] font-semibold text-white">
+                      ₹ {item?.voucherWorth}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between border-l border-slate-500/50 px-4 py-4">
-                    <span className="text-[14px] text-slate-300">Voucher worth Quantity ( ₹ {item?.voucherWorth} )</span>
-                    <span className="text-[13px] font-semibold text-white">{item?.quantity}</span>
+                    <span className="text-[14px] text-slate-300">
+                      Voucher worth Quantity ( ₹ {item?.voucherWorth} )
+                    </span>
+                    <span className="text-[13px] font-semibold text-white">
+                      {item?.quantity}
+                    </span>
                   </div>
                 </div>
               ))}
@@ -398,10 +518,19 @@ const IndividualPurchaseDetailPage = ({ data }) => {
 
             <div className="rounded-xl border border-slate-500/40 bg-[#2c3548] px-4 py-4">
               <div className="mb-3 flex items-center gap-1.5">
-                <ClipboardList size={14} strokeWidth={1.8} className="text-slate-200" />
-                <span className="text-[13px] font-medium text-slate-200">Special Requirement</span>
+                <ClipboardList
+                  size={14}
+                  strokeWidth={1.8}
+                  className="text-slate-200"
+                />
+                <span className="text-[13px] font-medium text-slate-200">
+                  Special Requirement
+                </span>
               </div>
-              <p className="text-[14px] leading-6 text-slate-300">{data?.data?.purchases?.[0]?.guests?.specialRequirements || "--"}</p>
+              <p className="text-[14px] leading-6 text-slate-300">
+                {data?.data?.purchases?.[0]?.guests?.specialRequirements ||
+                  "--"}
+              </p>
             </div>
           </div>
         </div>
