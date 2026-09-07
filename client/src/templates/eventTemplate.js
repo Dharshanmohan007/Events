@@ -134,13 +134,28 @@ function buildEventTemplate(event = {}) {
 
   const accommRows = (event?.accommodationDetails?.accommodations || [])
     .map((a) => {
-      const guests = (a.guests || []).map(g => `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`).join('<br/>');
+      // Deduplicate guests by _id (fall back to name) to prevent rendering duplicates
+      const seenGuests = new Set();
+      const uniqueGuests = (a.guests || []).filter(g => {
+        const key = g._id || g.name;
+        if (seenGuests.has(key)) return false;
+        seenGuests.add(key);
+        return true;
+      });
+      const guests = uniqueGuests.map(g =>
+        `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
+      ).join('<br/>');
+
       const dineInCounts = (a.dineInCounts || []).map(d => `${d.type}: ${d.count}`).join(', ');
-      // roomSelections — defensive generic rendering for any keys present
+
+      // Clean human-readable room selections — only show relevant fields
       const roomSel = (a.roomSelections || []);
       const roomHtml = roomSel.length
-        ? roomSel.map(rs => Object.entries(rs).filter(([k]) => k !== '_id').map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(', ')).join('<br/>')
+        ? roomSel.map(rs =>
+            `Room ${rs.roomNumber || '-'} - ${rs.venue || '-'} (Occupants: ${rs.occupantCount ?? '-'})`
+          ).join('<br/>')
         : '-';
+
       const staff = (a.accompanyingStaff || []).map(s => s.name).join(', ');
       return `
       <tr>
