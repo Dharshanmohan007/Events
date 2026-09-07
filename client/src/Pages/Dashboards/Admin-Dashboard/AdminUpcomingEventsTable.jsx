@@ -42,6 +42,7 @@ const normalizeIndividualRequest = (request) => ({
   eventType: request.formType || "-",
   date: request.createdAt ? formatDate(request.createdAt) : "-",
   status: typeof request.status === "string" ? request.status : "-",
+  superAdminStatus : request.superAdminApproval.status
 });
 
 const getStatusColor = (status = "") => {
@@ -170,6 +171,7 @@ const AdminUpcomingEventsTable = ({
             (responseData.data || []).map(normalizeIndividualRequest),
           );
         }
+        console.log("individual response : ", responseData)
       })
       .catch((error) => {
         console.warn(error.message);
@@ -337,6 +339,8 @@ const AdminUpcomingEventsTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        {console.log("admin individual status  : ", row)}
+                        {/* <StatusBadge status={row.status} /> */}
                         <StatusBadge status={row.status} />
                       </td>
                       <td className="px-6 py-4">
