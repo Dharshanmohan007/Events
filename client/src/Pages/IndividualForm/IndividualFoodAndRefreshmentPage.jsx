@@ -1639,6 +1639,7 @@ if (loadError) {
         )}
       </div>
 
+      {formCards.some((formCard) => formCard.financeRequired === "Yes") && (
       <div className="mb-6">
         <label className="block mb-2 text-sm text-white">
           Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
@@ -1782,6 +1783,7 @@ if (loadError) {
           </p>
         )}
       </div>
+      )}
 
       {/* HEADER */}
       {!isEditMode && (

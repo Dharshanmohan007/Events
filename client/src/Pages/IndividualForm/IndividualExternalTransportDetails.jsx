@@ -37,7 +37,7 @@ const IndividualExternalTransportDetails = () => {
 
   return (
     <div className="min-h-screen bg-[#16162A] p-6">
-      {!isLoading && <ExternalTransportForm initialValues={ticketingData} />}
+      {!isLoading && <ExternalTransportForm />}
     </div>
   )
 }

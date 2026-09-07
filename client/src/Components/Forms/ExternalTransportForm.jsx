@@ -50,7 +50,10 @@ function sanitiseForm(v) {
     from: v.from || "",
     to: v.to || "",
     totalPassengers: v.totalPassengers !== undefined && v.totalPassengers !== null ? String(v.totalPassengers) : "",
-    classOrBerth: v.classOrBerth || (v.travelOption === "Train" ? [] : "Economy"),
+    classOrBerth:
+      v.classOrBerth ||
+      v.travelClass ||
+      (v.travelOption === "Train" ? [] : "Economy"),
     trainNumber: v.trainNumber || "",
     flightNumber: v.flightNumber || "",
     specialRequirements: v.specialRequirements || "None",
@@ -406,13 +409,16 @@ export default function ExternalTransportForm({
             from: item.from || "",
             to: item.to || "",
             totalPassengers: Number(item.totalPassengers) || 0,
+            numberOfPassengers: Number(item.totalPassengers) || 0,
             classOrBerth: formatClassOrBerth(item.classOrBerth, item.travelOption),
+            travelClass: formatClassOrBerth(item.classOrBerth, item.travelOption),
             trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
             flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
             specialRequirements: item.specialRequirements?.trim() || "None",
             passengers: (item.passengers || []).map((p) => ({
               name: p.name || "",
               phone: String(p.phone || "").trim(),
+              phoneNumber: String(p.phone || "").trim(),
               email: p.email || "",
               age: Number(p.age) || 0,
               gender: p.gender || "",
@@ -421,30 +427,38 @@ export default function ExternalTransportForm({
             })),
           }));
 
-      const payload = nextStep
-        ? { externalTransportDetails: { externalTransports } }
-        : {
-            externalTransports,
-            facultyId: JSON.parse(localStorage.getItem("user") || "{}")?.facultyId || undefined,
-          };
+      const headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      };
 
-      const response = await fetch(
-        nextStep
-          ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`
-          : `${API_BASE}/api/individual-ticketing`,
-        {
+      if (nextStep) {
+        const response = await fetch(`${API_BASE}/api/events/${eventId}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-          body: JSON.stringify(payload),
+          headers,
+          body: JSON.stringify({ externalTransportDetails: { externalTransports } }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.message || `Server error: ${response.status}`);
         }
-      );
+      } else {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data.message || `Server error: ${response.status}`);
+        for (const transport of externalTransports) {
+          const response = await fetch(`${API_BASE}/api/individual-ticketing`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              ...transport,
+              facultyId: user.facultyId || undefined,
+            }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.message || `Server error: ${response.status}`);
+          }
+        }
       }
 
       if (nextStep) nextStep();
@@ -519,7 +533,7 @@ export default function ExternalTransportForm({
           while (newPax.length < num) newPax.push(createEmptyPassenger());
           if (newPax.length > num) newPax.splice(num);
           updated[index].passengers = newPax;
-        } else if (val === "") {
+        } else if (val === "" || num > 10) {
           updated[index].passengers = [];
         }
       } else if (field === "trainNumber") {
@@ -792,7 +806,7 @@ export default function ExternalTransportForm({
                   </div>
                 </div>
 
-                {form.passengers.length > 0 && (
+                {Number(form.totalPassengers) > 0 && Number(form.totalPassengers) <= 10 && (
                   <div
                     className="mt-6 rounded-xl p-5"
                     style={{
@@ -802,7 +816,7 @@ export default function ExternalTransportForm({
                   >
                     <h4 className="text-white font-medium mb-4">Passenger Details</h4>
                     <div className="space-y-4">
-                      {form.passengers.map((p, pIndex) => (
+                      {form.passengers.slice(0, Number(form.totalPassengers)).map((p, pIndex) => (
                         <div
                           key={p.id}
                           className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg"
