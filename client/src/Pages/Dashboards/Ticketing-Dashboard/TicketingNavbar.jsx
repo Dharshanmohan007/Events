@@ -10,7 +10,7 @@ const TicketingNavbar = () => {
     { label: "Dashboard", href: "/ticketing-dashboard" },
     {
       label: "Request List",
-      href: "/dashboard-ticketing-request-list",
+      href: "/ticketing-dashboard/requestList",
     },
     {
       label: "Reports",
@@ -20,7 +20,7 @@ const TicketingNavbar = () => {
   ];
 
   return (
-    <nav className="w-full border-y border-[#1e293b] bg-[#0d121f] px-4">
+    <nav className="w-full border-y border-[#1e293b] bg-[#0d121f] px-4 sticky top-0 z-20">
       <div className="flex h-[55px] items-center justify-between">
         {/* Left Section */}
         <div className="flex items-center gap-6">
@@ -32,7 +32,7 @@ const TicketingNavbar = () => {
           {/* Navigation Links */}
           <div className="flex h-full items-center gap-5">
             {navItems.map((item) => {
-              const isActive = location.pathname.includes(item.href);
+              const isActive = location.pathname == item.href;
 
               return (
                 <a

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Filter, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const tabs = ["Events", "Individuals"];
 
@@ -93,9 +94,9 @@ const TicketingUpcommingTable = () => {
               </td>
 
               <td className="px-2 py-2 text-center">
-                <button className="text-[#aab3c3] hover:text-white">
+                <Link to={`/ticketing-dashboard/event-request/123`} className="text-[#aab3c3] hover:text-white">
                   <ArrowUpRight size={18} />
-                </button>
+                </Link>
               </td>
             </tr>
           </tbody>

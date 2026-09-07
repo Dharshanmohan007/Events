@@ -19,7 +19,7 @@ async function loginApi(email, password) {
   // );
   const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`, {
     method: "POST",
-    headers: {
+    headers: { 
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
