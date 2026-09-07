@@ -266,7 +266,7 @@ let decodedToken = jwtDecode(token);
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
     if (isFileLike) {
-    fd.append("principalApprovalForm", eventRequisition.principalApprovalDocument);
+    fd.append("principalApprovalDocument", eventRequisition.principalApprovalDocument);
   }
   return fd;
 };
@@ -996,7 +996,7 @@ function hydrateEventData(apiData) {
     expectedEventOutcome: od.ExpectedEventOutcome || "",
     department: od.organizingDepartment || "",
     file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
-    principalApprovalDocument: od.principalApprovalDocument || apiData.principalApprovalForm || apiData.principalApprovalDocument || null,
+    principalApprovalDocument: od.principalApprovalDocument || apiData.principalApprovalDocument || apiData.principalApprovalDocument || null,
     numOrganizers: String(od.organizerCount ?? od.totalCoOrganizers ?? od.coOrganizerCount ?? 0),
     organizers: (od.organizers || []).map((o) => ({
       name: o.name || "",
