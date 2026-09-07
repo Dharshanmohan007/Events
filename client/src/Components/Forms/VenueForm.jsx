@@ -15,12 +15,25 @@ const HALL_REQUIREMENTS = [
 const ErrorMsg = ({ msg }) =>
   msg ? <p className="text-red-400 text-xs mt-1">{msg}</p> : null;
 
-function validateVenueCard(card) {
+function validateVenueCard(card, options = []) {
   const e = {};
   if (!card.participants || parseInt(card.participants) < 1)
     e.participants = "Number of participants is required";
   if (!card.seatingCapacity || parseInt(card.seatingCapacity) < 1)
     e.seatingCapacity = "Seating capacity is required";
+
+  const venueObj = options.find((v) => v.venue === card.venueName);
+  const venueCapacity = venueObj?.capacity || 0;
+
+  if (venueCapacity > 0) {
+    if (parseInt(card.participants) > venueCapacity) {
+      e.participants = `${card.venueName} has only ${venueCapacity} seat capacity. Max ${venueCapacity} participants allowed.`;
+    }
+    if (parseInt(card.seatingCapacity) > venueCapacity) {
+      e.seatingCapacity = `${card.venueName} has only ${venueCapacity} seat capacity. Seating capacity required cannot exceed ${venueCapacity}.`;
+    }
+  }
+
   if (!card.hallReqs || card.hallReqs.length === 0)
     e.hallReqs = "Select at least one hall requirement";
   if (card.hallReqs?.includes("Guest Chair") && (!card.guestChairs || parseInt(card.guestChairs) < 1))
@@ -57,15 +70,32 @@ function validateDay(dayData, options = []) {
     e.participants = "Total number of participants is required";
   if (!dayData.selectedVenues || dayData.selectedVenues.length === 0)
     e.selectedVenues = "Please select at least one venue";
+  
+  const totalParticipants = parseInt(dayData.participants) || 0;
+
   const tooManyVenuesError = getTooManyVenuesError(
     dayData.selectedVenues,
     options,
-    parseInt(dayData.participants) || 0
+    totalParticipants
   );
   if (tooManyVenuesError) e.selectedVenues = tooManyVenuesError;
+
+  if (dayData.selectedVenues?.length > 0 && totalParticipants > 0) {
+    const totalSelectedCapacity = dayData.selectedVenues.reduce((sum, venueName) => {
+      const venueObj = options.find((v) => v.venue === venueName);
+      if (!venueObj || venueObj.capacity === 0) return Number.MAX_SAFE_INTEGER;
+      return sum + venueObj.capacity;
+    }, 0);
+
+    if (totalSelectedCapacity !== Number.MAX_SAFE_INTEGER && totalSelectedCapacity < totalParticipants) {
+      const insufficientError = `Selected venues have only ${totalSelectedCapacity} seats. Please select more venue(s) for ${totalParticipants} participants.`;
+      e.selectedVenues = e.selectedVenues ? `${e.selectedVenues} ${insufficientError}` : insufficientError;
+    }
+  }
+
   if (dayData.selectedVenues?.length > 0) {
     const cards = dayData.venueCards || [];
-    const cardErrors = cards.map((card) => validateVenueCard(card));
+    const cardErrors = cards.map((card) => validateVenueCard(card, options));
     if (cardErrors.some((ce) => Object.keys(ce).length > 0))
       e.venueCards = cardErrors;
   }
@@ -847,6 +877,9 @@ export default function VenueForm({
     eventId,
     nextStep,
     prevStep,
+    venueAvailability,
+    checkingVenueAvailability,
+    venuesList,
   };
 
   useEffect(() => {
@@ -1039,13 +1072,26 @@ export default function VenueForm({
   };
 
   const handleNext = useCallback(async () => {
-    const { venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep } =
+    const { venueData, currentDayIndex, completedDays, isLastDay, eventId, nextStep, venueAvailability, checkingVenueAvailability, venuesList: currentVenuesList } =
       stateRef.current;
+
+    if (checkingVenueAvailability) {
+      setApiError("Please wait, checking venue availability...");
+      return;
+    }
+
+    if (venueAvailability?.status === "NOT_AVAILABLE") {
+      setApiError("Please choose another venue, this venue is already booked.");
+      return;
+    }
+
     const dayData   = venueData[currentDayIndex];
-    const dayErrors = validateDay(dayData, venuesList);
+    const dayErrors = validateDay(dayData, currentVenuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
+
+    setApiError("");
 
     const newCompleted = completedDays.includes(currentDayIndex)
       ? completedDays
@@ -1134,6 +1180,95 @@ export default function VenueForm({
           completedDays={completedDays}
         />
 
+        {/* Venue Availability Status */}
+        {checkingVenueAvailability && (
+          <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-blue-300 text-sm">
+            Checking venue availability...
+          </div>
+        )}
+
+        {venueAvailability && venueAvailability.status === "AVAILABLE" && (
+          <div className="rounded-lg border border-green-500/40 bg-green-500/10 px-5 py-4 flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-green-400 flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <p className="text-green-300 font-semibold">
+              {venueAvailability.message || "All selected venues are available."}
+            </p>
+          </div>
+        )}
+
+        {venueAvailability &&
+          venueAvailability.status === "NOT_AVAILABLE" &&
+          venueAvailability.data?.unavailable &&
+          venueAvailability.data.unavailable.length > 0 && (
+            <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-5 py-4 flex flex-col gap-4">
+              {/* Icon + Message */}
+              <div className="flex items-center gap-2">
+                <svg
+                  className="w-5 h-5 text-red-400 flex-shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+
+                <div className="flex flex-col">
+                  <p className="text-red-300 font-semibold">
+                    {venueAvailability.message}
+                  </p>
+                  <p className="text-red-400 text-xs mt-1">
+                    Please choose another venue, this venue was already booked.
+                  </p>
+                </div>
+              </div>
+
+              {/* Booked Venues */}
+              <div className="flex flex-col gap-3 ml-7">
+                {venueAvailability.data.unavailable.map((venue, index) => (
+                  <div
+                    key={index}
+                    className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm"
+                  >
+                    <p className="font-semibold text-white whitespace-nowrap">
+                      {venue.venueName}
+                    </p>
+
+                    <p className="text-gray-300 whitespace-nowrap">
+                      <span className="text-gray-400">Status :</span>{" "}
+                      <span className="text-red-400 font-medium">{venue.status}</span>
+                    </p>
+
+                    <p className="text-gray-300 whitespace-nowrap">
+                      <span className="text-gray-400">Booked for :</span>{" "}
+                      {venue.eventName}
+                    </p>
+
+                    <p className="text-gray-300 whitespace-nowrap">
+                      <span className="text-gray-400">Date :</span>{" "}
+                      {venue.date}
+                    </p>
+
+                    <p className="text-gray-300 whitespace-nowrap">
+                      <span className="text-gray-400">Time :</span>{" "}
+                      {venue.startTime} - {venue.endTime}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+        )}
+
         <h2 className="text-white text-lg font-bold">
           Venue Details
         </h2>
@@ -1162,65 +1297,6 @@ export default function VenueForm({
               )}
             </div>
           </div>
-        )}
-        {/* Venue Availability Status */}
-
-        {checkingVenueAvailability && (
-          <div className="rounded-lg border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-blue-300 text-sm">
-            Checking venue availability...
-          </div>
-        )}
-
-        {venueAvailability &&
-          venueAvailability.unavailableVenues &&
-          venueAvailability.unavailableVenues.length > 0 && (
-            <div className="rounded-lg border border-red-500/40 bg-red-500/10 px-5 py-4 flex items-center gap-6 flex-wrap">
-
-              {/* Icon + Message */}
-              <div className="flex items-center gap-2 whitespace-nowrap">
-                <svg
-                  className="w-5 h-5 text-red-400 flex-shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
-
-                <p className="text-red-300 font-semibold">
-                  {venueAvailability.message}
-                </p>
-              </div>
-
-              {/* Booked Venues */}
-              {venueAvailability.unavailableVenues.map((venue, index) => (
-                <div
-                  key={index}
-                  className="flex items-center gap-8 text-sm"
-                >
-                  <p className="font-semibold text-white whitespace-nowrap">
-                    {venue.venueName}
-                  </p>
-
-                  {/* <p className="text-gray-300 whitespace-nowrap">
-                    <span className="text-gray-400">Booked Event :</span>{" "}
-                    {venue.eventName}
-                  </p>
-                  <p>
-                    <span className="text-gray-400">Date :</span>{" "}
-                    {venue.date}
-                  </p>
-
-                  <p>
-                    <span className="text-gray-400">Time :</span>{" "}
-                    {venue.startTime} - {venue.endTime}
-                  </p> */}
-                </div>
-              ))}
-            </div>
         )}
 
         <CustomInput
