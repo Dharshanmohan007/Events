@@ -62,40 +62,49 @@ function buildEventTemplate(event = {}) {
     .join("");
 
   const venueRows = (venueDetails?.venues || [])
-    .map(
-      (v) => `
+    .map((v) => {
+      const dayIdx = v?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(v?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${v?.venueName || '-'}</td>
         <td>${v?.numberOfParticipants || '-'}</td>
         <td>${v?.seatingCapacity || '-'}</td>
         <td>${(v?.hallRequirements || []).map((h) => `${h?.type} (${h?.quantity})`).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   const ictsRows = (ictsDetails?.ictses || [])
-    .map(
-      (i) => `
+    .map((i) => {
+      const dayIdx = i?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(i?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${i?.venueName || '-'}</td>
         <td>${(i?.desktopLaptop || []).map((d) => `${d?.type}: ${d?.count}`).join(", ") || '-'}</td>
         <td>${i?.internetFacility || '-'}</td>
         <td>${(i?.requirements || []).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   const audioRows = (audioDetails?.audios || [])
-    .map(
-      (a) => `
+    .map((a) => {
+      const dayIdx = a?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(a?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${a?.venueName || '-'}</td>
         <td>${(a?.audioItems || []).map((it) => `${it?.type} (${it?.quantity})`).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
     
   const mediaRows = (reqFlags?.mediaRequirementDetails?.mediaRequirements || [])
@@ -264,7 +273,7 @@ function buildEventTemplate(event = {}) {
 
   const ictsSection = (reqFlags.ictsRequired && ictsRows) ? `
     <div class="section">
-      <h2>ICT Requirements</h2>
+      <h2>ICTS Requirements</h2>
       <table>
         <thead>
           <tr><th>Day</th><th>Venue</th><th>Devices</th><th>Internet</th><th>Requirements</th></tr>
