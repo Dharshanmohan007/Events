@@ -20,7 +20,7 @@ const EventRequestDetails = () => {
   const navigate = useNavigate();
   const [detailData, setDetailData] = useState(null);
   const [isApproving, setIsApproving] = useState(false);
-  const expenditureId = detailData?.expenditure?._id || requestId;
+  const expenditureId = detailData?.expenditure?._id || "6a9552ebf8a412f5ec3babdb";
 
   const goToEditForm = () => {
     if (!requestId) return;
@@ -138,16 +138,11 @@ const EventRequestDetails = () => {
             if (!response.ok) continue;
 
             const payload = await response.json();
-            const candidates = [
-              payload,
-              payload?.data,
-              payload?.result,
-              payload?.data?.data,
-              payload?.data?.result,
-            ];
-            const normalized = candidates
-              .map((candidate) => Array.isArray(candidate) ? candidate[0] : candidate)
-              .find((candidate) => candidate && typeof candidate === "object" && Object.keys(candidate).length) || {};
+            const normalized =
+              Array.isArray(payload) ? payload[0] :
+              payload?.data && typeof payload.data === "object" ? payload.data :
+              payload?.result && typeof payload.result === "object" ? payload.result :
+              payload || {};
 
             if (normalized && Object.keys(normalized).length) {
               loadedData = normalized;
