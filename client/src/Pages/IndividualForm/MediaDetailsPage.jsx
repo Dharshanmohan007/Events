@@ -1094,6 +1094,7 @@ const [trophyContent, setTrophyContent] = useState("");
         </div>
       )}
  
+      {financeRequired === "Yes" && (
       <div className="mb-8">
         <label className="block mb-2 text-sm text-white">
           Principal Approval Form (without uploading this document you cannot proceed further)
@@ -1228,6 +1229,7 @@ const [trophyContent, setTrophyContent] = useState("");
           <p className="text-red-400 text-xs mt-1">{principalFileError}</p>
         )}
       </div>
+      )}
 
       {/* TYPE DROPDOWN */}
       <div className="relative mb-8">

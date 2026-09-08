@@ -3,8 +3,9 @@ import { ChevronRight, Shield, Clock, CheckCircle2, XCircle } from "lucide-react
 import { Link, useParams } from "react-router-dom";
 import DashboardHeader from "../ICTC-Dashboard/DashboardHeader";
 import FacultyTransportationDetailsPanel from "../Faculty-Dashboard/FacultyTransportationDetailsPanel";
+import { API_BASE } from "../../../utils/apiConfig";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = API_BASE;
 
 const getStatusClassName = (status) => {
   if (!status || status === "-") return "bg-[#0e5149]/55 text-[#20D18C]";
@@ -64,6 +65,26 @@ const InfoItem = memo(({ label, value, span = 1 }) => (
     </span>
   </div>
 ));
+
+const TicketDetailsSection = memo(({ ticket }) => {
+  if (!ticket || !ticket.travelOption) return null;
+  return (
+    <div className="mt-6 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+      <h3 className="mb-4 text-base font-semibold text-white">Ticket Details</h3>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <InfoItem label="Travel Option" value={ticket.travelOption} />
+        <InfoItem label="Travel Date" value={formatDateTime(ticket.travelDate)} />
+        <InfoItem label="From" value={ticket.from} />
+        <InfoItem label="To" value={ticket.to} />
+        <InfoItem label="Train Number" value={ticket.trainNumber} />
+        <InfoItem label="Flight Number" value={ticket.flightNumber} />
+        <InfoItem label="Travel Class" value={ticket.travelClass} />
+        <InfoItem label="Passengers" value={ticket.numberOfPassengers} />
+        <InfoItem label="Special Requirements" value={ticket.specialRequirements} />
+      </div>
+    </div>
+  );
+});
 
 const EmployeeDetailsSection = memo(({ employee }) => {
   if (!employee?.name) return null;
@@ -248,6 +269,7 @@ const TransportIndividualDetailViewPage = () => {
   const [submission, setSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -257,7 +279,7 @@ const TransportIndividualDetailViewPage = () => {
       try {
         const token = localStorage.getItem("token");
         const res = await fetch(
-          `${API_BASE_URL}/api/individual-submissions/getrequest/${id}`,
+          `${API_BASE_URL}/api/individual-ticketing/superadmin`,
           { headers: token ? { Authorization: `Bearer ${token}` } : {} },
         );
         if (!res.ok) throw new Error("Failed to fetch transport submission");
@@ -267,9 +289,10 @@ const TransportIndividualDetailViewPage = () => {
             response.message || "Failed to fetch transport submission",
           );
         if (isMounted) {
-          const data = Array.isArray(response.data)
-            ? response.data[0]
-            : response.data;
+          const records = Array.isArray(response.data)
+            ? response.data
+            : response.data?.tickets || response.tickets || [];
+          const data = records.find((item) => (item._id || item.id) === id);
           setSubmission(data || null);
         }
       } catch (err) {
@@ -285,7 +308,33 @@ const TransportIndividualDetailViewPage = () => {
     };
   }, [id]);
 
-  const innerData = submission?.data || {};
+  const runApprovalAction = async (action) => {
+    const reason = action === "reject" ? window.prompt("Enter rejection reason") : "";
+    if (action === "reject" && !reason?.trim()) return;
+    setActionLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`${API_BASE_URL}/api/individual-ticketing/${id}/${action}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        ...(action === "reject" ? { body: JSON.stringify({ reason: reason.trim() }) } : {}),
+      });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok || result.success === false) {
+        throw new Error(result.message || `Failed to ${action} request`);
+      }
+      window.location.reload();
+    } catch (err) {
+      setError(err.message || `Failed to ${action} request`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const innerData = submission?.data || submission || {};
   const employee = innerData.employee || {};
   const status = submission?.status || innerData.overallStatus || "-";
 
@@ -363,7 +412,29 @@ const TransportIndividualDetailViewPage = () => {
                   )}
                 </div>
 
+                {String(status).toLowerCase() === "pending" && (
+                  <div className="mt-4 flex justify-end gap-3">
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => runApprovalAction("reject")}
+                      className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      type="button"
+                      disabled={actionLoading}
+                      onClick={() => runApprovalAction("approve")}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                )}
+
                 <EmployeeDetailsSection employee={employee} />
+                <TicketDetailsSection ticket={innerData} />
 
                 <div className="mt-8">
                   <FacultyTransportationDetailsPanel

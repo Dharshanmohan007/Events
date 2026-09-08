@@ -62,40 +62,49 @@ function buildEventTemplate(event = {}) {
     .join("");
 
   const venueRows = (venueDetails?.venues || [])
-    .map(
-      (v) => `
+    .map((v) => {
+      const dayIdx = v?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(v?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${v?.venueName || '-'}</td>
         <td>${v?.numberOfParticipants || '-'}</td>
         <td>${v?.seatingCapacity || '-'}</td>
         <td>${(v?.hallRequirements || []).map((h) => `${h?.type} (${h?.quantity})`).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   const ictsRows = (ictsDetails?.ictses || [])
-    .map(
-      (i) => `
+    .map((i) => {
+      const dayIdx = i?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(i?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${i?.venueName || '-'}</td>
         <td>${(i?.desktopLaptop || []).map((d) => `${d?.type}: ${d?.count}`).join(", ") || '-'}</td>
         <td>${i?.internetFacility || '-'}</td>
         <td>${(i?.requirements || []).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
 
   const audioRows = (audioDetails?.audios || [])
-    .map(
-      (a) => `
+    .map((a) => {
+      const dayIdx = a?.dayIndex || 0;
+      const dayDate = formatDate((eventDetails?.eventSchedule || [])[dayIdx]?.eventDate);
+      const dayLabel = dayDate && dayDate !== '-' ? `Day ${dayIdx + 1} (${dayDate})` : `Day ${dayIdx + 1}`;
+      return `
       <tr>
-        <td>Day ${(a?.dayIndex || 0) + 1}</td>
+        <td>${dayLabel}</td>
         <td>${a?.venueName || '-'}</td>
         <td>${(a?.audioItems || []).map((it) => `${it?.type} (${it?.quantity})`).join(", ") || '-'}</td>
-      </tr>`
-    )
+      </tr>`;
+    })
     .join("");
     
   const mediaRows = (reqFlags?.mediaRequirementDetails?.mediaRequirements || [])
@@ -134,13 +143,28 @@ function buildEventTemplate(event = {}) {
 
   const accommRows = (event?.accommodationDetails?.accommodations || [])
     .map((a) => {
-      const guests = (a.guests || []).map(g => `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`).join('<br/>');
+      // Deduplicate guests by _id (fall back to name) to prevent rendering duplicates
+      const seenGuests = new Set();
+      const uniqueGuests = (a.guests || []).filter(g => {
+        const key = g._id || g.name;
+        if (seenGuests.has(key)) return false;
+        seenGuests.add(key);
+        return true;
+      });
+      const guests = uniqueGuests.map(g =>
+        `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
+      ).join('<br/>');
+
       const dineInCounts = (a.dineInCounts || []).map(d => `${d.type}: ${d.count}`).join(', ');
-      // roomSelections — defensive generic rendering for any keys present
+
+      // Clean human-readable room selections — only show relevant fields
       const roomSel = (a.roomSelections || []);
       const roomHtml = roomSel.length
-        ? roomSel.map(rs => Object.entries(rs).filter(([k]) => k !== '_id').map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(', ')).join('<br/>')
+        ? roomSel.map(rs =>
+            `Room ${rs.roomNumber || '-'} - ${rs.venue || '-'} (Occupants: ${rs.occupantCount ?? '-'})`
+          ).join('<br/>')
         : '-';
+
       const staff = (a.accompanyingStaff || []).map(s => s.name).join(', ');
       return `
       <tr>
@@ -249,7 +273,7 @@ function buildEventTemplate(event = {}) {
 
   const ictsSection = (reqFlags.ictsRequired && ictsRows) ? `
     <div class="section">
-      <h2>ICT Requirements</h2>
+      <h2>ICTS Requirements</h2>
       <table>
         <thead>
           <tr><th>Day</th><th>Venue</th><th>Devices</th><th>Internet</th><th>Requirements</th></tr>

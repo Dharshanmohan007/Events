@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`;
+// const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 
 const formatDate = (dateValue) => {
@@ -42,6 +43,7 @@ const normalizeIndividualRequest = (request) => ({
   eventType: request.formType || "-",
   date: request.createdAt ? formatDate(request.createdAt) : "-",
   status: typeof request.status === "string" ? request.status : "-",
+  superAdminStatus : request.superAdminApproval.status
 });
 
 const getStatusColor = (status = "") => {
@@ -170,6 +172,8 @@ const AdminUpcomingEventsTable = ({
             (responseData.data || []).map(normalizeIndividualRequest),
           );
         }
+        console.log("individual response : ", responseData)
+        console.log("Indiviudal data fetched in admin and the endpoint is used", responseData)
       })
       .catch((error) => {
         console.warn(error.message);
@@ -337,6 +341,8 @@ const AdminUpcomingEventsTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
+                        {console.log("admin individual status  : ", row)}
+                        {/* <StatusBadge status={row.status} /> */}
                         <StatusBadge status={row.status} />
                       </td>
                       <td className="px-6 py-4">
