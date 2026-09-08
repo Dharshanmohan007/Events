@@ -283,7 +283,7 @@ const TicketingEventDetailView = () => {
               {/* Types of Vehicle Needed */}
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Type of Vehicle 
+                  Type of Vehicle
                 </span>
 
                 <span className="text-[15px] font-bold text-[#f1eee9]">
@@ -309,7 +309,9 @@ const TicketingEventDetailView = () => {
                   Travel Class
                 </span>
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">Economy</span>
+                <span className="text-[15px] font-bold text-[#f1eee9]">
+                  Economy
+                </span>
               </div>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Filter, ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
@@ -21,8 +22,10 @@ const TicketingUpcommingTable = () => {
   // function to fetch transport event data from the api
   const fetchEventTicketingData = () => {
     const token = localStorage.getItem("token");
+    const decoded = jwtDecode(token);
+    const dept = decoded.department;
 
-    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=transport`, {
+    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=${dept}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -160,7 +163,10 @@ const TicketingUpcommingTable = () => {
                 </td>
 
                 <td className="px-2 py-2 text-center">
-                  <Link to={`/ticketing-dashboard/event-request/123`} className="text-[#aab3c3] hover:text-white">
+                  <Link
+                    to={`/ticketing-dashboard/event-request/123`}
+                    className="text-[#aab3c3] hover:text-white"
+                  >
                     <ArrowUpRight size={18} />
                   </Link>
                 </td>
