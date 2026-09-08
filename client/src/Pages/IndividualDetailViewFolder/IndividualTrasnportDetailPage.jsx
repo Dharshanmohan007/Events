@@ -186,14 +186,18 @@ const IndividualTrasnportDetailPage = ({ data }) => {
     });
   };
 
-  const time = (dateTime) => {
-    if (!dateTime) return "-";
-    return new Date(dateTime).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+const time = (dateTime) => {
+  if (!dateTime) return "-";
+
+  const timeValue = dateTime.split("T")[1].split(".")[0];
+  const [hours, minutes] = timeValue.split(":");
+
+  const hour = Number(hours);
+  const period = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+
+  return `${String(formattedHour).padStart(2, "0")}:${minutes} ${period}`;
+};
 
   const car = data?.data?.vehicles?.find((item) => item.type == "Car");
 

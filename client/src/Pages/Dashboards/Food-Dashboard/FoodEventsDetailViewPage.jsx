@@ -55,7 +55,11 @@ const FoodEventsDetailViewPage = () => {
         const eventDetails = eventData.requestDetails?.eventDetails || {};
         setEventName(eventDetails.eventName || "Event Details");
         setEventSchedule(eventDetails.eventSchedule || []);
-        setOrganizingDepartment(eventDetails.organizingDepartment || "");
+        setOrganizingDepartment(
+          eventDetails.organizingDepartment ||
+            eventData.requestDetails?.organizerDetails?.organizingDepartment ||
+            "",
+        );
 
         const foodStatus = eventData.refreshmentDetails.status?.status;
         if (foodStatus) {
