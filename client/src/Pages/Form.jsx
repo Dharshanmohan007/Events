@@ -857,6 +857,56 @@ const formatExternalTransportPayload = (externalTransportData) => {
   });
 };
 
+const buildRefreshmentPayload = (foodData = []) => ({
+  refreshments: (Array.isArray(foodData) ? foodData : []).map((form) => ({
+    date: form.date ? new Date(form.date).toISOString() : "",
+    resourcePersonType: form.resourcePersonType || [],
+    numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
+    numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
+    accompanyingStaff: (form.staffList || []).map((staff) => ({
+      name: staff.name || "",
+      mobile: parseInt(staff.mobile) || 0,
+    })),
+    foodTypes: (form.foodTypes || []).map((type) => {
+      if (type === "Morning Refreshment" || type === "Evening Refreshment") {
+        const isMorning = type === "Morning Refreshment";
+        const venues = isMorning ? form.morningRefreshmentVenues : form.eveningRefreshmentVenues;
+        const count = isMorning ? form.morningRefreshmentCount : form.eveningRefreshmentCount;
+        return {
+          type,
+          refreshmentCount: parseInt(count) || 0,
+          venueWiseDetails: (venues || []).map((venue) => ({
+            venueName: venue.venue || "",
+            count: parseInt(venue.count) || 0,
+          })),
+        };
+      }
+
+      const meal = form[type.toLowerCase()] || {};
+      const payload = {
+        type,
+        participants: { vegCount: 0, nonVegCount: 0 },
+        vipGuests: { vegCount: 0, nonVegCount: 0 },
+        trainer: { vegCount: 0, nonVegCount: 0 },
+        placement: { vegCount: 0, nonVegCount: 0 },
+      };
+      const sections = ["participants"];
+      if (form.resourcePersonType?.includes("VIP")) sections.push("vipGuests");
+      if (form.resourcePersonType?.includes("Trainer")) sections.push("trainer");
+      if (form.resourcePersonType?.includes("Placement")) sections.push("placement");
+      sections.forEach((section) => {
+        const values = meal[section] || {};
+        payload[section] = {
+          vegCount: parseInt(values.vegCount) || 0,
+          nonVegCount: parseInt(values.nonVegCount) || 0,
+        };
+      });
+      return payload;
+    }),
+    specialRequirements: form.specialRequirements || "",
+  })),
+});
+
 const buildPayloadForSection = (sectionKey, data, eventDays = [], formData = {}) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
@@ -866,7 +916,7 @@ const buildPayloadForSection = (sectionKey, data, eventDays = [], formData = {})
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
     case "externalTransport":   return { externalTransportDetails: { externalTransports: formatExternalTransportPayload(data) } };
-    case "foodandrefreshments": return { foodDetails: data };
+    case "foodandrefreshments": return { refreshmentDetails: buildRefreshmentPayload(data) };
     case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
   }
@@ -921,7 +971,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     externalTransportDetails: {
       externalTransports: formatExternalTransportPayload(formData.externalTransport),
     },
-    foodDetails:         formData.foodandrefreshments,
+    refreshmentDetails:  buildRefreshmentPayload(formData.foodandrefreshments),
     accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
 };
