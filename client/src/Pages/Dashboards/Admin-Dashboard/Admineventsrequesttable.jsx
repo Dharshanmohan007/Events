@@ -6,7 +6,7 @@ import ThemedDatePicker from "../../../Components/ThemedDatePicker";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`;
-const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-ticketing/superadmin`;
+const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
