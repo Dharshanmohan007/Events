@@ -5,8 +5,9 @@ import UpcomingEventsTable from '../../../Components/UpcomingEventsTable'
 import DepartmentRequestChart from '../../../Components/DepartmentRequestChart'
 import FeedbackRatings from '../../../Components/FeedbackRatings'
 import { useDepartmentFeedback, useIndividualFeedback } from '../../../api/feedbackApi'
+import { API_BASE } from '../../../utils/apiConfig'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = API_BASE
 
 const formatDate = (dateStr) => {
   if (!dateStr) return '-'
@@ -27,16 +28,15 @@ const transformTransportData = (apiData) =>
 
 const transformIndividualData = (apiData) =>
     apiData.map((item) => {
-        console.log("tp data : ", item.data.employee)
-        const transport = item.data?.transports?.[0]
-        const dateField = transport?.pickupDateTime || transport?.requiredDate || item.createdAt
+        const record = item.data || item
+        const dateField = record.travelDate || item.createdAt
         return {
             requiredDate: formatDate(dateField),
-            organizerName: item.data?.employee?.firstName || item.employee || '-',
-            department: item.employeeDetail?.department || '-',
-            organizerPhone: item.employeeDetail?.phone ? String(item.employeeDetail.phone) : '-',
-            acknowledgeStatus: item.data?.overallStatus || item.status || '-',
-            eventId: item.id || item.data?._id,
+            organizerName: record.faculty?.name || record.employee?.name || item.employee || '-',
+            department: record.faculty?.department || item.employeeDetail?.department || '-',
+            organizerPhone: record.faculty?.phone || item.employeeDetail?.phone || '-',
+            acknowledgeStatus: record.status || item.status || '-',
+            eventId: record._id || item._id || item.id,
         }
     })
 
@@ -55,7 +55,7 @@ const TransportsDashboard = () => {
 
                 const [eventsRes, individualsRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/api/table/dashboard-table?module=transport`, { headers }),
-                    fetch(`${API_BASE_URL}/api/individual-submissions/getrequest?module=transport`, { headers }),
+                    fetch(`${API_BASE_URL}/api/individual-ticketing/superadmin`, { headers }),
                 ])
 
                 if (eventsRes.ok) {
@@ -67,8 +67,9 @@ const TransportsDashboard = () => {
 
                 if (individualsRes.ok) {
                     const json = await individualsRes.json()
-                    if (json.data && Array.isArray(json.data)) {
-                        setIndividualEvents(transformIndividualData(json.data))
+                    const records = Array.isArray(json.data) ? json.data : json.data?.tickets || json.tickets || []
+                    if (records.length) {
+                        setIndividualEvents(transformIndividualData(records))
                     }
                 }
             } catch (err) {
