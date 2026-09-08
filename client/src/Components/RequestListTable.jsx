@@ -68,12 +68,21 @@ const normalizeEventRequest = (event) => ({
   rawEventId: event.eventId || event.id,
 });
 
+const getEmployeeDisplayName = (employee) =>
+  employee
+    ? `${employee.salutation || ""} ${employee.firstName || employee.name || ""} ${employee.lastName || ""}`
+        .trim()
+        .replace(/\s+/g, " ")
+    : "";
+
 const normalizeIndividualRequest = (request) => {
   const emp = request.data?.employee;
   return {
     id: request.id,
     employee: safeString(
-      request.employee || request.employeeDetail?.name || emp?.name,
+      request.employee ||
+        getEmployeeDisplayName(request.employeeDetail) ||
+        getEmployeeDisplayName(emp),
     ),
     employeeEmail: safeString(request.employeeEmail || emp?.email),
     formType: safeString(request.formType),
@@ -284,6 +293,7 @@ const IndividualRequestTable = ({ rows, individualDetailViewPath }) => (
             key={row.id || index}
             className="border-t border-[#20283a] text-sm text-white align-top"
           >
+            
             <td className="px-6 py-4 whitespace-nowrap">{row.createdAt}</td>
             <td className="px-6 py-4 font-medium whitespace-nowrap">
               <div className="max-w-34 truncate" title={row.employee}>
