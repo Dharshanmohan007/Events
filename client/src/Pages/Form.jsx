@@ -375,11 +375,13 @@ const validateIctsData = (ictsData, venueData) => {
   return errors;
 };
 
-const buildIctsPayload = (ictsData) => {
+const buildIctsPayload = (ictsData, venueData) => {
   const ictses = [];
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
+    const selectedVenuesForDay = venueData?.[dayIndex]?.selectedVenues || [];
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      if (!selectedVenuesForDay.includes(venueName)) return;
       const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
@@ -855,10 +857,10 @@ const formatExternalTransportPayload = (externalTransportData) => {
   });
 };
 
-const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
+const buildPayloadForSection = (sectionKey, data, eventDays = [], formData = {}) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
-    case "icts":                return { ictsDetails: buildIctsPayload(data) };
+    case "icts":                return { ictsDetails: buildIctsPayload(data, formData.venue) };
     case "purchase":            return { purchaseDetails: buildPurchasePayload(data) };
     case "media":               return buildMediaPayload(data);
     case "audio":               return { audioDetails: data };
@@ -889,7 +891,7 @@ const validateSection = (sectionKey, data, extras = {}) => {
 const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
   const media    = buildMediaPayload(formData.media);
   const venue    = buildVenuePayload(formData.venue);
-  const icts     = buildIctsPayload(formData.icts);
+  const icts     = buildIctsPayload(formData.icts, formData.venue);
   const purchase = buildPurchasePayload(formData.purchase);
   return {
     organizerDetails: {
@@ -1604,7 +1606,7 @@ export default function Form() {
           body: sectionValueOrFormData,
         });
       } else {
-        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays);
+        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays, formDataRef.current);
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
