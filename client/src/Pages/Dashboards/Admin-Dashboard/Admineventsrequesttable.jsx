@@ -21,6 +21,9 @@ const formatDate = (dateValue) => {
   });
 };
 
+
+
+console.log("api bug fixed in individual admin module get api")
 const toDateKey = (dateValue) => {
   if (!dateValue) return "";
 
