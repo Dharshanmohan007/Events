@@ -1772,11 +1772,12 @@ export default function Form() {
   // ── registerChildNavigation ───────────────────────────────────────────────
   const registerChildNavigation = useCallback((nav = {}) => {
     setChildNav({
-      next:         nav.next         || null,
-      prev:         nav.prev         || null,
-      isLoading:    nav.isLoading    || false,
-      isOnLastDay:  nav.isOnLastDay  !== undefined ? nav.isOnLastDay  : true,
-      nextDayLabel: nav.nextDayLabel || "Save & Next",
+      next:           nav.next           || null,
+      prev:           nav.prev           || null,
+      isLoading:      nav.isLoading      || false,
+      isNextDisabled: nav.isNextDisabled || false,
+      isOnLastDay:    nav.isOnLastDay    !== undefined ? nav.isOnLastDay  : true,
+      nextDayLabel:   nav.nextDayLabel   || "Save & Next",
     });
   }, []);
 
@@ -2004,7 +2005,7 @@ export default function Form() {
             {showSubmit ? (
               <button
                   onClick={handlePreview}
-                  disabled={!eventId || isLoading || childNav.isLoading}
+                  disabled={!eventId || isLoading || childNav.isLoading || childNav.isNextDisabled}
                   className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                   {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
@@ -2012,7 +2013,7 @@ export default function Form() {
           ) : (
               <button
                   onClick={handleSaveAndContinue}
-                  disabled={isLoading || childNav.isLoading}
+                  disabled={isLoading || childNav.isLoading || childNav.isNextDisabled}
                   className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                   {forwardLabel()}
