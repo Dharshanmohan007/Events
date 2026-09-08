@@ -283,33 +283,33 @@ const TicketingEventDetailView = () => {
               {/* Types of Vehicle Needed */}
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Types of Vehicle needed
+                  Type of Vehicle 
                 </span>
 
                 <span className="text-[15px] font-bold text-[#f1eee9]">
-                  Car
+                  Train
                 </span>
               </div>
             </div>
 
             {/* Second Row */}
-            <div className="mt-1 grid grid-cols-2 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
-              {/* Total Bus Needed */}
-              <div className="flex items-center justify-between border-r border-[#46536a] px-3 py-3">
+            <div className="mt-1 grid grid-cols-1 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
+              {/* Train class  */}
+              <div className="flex items-center justify-between border-b border-[#46536a] px-3 py-3">
                 <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Total bus needed
+                  Train Coach Class
                 </span>
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">0</span>
+                <span className="text-[15px] font-bold text-[#f1eee9]">AC</span>
               </div>
 
-              {/* Total Car Needed */}
+              {/*  Flight class */}
               <div className="flex items-center justify-between px-3 py-3">
                 <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Total car needed
+                  Travel Class
                 </span>
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">1</span>
+                <span className="text-[15px] font-bold text-[#f1eee9]">Economy</span>
               </div>
             </div>
           </div>

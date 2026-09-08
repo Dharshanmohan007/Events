@@ -14,6 +14,7 @@ export const DEPARTMENT_ROUTES = {
   poster:        "/dashboard-poster",
   food:          "/dashboard-food",
   video:         "/dashboard-video",
+  externaltransport: "/ticketing-dashboard",
 };
 
 // Role → dashboard route (for non-head roles)
