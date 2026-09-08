@@ -9,7 +9,7 @@ const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-ticketing/superad
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
-
+ 
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return dateValue;
 
