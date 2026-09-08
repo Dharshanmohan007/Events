@@ -966,9 +966,56 @@ export default function VenueForm({
   };
 
   useEffect(() => {
-    if (onVenueDataChange) onVenueDataChange(venueData);
+    if (!onVenueDataChange) return;
+    // Convert internal _id-based selectedVenues back to venue name strings
+    // so that downstream forms (ICTS, Audio, etc.) receive human-readable names.
+    if (venuesList.length === 0) {
+      onVenueDataChange(venueData);
+      return;
+    }
+    const resolved = venueData.map((day) => ({
+      ...day,
+      selectedVenues: (day.selectedVenues || []).map((entry) => {
+        const match = venuesList.find((v) => v.id === entry);
+        return match ? match.venue : entry; // fallback to raw value if no match
+      }),
+    }));
+    onVenueDataChange(resolved);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venueData]);
+  }, [venueData, venuesList]);
+
+  // Resolve name-based selectedVenues (from draft hydration) to _id values
+  // once the venues list has loaded from the API.
+  useEffect(() => {
+    if (venuesList.length === 0) return;
+    setVenueData((prev) => {
+      let changed = false;
+      const updated = prev.map((day) => {
+        const resolvedVenues = (day.selectedVenues || []).map((entry) => {
+          // Already an _id — check if it exists in venuesList
+          if (venuesList.some((v) => v.id === entry)) return entry;
+          // It's a venue name string from hydration — resolve to _id
+          const match = venuesList.find((v) => v.venue === entry);
+          if (match) { changed = true; return match.id; }
+          return entry; // leave as-is if no match
+        });
+
+        // Also resolve venueId in venueCards if missing
+        const resolvedCards = (day.venueCards || []).map((card) => {
+          if (card.venueId && venuesList.some((v) => v.id === card.venueId)) return card;
+          const cardMatch = venuesList.find((v) => v.venue === card.venueName);
+          if (cardMatch && card.venueId !== cardMatch.id) {
+            changed = true;
+            return { ...card, venueId: cardMatch.id };
+          }
+          return card;
+        });
+
+        return { ...day, selectedVenues: resolvedVenues, venueCards: resolvedCards };
+      });
+      return changed ? updated : prev;
+    });
+  }, [venuesList]);
 
   useEffect(() => {
     if (initialVenueData.length > 0) {
