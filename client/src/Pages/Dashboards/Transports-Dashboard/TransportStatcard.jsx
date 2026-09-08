@@ -225,7 +225,7 @@ const TransportStatcard = ({ sections = defaultSections }) => {
             })
             .then((responseData) => {
                 if (isMounted) {
-                    setIndividualStats(responseData.stats ?? null)
+                    setIndividualStats(responseData.breakdowns?.headWise?.[0] ?? responseData.stats ?? null)
                 }
             })
             .catch((error) => {
