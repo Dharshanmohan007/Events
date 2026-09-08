@@ -27,12 +27,17 @@ const SplitInfoRow = ({ items }) => (
   </div>
 )
 
-const MealSection = ({ title, foodType }) => {
+const MealSection = ({ title, foodType, showPlacement = false }) => {
   if (!foodType) return null
-  const { participants = {}, vipGuests = {}, trainer = {}, refreshmentCount, venueWiseDetails = [] } = foodType
+  const { participants = {}, vipGuests = {}, trainer = {}, placement = {}, refreshmentCount, venueWiseDetails = [] } = foodType
   
   // For Morning/Evening Refreshment - show refreshment count and venue wise details
   const isRefreshment = foodType.type === 'Morning Refreshment' || foodType.type === 'Evening Refreshment'
+
+  // Show non-veg counts for every meal type when the data actually contains them
+  const hasNonVegData = [participants, vipGuests, trainer, placement].some(
+    (section) => Number(section?.nonVegCount) > 0,
+  )
   
   return (
     <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-4">
@@ -70,8 +75,15 @@ const MealSection = ({ title, foodType }) => {
               <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of veg In Trainer Menu</p>
               <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.vegCount)}</p>
             </div>
-            {/* Only show non-veg section for Lunch, not for Breakfast/Dinner */}
-            {foodType.type !== 'Breakfast' && foodType.type !== 'Dinner' && (
+            {showPlacement && (
+              <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of veg In Placement Menu</p>
+                <p className="mt-1 text-sm font-semibold text-white">{displayValue(placement.vegCount)}</p>
+              </div>
+            )}
+            {/* Show non-veg for Lunch, and for Breakfast/Dinner when the data has non-veg counts */}
+            {(foodType.type !== 'Breakfast' && foodType.type !== 'Dinner' ||
+              hasNonVegData) && (
               <>
                 <SplitInfoRow
                   items={[
@@ -83,6 +95,12 @@ const MealSection = ({ title, foodType }) => {
                   <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of Non-veg In Trainer Menu</p>
                   <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.nonVegCount)}</p>
                 </div>
+                {showPlacement && (
+                  <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                    <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of Non-veg In Placement Menu</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{displayValue(placement.nonVegCount)}</p>
+                  </div>
+                )}
               </>
             )}
           </>
@@ -137,6 +155,7 @@ const FoodDetails = ({ refreshment }) => {
           key={foodType.type}
           title={mealTitleMap[foodType.type] || foodType.type}
           foodType={foodType}
+          showPlacement={(refreshment.resourcePersonType || []).includes('Placement')}
         />
       ))}
 
