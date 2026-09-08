@@ -1,7 +1,8 @@
 import { API_BASE } from "../utils/apiConfig";
 
-export async function fetchAvailableRooms(startDateTime, endDateTime) {
+export async function fetchAvailableRooms(startDateTime, endDateTime, eventId) {
   const params = new URLSearchParams({ startDateTime, endDateTime });
+  if (eventId) params.set("excludeEventId", eventId);
   const response = await fetch(`${API_BASE}/api/accommodation/rooms/availability?${params}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,

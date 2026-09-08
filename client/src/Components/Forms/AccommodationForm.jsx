@@ -886,14 +886,18 @@ export default function AccommodationForm({
     setRoomLoading((prev) => ({ ...prev, [index]: true }));
     setRoomErrors((prev) => ({ ...prev, [index]: "" }));
     try {
-      const rooms = await fetchAvailableRooms(formatAccommodationDateTime(acc.checkIn), formatAccommodationDateTime(acc.checkOut));
+      const rooms = await fetchAvailableRooms(
+        formatAccommodationDateTime(acc.checkIn),
+        formatAccommodationDateTime(acc.checkOut),
+        eventId
+      );
       setRoomAvailability((prev) => ({ ...prev, [index]: rooms.filter((room) => !revokedRoomIds.has(room.roomId)) }));
     } catch (error) {
       setRoomErrors((prev) => ({ ...prev, [index]: error.message || "Unable to load room availability." }));
     } finally {
       setRoomLoading((prev) => ({ ...prev, [index]: false }));
     }
-  }, [revokedRoomIds]);
+  }, [eventId, revokedRoomIds]);
 
   const updateBlock = (index, updated) => {
     setAccommodations((prev) => prev.map((a, i) => (i === index ? updated : a)));
