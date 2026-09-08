@@ -172,6 +172,7 @@ const AdminUpcomingEventsTable = ({
           );
         }
         console.log("individual response : ", responseData)
+        console.log("Indiviudal data fetched in admin and the endpoint is used", responseData)
       })
       .catch((error) => {
         console.warn(error.message);
