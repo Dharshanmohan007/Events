@@ -1245,6 +1245,7 @@ export default function PurchaseDetails() {
         )}
       </div>
       <div className="w-full space-y-5 mt-4">
+        {form.financeRequired === "Yes" && (
         <div className="mb-2">
           <label className="block mb-2 text-sm text-white">
             Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
@@ -1384,6 +1385,7 @@ export default function PurchaseDetails() {
             <p className="text-red-400 text-xs mt-1">{errors.principalApprovalDocument}</p>
           )}
         </div>
+        )}
         {/* REQUIREMENT */}
         <CustomDropdown
       

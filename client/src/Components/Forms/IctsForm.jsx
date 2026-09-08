@@ -45,8 +45,6 @@ const isPlacementDept = () => getDepartmentFromStorage() === "placement";
 
 function validateIctsCard(card, showProctoring) {
   const e = {};
-  if (!card.laptopTypes || card.laptopTypes.length === 0)
-    e.laptopTypes = "Select at least one laptop type";
   if (!card.internetFacility) e.internetFacility = "This field is required";
   if (
     card.expectedInternetUsers === "" ||
@@ -68,8 +66,6 @@ function validateIctsCard(card, showProctoring) {
   ) {
     e.totalGuestCount = "This field is required";
   }
-  if (!card.requirements || card.requirements.length === 0)
-    e.requirements = "Select at least one requirement";
   // desktopCount / laptopCount are optional — not validated here.
   return e;
 }
@@ -287,7 +283,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <RequirementsSelect
-            label="Guest Laptop Types *"
+            label="Guest Laptop Types"
             options={LAPTOP_TYPE_OPTIONS}
             placeholder="Select laptop types..."
             selected={laptopTypes}
@@ -473,7 +469,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <RequirementsSelect
-            label="Requirements *"
+            label="Requirements"
             selected={data.requirements || []}
             onChange={(val) => onChange({ ...data, requirements: val })}
             error={errors.requirements}

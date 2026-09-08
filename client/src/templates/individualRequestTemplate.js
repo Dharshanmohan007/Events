@@ -1,3 +1,5 @@
+import clgLogo from '../assets/clg-logo2.webp';
+
 /**
  * Builds the HTML string for the individual request PDF.
  * Pure function: (apiResponse) => htmlString
@@ -298,45 +300,53 @@ export function buildIndividualRequestTemplate(payload = {}) {
   <meta charset="utf-8"/>
   <title>Individual Request \u2013 ${requestNo}</title>
   <style>
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.5; color: #333; margin: 0; padding: 20px; background: #fff; }
-    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 20px; }
-    .header h1 { font-size: 18px; color: #1e3a8a; margin: 0 0 4px 0; }
-    .header .meta { font-size: 10px; color: #555; text-align: right; line-height: 1.8; }
+    @page { margin: 0; }
+    * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1a1a1a; font-size: 11px; line-height: 1.4; padding: 28px 36px; background: #fff; }
+    .top-status { font-size: 13px; font-weight: bold; color: #1e3a8a; margin-bottom: 16px; text-transform: uppercase; }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1e3a8a; padding-bottom: 12px; margin-bottom: 16px; }
+    .logo-container { flex: 1; display: flex; justify-content: flex-start; }
+    .logo { height: 50px; width: auto; }
+    .header-titles { flex: 2; display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .form-title { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header h1 { font-size: 18px; color: #1e3a8a; margin: 4px 0 0 0; }
+    .header .meta { flex: 1; font-size: 10px; color: #555; text-align: right; line-height: 1.8; }
     .section { margin-bottom: 18px; page-break-inside: avoid; }
-    .section h2 {
-      font-size: 13px; color: #fff; background: #1e3a8a;
-      padding: 5px 10px; margin: 0 0 8px 0; border-radius: 3px;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
+    .section h2 { font-size: 13px; color: #fff; background: #1e3a8a; padding: 5px 10px; margin: 0 0 8px 0; border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
     th, td { border: 1px solid #ccc; padding: 5px 8px; text-align: left; vertical-align: top; }
-    th {
-      background: #eef2ff; color: #1e3a8a; font-weight: 600;
-      -webkit-print-color-adjust: exact; print-color-adjust: exact;
-    }
+    th { background: #eef2ff; color: #1e3a8a; font-weight: 600; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     td { font-size: 10.5px; }
-    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 30px; }
+    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; margin-bottom: 8px; }
     .meta-grid div { padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
-    .meta-grid div span.label { color: #444; font-weight: 600; margin-right: 5px; }
-    .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; color: #666; border-top: 1px solid #ccc; padding-top: 8px; }
+    .meta-grid div span.label { color: #555; font-weight: 600; margin-right: 5px; }
+    .signatures { margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; }
+    .signature-block { text-align: center; width: 28%; }
+    .signature-line { border-top: 1px solid #1a1a1a; margin-bottom: 6px; height: 1px; width: 100%; }
+    .signature-label { font-size: 11px; font-weight: 600; color: #1e3a8a; }
+    .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
     .no-data { color: #999; font-style: italic; padding: 6px 8px; }
     @media print { body { padding: 0; } .section { page-break-inside: avoid; } }
   </style>
 </head>
 <body>
 
+  <div class="top-status">
+    Status: ${finalStatus}
+  </div>
+
   <div class="header">
-    <div>
-      <h1>Individual Request \u2013 ${module}</h1>
-      <div style="color:#555;font-size:11px;">Form Type: ${formType}</div>
-      <div style="color:#555;font-size:11px;margin-top:3px;">Workflow Stage: ${workflowStage}</div>
+    <div class="logo-container">
+      <img src="${clgLogo}" class="logo" alt="Logo" />
+    </div>
+    <div class="header-titles">
+      <div class="form-title">Individual Request Form</div>
+      <h1>${module} &#8211; ${formType}</h1>
     </div>
     <div class="meta">
       Request No: <strong>${requestNo}</strong><br/>
       Financial Year: ${financialYear}<br/>
-      Department Code: ${departmentCode}<br/>
-      Status: <strong>${finalStatus}</strong>
+      Department Code: ${departmentCode}
     </div>
   </div>
 
@@ -377,9 +387,24 @@ export function buildIndividualRequestTemplate(payload = {}) {
     </table>
   </div>
 
+  <div class="signatures">
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-label">Event Organizer</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-label">HoD / Section Head</div>
+    </div>
+    <div class="signature-block">
+      <div class="signature-line"></div>
+      <div class="signature-label">IQAC Team</div>
+    </div>
+  </div>
+
   <div class="footer">
-    <span>Generated on: ${new Date().toLocaleString('en-IN')}</span>
-    <span>Final Status: ${finalStatus}</span>
+    <div>Submitted on: ${createdAt ? new Date(createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</div>
+    <div>Generated on: ${new Date().toLocaleString('en-IN')}</div>
   </div>
 
 </body>
