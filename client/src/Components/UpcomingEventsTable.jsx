@@ -77,7 +77,7 @@ const HEADERS_CONFIG = {
       "Required Date",
       "Organizer Name",
       "Department",
-      "Organizer Phone No",
+      // "Organizer Phone No",
       "Status",
       "Action",
     ],
@@ -301,8 +301,8 @@ const renderCellValue = (event, header, detailViewPath) => {
       return `${event.checkInDate || "-"} - ${event.checkOutDate || "-"}`;
     case "Organizer Name":
       return event.organizerName || "-";
-    case "Organizer Phone No":
-      return event.organizerPhone || "-";
+    // case "Organizer Phone No":
+    //   return event.organizerPhone || "-";
     case "Status": {
       const status =
         event.acknowledgeStatus ||
@@ -351,6 +351,9 @@ const UpcomingEventsTable = ({
   individualDetailViewPath = "/dashboard/IndividualEvents",
 }) => {
   const [activeTab, setActiveTab] = useState("events");
+
+console.log("individual trabsport data : ", individualEvents)
+
 
   const config = HEADERS_CONFIG[module] || HEADERS_CONFIG.default;
   const hasTabs = MODULES_WITH_TABS.includes(module);
