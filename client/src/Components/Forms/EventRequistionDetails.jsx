@@ -207,6 +207,7 @@ export default function EventRequisitionDetails({
   const [estimatedBudget, setEstimatedBudget] = useState(
     initialEventRequisition.estimatedBudget ?? ""
   );
+  const [fundingSource, setFundingSource] = useState(initialEventRequisition.fundingSource || []);
   const [budget, setBudget] = useState(initialEventRequisition.budget || "");
   const [department, setDepartment] = useState(initialEventRequisition.department || "");
   const [principalApprovalDocument, setprincipalApprovalDocument] = useState(
@@ -249,12 +250,12 @@ export default function EventRequisitionDetails({
     if (!setEventRequisition) return;
     const next = {
       doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, principalApprovalDocument, file, reason,
-      numOrganizers, organizers, eventData, expectedEventOutcome,
+      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome,
       eventDays: eventDaysLocal, requirements,
     };
     const comparable = JSON.stringify({
       doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, reason,
-      numOrganizers, organizers, eventData, expectedEventOutcome,
+      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome,
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
         ? {
@@ -269,7 +270,7 @@ export default function EventRequisitionDetails({
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, expectedEventOutcome, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, fundingSource, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, expectedEventOutcome, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
@@ -339,6 +340,8 @@ export default function EventRequisitionDetails({
         finance={finance} setFinance={setFinance}
         advanceAmount={advanceAmount}
         setAdvanceAmount={setAdvanceAmount}
+        fundingSource={fundingSource}
+        setFundingSource={setFundingSource}
         purposeOfAdvance={purposeOfAdvance}
         setPurposeOfAdvance={setPurposeOfAdvance}
         advanceToBeReceivedWithin={advanceToBeReceivedWithin}

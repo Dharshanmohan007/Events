@@ -195,6 +195,9 @@ let decodedToken = jwtDecode(token);
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
       estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
+      fundingSource: (eventRequisition.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
@@ -950,6 +953,9 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
       estimatedBudget: Number(formData.event.estimatedBudget) || 0,
+      fundingSource: (formData.event.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(formData.event.advanceToBeReceivedWithin) || 0,
@@ -1042,6 +1048,12 @@ function hydrateEventData(apiData) {
     budget: od.isBudgetApproved ? "Yes" : "No",
     finance: od.financeRequired ? "Yes" : "No",
     estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
+    fundingSource: Array.isArray(od.fundingSource)
+      ? od.fundingSource.map((source) => ({
+          type: source.type || "",
+          amount: source.amount != null ? String(source.amount) : "",
+        }))
+      : [],
     advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
     advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
@@ -1477,6 +1489,7 @@ export default function Form() {
     event: {
       doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
       reason: "", numOrganizers: "", organizers: [],
+      fundingSource: [],
       eventData: {}, eventDays: [], requirements: [],
     },
     venue: [], icts: {}, audio: defaultAudio,
