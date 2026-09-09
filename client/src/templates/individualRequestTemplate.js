@@ -60,9 +60,11 @@ export function buildIndividualRequestTemplate(payload = {}) {
     '_id', 'requestNo', 'module', 'financialYear', 'departmentCode', 
     'typeOfMedia', 'overallStatus', 'finalStatus', 'status', 
     'approvalHistory', 'adminApproval', 'hodApproval', 'departmentApproval', 
-    'superAdminApproval', 'headApproval', 'financeRequired', 'advanceAmount', 
+    'superAdminApproval', 'superAdmin1Approval', 'superAdmin2Approval',
+    'headApproval', 'financeRequired', 'advanceAmount', 
     'estimatedAmount', 'advancePurpose', 'principalApprovalForm', 'uploadedFile', 
-    'employee', 'employeeDetail', 'createdAt', 'updatedAt', '__v', 'id', 'formType'
+    'employee', 'employeeDetail', 'createdAt', 'updatedAt', '__v', 'id', 'formType',
+    'referenceFiles'  // internal file references — not rendered in PDF
   ]);
   
   const moduleSpecificKeys = Object.keys(data).filter(k => !ignoredKeys.has(k) && data[k] !== null && data[k] !== undefined && data[k] !== '');
@@ -73,13 +75,28 @@ export function buildIndividualRequestTemplate(payload = {}) {
   const advancePurpose  = data.advancePurpose;
 
   // ── Helpers ───────────────────────────────────────────────────────────────────
+  // Date-only formatter (DD Mon YYYY)
   const formatDate = (dateStr) => {
     if (!dateStr) return '-';
     const d = new Date(dateStr);
     return isNaN(d.getTime())
       ? dateStr
-      : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
+
+  // Date-TIME formatter (DD Mon YYYY, HH:MM AM/PM) — for ISO datetime fields
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hour12: true
+    });
+  };
+
+  // Detect ISO 8601 datetime strings (has T and Z / offset)
+  const isIsoDateTime = (s) => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s);
 
   const formatLabel = (k) =>
     k.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
@@ -96,12 +113,15 @@ export function buildIndividualRequestTemplate(payload = {}) {
         const itemHtml = Object.entries(item)
           .filter(([k,v]) => v !== undefined && v !== null && v !== '' && k !== '_id' && k !== 'id')
           .map(([k,v]) => {
-             if (typeof v !== 'object') return `<strong>${formatLabel(k)}:</strong> ${v}`;
-             return `<strong>${formatLabel(k)}:</strong> <div style="padding-left:10px;border-left:2px solid #ccc;margin-top:2px;">${renderRecursive(v, level + 1)}</div>`;
-          }).join('<br/>');
-        return `<div><span style="color:#1e3a8a;font-weight:bold;font-size:10px;">#${i+1}</span><br/>${itemHtml}</div>`;
+             if (typeof v !== 'object') {
+               const disp = isIsoDateTime(v) ? formatDateTime(v) : v;
+               return `<div style="display:flex;border-bottom:1px solid #e8e8e8;padding:3px 0;"><span style="width:40%;font-weight:600;color:#444;flex-shrink:0;">${formatLabel(k)}</span><span>${disp}</span></div>`;
+             }
+             return `<div style="padding:3px 0;border-bottom:1px solid #e8e8e8;"><span style="font-weight:600;color:#444;">${formatLabel(k)}:</span><div style="padding-left:10px;border-left:2px solid #ccc;margin-top:2px;">${renderRecursive(v, level + 1)}</div></div>`;
+          }).join('');
+        return `<div style="border:1px solid #ccc;border-radius:3px;padding:8px;margin-bottom:6px;background:#fff;"><div style="color:#1e3a8a;font-weight:bold;font-size:10px;margin-bottom:4px;">#${i+1}</div>${itemHtml}</div>`;
       });
-      return rows.join('<hr style="border:0;border-top:1px dashed #ccc;margin:4px 0;"/>');
+      return rows.join('');
     }
     
     if (typeof val === 'object') {
@@ -111,13 +131,16 @@ export function buildIndividualRequestTemplate(payload = {}) {
       const rows = Object.entries(val)
         .filter(([k,v]) => v !== undefined && v !== null && v !== '' && k !== '_id' && k !== 'id')
         .map(([k,v]) => {
-          if (typeof v !== 'object') return `<strong>${formatLabel(k)}:</strong> ${v}`;
+          if (typeof v !== 'object') {
+            const display = isIsoDateTime(v) ? formatDateTime(v) : v;
+            return `<strong>${formatLabel(k)}:</strong> ${display}`;
+          }
           return `<strong>${formatLabel(k)}:</strong> <div style="padding-left:10px;border-left:2px solid #ccc;margin-top:2px;">${renderRecursive(v, level + 1)}</div>`;
         });
       return rows.length > 0 ? rows.join('<br/>') : '-';
     }
     
-    return String(val);
+    return isIsoDateTime(val) ? formatDateTime(val) : String(val);
   };
 
   const renderValue = renderRecursive;
@@ -168,7 +191,7 @@ export function buildIndividualRequestTemplate(payload = {}) {
         return `
           <div class="section">
             <h2>${title}</h2>
-            <table><tbody><tr><td style="width:35%;font-weight:600;color:#444;">${title}</td><td>${obj.join(', ')}</td></tr></tbody></table>
+            <table><tbody><tr><td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">${title}</td><td style="border-bottom:1px solid #ccc;">${obj.join(', ')}</td></tr></tbody></table>
           </div>`;
       }
       
@@ -186,8 +209,8 @@ export function buildIndividualRequestTemplate(payload = {}) {
         .filter(([k,v]) => v !== undefined && v !== null && v !== '' && k !== '_id' && k !== 'id')
         .map(([k, v]) => `
         <tr>
-          <td style="width:35%;font-weight:600;color:#444;">${formatLabel(k)}</td>
-          <td>${renderRecursive(v)}</td>
+          <td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">${formatLabel(k)}</td>
+          <td style="border-bottom:1px solid #ccc;">${renderRecursive(v)}</td>
         </tr>`).join('');
         
       if (!rows) {
@@ -213,11 +236,15 @@ export function buildIndividualRequestTemplate(payload = {}) {
 
   let primitiveHtml = '';
   if (primitiveKeys.length > 0) {
-    const rows = primitiveKeys.map(k => `
+    const rows = primitiveKeys.map(k => {
+      const raw = data[k];
+      const display = isIsoDateTime(String(raw)) ? formatDateTime(raw) : String(raw);
+      return `
       <tr>
-        <td style="width:35%;font-weight:600;color:#444;">${formatLabel(k)}</td>
-        <td>${String(data[k])}</td>
-      </tr>`).join('');
+        <td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">${formatLabel(k)}</td>
+        <td style="border-bottom:1px solid #ccc;">${display}</td>
+      </tr>`;
+    }).join('');
     primitiveHtml = `
       <div class="section">
         <h2>General Details</h2>
@@ -244,26 +271,13 @@ export function buildIndividualRequestTemplate(payload = {}) {
     <div class="section">
       <h2>Financial Details</h2>
       <table><tbody>
-        <tr><td style="width:35%;font-weight:600;color:#444;">Finance Required</td><td>${financeRequired || '-'}</td></tr>
-        <tr><td style="width:35%;font-weight:600;color:#444;">Estimated Amount</td><td>${estimatedAmount != null ? '\u20B9' + estimatedAmount : '-'}</td></tr>
-        <tr><td style="width:35%;font-weight:600;color:#444;">Advance Amount</td><td>${advanceAmount != null ? '\u20B9' + advanceAmount : '-'}</td></tr>
-        <tr><td style="width:35%;font-weight:600;color:#444;">Advance Purpose</td><td>${advancePurpose || '-'}</td></tr>
+        <tr><td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">Finance Required</td><td style="border-bottom:1px solid #ccc;">${financeRequired || '-'}</td></tr>
+        <tr><td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">Estimated Amount</td><td style="border-bottom:1px solid #ccc;">${estimatedAmount != null ? '\u20B9' + estimatedAmount : '-'}</td></tr>
+        <tr><td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">Advance Amount</td><td style="border-bottom:1px solid #ccc;">${advanceAmount != null ? '\u20B9' + advanceAmount : '-'}</td></tr>
+        <tr><td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">Advance Purpose</td><td style="border-bottom:1px solid #ccc;">${advancePurpose || '-'}</td></tr>
       </tbody></table>
     </div>` : '';
 
-  let moduleStatusHtml = '';
-  if (data.status && typeof data.status === 'object') {
-    const statusRows = Object.entries(data.status).map(([k, v]) => `
-      <tr>
-        <td style="width:35%;font-weight:600;color:#444;text-transform:capitalize;">${k}</td>
-        <td>${v}</td>
-      </tr>`).join('');
-    moduleStatusHtml = `
-      <div class="section">
-        <h2>Module Status</h2>
-        <table><tbody>${statusRows}</tbody></table>
-      </div>`;
-  }
 
   let uploadedDocHtml = '';
   const docUrl = data.principalApprovalForm?.url || data.uploadedFile?.url;
@@ -274,24 +288,13 @@ export function buildIndividualRequestTemplate(payload = {}) {
         <h2>Uploaded Document</h2>
         <table><tbody>
           <tr>
-            <td style="width:35%;font-weight:600;color:#444;">Document Link</td>
+            <td style="width:35%;font-weight:600;color:#444;border-right:1px solid #ccc;border-bottom:1px solid #ccc;">Document Link</td>
+            
             <td><a href="${docUrl}" target="_blank" style="color:#1e3a8a;text-decoration:none;">${docName}</a></td>
           </tr>
         </tbody></table>
       </div>`;
   }
-
-  const overviewHtml = `
-    <div class="section">
-      <h2>Request Overview</h2>
-      <div class="meta-grid">
-        <div><span class="label">Data ID:</span>${data._id || '-'}</div>
-        <div><span class="label">Workflow Stage:</span>${workflowStage}</div>
-        <div><span class="label">Overall Status:</span>${data.overallStatus || '-'}</div>
-        <div><span class="label">Submitted:</span>${formatDate(createdAt)}</div>
-        <div><span class="label">Last Updated:</span>${formatDate(req.updatedAt)}</div>
-      </div>
-    </div>`;
 
   // ── Full HTML ─────────────────────────────────────────────────────────────────
   return `<!DOCTYPE html>
@@ -313,10 +316,9 @@ export function buildIndividualRequestTemplate(payload = {}) {
     .header .meta { flex: 1; font-size: 10px; color: #555; text-align: right; line-height: 1.8; }
     .section { margin-bottom: 18px; page-break-inside: avoid; }
     .section h2 { font-size: 13px; color: #fff; background: #1e3a8a; padding: 5px 10px; margin: 0 0 8px 0; border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    table { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-    th, td { border: 1px solid #ccc; padding: 5px 8px; text-align: left; vertical-align: top; }
-    th { background: #eef2ff; color: #1e3a8a; font-weight: 600; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    td { font-size: 10.5px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 1px; background-color: #bbb; margin-bottom: 8px; }
+    th, td { background-color: #fff; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 10.5px; }
+    th { background-color: #eef2ff !important; color: #1e3a8a; font-weight: 600; font-size: 11px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; margin-bottom: 8px; }
     .meta-grid div { padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
     .meta-grid div span.label { color: #555; font-weight: 600; margin-right: 5px; }
@@ -364,28 +366,13 @@ export function buildIndividualRequestTemplate(payload = {}) {
     </div>
   </div>
 
-  ${overviewHtml}
-  ${moduleStatusHtml}
+
   ${typeOfMediaHtml}
   ${financeHtml}
   ${uploadedDocHtml}
   ${moduleSectionsHtml}
 
-  <div class="section">
-    <h2>Approval Status</h2>
-    <table>
-      <thead><tr><th>Role</th><th>Status</th><th>Reason</th><th>Date</th></tr></thead>
-      <tbody>${approvalStatusRows || '<tr><td colspan="4" class="no-data">No approval data</td></tr>'}</tbody>
-    </table>
-  </div>
 
-  <div class="section">
-    <h2>Approval History</h2>
-    <table>
-      <thead><tr><th>Role</th><th>Action</th><th>Remarks</th><th>Date</th></tr></thead>
-      <tbody>${historyRows || '<tr><td colspan="4" class="no-data">No history</td></tr>'}</tbody>
-    </table>
-  </div>
 
   <div class="signatures">
     <div class="signature-block">
