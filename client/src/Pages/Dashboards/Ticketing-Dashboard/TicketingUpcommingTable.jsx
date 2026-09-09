@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Filter, ArrowUpRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Filter, ArrowUpRight, Plus } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const API_BASE_URL =
@@ -9,6 +9,8 @@ const API_BASE_URL =
 const tabs = ["Events", "Individuals"];
 
 const TicketingUpcommingTable = () => {
+  const navigate = useNavigate();
+
   // states
   const [selectedTab, setSelectedTab] = useState("Events");
   // individual ticketing data from the api (will be used in the individuals table later)
@@ -25,23 +27,27 @@ const TicketingUpcommingTable = () => {
     const decoded = jwtDecode(token);
     const dept = decoded.department;
 
-    fetch(`${API_BASE_URL}/api/table/dashboard-table?module=${dept}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    fetch(
+      `${API_BASE_URL}/api/table/dashboard-table?module=externalTransports`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       },
-    })
+    )
       .then((response) => response.json())
       .then((data) => {
         // log the data to check what the api returned
-        console.log("transport event data : ", data);
 
         // store the data in state
-        setEventTicketingData(data);
+        setEventTicketingData(data.data);
       })
       .catch((error) => {
         console.log("error while fetching transport event data : ", error);
       });
   };
+
+  console.log("transport event data : ", eventTicketingData);
 
   // function to fetch individual ticketing data from the api
   const fetchIndividualTicketingData = () => {
@@ -75,6 +81,14 @@ const TicketingUpcommingTable = () => {
       fetchIndividualTicketingData();
     }
   }, [selectedTab]);
+
+  // status color denotion function
+
+  const getStatusColor = (status = "") => {
+    const isPending = status.toLowerCase().includes("pending");
+
+    return isPending ? "text-red-500" : "text-green-500";
+  };
 
   return (
     <div className="w-full rounded-md border min-h-[calc(100vh-320px)] border-[#283247] bg-[#151e2e] p-4 shadow-lg">
@@ -114,11 +128,7 @@ const TicketingUpcommingTable = () => {
                 </th>
 
                 <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
-                  Allocated Person
-                </th>
-
-                <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
-                  Due Date
+                  Required Date
                 </th>
 
                 <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
@@ -129,49 +139,113 @@ const TicketingUpcommingTable = () => {
                   Acknowledge Status
                 </th>
 
-                <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
-                  Work Status
-                </th>
-
                 <th className="px-2 py-2 text-center text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
                   Action
                 </th>
               </tr>
             </thead>
 
-            <tbody className="text-[14px]  ">
-              {/* Row 1 */}
-              <tr className="border-b border-[#202a3b] transition hover:bg-[#1a2435]">
-                <td className="px-2 py-3 text-[#d2d6de]">Welcome Freshers</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">Poster</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">Karthikeyan M</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">15-03-2026</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">CSE</td>
+          <tbody className="text-[14px]">
+  {eventTicketingData?.length > 0 ? (
+    eventTicketingData.map((item, index) => {
+      return (
+        <tr
+          key={item?._id || index}
+          className="border-b border-[#202a3b] transition hover:bg-[#1a2435]"
+        >
+          {/* Event Name */}
+          <td
+            className="max-w-[100px] truncate px-2 py-3 text-[#d2d6de]"
+            title={item?.eventName}
+          >
+            {item?.eventName || "-"}
+          </td>
 
-                <td className="px-2 py-2">
-                  <span className="text-[#55cbb0]">
-                    <span className="mr-1">●</span>
-                    Acknowledged
-                  </span>
-                </td>
+          {/* Event Type */}
+          <td className="px-2 py-3 text-[#b0b7c5]">
+            {item?.eventType || "-"}
+          </td>
 
-                <td className="px-2 py-2">
-                  <span className="text-[#55cbb0]">
-                    <span className="mr-1">●</span>
-                    Completed
-                  </span>
-                </td>
+          {/* Dates */}
+          <td className="px-2 py-3 text-[#b0b7c5]">
+            <div className="flex items-center gap-2">
+              {/* First Date */}
+              <span>
+                {item?.dates?.[0]
+                  ? new Date(item.dates[0])
+                      .toLocaleDateString("en-GB")
+                      .replaceAll("/", "-")
+                  : "-"}
+              </span>
 
-                <td className="px-2 py-2 text-center">
-                  <Link
-                    to={`/ticketing-dashboard/event-request/123`}
-                    className="text-[#aab3c3] hover:text-white"
-                  >
-                    <ArrowUpRight size={18} />
-                  </Link>
-                </td>
-              </tr>
-            </tbody>
+              {/* Remaining Dates */}
+              {item?.dates?.length > 1 && (
+                <div className="group relative">
+                  <div className="flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-md bg-gray-700 px-1 text-xs text-white">
+                    +{item.dates.length - 1}
+                  </div>
+
+                  {/* Hover Tooltip */}
+                  <div className="absolute left-0 top-8 z-50 hidden min-w-[150px] rounded-md border border-gray-600 bg-[#1f2937] p-2 shadow-lg group-hover:block">
+                    {item.dates.slice(1).map((date, dateIndex) => (
+                      <div
+                        key={dateIndex}
+                        className="whitespace-nowrap py-1 text-sm text-[#b0b7c5]"
+                      >
+                        {new Date(date)
+                          .toLocaleDateString("en-GB")
+                          .replaceAll("/", "-")}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </td>
+
+          {/* Organizing Department */}
+          <td className="px-2 py-3 text-[#b0b7c5]">
+            {item?.organizingDepartment || "-"}
+          </td>
+
+          {/* Department Status */}
+          <td className="px-2 py-2">
+            <span
+              className={`inline-flex items-center ${getStatusColor(
+                item?.departmentStatus
+              )}`}
+            >
+              <span className="mr-1">●</span>
+
+              {item?.departmentStatus || "-"}
+            </span>
+          </td>
+
+          {/* View Button */}
+          <td className="px-2 py-2 text-center">
+            <button
+              onClick={() => {
+                navigate("/ticketing-dashboard/event-request/123");
+              }}
+              className="text-[#aab3c3] hover:text-white"
+            >
+              <ArrowUpRight size={18} />
+            </button>
+          </td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td
+        colSpan={6}
+        className="px-2 py-10 text-center text-[#8b95a7]"
+      >
+        No events found
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
       )}
