@@ -21,6 +21,8 @@ export default function EventOrganizerDetails({
   setFinance,
   advanceAmount,
   setAdvanceAmount,
+  fundingSource = [],
+  setFundingSource,
   purposeOfAdvance,
   setPurposeOfAdvance,
   advanceToBeReceivedWithin,
@@ -51,6 +53,31 @@ export default function EventOrganizerDetails({
   const [advanceDaysError, setAdvanceDaysError] = React.useState("");
   // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
+
+  const fundingType = fundingSource.length === 2
+    ? "Both"
+    : fundingSource[0]?.type || "";
+
+  const getFundingAmount = (type) => (
+    fundingSource.find((source) => source.type === type)?.amount ?? ""
+  );
+
+  const handleFundingTypeChange = (type) => {
+    if (type === "Both") {
+      setFundingSource([
+        { type: "Institutional Fund", amount: getFundingAmount("Institutional Fund") },
+        { type: "Department Funding", amount: getFundingAmount("Department Funding") },
+      ]);
+      return;
+    }
+    setFundingSource(type ? [{ type, amount: getFundingAmount(type) }] : []);
+  };
+
+  const updateFundingAmount = (type, amount) => {
+    setFundingSource((current) => current.map((source) => (
+      source.type === type ? { ...source, amount } : source
+    )));
+  };
 
   const handleOrganizersChange = (e) => {
     let val = e.target.value;
@@ -422,6 +449,7 @@ export default function EventOrganizerDetails({
                 setEstimatedBudget("");
                 setAdvanceAmount("");
                 setPurposeOfAdvance("");
+                setFundingSource([]);
               }
             }}
             options={["Yes", "No"]}
@@ -431,6 +459,41 @@ export default function EventOrganizerDetails({
         </div>
         {finance === "Yes" && (
           <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div className="col-span-1 sm:col-span-2">
+            <CustomSelect
+              label="Funding Type"
+              required
+              value={fundingType}
+              onChange={handleFundingTypeChange}
+              options={["Institutional Fund", "Department Funding", "Both"]}
+              placeholder="Select funding type"
+            />
+            {fundingType === "Institutional Fund" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Institutional Fund Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Institutional Fund")}
+                  onChange={(e) => updateFundingAmount("Institutional Fund", e.target.value)}
+                  placeholder="Enter institutional fund amount"
+                />
+              </div>
+            ) : null}
+            {fundingType === "Department Funding" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Department Funding Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Department Funding")}
+                  onChange={(e) => updateFundingAmount("Department Funding", e.target.value)}
+                  placeholder="Enter department funding amount"
+                />
+              </div>
+            ) : null}
+          </div>
 
           {/* Principal Approval Form Upload */}
       <div className="mb-7 sm:col-span-2">
@@ -488,20 +551,29 @@ export default function EventOrganizerDetails({
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
 
-                <span 
+                <span
                   className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer text-sm font-medium transition-colors"
                   onClick={handlePreviewPrincipal}
                 >
-                  {typeof principalApprovalDocument === 'string'
-                    ? principalApprovalDocument.split('/').pop()
-                    : (principalApprovalDocument.name || principalApprovalDocument.filename || 'Uploaded Document')}
+                  {typeof principalApprovalDocument === "string"
+                    ? principalApprovalDocument.split("/").pop()
+                    : principalApprovalDocument.name ||
+                      principalApprovalDocument.filename ||
+                      "Uploaded Document"}
                 </span>
 
-                {typeof principalApprovalDocument !== 'string' && principalApprovalDocument.size && (
-                  <span className="text-gray-400 text-xs">
-                    ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
-                )}
+                {typeof principalApprovalDocument !== "string" &&
+                  principalApprovalDocument.size && (
+                    <span className="text-gray-400 text-xs">
+                      (
+                      {(
+                        principalApprovalDocument.size /
+                        1024 /
+                        1024
+                      ).toFixed(2)}{" "}
+                      MB)
+                    </span>
+                  )}
               </div>
 
               <button
@@ -559,6 +631,36 @@ export default function EventOrganizerDetails({
             {errors.principalApprovalDocument}
           </p>
         )}
+
+        {/* ─────────────────────────────────────────────────────────────
+            Principal Approval Form Template Download
+          ───────────────────────────────────────────────────────────── */}
+        <div className="mt-3 flex justify-end">
+          <a
+            href="/templates/Principal_Approval_Form_Template.docx"
+            download="Principal_Approval_Form_Template.docx"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-xs font-medium"
+            title="Download Principal Approval Form Template"
+          >
+            {/* Download Icon */}
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+
+            Download Principal Approval Form Template
+          </a>
+        </div>
       </div>
             {/* Estimated Event Budget */}
             <div>

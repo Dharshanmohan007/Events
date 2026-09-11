@@ -81,11 +81,13 @@ function validateDay(dayIndex, venues, latestIctsData, showProctoring) {
   return dayErrors;
 }
 
-const buildIctsPayload = (ictsData) => {
+const buildIctsPayload = (ictsData, venueData) => {
   const ictses = [];
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
+    const selectedVenuesForDay = venueData[dayIndex]?.selectedVenues || [];
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      if (!selectedVenuesForDay.includes(venueName)) return;
       const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
@@ -609,7 +611,7 @@ export default function IctsForm({
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildIctsPayload(latestIctsData);
+        const payload = buildIctsPayload(latestIctsData, venueData);
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {

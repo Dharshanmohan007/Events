@@ -22,7 +22,7 @@ function validateVenueCard(card, options = []) {
   if (!card.seatingCapacity || parseInt(card.seatingCapacity) < 1)
     e.seatingCapacity = "Seating capacity is required";
 
-  const venueObj = options.find((v) => v.venue === card.venueName);
+  const venueObj = options.find((v) => v.id === card.venueId);
   const venueCapacity = venueObj?.capacity || 0;
 
   if (venueCapacity > 0) {
@@ -51,7 +51,7 @@ function getTooManyVenuesError(selectedVenues = [], options = [], totalParticipa
   if (totalParticipants < 1 || selectedVenues.length < 2) return "";
 
   const capacities = selectedVenues
-    .map((name) => options.find((venue) => venue.venue === name)?.capacity || 0)
+    .map((id) => options.find((venue) => venue.id === id)?.capacity || 0)
     .filter((capacity) => capacity > 0);
 
   if (capacities.length < 2) return "";
@@ -81,8 +81,8 @@ function validateDay(dayData, options = []) {
   if (tooManyVenuesError) e.selectedVenues = tooManyVenuesError;
 
   if (dayData.selectedVenues?.length > 0 && totalParticipants > 0) {
-    const totalSelectedCapacity = dayData.selectedVenues.reduce((sum, venueName) => {
-      const venueObj = options.find((v) => v.venue === venueName);
+    const totalSelectedCapacity = dayData.selectedVenues.reduce((sum, id) => {
+      const venueObj = options.find((v) => v.id === id);
       if (!venueObj || venueObj.capacity === 0) return Number.MAX_SAFE_INTEGER;
       return sum + venueObj.capacity;
     }, 0);
@@ -137,12 +137,16 @@ function buildVenuePayload(venueData) {
 
 // ─── Multi-venue dropdown ─────────────────────────────────────────────────────
 
-function MultiVenueSelect({ label, options, selected, onChange, error, totalParticipants }) {
+function MultiVenueSelect({ label, options, selected, onChange, error, totalParticipants, bookedVenues = [] }) {
   const [open, setOpen]               = useState(false);
   const [search, setSearch]           = useState("");
   const [capacityError, setCapacityError] = useState("");
   const ref       = useRef(null);
   const searchRef = useRef(null);
+
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [hoveredBlock, setHoveredBlock] = useState(null);
+  const [hoveredFloor, setHoveredFloor] = useState(null);
 
   useEffect(() => {
     const handler = (e) => {
@@ -162,27 +166,21 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
     totalParticipants
   );
 
-  // const getSelectedCapacitySum = (selectedVenues) =>
-  //   selectedVenues.reduce((sum, name) => {
-  //     const venue = options.find((v) => v.venue === name);
-  //     return sum + (venue?.capacity || 0);
-  //   }, 0);
-
-  const toggle = (venue) => {
+  const toggle = (venueId) => {
     setCapacityError("");
 
     // Remove venue
-    if (selected.includes(venue)) {
-      onChange(selected.filter((v) => v !== venue));
+    if (selected.includes(venueId)) {
+      onChange(selected.filter((v) => v !== venueId));
       return;
     }
 
     // Add venue
-    const updatedSelected = [...selected, venue];
+    const updatedSelected = [...selected, venueId];
 
     // Calculate total selected capacity
-    const totalSelectedCapacity = updatedSelected.reduce((sum, venueName) => {
-      const venueObj = options.find((v) => v.venue === venueName);
+    const totalSelectedCapacity = updatedSelected.reduce((sum, id) => {
+      const venueObj = options.find((v) => v.id === id);
 
       // Capacity 0 means Open (Unlimited)
       if (!venueObj || venueObj.capacity === 0) {
@@ -205,42 +203,32 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
     onChange(updatedSelected);
   };
 
+  const selectedNames = selected.map(id => {
+    const v = options.find(o => o.id === id);
+    return v ? v.venue : "";
+  }).filter(Boolean).filter(name => !bookedVenues.includes(name));
+
   const displayText =
-    selected.length === 0
+    selectedNames.length === 0
       ? ""
-      : selected.length <= 2
-        ? selected.join(" / ")
-        : `${selected[0]} / ${selected[1]} +${selected.length - 2} more`;
+      : selectedNames.length <= 2
+        ? selectedNames.join(" / ")
+        : `${selectedNames[0]} / ${selectedNames[1]} +${selectedNames.length - 2} more`;
 
-  const filteredOptions = (() => {
-    const q = search.toLowerCase().trim();
+  // Grouping for cascading
+  const categories = [...new Set(options.map(o => o.category))];
+  const blocks = hoveredCategory ? [...new Set(options.filter(o => o.category === hoveredCategory).map(o => o.block))] : [];
+  const floors = hoveredBlock ? [...new Set(options.filter(o => o.category === hoveredCategory && o.block === hoveredBlock).map(o => o.floor))] : [];
+  const venues = hoveredFloor ? options.filter(o => o.category === hoveredCategory && o.block === hoveredBlock && o.floor === hoveredFloor) : [];
 
-    const selectedOptions = options.filter((o) =>
-      selected.includes(o.venue)
-    );
-    const unselected = options.filter((o) =>
-      !selected.includes(o.venue)
-    );
-
-    const combined = [...selectedOptions, ...unselected];
-
-    if (!q) return combined;
-
-    return combined.filter((o) => {
-      const venueName = o.venue.toLowerCase();
-
-      // Show "Open" when capacity is 0
-      const capacityText =
-        o.capacity === 0
-          ? "open"
-          : String(o.capacity).toLowerCase();
-
-      return (
-        venueName.includes(q) ||
-        capacityText.includes(q)
-      );
-    });
-  })();
+  const q = search.toLowerCase().trim();
+  const searchResults = q ? options.filter(o => 
+    o.venue.toLowerCase().includes(q) || 
+    o.category.toLowerCase().includes(q) || 
+    o.block.toLowerCase().includes(q) || 
+    o.floor.toLowerCase().includes(q) || 
+    (o.capacity === 0 ? "open" : String(o.capacity).toLowerCase()).includes(q)
+  ) : [];
 
   return (
     <div className="w-full" ref={ref}>
@@ -254,7 +242,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
           }`}
         >
-          <span className={selected.length ? "text-white text-sm" : "text-gray-500 text-sm"}>
+          <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm truncate"}>
             {displayText || "Select venues..."}
           </span>
           <svg
@@ -274,7 +262,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col">
+          <div className="absolute top-full mt-1 w-[250%] max-w-4xl bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-2xl">
             {/* Search */}
             <div className="p-2 border-b border-[#3A3A5A]">
               <div className="relative">
@@ -341,47 +329,134 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             )}
 
             {/* Options list */}
-            <div className="max-h-52 overflow-y-auto custom-scrollbar">
-              {filteredOptions.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-gray-400">No venues found</div>
-              ) : (
-                filteredOptions.map((opt, i) => {
-                  const isSelected = selected.includes(opt.venue);
-                  return (
+            {q ? (
+              <div className="max-h-64 overflow-y-auto custom-scrollbar p-2 space-y-1">
+                {searchResults.length === 0 ? (
+                  <div className="px-4 py-3 text-sm text-gray-400">No venues found</div>
+                ) : (
+                  searchResults.map((opt) => {
+                    const isSelected = selected.includes(opt.id);
+                    return (
+                      <div
+                        key={opt.id}
+                        onClick={() => toggle(opt.id)}
+                        className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center justify-between ${
+                          isSelected
+                            ? "bg-purple-600/30 text-white"
+                            : "text-white hover:bg-purple-500/20"
+                        }`}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">{opt.venue}</span>
+                          <span className="text-xs text-gray-400">{opt.category} / {opt.block} / {opt.floor}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-gray-400">
+                            Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
+                          </span>
+                          {isSelected && (
+                            <svg className="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              <div className="flex max-h-64 h-64 overflow-hidden">
+                {/* Categories */}
+                <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px]">
+                  {categories.map((cat) => (
                     <div
-                      key={i}
-                      onClick={() => toggle(opt.venue)}
-                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between gap-2 ${
-                        isSelected
-                          ? "bg-purple-600/30 text-white"
-                          : "text-white hover:bg-purple-500/20"
+                      key={cat}
+                      onMouseEnter={() => {
+                        setHoveredCategory(cat);
+                        setHoveredBlock(null);
+                        setHoveredFloor(null);
+                      }}
+                      className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
+                        hoveredCategory === cat ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
                       }`}
                     >
-                      <span className="flex-1">{opt.venue}</span>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-xs text-gray-400">
-                          Cap: {opt.capacity === 0 ? "Open" : opt.capacity}
-                        </span>
-                        {isSelected && (
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="w-4 h-4 text-purple-400"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
-                        )}
-                      </div>
+                      <span>{cat}</span>
+                      <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
                     </div>
-                  );
-                })
-              )}
-            </div>
+                  ))}
+                </div>
+
+                {/* Blocks */}
+                {hoveredCategory && (
+                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-[#1a1a2b]">
+                    {blocks.map((block) => (
+                      <div
+                        key={block}
+                        onMouseEnter={() => {
+                          setHoveredBlock(block);
+                          setHoveredFloor(null);
+                        }}
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
+                          hoveredBlock === block ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                        }`}
+                      >
+                        <span>{block}</span>
+                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Floors */}
+                {hoveredBlock && (
+                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-[#161626]">
+                    {floors.map((floor) => (
+                      <div
+                        key={floor}
+                        onMouseEnter={() => setHoveredFloor(floor)}
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
+                          hoveredFloor === floor ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                        }`}
+                      >
+                        <span>{floor}</span>
+                        <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Venues */}
+                {hoveredFloor && (
+                  <div className="flex-[1.5] overflow-y-auto custom-scrollbar p-2 space-y-1 min-w-[200px] bg-[#121221]">
+                    {venues.map((opt) => {
+                      const isSelected = selected.includes(opt.id);
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => toggle(opt.id)}
+                          className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center justify-between transition-colors ${
+                            isSelected
+                              ? "bg-purple-600/30 text-white"
+                              : "text-gray-300 hover:bg-purple-500/20"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isSelected ? (
+                              <svg className="w-4 h-4 text-purple-400 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                            ) : (
+                              <div className="w-4 h-4 flex-shrink-0" />
+                            )}
+                            <span className="font-medium">{opt.venue}</span>
+                          </div>
+                          <span className="text-xs text-gray-400 whitespace-nowrap">
+                            ({opt.capacity === 0 ? "Open" : opt.capacity})
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -389,6 +464,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
     </div>
   );
 }
+
 
 // ─── Hall Requirements dropdown ───────────────────────────────────────────────
 
@@ -553,7 +629,7 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
 
 // ─── Venue Detail Card ────────────────────────────────────────────────────────
 
-function VenueDetailCard({ venueName, venuesList, index, data, onChange, errors = {}, onInfoClick }) {
+function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange, errors = {}, onInfoClick }) {
   const showGuestChair    = data.hallReqs?.includes("Guest Chair");
   const showWaterBottles  = data.hallReqs?.includes("Water Bottles");
   const showDiasTable     = data.hallReqs?.includes("Dias Table");
@@ -562,7 +638,7 @@ function VenueDetailCard({ venueName, venuesList, index, data, onChange, errors 
   const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
   // ── Capacity validation: look up this venue's max capacity from API venues list ──
-  const venueObj      = venuesList.find((v) => v.venue === venueName);
+  const venueObj      = venuesList.find((v) => v.id === venueId);
   const venueCapacity = venueObj?.capacity || 0; // 0 means open/no fixed limit
 
   const enteredParticipants  = parseInt(data.participants) || 0;
@@ -825,6 +901,10 @@ export default function VenueForm({
   const [popupVenue, setPopupVenue] = useState(null);
   const [venueAvailability, setVenueAvailability] = useState(null);
   const [checkingVenueAvailability, setCheckingVenueAvailability] = useState(false);
+  const [bookedVenueNames, setBookedVenueNames] = useState([]);
+  const [permissionPopupOpen, setPermissionPopupOpen] = useState(false);
+  const [contactedAdmin, setContactedAdmin] = useState(false);
+  const [pendingPermissionVenues, setPendingPermissionVenues] = useState([]);
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -853,10 +933,16 @@ export default function VenueForm({
         );
         if (!response.ok) throw new Error(`Failed to load venues (${response.status})`);
         const data = await response.json();
-        // Normalize to { venue, capacity } shape — same as the old static VENUES array
         const normalized = data.map((v) => ({
+          id: v._id,
           venue: v.venue,
+          category: v.category || "Other",
+          block: v.block || "Other",
+          floor: v.floor || "Other",
           capacity: v.capacity ?? 0,
+          remarks: v.remarks || "",
+          audio: v.audio,
+          seating: v.seating,
         }));
         setVenuesList(normalized);
       } catch (err) {
@@ -883,9 +969,56 @@ export default function VenueForm({
   };
 
   useEffect(() => {
-    if (onVenueDataChange) onVenueDataChange(venueData);
+    if (!onVenueDataChange) return;
+    // Convert internal _id-based selectedVenues back to venue name strings
+    // so that downstream forms (ICTS, Audio, etc.) receive human-readable names.
+    if (venuesList.length === 0) {
+      onVenueDataChange(venueData);
+      return;
+    }
+    const resolved = venueData.map((day) => ({
+      ...day,
+      selectedVenues: (day.selectedVenues || []).map((entry) => {
+        const match = venuesList.find((v) => v.id === entry);
+        return match ? match.venue : entry; // fallback to raw value if no match
+      }),
+    }));
+    onVenueDataChange(resolved);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [venueData]);
+  }, [venueData, venuesList]);
+
+  // Resolve name-based selectedVenues (from draft hydration) to _id values
+  // once the venues list has loaded from the API.
+  useEffect(() => {
+    if (venuesList.length === 0) return;
+    setVenueData((prev) => {
+      let changed = false;
+      const updated = prev.map((day) => {
+        const resolvedVenues = (day.selectedVenues || []).map((entry) => {
+          // Already an _id — check if it exists in venuesList
+          if (venuesList.some((v) => v.id === entry)) return entry;
+          // It's a venue name string from hydration — resolve to _id
+          const match = venuesList.find((v) => v.venue === entry);
+          if (match) { changed = true; return match.id; }
+          return entry; // leave as-is if no match
+        });
+
+        // Also resolve venueId in venueCards if missing
+        const resolvedCards = (day.venueCards || []).map((card) => {
+          if (card.venueId && venuesList.some((v) => v.id === card.venueId)) return card;
+          const cardMatch = venuesList.find((v) => v.venue === card.venueName);
+          if (cardMatch && card.venueId !== cardMatch.id) {
+            changed = true;
+            return { ...card, venueId: cardMatch.id };
+          }
+          return card;
+        });
+
+        return { ...day, selectedVenues: resolvedVenues, venueCards: resolvedCards };
+      });
+      return changed ? updated : prev;
+    });
+  }, [venuesList]);
 
   useEffect(() => {
     if (initialVenueData.length > 0) {
@@ -924,69 +1057,165 @@ export default function VenueForm({
   };
 
   const handleVenueSelection = (selectedVenues) => {
-    const existingCards  = currentDay.venueCards || [];
-    // Auto-fill only applies when exactly ONE venue is selected.
-    const isSingleVenue  = selectedVenues.length === 1;
-    const totalParticipantsValue = currentDay.participants
-      ? String(currentDay.participants)
-      : "";
+  const existingSelectedVenues = currentDay.selectedVenues || [];
 
-    const updatedCards = selectedVenues.map((name) => {
-      const existing = existingCards.find((c) => c.venueName === name);
+  // ─────────────────────────────────────────────────────────────
+  // Find only the newly selected venues
+  // ─────────────────────────────────────────────────────────────
+  const newlySelectedVenueIds = selectedVenues.filter(
+    (id) => !existingSelectedVenues.includes(id)
+  );
 
-      if (existing) {
-        if (isSingleVenue) {
-          // Sole selected venue → keep it synced with the total, mark as auto-filled.
-          return {
-            ...existing,
-            participants: totalParticipantsValue,
-            seatingCapacity: totalParticipantsValue,
-            autoFilled: true,
-          };
-        }
-        // Multiple venues selected → if this card's values came from the
-        // earlier single-venue auto-fill, clear them so the user enters
-        // per-venue counts manually. Manually-entered values are preserved.
-        if (existing.autoFilled) {
-          return {
-            ...existing,
-            participants: "",
-            seatingCapacity: "",
-            autoFilled: false,
-          };
-        }
-        return existing;
+  // ─────────────────────────────────────────────────────────────
+  // Find newly selected venues that require permission
+  // Classroom / Lab / Department / Center
+  // ─────────────────────────────────────────────────────────────
+  const restrictedVenueIds = newlySelectedVenueIds.filter((id) => {
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    if (!venueObj?.category) return false;
+
+    const category = venueObj.category.toLowerCase().trim();
+
+    return (
+      category.includes("classroom") ||
+      category.includes("lab") ||
+      category.includes("department") ||
+      category.includes("center")
+    );
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // If restricted venue selected:
+  //
+  // DO NOT add it to selectedVenues.
+  // DO NOT create venue card.
+  // Show permission popup instead.
+  // ─────────────────────────────────────────────────────────────
+  if (restrictedVenueIds.length > 0) {
+    setPendingPermissionVenues(restrictedVenueIds);
+    setContactedAdmin(false);
+    setPermissionPopupOpen(true);
+
+    // Keep only venues that are already approved/selected.
+    // Restricted venues are NOT added yet.
+    const allowedVenueIds = selectedVenues.filter(
+      (id) => !restrictedVenueIds.includes(id)
+    );
+
+    applyVenueSelection(allowedVenueIds);
+
+    return;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Normal venue selection
+  // ─────────────────────────────────────────────────────────────
+  applyVenueSelection(selectedVenues);
+};
+
+
+// ─────────────────────────────────────────────────────────────
+// Actually apply the venue selection.
+//
+// This function is called only when:
+// 1. Venue does not require permission, OR
+// 2. User clicked "Contacted Admin" in the permission popup.
+//
+// This is the ONLY place where venueCards are created.
+// ─────────────────────────────────────────────────────────────
+const applyVenueSelection = (selectedVenues) => {
+  const existingCards = currentDay.venueCards || [];
+
+  // Auto-fill only applies when exactly ONE venue is selected.
+  const isSingleVenue = selectedVenues.length === 1;
+
+  const totalParticipantsValue = currentDay.participants
+    ? String(currentDay.participants)
+    : "";
+
+  const updatedCards = selectedVenues.map((id) => {
+    const existing = existingCards.find(
+      (c) => c.venueId === id
+    );
+
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    const name = venueObj ? venueObj.venue : "";
+
+    if (existing) {
+      if (isSingleVenue) {
+        // Sole selected venue → keep it synced with total participants.
+        return {
+          ...existing,
+          participants: totalParticipantsValue,
+          seatingCapacity: totalParticipantsValue,
+          autoFilled: true,
+        };
       }
 
-      // New card
-      return {
-        venueName: name,
-        participants: isSingleVenue ? totalParticipantsValue : "",
-        seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
-        hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
-        audienceChair: "", specialReqs: "",
-        autoFilled: isSingleVenue,
-      };
-    });
+      // Multiple venues selected.
+      // Clear only automatically filled values.
+      if (existing.autoFilled) {
+        return {
+          ...existing,
+          participants: "",
+          seatingCapacity: "",
+          autoFilled: false,
+        };
+      }
 
-    setVenueData((prev) => {
-      const updated = [...prev];
-      updated[currentDayIndex] = {
-        ...updated[currentDayIndex],
-        selectedVenues,
-        venueCards: updatedCards,
-      };
-      return updated;
-    });
-    setErrors((prev) => {
-      const updatedErrors    = { ...prev };
-      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
-      delete currentDayErrors.selectedVenues;
-      updatedErrors[currentDayIndex] = currentDayErrors;
-      return updatedErrors;
-    });
-    checkVenueAvailability(selectedVenues);
-  };
+      return existing;
+    }
+
+    // New venue card is created ONLY here.
+    return {
+      venueId: id,
+      venueName: name,
+      participants: isSingleVenue ? totalParticipantsValue : "",
+      seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
+      hallReqs: [],
+      guestChairs: "",
+      waterBottles: "",
+      diasTable: "",
+      audienceChair: "",
+      specialReqs: "",
+      autoFilled: isSingleVenue,
+    };
+  });
+
+  setVenueData((prev) => {
+    const updated = [...prev];
+
+    updated[currentDayIndex] = {
+      ...updated[currentDayIndex],
+      selectedVenues,
+      venueCards: updatedCards,
+    };
+
+    return updated;
+  });
+
+  setErrors((prev) => {
+    const updatedErrors = { ...prev };
+
+    const currentDayErrors = {
+      ...(updatedErrors[currentDayIndex] || {}),
+    };
+
+    delete currentDayErrors.selectedVenues;
+
+    updatedErrors[currentDayIndex] = currentDayErrors;
+
+    return updatedErrors;
+  });
+
+  checkVenueAvailability(selectedVenues);
+};
 
   const updateVenueCard = (cardIndex, updated) => {
     setVenueData((prev) => {
@@ -1011,10 +1240,11 @@ export default function VenueForm({
   };
 
   const checkVenueAvailability = async (selectedVenues) => {
-    // Clear previous result
-    setVenueAvailability(null);
-
-    if (!selectedVenues.length) return;
+    if (!selectedVenues.length) {
+      setVenueAvailability(null);
+      setBookedVenueNames([]);
+      return;
+    }
 
     const currentEventDay = eventDays[currentDayIndex];
 
@@ -1038,10 +1268,13 @@ export default function VenueForm({
             endTime: currentEventDay.endTime,
           },
         ],
-        venues: selectedVenues.map((venue) => ({
-          dayIndex: currentDayIndex,
-          venueName: venue,
-        })),
+        venues: selectedVenues.map((id) => {
+          const venueObj = stateRef.current.venuesList.find(v => v.id === id);
+          return {
+            dayIndex: currentDayIndex,
+            venueName: venueObj ? venueObj.venue : id,
+          };
+        }),
       };
 
       const response = await fetch(
@@ -1063,9 +1296,17 @@ export default function VenueForm({
       }
 
       setVenueAvailability(data);
+      if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
+        setBookedVenueNames(data.data.unavailable.map((u) => u.venueName));
+      } else if (data?.status === "AVAILABLE") {
+        setBookedVenueNames([]);
+      }
     } catch (err) {
       console.error(err);
       setVenueAvailability(null);
+      // We purposefully DO NOT clear bookedVenueNames on API error.
+      // This ensures that previously booked venue containers remain hidden
+      // even if a subsequent API call fails (e.g., due to a 400 Bad Request).
     } finally {
       setCheckingVenueAvailability(false);
     }
@@ -1077,19 +1318,19 @@ export default function VenueForm({
 
     if (checkingVenueAvailability) {
       setApiError("Please wait, checking venue availability...");
-      return;
+      return false;
     }
 
     if (venueAvailability?.status === "NOT_AVAILABLE") {
       setApiError("Please choose another venue, this venue is already booked.");
-      return;
+      return false;
     }
 
     const dayData   = venueData[currentDayIndex];
     const dayErrors = validateDay(dayData, currentVenuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
-    if (hasErrors) return;
+    if (hasErrors) return false;
 
     setApiError("");
 
@@ -1115,14 +1356,17 @@ export default function VenueForm({
         if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
         setCompletedDays(newCompleted);
         nextStep();
+        return true;
       } catch (err) {
         setApiError(err.message || "Failed to save venue details. Please try again.");
+        return false;
       } finally {
         setIsLoading(false);
       }
     } else {
       setCompletedDays(newCompleted);
       setCurrentDayIndex((prev) => prev + 1);
+      return true;
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1137,32 +1381,30 @@ export default function VenueForm({
   const isOnLastDay = currentDayIndex === Math.max(eventDays.length - 1, 0);
   const nextDayLabel = isOnLastDay ? "Save & Next" : `Day ${currentDayIndex + 2} →`;
 
+  const isNextDisabled = 
+    checkingVenueAvailability || 
+    venueAvailability?.status === "NOT_AVAILABLE" || 
+    Object.keys(errors[currentDayIndex] || {}).length > 0;
+
   useEffect(() => {
     if (!registerChildNavigation) return;
     registerChildNavigation({
       next: handleNext,
       prev: handleBack,
       isLoading: false,
+      isNextDisabled,
       isOnLastDay,
       nextDayLabel,
     });
-    return () => registerChildNavigation({ next: null, prev: null, isLoading: false });
-  }, [registerChildNavigation, handleNext, handleBack, isOnLastDay, nextDayLabel]);
+    return () => registerChildNavigation({ next: null, prev: null, isLoading: false, isNextDisabled: false });
+  }, [registerChildNavigation, handleNext, handleBack, isOnLastDay, nextDayLabel, isNextDisabled]);
 
-  useEffect(() => {
-    if (!registerChildNavigation) return;
-    registerChildNavigation({
-      next: handleNext,
-      prev: handleBack,
-      isLoading,
-      isOnLastDay,
-      nextDayLabel,
-    });
-  }, [isLoading, registerChildNavigation, handleNext, handleBack, isOnLastDay, nextDayLabel]);
+
 
   const selectedVenueObjects = (currentDay.selectedVenues || [])
-    .map((name) => venuesList.find((v) => v.venue === name))
-    .filter(Boolean);
+    .map((id) => venuesList.find((v) => v.id === id))
+    .filter(Boolean)
+    .filter((v) => !bookedVenueNames.includes(v.venue));
 
   const handleInfoClick  = useCallback((venueName) => setPopupVenue(venueName), []);
   const handlePopupClose = useCallback(() => setPopupVenue(null), []);
@@ -1171,6 +1413,118 @@ export default function VenueForm({
     <>
       {popupVenue && (
         <VenueInfoPopup venueName={popupVenue} onClose={handlePopupClose} />
+      )}
+
+      {permissionPopupOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#3A3A5A] bg-[#1E1E35] shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-start gap-3 px-6 pt-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-600/20 border border-purple-500/40 flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-purple-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 className="text-white text-lg font-semibold">
+                  Venue Permission Required
+                </h3>
+
+                <p className="text-gray-400 text-sm mt-1">
+                  Please make sure you have permission before using this venue.
+                </p>
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className="px-6 py-5">
+
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-4">
+                <p className="text-purple-200 text-sm leading-6">
+                  Kindly get permission from the respective department
+                  venue in-charge, classroom in-charge, or lab in-charge
+                  before using the selected venue.
+                </p>
+              </div>
+
+              {/* Contacted Admin */}
+              <label className="mt-5 flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={contactedAdmin}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+
+                    setContactedAdmin(checked);
+
+                    if (checked) {
+                      // ─────────────────────────────────────────────
+                      // User has confirmed permission.
+                      // Now actually add the pending venues.
+                      // ─────────────────────────────────────────────
+                      const currentSelected =
+                        stateRef.current.venueData?.[currentDayIndex]
+                          ?.selectedVenues || [];
+
+                      const finalSelectedVenues = [
+                        ...new Set([
+                          ...currentSelected,
+                          ...pendingPermissionVenues,
+                        ]),
+                      ];
+
+                      setPermissionPopupOpen(false);
+                      setPendingPermissionVenues([]);
+
+                      // NOW create the venue container.
+                      applyVenueSelection(finalSelectedVenues);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                />
+
+                <span className="text-white text-sm font-medium">
+                  Contacted Admin
+                </span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  // ─────────────────────────────────────────────
+                  // User did NOT get permission.
+                  //
+                  // Remove the pending venue completely.
+                  // No selected venue.
+                  // No venue container.
+                  // ─────────────────────────────────────────────
+                  setPermissionPopupOpen(false);
+                  setContactedAdmin(false);
+                  setPendingPermissionVenues([]);
+                }}
+                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
+              >
+                Remove this message
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col gap-6 pb-6">
@@ -1379,6 +1733,7 @@ export default function VenueForm({
               selected={currentDay.selectedVenues}
               onChange={handleVenueSelection}
               totalParticipants={participantCount}
+              bookedVenues={bookedVenueNames}
               error={
                 currentErrors.selectedVenues && currentDay.selectedVenues.length === 0
                   ? currentErrors.selectedVenues
@@ -1405,8 +1760,9 @@ export default function VenueForm({
           <div className="flex flex-col gap-4">
             {selectedVenueObjects.map((v, i) => (
               <VenueDetailCard
-                key={v.venue}
+                key={v.id}
                 venueName={v.venue}
+                venueId={v.id}
                 venuesList={venuesList}
                 venueCapacity={v.capacity}
                 index={i + 1}

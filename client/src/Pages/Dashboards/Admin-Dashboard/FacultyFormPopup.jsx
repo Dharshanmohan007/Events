@@ -228,6 +228,8 @@ const FacultyFormPopup = ({
     const ROLE_OPTIONS = [
         { value: 'Faculty', label: 'Faculty' },
         { value: 'HOD', label: 'HOD' },
+        { value: 'admin secretary', label: 'Admin Secretary' },
+
     ];
 
     return (

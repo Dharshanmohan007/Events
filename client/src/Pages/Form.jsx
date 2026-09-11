@@ -195,6 +195,9 @@ let decodedToken = jwtDecode(token);
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
       estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
+      fundingSource: (eventRequisition.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
@@ -375,11 +378,13 @@ const validateIctsData = (ictsData, venueData) => {
   return errors;
 };
 
-const buildIctsPayload = (ictsData) => {
+const buildIctsPayload = (ictsData, venueData) => {
   const ictses = [];
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
+    const selectedVenuesForDay = venueData?.[dayIndex]?.selectedVenues || [];
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      if (!selectedVenuesForDay.includes(venueName)) return;
       const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
@@ -855,16 +860,66 @@ const formatExternalTransportPayload = (externalTransportData) => {
   });
 };
 
-const buildPayloadForSection = (sectionKey, data, eventDays = []) => {
+const buildRefreshmentPayload = (foodData = []) => ({
+  refreshments: (Array.isArray(foodData) ? foodData : []).map((form) => ({
+    date: form.date ? new Date(form.date).toISOString() : "",
+    resourcePersonType: form.resourcePersonType || [],
+    numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
+    numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
+    accompanyingStaff: (form.staffList || []).map((staff) => ({
+      name: staff.name || "",
+      mobile: parseInt(staff.mobile) || 0,
+    })),
+    foodTypes: (form.foodTypes || []).map((type) => {
+      if (type === "Morning Refreshment" || type === "Evening Refreshment") {
+        const isMorning = type === "Morning Refreshment";
+        const venues = isMorning ? form.morningRefreshmentVenues : form.eveningRefreshmentVenues;
+        const count = isMorning ? form.morningRefreshmentCount : form.eveningRefreshmentCount;
+        return {
+          type,
+          refreshmentCount: parseInt(count) || 0,
+          venueWiseDetails: (venues || []).map((venue) => ({
+            venueName: venue.venue || "",
+            count: parseInt(venue.count) || 0,
+          })),
+        };
+      }
+
+      const meal = form[type.toLowerCase()] || {};
+      const payload = {
+        type,
+        participants: { vegCount: 0, nonVegCount: 0 },
+        vipGuests: { vegCount: 0, nonVegCount: 0 },
+        trainer: { vegCount: 0, nonVegCount: 0 },
+        placement: { vegCount: 0, nonVegCount: 0 },
+      };
+      const sections = ["participants"];
+      if (form.resourcePersonType?.includes("VIP")) sections.push("vipGuests");
+      if (form.resourcePersonType?.includes("Trainer")) sections.push("trainer");
+      if (form.resourcePersonType?.includes("Placement")) sections.push("placement");
+      sections.forEach((section) => {
+        const values = meal[section] || {};
+        payload[section] = {
+          vegCount: parseInt(values.vegCount) || 0,
+          nonVegCount: parseInt(values.nonVegCount) || 0,
+        };
+      });
+      return payload;
+    }),
+    specialRequirements: form.specialRequirements || "",
+  })),
+});
+
+const buildPayloadForSection = (sectionKey, data, eventDays = [], formData = {}) => {
   switch (sectionKey) {
     case "venue":               return { venueDetails: buildVenuePayload(data) };
-    case "icts":                return { ictsDetails: buildIctsPayload(data) };
+    case "icts":                return { ictsDetails: buildIctsPayload(data, formData.venue) };
     case "purchase":            return { purchaseDetails: buildPurchasePayload(data) };
     case "media":               return buildMediaPayload(data);
     case "audio":               return { audioDetails: data };
     case "transport":           return { transportDetails: data };
     case "externalTransport":   return { externalTransportDetails: { externalTransports: formatExternalTransportPayload(data) } };
-    case "foodandrefreshments": return { foodDetails: data };
+    case "foodandrefreshments": return { refreshmentDetails: buildRefreshmentPayload(data) };
     case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
     default:                    return {};
   }
@@ -889,7 +944,7 @@ const validateSection = (sectionKey, data, extras = {}) => {
 const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
   const media    = buildMediaPayload(formData.media);
   const venue    = buildVenuePayload(formData.venue);
-  const icts     = buildIctsPayload(formData.icts);
+  const icts     = buildIctsPayload(formData.icts, formData.venue);
   const purchase = buildPurchasePayload(formData.purchase);
   return {
     organizerDetails: {
@@ -898,6 +953,9 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
       estimatedBudget: Number(formData.event.estimatedBudget) || 0,
+      fundingSource: (formData.event.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(formData.event.advanceToBeReceivedWithin) || 0,
@@ -919,7 +977,7 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
     externalTransportDetails: {
       externalTransports: formatExternalTransportPayload(formData.externalTransport),
     },
-    foodDetails:         formData.foodandrefreshments,
+    refreshmentDetails:  buildRefreshmentPayload(formData.foodandrefreshments),
     accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
 };
@@ -990,6 +1048,12 @@ function hydrateEventData(apiData) {
     budget: od.isBudgetApproved ? "Yes" : "No",
     finance: od.financeRequired ? "Yes" : "No",
     estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
+    fundingSource: Array.isArray(od.fundingSource)
+      ? od.fundingSource.map((source) => ({
+          type: source.type || "",
+          amount: source.amount != null ? String(source.amount) : "",
+        }))
+      : [],
     advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
     advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
@@ -1425,6 +1489,7 @@ export default function Form() {
     event: {
       doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
       reason: "", numOrganizers: "", organizers: [],
+      fundingSource: [],
       eventData: {}, eventDays: [], requirements: [],
     },
     venue: [], icts: {}, audio: defaultAudio,
@@ -1604,7 +1669,7 @@ export default function Form() {
           body: sectionValueOrFormData,
         });
       } else {
-        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays);
+        const payload = buildPayloadForSection(sectionKey, sectionValueOrFormData, formDataRef.current.event.eventDays, formDataRef.current);
         response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1772,11 +1837,12 @@ export default function Form() {
   // ── registerChildNavigation ───────────────────────────────────────────────
   const registerChildNavigation = useCallback((nav = {}) => {
     setChildNav({
-      next:         nav.next         || null,
-      prev:         nav.prev         || null,
-      isLoading:    nav.isLoading    || false,
-      isOnLastDay:  nav.isOnLastDay  !== undefined ? nav.isOnLastDay  : true,
-      nextDayLabel: nav.nextDayLabel || "Save & Next",
+      next:           nav.next           || null,
+      prev:           nav.prev           || null,
+      isLoading:      nav.isLoading      || false,
+      isNextDisabled: nav.isNextDisabled || false,
+      isOnLastDay:    nav.isOnLastDay    !== undefined ? nav.isOnLastDay  : true,
+      nextDayLabel:   nav.nextDayLabel   || "Save & Next",
     });
   }, []);
 
@@ -2004,7 +2070,7 @@ export default function Form() {
             {showSubmit ? (
               <button
                   onClick={handlePreview}
-                  disabled={!eventId || isLoading || childNav.isLoading}
+                  disabled={!eventId || isLoading || childNav.isLoading || childNav.isNextDisabled}
                   className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                   {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
@@ -2012,7 +2078,7 @@ export default function Form() {
           ) : (
               <button
                   onClick={handleSaveAndContinue}
-                  disabled={isLoading || childNav.isLoading}
+                  disabled={isLoading || childNav.isLoading || childNav.isNextDisabled}
                   className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                   {forwardLabel()}
