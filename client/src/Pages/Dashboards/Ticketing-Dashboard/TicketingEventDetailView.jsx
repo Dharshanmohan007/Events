@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import TicketingNavbar from "./TicketingNavbar";
 import {
   ChevronRight,
@@ -9,10 +9,48 @@ import {
   MapPin,
   VenusAndMars,
   ClipboardList,
+  PartyPopper,
+  CalendarDays,
+  Clock,
 } from "lucide-react";
 import EventHeaderData from "../EventHeaderData";
+import { useParams } from "react-router-dom";
+import axios from "axios";
 
 const TicketingEventDetailView = () => {
+  const token = localStorage.getItem("token");
+
+  const { eventId } = useParams();
+
+  // states
+  const [eventData, setEventData] = useState(null);
+
+  // function to fetch the details
+  async function fetchEventDetails() {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}?module=externalTransports`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setEventData(res.data.data);
+    } catch (err) {
+      console.error(
+        "error occured while fetching the detail page : ",
+        err.message,
+      );
+    }
+  }
+
+  console.log("event external transport data : ", eventData);
+
+  useEffect(() => {
+    fetchEventDetails();
+  }, [eventId]);
+
   return (
     <>
       <main className="bg-[#0b1326] ">
@@ -21,19 +59,29 @@ const TicketingEventDetailView = () => {
           <div className="flex items-center gap-2">
             <h1>Event Details</h1>
             <ChevronRight />
-            <h1 className="text-[#d0bcff]">Static Event Name</h1>
+            <h1 className="text-[#d0bcff]">
+              {eventData?.requestDetails?.eventDetails?.eventName}
+            </h1>
             <h1>--</h1>
             <button className="text-amber-300 bg-amber-200/20 text-xs py-2 px-2 rounded-full">
-              static Department
+              {
+                eventData?.requestDetails?.organizerDetails
+                  ?.organizingDepartment
+              }
             </button>
             <h1>--</h1>
-            <button className="text-green-300 bg-green-200/20 text-xs py-2 px-2 rounded-full">
-              static -- Acknowledged
+            <button
+              className={`  ${eventData?.externalTransportDetails?.status?.status.toLowerCase().includes("pending") ? "text-red-500 bg-red-300/10" : "text-green-500"}  text-xs py-2 px-2 rounded-full`}
+            >
+              {eventData?.externalTransportDetails?.status?.status}
             </button>
           </div>
-          <button className="bg-linear-to-r from-emerald-800 to-emerald-900 text-white px-3 py-1 rounded-lg">
-            Acknowledge
-          </button>
+          {eventData?.externalTransportDetails?.status?.status.toLowerCase() ==
+            "pending for acknowledge" && (
+            <button className="bg-linear-to-r from-emerald-800 to-emerald-900 text-white px-3 py-1 rounded-lg">
+              Acknowledge
+            </button>
+          )}
         </div>
 
         {/* main content  */}
@@ -42,301 +90,413 @@ const TicketingEventDetailView = () => {
           <h1 className="mb-4 font-medium text-violet-700">
             Transportation Details
           </h1>
-          <EventHeaderData />
+          <div className="w-full px-1 ">
+            {/* Outer Container */}
+            <div className="rounded-2xl border border-[#354258] bg-[#1d2638] p-3 shadow-lg">
+              {/* Details Container */}
+              <div className="grid grid-cols-1 overflow-hidden rounded-xl bg-[#303a4f] md:grid-cols-4">
+                {/* Event Name */}
+                <div className="flex min-h-[74px] items-center gap-4 border-b border-[#526078] px-5 md:border-b-0 md:border-r">
+                  <PartyPopper
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-[#b8a9ed]"
+                  />
+
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[1px] text-[#aeb6c6]">
+                      EVENT NAME
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {eventData?.requestDetails?.eventDetails?.eventName}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Event Date */}
+                <div className="flex min-h-[74px] items-center gap-4 border-b border-[#526078] px-5 md:border-b-0 md:border-r">
+                  <CalendarDays
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-[#b8a9ed]"
+                  />
+
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[1px] text-[#aeb6c6]">
+                      EVENT DATE
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {eventData?.requestDetails?.eventDetails?.eventSchedule
+                        ?.map((item) =>
+                          new Date(item.eventDate).toLocaleDateString("en-GB"),
+                        )
+                        .join(", ")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Event Start Time */}
+                <div className="flex min-h-[74px] items-center gap-4 border-b border-[#526078] px-5 md:border-b-0 md:border-r">
+                  <Clock
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-[#b8a9ed]"
+                  />
+
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[1px] text-[#aeb6c6]">
+                      EVENT START TIME
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {eventData?.requestDetails?.eventDetails?.eventSchedule?.map(
+                        (item) => {
+                          return <p>{item.startTime}</p>;
+                        },
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Event End Time */}
+                <div className="flex min-h-[74px] items-center gap-4 px-5">
+                  <Clock
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-[#b8a9ed]"
+                  />
+
+                  <div>
+                    <p className="text-[10px] font-semibold tracking-[1px] text-[#aeb6c6]">
+                      EVENT END TIME
+                    </p>
+
+                    <p className="mt-1 text-sm font-semibold text-white">
+                      {eventData?.requestDetails?.eventDetails?.eventSchedule?.map(
+                        (item) => {
+                          return <p>{item.endTime}</p>;
+                        },
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* organizer details  */}
-          <div class="flex w-full mt-2 items-center rounded-lg border border-[#374151] bg-[#2d37489d] px-5 py-3">
-            <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] pr-6">
-              <i data-lucide="user" class="h-5 w-5 text-[#c4b5fd]"></i>
 
-              <div>
-                <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
-                  Organizer Name
-                </p>
+          {eventData?.requestDetails?.organizerDetails?.organizers?.map(
+            (item) => {
+              return (
+                <div class="flex w-full mt-2 items-center rounded-lg border border-[#374151] bg-[#2d37489d] px-5 py-3">
+                  <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] pr-6">
+                    <i data-lucide="user" class="h-5 w-5 text-[#c4b5fd]"></i>
 
-                <p class="mt-1 text-[15px] font-semibold text-white">
-                  Dr ARUN J
-                </p>
-              </div>
-            </div>
+                    <div>
+                      <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
+                        Organizer Name
+                      </p>
 
-            <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] px-6">
-              <i data-lucide="mail" class="h-5 w-5 text-[#c4b5fd]"></i>
+                      <p class="mt-1 text-[15px] font-semibold text-white">
+                        {item?.name}
+                      </p>
+                    </div>
+                  </div>
 
-              <div>
-                <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
-                  Organizer Email
-                </p>
+                  <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] px-6">
+                    <i data-lucide="mail" class="h-5 w-5 text-[#c4b5fd]"></i>
 
-                <p class="mt-1 text-[15px] font-semibold text-white">
-                  arun.j@sece.ac.in
-                </p>
-              </div>
-            </div>
+                    <div>
+                      <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
+                        Organizer Email
+                      </p>
 
-            <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] px-6">
-              <i data-lucide="phone" class="h-5 w-5 text-[#c4b5fd]"></i>
+                      <p class="mt-1 text-[15px] font-semibold text-white">
+                        {item?.email}
+                      </p>
+                    </div>
+                  </div>
 
-              <div>
-                <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
-                  Organizer Phone Number
-                </p>
+                  <div class="flex flex-1 items-center gap-4 border-r border-[#4b5563] px-6">
+                    <i data-lucide="phone" class="h-5 w-5 text-[#c4b5fd]"></i>
 
-                <p class="mt-1 text-[15px] font-semibold text-white">
-                  8428797979
-                </p>
-              </div>
-            </div>
+                    <div>
+                      <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
+                        Organizer Phone Number
+                      </p>
 
-            {/* Organizer Department  */}
-            <div class="flex flex-1 items-center gap-4 pl-6">
-              <i data-lucide="network" class="h-5 w-5 text-[#c4b5fd]"></i>
+                      <p class="mt-1 text-[15px] font-semibold text-white">
+                        {item?.mobile}
+                      </p>
+                    </div>
+                  </div>
 
-              <div>
-                <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
-                  Organizer Department
-                </p>
+                  {/* Organizer Department  */}
+                  <div class="flex flex-1 items-center gap-4 pl-6">
+                    <i data-lucide="network" class="h-5 w-5 text-[#c4b5fd]"></i>
 
-                <p class="mt-1 text-[15px] font-semibold text-white">
-                  PLACEMENT
-                </p>
-              </div>
-            </div>
-          </div>
+                    <div>
+                      <p class="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
+                        Organizer Department
+                      </p>
+
+                      <p class="mt-1 text-[15px] font-semibold text-white">
+                        {item?.department}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            },
+          )}
 
           {/* Guest details  */}
-          <div className="guest-detail-container mt-4 border border-gray-700 rounded-lg p-2">
-            <h1 className="text-[#6508e7] mb-2 font-medium ">Guest Details</h1>
-            <div className="w-full ">
-              <div className="flex min-h-[100px] items-center rounded-xl bg-[#2d37489d] px-5">
-                {/* Guest Name */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <UserRound
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
 
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      GUEST NAME
-                    </p>
+          {eventData?.externalTransportDetails?.externalTransports?.map(
+            (transport, transportIndex) => (
+              <div
+                key={transport?._id || transportIndex}
+                className="guest-detail-container mt-4 rounded-lg border border-gray-700 p-2"
+              >
+                <h1 className="mb-2 font-medium text-[#6508e7]">
+                  Passenger Details
+                </h1>
 
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      priyanka
-                    </p>
+                {transport?.passengers?.map((item, index) => (
+                  <div key={item?._id || index} className="mb-3 last:mb-0">
+                    <div className="flex min-h-[100px] items-center rounded-xl bg-[#2d37489d] px-5">
+                      {/* Passenger Name */}
+                      <div className="flex flex-1 items-center gap-4 border-r border-[#536078] px-4">
+                        <UserRound
+                          size={22}
+                          strokeWidth={1.8}
+                          className="text-[#b8a9ed]"
+                        />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                            PASSENGER NAME
+                          </p>
+
+                          <p className="text-[15px] font-bold text-[#f4ede8]">
+                            {item?.name || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Mobile Number */}
+                      <div className="flex flex-1 items-center gap-4 border-r border-[#536078] px-4">
+                        <Phone
+                          size={22}
+                          strokeWidth={1.8}
+                          className="text-[#b8a9ed]"
+                        />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                            MOBILE NUMBER
+                          </p>
+
+                          <p className="text-[15px] font-bold text-[#f4ede8]">
+                            {item?.phone || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Designation */}
+                      <div className="flex flex-1 items-center gap-4 border-r border-[#536078] px-4">
+                        <BriefcaseBusiness
+                          size={22}
+                          strokeWidth={1.8}
+                          className="text-[#b8a9ed]"
+                        />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                            DESIGNATION
+                          </p>
+
+                          <p className="text-[15px] font-bold text-[#f4ede8]">
+                            {item?.designation || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Organization */}
+                      <div className="flex flex-1 items-center gap-4 border-r border-[#536078] px-4">
+                        <Building2
+                          size={22}
+                          strokeWidth={1.8}
+                          className="text-[#b8a9ed]"
+                        />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                            ORGANIZATION
+                          </p>
+
+                          <p className="text-[15px] font-bold leading-5 text-[#f4ede8]">
+                            {item?.organization || "-"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Gender */}
+                      <div className="flex flex-1 items-center gap-4 px-4">
+                        <VenusAndMars
+                          size={22}
+                          strokeWidth={1.8}
+                          className="text-[#b8a9ed]"
+                        />
+
+                        <div>
+                          <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                            GENDER
+                          </p>
+
+                          <p className="text-[15px] font-bold text-[#f4ede8]">
+                            {item?.gender || "-"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-
-                {/* Mobile Number */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <Phone
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      MOBILE NUMBER
-                    </p>
-
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      977903441715
-                    </p>
-                  </div>
-                </div>
-
-                {/* Designation */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <BriefcaseBusiness
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      DESIGNATION
-                    </p>
-
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      Student
-                    </p>
-                  </div>
-                </div>
-
-                {/* Organization */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <Building2
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      ORGANIZATION
-                    </p>
-
-                    <p className="text-[15px] font-bold leading-5 text-[#f4ede8]">
-                      SECE (International
-                      <br />
-                      Students)
-                    </p>
-                  </div>
-                </div>
-
-                {/* Gender */}
-                <div className="flex flex-1 items-center gap-4 px-4">
-                  <VenusAndMars
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      GENDER
-                    </p>
-
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      Female
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
-            </div>
-          </div>
+            ),
+          )}
 
           {/* Pickup  ---  drop  */}
-          <div className="w-full border border-gray-700 rounded-lg mt-3 px-3 py-3">
-            <div className="flex items-center">
-              {/* Pickup Location */}
-              <div className="flex w-[290px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
-                  <MapPin size={14} className="text-white" />
-                </div>
+          {eventData?.externalTransportDetails?.externalTransports?.map(
+            (item) => {
+              return (
+                <>
+                  <div className="w-full border border-gray-700 rounded-lg mt-3 px-3 py-3">
+                    <div className="flex items-center">
+                      {/* Pickup Location */}
+                      <div className="flex w-[290px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
+                          <MapPin size={14} className="text-white" />
+                        </div>
 
-                <div>
-                  <p className="text-sm font-medium uppercase text-[#aab3c5]">
-                    Pickup Location
-                  </p>
-                  <p className="text-sm font-semibold text-white">Sece</p>
-                </div>
-              </div>
+                        <div>
+                          <p className="text-sm font-medium uppercase text-[#aab3c5]">
+                            Pickup Location
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {item?.from}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Route Line */}
-              <div className="h-0 flex-1 border-t border-dashed border-[#536078]" />
+                      <div className="h-0 flex-1 border-t border-dashed border-[#536078]" />
 
-              {/* Intermediate Location - Render only when available */}
+                      {/* Drop Location */}
+                      <div className="flex w-[290px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
+                          <MapPin size={14} className="text-white" />
+                        </div>
 
-              <div className="flex w-[220px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
-                  <MapPin size={14} className="text-white" />
-                </div>
+                        <div>
+                          <p className="text-sm font-medium uppercase text-[#aab3c5]">
+                            Drop Location
+                          </p>
+                          <p className="text-sm font-semibold text-white">
+                            {item?.to}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                <div>
-                  <p className="text-sm font-medium uppercase text-[#aab3c5]">
-                    Stop 1
-                  </p>
-                  <p className="text-sm font-semibold text-white">
-                    Chennai Airport
-                  </p>
-                </div>
-              </div>
+                  {/* count section  */}
 
-              <div className="h-0 flex-1 border-t border-dashed border-[#536078]" />
+                  <div className="w-full rounded-lg  border border-gray-700 mt-3 p-2">
+                    {/* First Row */}
+                    <div className="grid grid-cols-2 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
+                      {/* Total Number of Members */}
+                      <div className="flex items-center justify-between border-r border-[#46536a] px-3 py-3">
+                        <span className="text-[15px] font-medium text-[#c3c9d5]">
+                          Total Number of Members
+                        </span>
 
-              {/* Drop Location */}
-              <div className="flex w-[290px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
-                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
-                  <MapPin size={14} className="text-white" />
-                </div>
+                        <span className="text-[15px] font-bold text-[#f1eee9]">
+                          {item?.totalPassengers}
+                        </span>
+                      </div>
 
-                <div>
-                  <p className="text-sm font-medium uppercase text-[#aab3c5]">
-                    Drop Location
-                  </p>
-                  <p className="text-sm font-semibold text-white">
-                    Brook fields (CBE)
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+                      {/* Types of Vehicle Needed */}
+                      <div className="flex items-center justify-between px-3 py-3">
+                        <span className="text-[15px] font-medium text-[#c3c9d5]">
+                          Type of Vehicle
+                        </span>
 
-          {/* count section  */}
+                        <span className="text-[15px] font-bold text-[#f1eee9]">
+                          {item?.travelOption}
+                        </span>
+                      </div>
+                    </div>
 
-          <div className="w-full rounded-lg  border border-gray-700 mt-3 p-2">
-            {/* First Row */}
-            <div className="grid grid-cols-2 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
-              {/* Total Number of Members */}
-              <div className="flex items-center justify-between border-r border-[#46536a] px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Total Number of Members
-                </span>
+                    {/* Second Row */}
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">3</span>
-              </div>
+                    <div className="mt-1 grid grid-cols-1 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
+                      {item?.travelOption?.toLowerCase() === "train" ? (
+                        /* Train Class */
+                        <div className="flex items-center justify-between border-b border-[#46536a] px-3 py-3">
+                          <span className="text-[15px] font-medium text-[#c3c9d5]">
+                            Train Coach Class
+                          </span>
 
-              {/* Types of Vehicle Needed */}
-              <div className="flex items-center justify-between px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Type of Vehicle
-                </span>
+                          <div className="text-right text-[15px] font-bold text-[#f1eee9]">
+                            {item?.classOrBerth?.map((classItem, index) => (
+                              <p key={index}>{classItem}</p>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        /* Flight Class */
+                        <div className="flex items-center justify-between px-3 py-3">
+                          <span className="text-[15px] font-medium text-[#c3c9d5]">
+                            Travel Class
+                          </span>
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">
-                  Train
-                </span>
-              </div>
-            </div>
+                          <span className="text-[15px] font-bold text-[#f1eee9]">
+                            {item?.classOrBerth.map((item) => {
+                              return <p>{item}</p>;
+                            })}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-            {/* Second Row */}
-            <div className="mt-1 grid grid-cols-1 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
-              {/* Train class  */}
-              <div className="flex items-center justify-between border-b border-[#46536a] px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Train Coach Class
-                </span>
+                    {/* special requirements  */}
+                    <div className="w-full rounded-lg border border-[#46536a] mt-3 px-4 py-3">
+                      {/* Heading */}
+                      <div className="flex items-center gap-2">
+                        <ClipboardList
+                          size={15}
+                          strokeWidth={1.8}
+                          className="text-[#c3c9d5]"
+                        />
 
-                <span className="text-[15px] font-bold text-[#f1eee9]">AC</span>
-              </div>
+                        <h3 className="text-[15px] font-semibold text-[#f1eee9]">
+                          Special Requirement
+                        </h3>
+                      </div>
 
-              {/*  Flight class */}
-              <div className="flex items-center justify-between px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Travel Class
-                </span>
-
-                <span className="text-[15px] font-bold text-[#f1eee9]">
-                  Economy
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* special requirements  */}
-          <div className="w-full rounded-lg border border-[#46536a] mt-3 px-4 py-3">
-            {/* Heading */}
-            <div className="flex items-center gap-2">
-              <ClipboardList
-                size={15}
-                strokeWidth={1.8}
-                className="text-[#c3c9d5]"
-              />
-
-              <h3 className="text-[15px] font-semibold text-[#f1eee9]">
-                Special Requirement
-              </h3>
-            </div>
-
-            {/* Requirement Content */}
-            <p className="mt-3 text-[15px] font-medium leading-relaxed text-[#c3c9d5]">
-              Three Nepal girls student || Issue in time format the pickup time
-              is 6-sep-2026 morning 9.30 AM drop time 6-sep-2026 3.30 PM
-            </p>
-          </div>
+                      {/* Requirement Content */}
+                      <p className="mt-3 text-[15px] font-medium leading-relaxed text-[#c3c9d5]">
+                        {item?.specialRequirements}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              );
+            },
+          )}
         </div>
       </main>
     </>

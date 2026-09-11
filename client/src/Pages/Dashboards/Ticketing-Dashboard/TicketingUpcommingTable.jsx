@@ -6,7 +6,7 @@ import { jwtDecode } from "jwt-decode";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 
-const tabs = ["Events", "Individuals"];
+const tabs = ["Events"];
 
 const TicketingUpcommingTable = () => {
   const navigate = useNavigate();
@@ -97,20 +97,6 @@ const TicketingUpcommingTable = () => {
         <h2 className="text-[16px] font-medium text-white">
           Upcoming {selectedTab == "Events" ? "Event" : "Individual"} Requests
         </h2>
-
-        <div className="flex items-center border border-gray-700 rounded-md">
-          {tabs.map((item, index) => {
-            return (
-              <button
-                key={index}
-                onClick={() => setSelectedTab(item)}
-                className={`px-4 py-1 text-md text-white  ${selectedTab == item ? "bg-purple-700" : ""}  ${index == 0 ? "rounded-l-md" : "rounded-r-md"} `}
-              >
-                {item}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* Events Table */}
@@ -145,107 +131,107 @@ const TicketingUpcommingTable = () => {
               </tr>
             </thead>
 
-          <tbody className="text-[14px]">
-  {eventTicketingData?.length > 0 ? (
-    eventTicketingData.map((item, index) => {
-      return (
-        <tr
-          key={item?._id || index}
-          className="border-b border-[#202a3b] transition hover:bg-[#1a2435]"
-        >
-          {/* Event Name */}
-          <td
-            className="max-w-[100px] truncate px-2 py-3 text-[#d2d6de]"
-            title={item?.eventName}
-          >
-            {item?.eventName || "-"}
-          </td>
-
-          {/* Event Type */}
-          <td className="px-2 py-3 text-[#b0b7c5]">
-            {item?.eventType || "-"}
-          </td>
-
-          {/* Dates */}
-          <td className="px-2 py-3 text-[#b0b7c5]">
-            <div className="flex items-center gap-2">
-              {/* First Date */}
-              <span>
-                {item?.dates?.[0]
-                  ? new Date(item.dates[0])
-                      .toLocaleDateString("en-GB")
-                      .replaceAll("/", "-")
-                  : "-"}
-              </span>
-
-              {/* Remaining Dates */}
-              {item?.dates?.length > 1 && (
-                <div className="group relative">
-                  <div className="flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-md bg-gray-700 px-1 text-xs text-white">
-                    +{item.dates.length - 1}
-                  </div>
-
-                  {/* Hover Tooltip */}
-                  <div className="absolute left-0 top-8 z-50 hidden min-w-[150px] rounded-md border border-gray-600 bg-[#1f2937] p-2 shadow-lg group-hover:block">
-                    {item.dates.slice(1).map((date, dateIndex) => (
-                      <div
-                        key={dateIndex}
-                        className="whitespace-nowrap py-1 text-sm text-[#b0b7c5]"
+            <tbody className="text-[14px]">
+              {eventTicketingData?.length > 0 ? (
+                eventTicketingData.map((item, index) => {
+                  return (
+                    <tr
+                      key={item?._id || index}
+                      className="border-b border-[#202a3b] transition hover:bg-[#1a2435]"
+                    >
+                      {/* Event Name */}
+                      <td
+                        className="max-w-[100px] truncate px-2 py-3 text-[#d2d6de]"
+                        title={item?.eventName}
                       >
-                        {new Date(date)
-                          .toLocaleDateString("en-GB")
-                          .replaceAll("/", "-")}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                        {item?.eventName || "-"}
+                      </td>
+
+                      {/* Event Type */}
+                      <td className="px-2 py-3 text-[#b0b7c5]">
+                        {item?.eventType || "-"}
+                      </td>
+
+                      {/* Dates */}
+                      <td className="px-2 py-3 text-[#b0b7c5]">
+                        <div className="flex items-center gap-2">
+                          {/* First Date */}
+                          <span>
+                            {item?.dates?.[0]
+                              ? new Date(item.dates[0])
+                                  .toLocaleDateString("en-GB")
+                                  .replaceAll("/", "-")
+                              : "-"}
+                          </span>
+
+                          {/* Remaining Dates */}
+                          {item?.dates?.length > 1 && (
+                            <div className="group relative">
+                              <div className="flex h-6 min-w-6 cursor-pointer items-center justify-center rounded-md bg-gray-700 px-1 text-xs text-white">
+                                +{item.dates.length - 1}
+                              </div>
+
+                              {/* Hover Tooltip */}
+                              <div className="absolute left-0 top-8 z-50 hidden min-w-[150px] rounded-md border border-gray-600 bg-[#1f2937] p-2 shadow-lg group-hover:block">
+                                {item.dates.slice(1).map((date, dateIndex) => (
+                                  <div
+                                    key={dateIndex}
+                                    className="whitespace-nowrap py-1 text-sm text-[#b0b7c5]"
+                                  >
+                                    {new Date(date)
+                                      .toLocaleDateString("en-GB")
+                                      .replaceAll("/", "-")}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Organizing Department */}
+                      <td className="px-2 py-3 text-[#b0b7c5]">
+                        {item?.organizingDepartment || "-"}
+                      </td>
+
+                      {/* Department Status */}
+                      <td className="px-2 py-2">
+                        <span
+                          className={`inline-flex items-center ${getStatusColor(
+                            item?.departmentStatus,
+                          )}`}
+                        >
+                          <span className="mr-1">●</span>
+
+                          {item?.departmentStatus || "-"}
+                        </span>
+                      </td>
+
+                      {/* View Button */}
+                      <td className="px-2 py-2 text-center">
+                        <button
+                          onClick={() => {
+                            navigate(`/ticketing-dashboard/event-request/${item?.eventId}`);
+                          }}
+                          className="text-[#aab3c3] hover:text-white"
+                        >
+                          <ArrowUpRight size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-2 py-10 text-center text-[#8b95a7]"
+                  >
+                    No events found
+                  </td>
+                </tr>
               )}
-            </div>
-          </td>
-
-          {/* Organizing Department */}
-          <td className="px-2 py-3 text-[#b0b7c5]">
-            {item?.organizingDepartment || "-"}
-          </td>
-
-          {/* Department Status */}
-          <td className="px-2 py-2">
-            <span
-              className={`inline-flex items-center ${getStatusColor(
-                item?.departmentStatus
-              )}`}
-            >
-              <span className="mr-1">●</span>
-
-              {item?.departmentStatus || "-"}
-            </span>
-          </td>
-
-          {/* View Button */}
-          <td className="px-2 py-2 text-center">
-            <button
-              onClick={() => {
-                navigate("/ticketing-dashboard/event-request/123");
-              }}
-              className="text-[#aab3c3] hover:text-white"
-            >
-              <ArrowUpRight size={18} />
-            </button>
-          </td>
-        </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td
-        colSpan={6}
-        className="px-2 py-10 text-center text-[#8b95a7]"
-      >
-        No events found
-      </td>
-    </tr>
-  )}
-</tbody>
+            </tbody>
           </table>
         </div>
       )}

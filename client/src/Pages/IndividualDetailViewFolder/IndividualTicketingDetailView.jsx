@@ -20,6 +20,8 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 
 const IndividualTicketingDetailView = ({ data }) => {
+  console.log("external transport data : ", data);
+
   const { eventId } = useParams();
 
   // Decode user role
@@ -51,7 +53,7 @@ const IndividualTicketingDetailView = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "approve" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -82,7 +84,7 @@ const IndividualTicketingDetailView = ({ data }) => {
             action: "reject",
             reason: rejectReason.trim(),
           }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -109,7 +111,7 @@ const IndividualTicketingDetailView = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "acknowledge" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -134,7 +136,7 @@ const IndividualTicketingDetailView = ({ data }) => {
           method: "PUT",
           headers: getAuthHeaders(),
           body: JSON.stringify({ action: "complete" }),
-        }
+        },
       );
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -170,7 +172,7 @@ const IndividualTicketingDetailView = ({ data }) => {
   return (
     <>
       <main className="bg-[#0b1326]">
-        <TicketingNavbar />
+        {role.includes("admin") ? "" : <TicketingNavbar />}
 
         {/* Header with breadcrumb, status badge, and action buttons */}
         <div className="header px-4 mt-4 text-white flex items-center justify-between">
@@ -192,7 +194,7 @@ const IndividualTicketingDetailView = ({ data }) => {
               role.toLowerCase() === "super admin 2") && (
               <button
                 className={`text-xs py-2 px-2 rounded-full ${renderStatusColors(
-                  data?.superAdminApproval?.status
+                  data?.superAdminApproval?.status,
                 )}`}
               >
                 {data?.superAdminApproval?.status}
@@ -201,7 +203,7 @@ const IndividualTicketingDetailView = ({ data }) => {
             {role.toLowerCase() === "faculty" && (
               <button
                 className={`text-xs py-2 px-2 rounded-full ${renderStatusColors(
-                  data?.finalStatus
+                  data?.finalStatus,
                 )}`}
               >
                 {data?.finalStatus}
@@ -210,7 +212,7 @@ const IndividualTicketingDetailView = ({ data }) => {
             {role.toLowerCase() === "head" && (
               <button
                 className={`text-xs py-2 px-2 rounded-full ${renderStatusColors(
-                  data?.headApproval?.status
+                  data?.headApproval?.status,
                 )}`}
               >
                 {data?.headApproval?.status}
@@ -253,8 +255,7 @@ const IndividualTicketingDetailView = ({ data }) => {
                   {actionLoading ? "Processing..." : "Acknowledge"}
                 </button>
               )}
-              {data?.headApproval?.status?.toLowerCase() ===
-                "acknowledged" && (
+              {data?.headApproval?.status?.toLowerCase() === "acknowledged" && (
                 <button
                   onClick={handleComplete}
                   disabled={actionLoading}
@@ -279,18 +280,22 @@ const IndividualTicketingDetailView = ({ data }) => {
           </h1>
 
           {/* Event Header Data */}
-          <EventHeaderData data={data?.requestDetails || data} />
+          {/* <EventHeaderData data={data?.requestDetails || data} /> */}
 
           {/* Organizer details */}
           <div className="flex w-full mt-2 items-center rounded-lg border border-[#374151] bg-[#2d37489d] px-5 py-3">
             <div className="flex flex-1 items-center gap-4 border-r border-[#4b5563] pr-6">
-              <UserRound size={20} strokeWidth={1.8} className="text-[#c4b5fd]" />
+              <UserRound
+                size={20}
+                strokeWidth={1.8}
+                className="text-[#c4b5fd]"
+              />
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
                   Organizer Name
                 </p>
                 <p className="mt-1 text-[15px] font-semibold text-white">
-                  {data?.organizerDetails?.organizers?.[0]?.name || "--"}
+                  {data?.employee || "--"}
                 </p>
               </div>
             </div>
@@ -308,7 +313,11 @@ const IndividualTicketingDetailView = ({ data }) => {
             </div>
 
             <div className="flex flex-1 items-center gap-4 pl-6">
-              <Building2 size={20} strokeWidth={1.8} className="text-[#c4b5fd]" />
+              <Building2
+                size={20}
+                strokeWidth={1.8}
+                className="text-[#c4b5fd]"
+              />
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-wider text-[#94a3b8]">
                   Organizer Department
@@ -322,101 +331,106 @@ const IndividualTicketingDetailView = ({ data }) => {
 
           {/* Guest details */}
           <div className="guest-detail-container mt-4 border border-gray-700 rounded-lg p-2">
-            <h1 className="text-[#6508e7] mb-2 font-medium">Guest Details</h1>
-            <div className="w-full">
-              <div className="flex min-h-[100px] items-center rounded-xl bg-[#2d37489d] px-5">
-                {/* Guest Name */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <UserRound
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      GUEST NAME
-                    </p>
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      {guestDetails.name || travelDetails.guestName || "--"}
-                    </p>
-                  </div>
-                </div>
+            <h1 className="text-[#6508e7] mb-2 font-medium">
+              Passenger Details
+            </h1>
 
-                {/* Mobile Number */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <Phone
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      MOBILE NUMBER
-                    </p>
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      {guestDetails.mobile ||
-                        travelDetails.guestPhone ||
-                        "--"}
-                    </p>
-                  </div>
-                </div>
+            {data?.data?.passengers?.map((item) => {
+              return (
+                <div className="w-full ">
+                  <div className="flex min-h-[100px] items-center rounded-xl bg-[#2d37489d] px-5">
+                    {/* Guest Name */}
+                    <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
+                      <UserRound
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#b8a9ed]"
+                      />
+                      <div>
+                        <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                          GUEST NAME
+                        </p>
+                        <p className="text-[15px] font-bold text-[#f4ede8]">
+                          {item.name || travelDetails.guestName || "--"}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Designation */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <BriefcaseBusiness
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      DESIGNATION
-                    </p>
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      {guestDetails.designation ||
-                        travelDetails.designation ||
-                        "--"}
-                    </p>
-                  </div>
-                </div>
+                    {/* Mobile Number */}
+                    <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
+                      <Phone
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#b8a9ed]"
+                      />
+                      <div>
+                        <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                          MOBILE NUMBER
+                        </p>
+                        <p className="text-[15px] font-bold text-[#f4ede8]">
+                          {item.phoneNumber || travelDetails.guestPhone || "--"}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Organization */}
-                <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
-                  <Building2
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      ORGANIZATION
-                    </p>
-                    <p className="text-[15px] font-bold leading-5 text-[#f4ede8]">
-                      {guestDetails.organization ||
-                        travelDetails.organization ||
-                        "--"}
-                    </p>
-                  </div>
-                </div>
+                    {/* Designation */}
+                    <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
+                      <BriefcaseBusiness
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#b8a9ed]"
+                      />
+                      <div>
+                        <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                          DESIGNATION
+                        </p>
+                        <p className="text-[15px] font-bold text-[#f4ede8]">
+                          {item.designation ||
+                            travelDetails.designation ||
+                            "--"}
+                        </p>
+                      </div>
+                    </div>
 
-                {/* Gender */}
-                <div className="flex flex-1 items-center gap-4 px-4">
-                  <VenusAndMars
-                    size={22}
-                    strokeWidth={1.8}
-                    className="text-[#b8a9ed]"
-                  />
-                  <div>
-                    <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
-                      GENDER
-                    </p>
-                    <p className="text-[15px] font-bold text-[#f4ede8]">
-                      {guestDetails.gender || travelDetails.gender || "--"}
-                    </p>
+                    {/* Organization */}
+                    <div className="flex flex-1 items-center gap-4 px-4 border-r border-[#536078]">
+                      <Building2
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#b8a9ed]"
+                      />
+                      <div>
+                        <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                          ORGANIZATION
+                        </p>
+                        <p className="text-[15px] font-bold leading-5 text-[#f4ede8]">
+                          {item.organization ||
+                            travelDetails.organization ||
+                            "--"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Gender */}
+                    <div className="flex flex-1 items-center gap-4 px-4">
+                      <VenusAndMars
+                        size={22}
+                        strokeWidth={1.8}
+                        className="text-[#b8a9ed]"
+                      />
+                      <div>
+                        <p className="mb-1 text-[10px] font-semibold tracking-[1.2px] text-[#b9c0ce]">
+                          GENDER
+                        </p>
+                        <p className="text-[15px] font-bold text-[#f4ede8]">
+                          {item.gender || travelDetails.gender || "--"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
 
           {/* Pickup --- Drop route */}
@@ -432,34 +446,12 @@ const IndividualTicketingDetailView = ({ data }) => {
                     Pickup Location
                   </p>
                   <p className="text-sm font-semibold text-white">
-                    {travelDetails.pickupLocation || "--"}
+                    {data?.data?.from || "--"}
                   </p>
                 </div>
               </div>
 
               <div className="h-0 flex-1 border-t border-dashed border-[#536078]" />
-
-              {/* Checkpoints / Intermediate Stops */}
-              {checkpoints.length > 0
-                ? checkpoints.map((cp, index) => (
-                    <React.Fragment key={index}>
-                      <div className="flex w-[220px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-600">
-                          <MapPin size={14} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium uppercase text-[#aab3c5]">
-                            Stop {index + 1}
-                          </p>
-                          <p className="text-sm font-semibold text-white">
-                            {cp.location || cp}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="h-0 flex-1 border-t border-dashed border-[#536078]" />
-                    </React.Fragment>
-                  ))
-                : null}
 
               {/* Drop Location */}
               <div className="flex w-[290px] items-center gap-3 rounded-lg bg-[#344057] px-4 py-3">
@@ -471,7 +463,7 @@ const IndividualTicketingDetailView = ({ data }) => {
                     Drop Location
                   </p>
                   <p className="text-sm font-semibold text-white">
-                    {travelDetails.dropLocation || "--"}
+                    {data?.data?.to || "--"}
                   </p>
                 </div>
               </div>
@@ -488,9 +480,7 @@ const IndividualTicketingDetailView = ({ data }) => {
                   Total Number of Members
                 </span>
                 <span className="text-[15px] font-bold text-[#f1eee9]">
-                  {travelDetails.totalPassengers ||
-                    travelDetails.totalMembers ||
-                    "--"}
+                  {data?.numberOfPassengers || "--"}
                 </span>
               </div>
 
@@ -500,7 +490,7 @@ const IndividualTicketingDetailView = ({ data }) => {
                   Type of Vehicle
                 </span>
                 <span className="text-[15px] font-bold text-[#f1eee9]">
-                  {travelDetails.vehicleType ||
+                  {data?.travelOption ||
                     travelDetails.vehicles?.map((v) => v.type).join(", ") ||
                     "--"}
                 </span>
@@ -510,26 +500,25 @@ const IndividualTicketingDetailView = ({ data }) => {
             {/* Second Row */}
             <div className="mt-1 grid grid-cols-1 rounded-md border border-[#3d4a61] bg-[#2d37489d]">
               {/* Train Coach Class */}
-              <div className="flex items-center justify-between border-b border-[#46536a] px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Train Coach Class
-                </span>
-                <span className="text-[15px] font-bold text-[#f1eee9]">
-                  {travelDetails.trainCoachClass ||
-                    travelDetails.coachClass ||
-                    "--"}
-                </span>
-              </div>
-
-              {/* Travel Class */}
-              <div className="flex items-center justify-between px-3 py-3">
-                <span className="text-[15px] font-medium text-[#c3c9d5]">
-                  Travel Class
-                </span>
-                <span className="text-[15px] font-bold text-[#f1eee9]">
-                  {travelDetails.travelClass || "--"}
-                </span>
-              </div>
+              {data?.travelOption.toLowerCase() == "train" ? (
+                <div className="flex items-center justify-between border-b border-[#46536a] px-3 py-3">
+                  <span className="text-[15px] font-medium text-[#c3c9d5]">
+                    Train Coach Class
+                  </span>
+                  <span className="text-[15px] font-bold text-[#f1eee9]">
+                    {data?.travelClass}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center justify-between px-3 py-3">
+                  <span className="text-[15px] font-medium text-[#c3c9d5]">
+                    Travel Class
+                  </span>
+                  <span className="text-[15px] font-bold text-[#f1eee9]">
+                    {travelDetails.travelClass || "--"}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
