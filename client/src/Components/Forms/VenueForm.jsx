@@ -902,6 +902,9 @@ export default function VenueForm({
   const [venueAvailability, setVenueAvailability] = useState(null);
   const [checkingVenueAvailability, setCheckingVenueAvailability] = useState(false);
   const [bookedVenueNames, setBookedVenueNames] = useState([]);
+  const [permissionPopupOpen, setPermissionPopupOpen] = useState(false);
+  const [contactedAdmin, setContactedAdmin] = useState(false);
+  const [pendingPermissionVenues, setPendingPermissionVenues] = useState([]);
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -1054,72 +1057,165 @@ export default function VenueForm({
   };
 
   const handleVenueSelection = (selectedVenues) => {
-    const existingCards  = currentDay.venueCards || [];
-    // Auto-fill only applies when exactly ONE venue is selected.
-    const isSingleVenue  = selectedVenues.length === 1;
-    const totalParticipantsValue = currentDay.participants
-      ? String(currentDay.participants)
-      : "";
+  const existingSelectedVenues = currentDay.selectedVenues || [];
 
-    const updatedCards = selectedVenues.map((id) => {
-      const existing = existingCards.find((c) => c.venueId === id);
-      const venueObj = stateRef.current.venuesList.find((v) => v.id === id);
-      const name = venueObj ? venueObj.venue : "";
+  // ─────────────────────────────────────────────────────────────
+  // Find only the newly selected venues
+  // ─────────────────────────────────────────────────────────────
+  const newlySelectedVenueIds = selectedVenues.filter(
+    (id) => !existingSelectedVenues.includes(id)
+  );
 
-      if (existing) {
-        if (isSingleVenue) {
-          // Sole selected venue → keep it synced with the total, mark as auto-filled.
-          return {
-            ...existing,
-            participants: totalParticipantsValue,
-            seatingCapacity: totalParticipantsValue,
-            autoFilled: true,
-          };
-        }
-        // Multiple venues selected → if this card's values came from the
-        // earlier single-venue auto-fill, clear them so the user enters
-        // per-venue counts manually. Manually-entered values are preserved.
-        if (existing.autoFilled) {
-          return {
-            ...existing,
-            participants: "",
-            seatingCapacity: "",
-            autoFilled: false,
-          };
-        }
-        return existing;
+  // ─────────────────────────────────────────────────────────────
+  // Find newly selected venues that require permission
+  // Classroom / Lab / Department / Center
+  // ─────────────────────────────────────────────────────────────
+  const restrictedVenueIds = newlySelectedVenueIds.filter((id) => {
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    if (!venueObj?.category) return false;
+
+    const category = venueObj.category.toLowerCase().trim();
+
+    return (
+      category.includes("classroom") ||
+      category.includes("lab") ||
+      category.includes("department") ||
+      category.includes("center")
+    );
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // If restricted venue selected:
+  //
+  // DO NOT add it to selectedVenues.
+  // DO NOT create venue card.
+  // Show permission popup instead.
+  // ─────────────────────────────────────────────────────────────
+  if (restrictedVenueIds.length > 0) {
+    setPendingPermissionVenues(restrictedVenueIds);
+    setContactedAdmin(false);
+    setPermissionPopupOpen(true);
+
+    // Keep only venues that are already approved/selected.
+    // Restricted venues are NOT added yet.
+    const allowedVenueIds = selectedVenues.filter(
+      (id) => !restrictedVenueIds.includes(id)
+    );
+
+    applyVenueSelection(allowedVenueIds);
+
+    return;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Normal venue selection
+  // ─────────────────────────────────────────────────────────────
+  applyVenueSelection(selectedVenues);
+};
+
+
+// ─────────────────────────────────────────────────────────────
+// Actually apply the venue selection.
+//
+// This function is called only when:
+// 1. Venue does not require permission, OR
+// 2. User clicked "Contacted Admin" in the permission popup.
+//
+// This is the ONLY place where venueCards are created.
+// ─────────────────────────────────────────────────────────────
+const applyVenueSelection = (selectedVenues) => {
+  const existingCards = currentDay.venueCards || [];
+
+  // Auto-fill only applies when exactly ONE venue is selected.
+  const isSingleVenue = selectedVenues.length === 1;
+
+  const totalParticipantsValue = currentDay.participants
+    ? String(currentDay.participants)
+    : "";
+
+  const updatedCards = selectedVenues.map((id) => {
+    const existing = existingCards.find(
+      (c) => c.venueId === id
+    );
+
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    const name = venueObj ? venueObj.venue : "";
+
+    if (existing) {
+      if (isSingleVenue) {
+        // Sole selected venue → keep it synced with total participants.
+        return {
+          ...existing,
+          participants: totalParticipantsValue,
+          seatingCapacity: totalParticipantsValue,
+          autoFilled: true,
+        };
       }
 
-      // New card
-      return {
-        venueId: id,
-        venueName: name,
-        participants: isSingleVenue ? totalParticipantsValue : "",
-        seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
-        hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
-        audienceChair: "", specialReqs: "",
-        autoFilled: isSingleVenue,
-      };
-    });
+      // Multiple venues selected.
+      // Clear only automatically filled values.
+      if (existing.autoFilled) {
+        return {
+          ...existing,
+          participants: "",
+          seatingCapacity: "",
+          autoFilled: false,
+        };
+      }
 
-    setVenueData((prev) => {
-      const updated = [...prev];
-      updated[currentDayIndex] = {
-        ...updated[currentDayIndex],
-        selectedVenues,
-        venueCards: updatedCards,
-      };
-      return updated;
-    });
-    setErrors((prev) => {
-      const updatedErrors    = { ...prev };
-      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
-      delete currentDayErrors.selectedVenues;
-      updatedErrors[currentDayIndex] = currentDayErrors;
-      return updatedErrors;
-    });
-    checkVenueAvailability(selectedVenues);
-  };
+      return existing;
+    }
+
+    // New venue card is created ONLY here.
+    return {
+      venueId: id,
+      venueName: name,
+      participants: isSingleVenue ? totalParticipantsValue : "",
+      seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
+      hallReqs: [],
+      guestChairs: "",
+      waterBottles: "",
+      diasTable: "",
+      audienceChair: "",
+      specialReqs: "",
+      autoFilled: isSingleVenue,
+    };
+  });
+
+  setVenueData((prev) => {
+    const updated = [...prev];
+
+    updated[currentDayIndex] = {
+      ...updated[currentDayIndex],
+      selectedVenues,
+      venueCards: updatedCards,
+    };
+
+    return updated;
+  });
+
+  setErrors((prev) => {
+    const updatedErrors = { ...prev };
+
+    const currentDayErrors = {
+      ...(updatedErrors[currentDayIndex] || {}),
+    };
+
+    delete currentDayErrors.selectedVenues;
+
+    updatedErrors[currentDayIndex] = currentDayErrors;
+
+    return updatedErrors;
+  });
+
+  checkVenueAvailability(selectedVenues);
+};
 
   const updateVenueCard = (cardIndex, updated) => {
     setVenueData((prev) => {
@@ -1317,6 +1413,118 @@ export default function VenueForm({
     <>
       {popupVenue && (
         <VenueInfoPopup venueName={popupVenue} onClose={handlePopupClose} />
+      )}
+
+      {permissionPopupOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#3A3A5A] bg-[#1E1E35] shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-start gap-3 px-6 pt-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-600/20 border border-purple-500/40 flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-purple-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 className="text-white text-lg font-semibold">
+                  Venue Permission Required
+                </h3>
+
+                <p className="text-gray-400 text-sm mt-1">
+                  Please make sure you have permission before using this venue.
+                </p>
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className="px-6 py-5">
+
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-4">
+                <p className="text-purple-200 text-sm leading-6">
+                  Kindly get permission from the respective department
+                  venue in-charge, classroom in-charge, or lab in-charge
+                  before using the selected venue.
+                </p>
+              </div>
+
+              {/* Contacted Admin */}
+              <label className="mt-5 flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={contactedAdmin}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+
+                    setContactedAdmin(checked);
+
+                    if (checked) {
+                      // ─────────────────────────────────────────────
+                      // User has confirmed permission.
+                      // Now actually add the pending venues.
+                      // ─────────────────────────────────────────────
+                      const currentSelected =
+                        stateRef.current.venueData?.[currentDayIndex]
+                          ?.selectedVenues || [];
+
+                      const finalSelectedVenues = [
+                        ...new Set([
+                          ...currentSelected,
+                          ...pendingPermissionVenues,
+                        ]),
+                      ];
+
+                      setPermissionPopupOpen(false);
+                      setPendingPermissionVenues([]);
+
+                      // NOW create the venue container.
+                      applyVenueSelection(finalSelectedVenues);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                />
+
+                <span className="text-white text-sm font-medium">
+                  Contacted Admin
+                </span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  // ─────────────────────────────────────────────
+                  // User did NOT get permission.
+                  //
+                  // Remove the pending venue completely.
+                  // No selected venue.
+                  // No venue container.
+                  // ─────────────────────────────────────────────
+                  setPermissionPopupOpen(false);
+                  setContactedAdmin(false);
+                  setPendingPermissionVenues([]);
+                }}
+                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
+              >
+                Remove this message
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col gap-6 pb-6">

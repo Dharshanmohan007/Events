@@ -12,7 +12,7 @@ function validateOrganizer(data = {}) {
   const mobile = data.mobile != null ? String(data.mobile).trim() : "";
   if (!mobile) {
     e.mobile = "Mobile number is required";
-  } 
+  }
   // else if (!/^[6-9]\d{9}$/.test(mobile)) {
   //   e.mobile = "Enter a valid 10-digit Indian mobile number";
   // }
@@ -33,7 +33,7 @@ function validateGuest(data = {}) {
   const mobile = data.mobile != null ? String(data.mobile).trim() : "";
   if (!mobile) {
     e.mobile = "Mobile number is required";
-  } 
+  }
   // else if (!/^[6-9]\d{9}$/.test(mobile)) {
   //   e.mobile = "Enter a valid 10-digit Indian mobile number";
   // }
@@ -131,11 +131,11 @@ function validateEventDetails(data = {}, days = []) {
     : data.audience
       ? [data.audience]
       : [];
-  if (audienceArr.length === 0) e.audience = "Target audience is required"; 
+  if (audienceArr.length === 0) e.audience = "Target audience is required";
 
   const dayErrors = days.map((d, i) => {
     const errs = validateDay(d, i + 1);
-    
+
     // Check for exact date/time duplication with previous days
     for (let j = 0; j < i; j++) {
       const prev = days[j];
@@ -148,7 +148,7 @@ function validateEventDetails(data = {}, days = []) {
         errs.endTime = `Cannot choose the end time and date as Day ${j + 1}`;
       }
     }
-    
+
     return errs;
   });
 
@@ -158,28 +158,28 @@ function validateEventDetails(data = {}, days = []) {
   return e;
 }
 
-  function validateRequirements(values = {}) {
-    const e = {};
+function validateRequirements(values = {}) {
+  const e = {};
 
-    const LABEL_MAP = {
-      venue: "Venue",
-      icts: "ICTS",
-      audio: "Audio",
-      transport: "Transport",
-      foodandrefreshments: "Food & Refreshments",
-      accommodation: "Accommodation",
-      purchase: "Purchase",
-      media: "Media",
-    };
+  const LABEL_MAP = {
+    venue: "Venue",
+    icts: "ICTS",
+    audio: "Audio",
+    transport: "Transport",
+    foodandrefreshments: "Food & Refreshments",
+    accommodation: "Accommodation",
+    purchase: "Purchase",
+    media: "Media",
+  };
 
-    Object.keys(LABEL_MAP).forEach((key) => {
-      if (!values[key]) {
-        e[key] = `${LABEL_MAP[key]} is required`;
-      }
-    });
+  Object.keys(LABEL_MAP).forEach((key) => {
+    if (!values[key]) {
+      e[key] = `${LABEL_MAP[key]} is required`;
+    }
+  });
 
-    return e;
-  }
+  return e;
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -259,10 +259,10 @@ export default function EventRequisitionDetails({
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
         ? {
-            name: principalApprovalDocument.name,
-            size: principalApprovalDocument.size,
-            type: principalApprovalDocument.type,
-          }
+          name: principalApprovalDocument.name,
+          size: principalApprovalDocument.size,
+          type: principalApprovalDocument.type,
+        }
         : null,
       file: file ? { name: file.name, size: file.size, type: file.type } : null,
     });
