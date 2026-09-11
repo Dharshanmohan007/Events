@@ -72,7 +72,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       <div>
         <CustomSelect
           labelBg="#2E3645"
-          options={["Male", "Female", "Others"]}
+          options={["Male", "Female", "Other"]}
           label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`}
           value={data.gender || ""}
           onChange={(val) => onChange({ ...data, gender: val })}

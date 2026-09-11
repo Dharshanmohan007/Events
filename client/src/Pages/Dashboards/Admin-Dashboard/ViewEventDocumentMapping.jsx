@@ -122,10 +122,10 @@ export default function ViewEventDocumentMapping({
   };
 
   const saveDocumentIds = (eventTypeId, documentIds) => {
-    localStorage.setItem(
-      `event-document-mapping-${eventTypeId}`,
-      JSON.stringify(documentIds)
-    );
+    // localStorage.setItem(
+    //   `event-document-mapping-${eventTypeId}`,
+    //   JSON.stringify(documentIds)
+    // );
   };
 
   const getSavedDocumentIds = (eventType) => {

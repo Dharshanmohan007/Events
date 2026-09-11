@@ -63,7 +63,7 @@ export function AuthProvider({ children }) {
         const department   = freshDecoded?.department || data.department;
         const freshUser    = { ...data, role, department };
         setUser(freshUser);
-        localStorage.setItem("user", JSON.stringify(freshUser));
+        // localStorage.setItem("user", JSON.stringify(freshUser));
       })
       .catch((err) => {
         if (err.message === "TOKEN_EXPIRED") logout();

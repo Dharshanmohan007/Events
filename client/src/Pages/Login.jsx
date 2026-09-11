@@ -292,7 +292,7 @@ export default function LoginPage() {
           decoded?.isFirstTimeLogin ?? data.isFirstTimeLogin ?? false,
       };
 
-      localStorage.setItem("user", JSON.stringify(userData));
+      // localStorage.setItem("user", JSON.stringify(userData));
 
       login(userData);
 
