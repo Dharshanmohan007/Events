@@ -14,6 +14,7 @@ const normalizeVenue = (venue) => ({
   id: venue._id,
   raw: venue,
   name: venue.venue || '-',
+  category: venue.category || '-',
   location: formatLocation(venue.block, venue.floor),
   block: venue.block || '',
   floor: venue.floor || '',
@@ -96,6 +97,7 @@ const VenueManagementPage = () => {
   const [floorFilter, setFloorFilter] = useState('all')
   const [blockFilter, setBlockFilter] = useState('all')
   const [venueFilter, setVenueFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [popupMode, setPopupMode] = useState(null)
   const [editingVenue, setEditingVenue] = useState(null)
   const [deletingVenue, setDeletingVenue] = useState(null)
@@ -219,19 +221,21 @@ const VenueManagementPage = () => {
     floors: [...new Set(venues.map((venue) => venue.floor).filter(Boolean))],
     blocks: [...new Set(venues.map((venue) => venue.block).filter(Boolean))],
     venueNames: [...new Set(venues.map((venue) => venue.name).filter(Boolean))],
+    categories: [...new Set(venues.map((venue) => venue.category).filter((category) => category && category !== '-'))],
   }), [venues])
 
   const filteredVenues = venues.filter((venue) => {
     const query = searchQuery.toLowerCase()
-    const matchesSearch = [venue.name, venue.location, venue.block, venue.floor]
+    const matchesSearch = [venue.id, venue.name, venue.category, venue.location, venue.block, venue.floor]
       .join(' ')
       .toLowerCase()
       .includes(query)
     const matchesFloor = floorFilter === 'all' || venue.floor === floorFilter
     const matchesBlock = blockFilter === 'all' || venue.block === blockFilter
     const matchesVenue = venueFilter === 'all' || venue.name === venueFilter
+    const matchesCategory = categoryFilter === 'all' || venue.category === categoryFilter
 
-    return matchesSearch && matchesFloor && matchesBlock && matchesVenue
+    return matchesSearch && matchesFloor && matchesBlock && matchesVenue && matchesCategory
   })
 
   return (
@@ -279,6 +283,9 @@ const VenueManagementPage = () => {
 
             {/* Venue filter */}
             <SelectFilter value={venueFilter} onChange={setVenueFilter} options={filterOptions.venueNames} label="Venue" />
+
+            {/* Category filter */}
+            <SelectFilter value={categoryFilter} onChange={setCategoryFilter} options={filterOptions.categories} label="Category" />
 
           </div>
 

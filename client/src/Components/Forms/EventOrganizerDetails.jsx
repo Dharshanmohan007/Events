@@ -21,6 +21,8 @@ export default function EventOrganizerDetails({
   setFinance,
   advanceAmount,
   setAdvanceAmount,
+  fundingSource = [],
+  setFundingSource,
   purposeOfAdvance,
   setPurposeOfAdvance,
   advanceToBeReceivedWithin,
@@ -51,6 +53,31 @@ export default function EventOrganizerDetails({
   const [advanceDaysError, setAdvanceDaysError] = React.useState("");
   // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
+
+  const fundingType = fundingSource.length === 2
+    ? "Both"
+    : fundingSource[0]?.type || "";
+
+  const getFundingAmount = (type) => (
+    fundingSource.find((source) => source.type === type)?.amount ?? ""
+  );
+
+  const handleFundingTypeChange = (type) => {
+    if (type === "Both") {
+      setFundingSource([
+        { type: "Institutional Fund", amount: getFundingAmount("Institutional Fund") },
+        { type: "Department Funding", amount: getFundingAmount("Department Funding") },
+      ]);
+      return;
+    }
+    setFundingSource(type ? [{ type, amount: getFundingAmount(type) }] : []);
+  };
+
+  const updateFundingAmount = (type, amount) => {
+    setFundingSource((current) => current.map((source) => (
+      source.type === type ? { ...source, amount } : source
+    )));
+  };
 
   const handleOrganizersChange = (e) => {
     let val = e.target.value;
@@ -422,6 +449,7 @@ export default function EventOrganizerDetails({
                 setEstimatedBudget("");
                 setAdvanceAmount("");
                 setPurposeOfAdvance("");
+                setFundingSource([]);
               }
             }}
             options={["Yes", "No"]}
@@ -431,6 +459,41 @@ export default function EventOrganizerDetails({
         </div>
         {finance === "Yes" && (
           <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div className="col-span-1 sm:col-span-2">
+            <CustomSelect
+              label="Funding Type"
+              required
+              value={fundingType}
+              onChange={handleFundingTypeChange}
+              options={["Institutional Fund", "Department Funding", "Both"]}
+              placeholder="Select funding type"
+            />
+            {fundingType === "Institutional Fund" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Institutional Fund Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Institutional Fund")}
+                  onChange={(e) => updateFundingAmount("Institutional Fund", e.target.value)}
+                  placeholder="Enter institutional fund amount"
+                />
+              </div>
+            ) : null}
+            {fundingType === "Department Funding" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Department Funding Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Department Funding")}
+                  onChange={(e) => updateFundingAmount("Department Funding", e.target.value)}
+                  placeholder="Enter department funding amount"
+                />
+              </div>
+            ) : null}
+          </div>
 
           {/* Principal Approval Form Upload */}
       <div className="mb-7 sm:col-span-2">
