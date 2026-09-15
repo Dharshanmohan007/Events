@@ -12,6 +12,30 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function formatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true
+  });
+}
+
+// Returns a CSS color string based on the semantic meaning of a status
+function statusColor(s) {
+  if (!s || s === '-') return '#1e3a8a';
+  const v = String(s).toLowerCase().trim();
+  if (v.includes('approved') || v.includes('completed') || v.includes('closed') ||
+      v.includes('acknowledged') || v.includes('accepted') || v.includes('sanctioned') ||
+      v === 'yes') return '#15803d';  // green
+  if (v.includes('rejected') || v.includes('cancelled') || v.includes('denied') ||
+      v.includes('declined')) return '#b91c1c'; // red
+  if (v.includes('pending') || v.includes('processing') || v.includes('review') ||
+      v.includes('submitted')) return '#b45309'; // amber
+  return '#1e3a8a'; // default blue
+}
+
 function buildEventTemplate(event = {}) {
   const {
     requestDetails = {},
@@ -48,18 +72,27 @@ function buildEventTemplate(event = {}) {
   const scheduleRows = (eventDetails?.eventSchedule || [])
     .map(
       (day, i) => {
-        const guestNames = (day?.guests || []).map(g => typeof g === 'object' ? (g?.name || g?.guestName || '') : g).filter(Boolean).join(", ");
+        const guestDetails = (day?.guests || []).map(g => {
+          if (typeof g !== 'object') return `<strong>${g}</strong>`;
+          const name = g?.name || g?.guestName || '';
+          const parts = [name ? `<strong>${name}</strong>` : ''];
+          if (g?.designation)  parts.push(g.designation);
+          if (g?.organization) parts.push(g.organization);
+          if (g?.mobile)       parts.push(g.mobile);
+          return parts.filter(Boolean).join(', ');
+        }).filter(Boolean).join('<br>');
         return `
       <tr>
         <td>Day ${i + 1}</td>
         <td>${formatDate(day?.eventDate)}</td>
         <td>${day?.startTime || '-'} - ${day?.endTime || '-'}</td>
         <td>${day?.totalGuests || '-'}</td>
-        <td><strong>${guestNames || '-'}</strong></td>
+        <td>${guestDetails || '-'}</td>
       </tr>`;
       }
     )
     .join("");
+
 
   const venueRows = (venueDetails?.venues || [])
     .map((v) => {
@@ -125,21 +158,60 @@ function buildEventTemplate(event = {}) {
     })
     .join("");
 
+  // Helper: describe one giftItem object from the purchase payload
+  const describeGiftItem = (gi) => {
+    if (!gi || !gi.giftType) return '';
+    if (gi.giftType === 'Trophy') {
+      const parts = (gi.trophy || []).map(t => `${t.trophyType} ×${t.quantity}`);
+      return parts.length ? `Trophy (${parts.join(', ')})` : 'Trophy';
+    }
+    if (gi.giftType === 'Cash Prize') return `Cash Prize ₹${gi.cashPrizeAmount || 0}`;
+    if (gi.giftType === 'Gifts') return `Gifts ×${gi.giftsQty || 0}`;
+    if (gi.giftType === 'Voucher') {
+      const vp = (gi.voucher || []).map(v => `${v.voucherWorth} ×${v.quantity}`);
+      return vp.length ? `Voucher (${vp.join(', ')})` : 'Voucher';
+    }
+    return gi.giftType;
+  };
+
   const purchaseRows = (event?.purchaseDetails?.purchases || [])
     .map((p) => {
-      const needed = (p.requirementNeeded || []).map(r => `${r.type} (H:${r.hardCount || 0}, S:${r.softCount || 0})`).join(", ");
-      let gifts = [];
-      if (p.students?.giftItems?.length) gifts.push(`Students: ${p.students.giftItems.length} gifts`);
-      if (p.guests?.giftItems?.length) gifts.push(`Guests: ${p.guests.giftItems.length} gifts`);
+      // requirementNeeded: array of objects {type, hardCount, softCount}
+      const needParts = (p.requirementNeeded || []).map(r =>
+        r.type ? `${r.type} ×${r.hardCount || 0}` : String(r)
+      );
+
+      // requiredFor: ["Students","Guest"] or ["Both"]
+      const requiredFor = (p.requiredFor || []).join(', ') || '-';
+
+      // Gift items — proper objects with full trophy/voucher breakdowns
+      const studentGifts = (p.students?.giftItems || []).map(describeGiftItem).filter(Boolean);
+      const guestGifts   = (p.guests?.giftItems   || []).map(describeGiftItem).filter(Boolean);
+      const regKit = [];
+      if (p.students?.registrationKitNeeded) regKit.push(`Students kit ×${p.students.registrationKitQty || 0}`);
+      if (p.guests?.registrationKitNeeded)   regKit.push(`Guests kit ×${p.guests.registrationKitQty || 0}`);
+
+      const giftParts = [];
+      if (studentGifts.length) giftParts.push(`Students: ${studentGifts.join(', ')}`);
+      if (guestGifts.length)   giftParts.push(`Guests: ${guestGifts.join(', ')}`);
+      if (regKit.length)       giftParts.push(regKit.join(', '));
+
+      // Staff — may be stored as accompanyingStaff array or staffNames string
+      const staffArr = p.accompanyingStaff || p.staffNames || [];
+      const staffStr = Array.isArray(staffArr)
+        ? staffArr.map(s => s.name || s).join(', ')
+        : String(staffArr);
+
       return `
       <tr>
         <td>Day ${(p.dayIndex || 0) + 1}</td>
-        <td>${(p.requiredFor || []).join(", ") || '-'}</td>
-        <td>${needed || '-'}</td>
-        <td>${gifts.join(", ") || '-'}</td>
+        <td>${requiredFor}</td>
+        <td>${needParts.join(', ') || '-'}</td>
+        <td>${giftParts.join(' | ') || '-'}</td>
+        <td>${staffStr || '-'}</td>
       </tr>`;
     })
-    .join("");
+    .join('');
 
   const accommRows = (event?.accommodationDetails?.accommodations || [])
     .map((a) => {
@@ -152,7 +224,7 @@ function buildEventTemplate(event = {}) {
         return true;
       });
       const guests = uniqueGuests.map(g =>
-        `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
+        `<strong>${g.name}</strong>${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
       ).join('<br/>');
 
       const dineInCounts = (a.dineInCounts || []).map(d => `${d.type}: ${d.count}`).join(', ');
@@ -172,7 +244,7 @@ function buildEventTemplate(event = {}) {
       const staff = (a.accompanyingStaff || []).map(s => s.name).join(', ');
       return `
       <tr>
-        <td>${formatDate(a.checkInDateTime)} → ${formatDate(a.checkOutDateTime)}</td>
+        <td>${formatDateTime(a.checkInDateTime)} → ${formatDateTime(a.checkOutDateTime)}</td>
         <td>${guests || '-'}</td>
         <td>${a.dineInRequired ? 'Yes' : 'No'}<br/><small>${dineInCounts || '-'}</small></td>
         <td>${roomHtml}</td>
@@ -403,7 +475,7 @@ function buildEventTemplate(event = {}) {
       <h2>Purchase Requirements</h2>
       <table>
         <thead>
-          <tr><th>Day</th><th>Required For</th><th>Items Needed</th><th>Gifts/Kits</th></tr>
+          <tr><th>Day</th><th>Required For</th><th>Items Needed</th><th>Gifts/Kits</th><th>Staff</th></tr>
         </thead>
         <tbody>${purchaseRows}</tbody>
       </table>
@@ -618,8 +690,8 @@ function buildEventTemplate(event = {}) {
   <body>
   <div class="page-wrap">
 
-    <div class="top-status">
-      Status: ${event?.status || event?.eventStatus || '-'}
+    <div class="top-status" style="color:${statusColor(event?.status || event?.eventStatus)}">
+      STATUS: ${event?.status || event?.eventStatus || '-'}
     </div>
 
     <div class="header">
@@ -661,7 +733,7 @@ function buildEventTemplate(event = {}) {
       <h2>Day-wise Schedule</h2>
       <table>
         <thead>
-          <tr><th>Day</th><th>Date</th><th>Time</th><th>Guests</th><th><strong>Guest Names</strong></th></tr>
+          <tr><th>Day</th><th>Date</th><th>Time</th><th>Guests</th><th>Guest Details</th></tr>
         </thead>
         <tbody>${scheduleRows}</tbody>
       </table>
