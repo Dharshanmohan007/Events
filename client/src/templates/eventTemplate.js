@@ -24,7 +24,7 @@ function formatDateTime(dateStr) {
 
 // Returns a CSS color string based on the semantic meaning of a status
 function statusColor(s) {
-  if (!s || s === '-') return '#1e3a8a';
+  if (!s || s === '-') return '#1e3a8a';  
   const v = String(s).toLowerCase().trim();
   if (v.includes('approved') || v.includes('completed') || v.includes('closed') ||
       v.includes('acknowledged') || v.includes('accepted') || v.includes('sanctioned') ||
