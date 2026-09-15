@@ -12,10 +12,12 @@ import {
   PartyPopper,
   CalendarDays,
   Clock,
+  Check,
 } from "lucide-react";
 import EventHeaderData from "../EventHeaderData";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const TicketingEventDetailView = () => {
   const token = localStorage.getItem("token");
@@ -24,6 +26,8 @@ const TicketingEventDetailView = () => {
 
   // states
   const [eventData, setEventData] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // function to fetch the details
   async function fetchEventDetails() {
@@ -47,9 +51,37 @@ const TicketingEventDetailView = () => {
 
   console.log("event external transport data : ", eventData);
 
+  const status = eventData?.externalTransportDetails?.status?.status || "";
+
+  const handleStatusUpdate = async (action) => {
+    setActionLoading(true);
+    try {
+      const res = await axios.patch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/status`,
+        { action, module: "externalTransports" },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (!res.data.success)
+        throw new Error(res.data.message || `Failed to ${action}`);
+      toast.success(
+        `Status updated to ${action === "acknowledge" ? "Acknowledged" : "Completed"} successfully`,
+      );
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err.message || `Failed to ${action}`);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchEventDetails();
-  }, [eventId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId, reloadKey]);
 
   return (
     <>
@@ -71,15 +103,28 @@ const TicketingEventDetailView = () => {
             </button>
             <h1>--</h1>
             <button
-              className={`  ${eventData?.externalTransportDetails?.status?.status.toLowerCase().includes("pending") ? "text-red-500 bg-red-300/10" : "text-green-500"}  text-xs py-2 px-2 rounded-full`}
+              className={`  ${status.toLowerCase().includes("pending") ? "text-red-500 bg-red-300/10" : "text-green-500"}  text-xs py-2 px-2 rounded-full`}
             >
-              {eventData?.externalTransportDetails?.status?.status}
+              {status}
             </button>
           </div>
-          {eventData?.externalTransportDetails?.status?.status.toLowerCase() ==
-            "pending for acknowledge" && (
-            <button className="bg-linear-to-r from-emerald-800 to-emerald-900 text-white px-3 py-1 rounded-lg">
-              Acknowledge
+          {status.toLowerCase() == "pending for acknowledge" && (
+            <button
+              onClick={() => handleStatusUpdate("acknowledge")}
+              disabled={actionLoading}
+              className="bg-gradient-to-r from-emerald-800 to-emerald-900 text-white px-4 py-2 rounded-lg flex items-center gap-1 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Check size={16} />{" "}
+              {actionLoading ? "Processing..." : "Acknowledge"}
+            </button>
+          )}
+          {status.toLowerCase() == "acknowledged" && (
+            <button
+              onClick={() => handleStatusUpdate("complete")}
+              disabled={actionLoading}
+              className="bg-gradient-to-r from-[#4A2BB7] to-[#6D3BD8] text-white px-4 py-2 rounded-lg flex items-center gap-1 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Check size={16} /> {actionLoading ? "Processing..." : "Complete"}
             </button>
           )}
         </div>

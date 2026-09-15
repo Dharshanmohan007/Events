@@ -1,11 +1,54 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useState } from "react";
-import { Search, Download } from "lucide-react";
+import { Search, Download, ExternalLink } from "lucide-react";
 import TicketingNavbar from "./TicketingNavbar";
+import axios from "axios";
 
 const TicketingReportsPage = () => {
+  // Auth
+  const token = localStorage.getItem("token");
+
+  // states
   const [activeTab, setActiveTab] = useState("event");
   const [search, setSearch] = useState("");
+  const [reportsData, setReportsData] = useState(null);
+
+  async function fetchReportsData() {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/table/dashboard-table?module=externalTransports`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      setReportsData(res.data.data);
+    } catch (err) {
+      console.error(
+        "error occured while fetching reports data in External transport data : ",
+        err.message,
+      );
+    }
+  }
+
+  useEffect(() => {
+    fetchReportsData();
+  }, []);
+  console.log("external transports : ", reportsData);
+
+  const filteredEvents = reportsData?.filter((event) =>
+    event?.eventName?.toLowerCase().includes(search.toLowerCase()),
+  );
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      timeZone: "Asia/Kolkata",
+    });
+  };
 
   return (
     <>
@@ -19,37 +62,6 @@ const TicketingReportsPage = () => {
               <h1 className="text-[22px] font-semibold text-[#f4efe9]">
                 Reports
               </h1>
-            </div>
-
-            {/* Tabs */}
-            <div className="grid grid-cols-2 rounded-md bg-[#222d42]">
-              <button
-                onClick={() => {
-                  setActiveTab("event");
-                  setSearch("");
-                }}
-                className={`px-5 py-2 text-[13px] font-medium transition ${
-                  activeTab === "event"
-                    ? "bg-[#7c3aed] text-white"
-                    : "text-[#9ba7ba]"
-                }`}
-              >
-                Event Request Report
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab("individual");
-                  setSearch("");
-                }}
-                className={`px-5 py-2 text-[13px] font-medium  transition ${
-                  activeTab === "individual"
-                    ? "bg-[#7c3aed] text-white"
-                    : "text-[#9ba7ba]"
-                }`}
-              >
-                Individual Request Report
-              </button>
             </div>
           </div>
 
@@ -91,10 +103,6 @@ const TicketingReportsPage = () => {
                       DEPT
                     </th>
 
-                    <th className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      STATUS
-                    </th>
-
                     <th className="px-5 py-3 text-center text-[10px] font-semibold tracking-wide text-[#8290a5]">
                       ACTION
                     </th>
@@ -102,249 +110,73 @@ const TicketingReportsPage = () => {
                 </thead>
 
                 <tbody>
-                  {/* Row 1 */}
-                  {"span technology".includes(search.toLowerCase()) && (
-                    <tr className="border-b border-[#263349]">
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        Span Technology
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        01-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        PLACEMENT
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Row 2 */}
-                  {"orientation programme".includes(search.toLowerCase()) && (
-                    <tr className="border-b border-[#263349]">
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        ORIENTATION PROGRAMME
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        01-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        S&amp;H
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Row 3 */}
-                  {"1st year orientation program".includes(
-                    search.toLowerCase(),
-                  ) && (
-                    <tr className="border-b border-[#263349]">
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        1st Year Orientation Program
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        02-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        PLACEMENT
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Row 4 */}
-                  {"mistrial on campus drive".includes(
-                    search.toLowerCase(),
-                  ) && (
+                  {filteredEvents?.length === 0 ? (
                     <tr>
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        Mistrial On Campus Drive
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        03-09-2026 +1
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        PLACEMENT
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Acknowledged
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
+                      <td
+                        colSpan={5}
+                        className="px-5 py-10 text-center text-[#8b95a7]"
+                      >
+                        No events found
                       </td>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
+                  ) : (
+                    filteredEvents?.map((event, index) => (
+                      <tr
+                        key={index}
+                        className={
+                          index !== filteredEvents.length - 1
+                            ? "border-b border-[#263349]"
+                            : ""
+                        }
+                      >
+                        <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
+                          {event.eventName}
+                        </td>
 
-            {/* INDIVIDUAL REPORT */}
-            {activeTab === "individual" && (
-              <table className="w-full border-collapse">
-                <thead className="bg-[#151e2e]">
-                  <tr className="border-b border-[#263349]">
-                    <th className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      GUEST NAME
-                    </th>
+                        <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
+                          <div className="flex items-center gap-2">
+                            {/* First date */}
+                            <span>{formatDate(event.dates[0])}</span>
 
-                    <th className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      REQUIRED DATE
-                    </th>
+                            {/* Remaining dates */}
+                            {event.dates.length > 1 && (
+                              <div className="relative group">
+                                <span className="cursor-pointer text-[#8da2bf]">
+                                  +{event.dates.length - 1}
+                                </span>
 
-                    <th className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      DEPT
-                    </th>
+                                {/* Tooltip */}
+                                <div className="absolute left-0 top-full z-50 mt-2 hidden min-w-[150px] rounded-md bg-[#1e293b] p-2 shadow-lg group-hover:block">
+                                  {event.dates.slice(1).map((date, index) => (
+                                    <div
+                                      key={index}
+                                      className="whitespace-nowrap py-1"
+                                    >
+                                      {formatDate(date)}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </td>
 
-                    <th className="px-5 py-3 text-left text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      STATUS
-                    </th>
+                        <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
+                          {event.organizingDepartment}
+                        </td>
 
-                    <th className="px-5 py-3 text-center text-[10px] font-semibold tracking-wide text-[#8290a5]">
-                      ACTION
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {/* Row 1 */}
-                  {"priyanka".includes(search.toLowerCase()) && (
-                    <tr className="border-b border-[#263349]">
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        Priyanka
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        06-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        SECE
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Row 2 */}
-                  {"rahul kumar".includes(search.toLowerCase()) && (
-                    <tr className="border-b border-[#263349]">
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        Rahul Kumar
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        08-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        S&amp;H
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  )}
-
-                  {/* Row 3 */}
-                  {"arjun raj".includes(search.toLowerCase()) && (
-                    <tr>
-                      <td className="px-5 py-4 text-[13px] font-semibold text-[#f1eee9]">
-                        Arjun Raj
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        10-09-2026
-                      </td>
-
-                      <td className="px-5 py-4 text-[13px] text-[#f1eee9]">
-                        PLACEMENT
-                      </td>
-
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-2 text-[12px] font-medium text-[#63d5ad]">
-                          <span className="h-1.5 w-1.5 rounded-full bg-[#63d5ad]" />
-                          Completed
-                        </div>
-                      </td>
-
-                      <td className="px-5 py-4 text-center">
-                        <button className="text-[#8995a8] hover:text-white">
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
+                        <td className="px-5 py-4 text-center flex">
+                          <div className="btn-contaienr w-fit m-auto flex items-center gap-3">
+                            <button className="text-[#8995a8] w-fit  hover:text-white flex items-center justify-center gap-3">
+                              <ExternalLink size={16} />
+                            </button>
+                            <button className="text-[#8995a8] w-fit  hover:text-white flex items-center justify-center gap-3">
+                              <Download size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                   )}
                 </tbody>
               </table>

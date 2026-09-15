@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   ClipboardList,
   CheckCircle2,
@@ -6,8 +6,42 @@ import {
   CalendarCheck2,
   FileText,
 } from "lucide-react";
+import axios from "axios";
 
 const RequestStats = () => {
+  // Auth
+  const token = localStorage.getItem("token");
+
+  // states
+  const [statcard, setStatcard] = useState(null);
+
+  // fetch statcard data
+  async function fetchStatcard() {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_API_BASE_URL}/api/dashboard/stats?module=externalTransports`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      // console.log('statcard : ', res.data.modules.externalTransports)
+      setStatcard(res.data.modules.externalTransports);
+    } catch (err) {
+      console.error(
+        "error occured while fetching statcard data for External transport module : ",
+        err.message,
+      );
+    }
+  }
+
+  useEffect(() => {
+    fetchStatcard();
+  }, []);
+
+  console.log("statcard : ", statcard);
+
   return (
     <div className="flex w-full gap-4 mt-3  ">
       {/* Event Request */}
@@ -27,7 +61,9 @@ const RequestStats = () => {
               </div>
             </div>
 
-            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">50</p>
+            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">
+              {statcard?.total}
+            </p>
           </div>
 
           {/* Approved Events */}
@@ -40,7 +76,7 @@ const RequestStats = () => {
               </div>
             </div>
 
-            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">50</p>
+            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">{statcard?.approved}</p>
           </div>
 
           {/* Completed Events */}
@@ -53,7 +89,7 @@ const RequestStats = () => {
               </div>
             </div>
 
-            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">50</p>
+            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">{statcard?.completed}</p>
           </div>
 
           {/* Pending Approval Events */}
@@ -68,7 +104,7 @@ const RequestStats = () => {
               </div>
             </div>
 
-            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">50</p>
+            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">{statcard?.pending}</p>
           </div>
         </div>
       </div>
