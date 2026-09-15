@@ -1,5 +1,19 @@
 import clgLogo from '../assets/clg-logo2.webp';
 
+// Returns a CSS color string based on the semantic meaning of a status
+function statusColor(s) {
+  if (!s || s === '-') return '#1e3a8a';
+  const v = String(s).toLowerCase().trim();
+  if (v.includes('approved') || v.includes('completed') || v.includes('closed') ||
+      v.includes('acknowledged') || v.includes('accepted') || v.includes('sanctioned') ||
+      v === 'yes') return '#15803d';  // green
+  if (v.includes('rejected') || v.includes('cancelled') || v.includes('denied') ||
+      v.includes('declined')) return '#b91c1c'; // red
+  if (v.includes('pending') || v.includes('processing') || v.includes('review') ||
+      v.includes('submitted')) return '#b45309'; // amber
+  return '#1e3a8a'; // default blue
+}
+
 /**
  * Builds the HTML string for the individual request PDF.
  * Pure function: (apiResponse) => htmlString
@@ -333,8 +347,8 @@ export function buildIndividualRequestTemplate(payload = {}) {
 </head>
 <body>
 
-  <div class="top-status">
-    Status: ${finalStatus}
+  <div class="top-status" style="color:${statusColor(finalStatus)}">
+    STATUS: ${finalStatus}
   </div>
 
   <div class="header">
