@@ -132,7 +132,7 @@ export default function SignUp() {
         email: data.email,
       };
 
-      localStorage.setItem("user", JSON.stringify(userData));
+      // localStorage.setItem("user", JSON.stringify(userData));
       login(userData);
       // console.log("👤 User set in context:", userData);
       navigate("/forms");

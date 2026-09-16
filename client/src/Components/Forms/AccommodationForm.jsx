@@ -20,11 +20,16 @@ function flattenGuests(eventDays = []) {
   const result = [];
   eventDays.forEach((day, dayIdx) => {
     (day.guests || []).forEach((g, gIdx) => {
-      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
-        .replace(/\s+/g, "")
-        .toLowerCase()}`;
-      if (!seen.has(guestId)) {
-        seen.add(guestId);
+      // Deduplicate by actual guest identity (name + mobile) so that
+      // "Same as Day 1" copies don't appear as separate entries.
+      const normalizedName = (g.name || "").replace(/\s+/g, "").toLowerCase();
+      const normalizedMobile = (g.mobile || "").toString().trim();
+      const identityKey = `${normalizedName}_${normalizedMobile}`;
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey);
+        // Keep the original day-based guestId for selection tracking
+        const guestId = `day${dayIdx}_g${gIdx}_${normalizedName}`;
         result.push({ ...g, guestId });
       }
     });
@@ -560,6 +565,7 @@ function AccommodationBlock({
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
   const filteredRoomOptions = roomOptions.filter((room) => {
+    if (room.available === false) return false;
     const capacity = Number(room.occupantCount) || 0;
     if (selectedCount === 1) return capacity === 2;
     return true;

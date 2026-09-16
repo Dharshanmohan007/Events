@@ -34,16 +34,6 @@ function validateVenueCard(card, options = []) {
     }
   }
 
-  if (!card.hallReqs || card.hallReqs.length === 0)
-    e.hallReqs = "Select at least one hall requirement";
-  if (card.hallReqs?.includes("Guest Chair") && (!card.guestChairs || parseInt(card.guestChairs) < 1))
-    e.guestChairs = "Number of guest chairs is required";
-  if (card.hallReqs?.includes("Water Bottles") && (!card.waterBottles || parseInt(card.waterBottles) < 1))
-    e.waterBottles = "Number of water bottles is required";
-  if (card.hallReqs?.includes("Dias Table") && (!card.diasTable || parseInt(card.diasTable) < 1))
-    e.diasTable = "Number of dias tables is required";
-  if (card.hallReqs?.includes("Audience Chair") && (!card.audienceChair || parseInt(card.audienceChair) < 1))
-    e.audienceChair = "Number of audience chairs is required";
   return e;
 }
 
@@ -713,7 +703,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
 
       <div>
         <HallRequirementsSelect
-          label="Hall Requirements *"
+          label="Hall Requirements"
           selected={data.hallReqs || []}
           onChange={(val) => onChange({ ...data, hallReqs: val })}
           error={errors.hallReqs}
@@ -723,10 +713,10 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
       {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) &&
         (() => {
           const activeFields = [
-            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair *",    field: "guestChairs",   error: errors.guestChairs },
-            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles *",  field: "waterBottles",  error: errors.waterBottles },
-            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table *",     field: "diasTable",     error: errors.diasTable },
-            showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair *", field: "audienceChair", error: errors.audienceChair },
+            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair",    field: "guestChairs",   error: errors.guestChairs },
+            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles",  field: "waterBottles",  error: errors.waterBottles },
+            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table",     field: "diasTable",     error: errors.diasTable },
+            showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair", field: "audienceChair", error: errors.audienceChair },
           ].filter(Boolean);
 
           const count       = activeFields.length;

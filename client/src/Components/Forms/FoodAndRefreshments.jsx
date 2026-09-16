@@ -9,7 +9,7 @@ import DatePicker from "react-datepicker";
 import { Trash2, Plus, Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
-
+import CustomSelect from "../CustomSelect";
 
 // ─── DatePicker dark theme override (injected once) ──────────────────────────
 const DATE_PICKER_STYLES = `
@@ -299,8 +299,8 @@ function createForm() {
     foodTypes: [],
     morningRefreshmentCount: "",
     eveningRefreshmentCount: "",
-    morningRefreshmentVenues: [],
-    eveningRefreshmentVenues: [],
+    morningRefreshmentVenue: "",
+    eveningRefreshmentVenue: "",
     breakfast: {
       participants: { vegCount: "", nonVegCount: "" },
       vipGuests: { vegCount: "", nonVegCount: "" },
@@ -324,7 +324,7 @@ function createForm() {
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
-function validateFoodForms(forms) {
+function validateFoodForms(forms, autoVenues = []) {
   if (!forms || forms.length === 0) return { _global: "Enter at least one food entry" };
   const errors = forms.map((form) => {
     const err = {};
@@ -376,52 +376,18 @@ function validateFoodForms(forms) {
       }
     });
 
-    // Validate Morning Refreshment venues sum
+    // Validate Morning Refreshment
     if (form.foodTypes?.includes("Morning Refreshment")) {
       const totalStr = form.morningRefreshmentCount || "";
-      if (!totalStr) {
-        err.morningRefreshmentCount = "Total count is required";
-      } else {
-        const total = parseInt(totalStr, 10);
-        const sum = (form.morningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
-        if (sum > total) {
-          err.morningRefreshmentCount = `Sum of venue counts (${sum}) exceeds total count (${total})`;
-        }
-        
-        const venueErrs = (form.morningRefreshmentVenues || []).map(v => {
-          const vErr = {};
-          if (!v.venue) vErr.venue = "Venue is required";
-          if (!v.count) vErr.count = "Count is required";
-          return vErr;
-        });
-        if (venueErrs.some(e => Object.keys(e).length > 0)) {
-          err.morningRefreshmentVenues = venueErrs;
-        }
-      }
+      if (!totalStr) err.morningRefreshmentCount = "Total count is required";
+      if (autoVenues.length === 0 && !form.morningRefreshmentVenue) err.morningRefreshmentVenue = "Venue is required";
     }
 
-    // Validate Evening Refreshment venues sum
+    // Validate Evening Refreshment
     if (form.foodTypes?.includes("Evening Refreshment")) {
       const totalStr = form.eveningRefreshmentCount || "";
-      if (!totalStr) {
-        err.eveningRefreshmentCount = "Total count is required";
-      } else {
-        const total = parseInt(totalStr, 10);
-        const sum = (form.eveningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
-        if (sum > total) {
-          err.eveningRefreshmentCount = `Sum of venue counts (${sum}) exceeds total count (${total})`;
-        }
-        
-        const venueErrs = (form.eveningRefreshmentVenues || []).map(v => {
-          const vErr = {};
-          if (!v.venue) vErr.venue = "Venue is required";
-          if (!v.count) vErr.count = "Count is required";
-          return vErr;
-        });
-        if (venueErrs.some(e => Object.keys(e).length > 0)) {
-          err.eveningRefreshmentVenues = venueErrs;
-        }
-      }
+      if (!totalStr) err.eveningRefreshmentCount = "Total count is required";
+      if (autoVenues.length === 0 && !form.eveningRefreshmentVenue) err.eveningRefreshmentVenue = "Venue is required";
     }
 
     Object.assign(err, mealErrors);
@@ -475,6 +441,52 @@ export default function FoodAndRefreshments({
   eventId,
   errors: propErrors = {},
 }) {
+  const [venuesList, setVenuesList] = useState([]);
+  
+  useEffect(() => {
+    const fetchVenues = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/venues`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setVenuesList(data);
+        }
+      } catch (err) {
+        console.error("Failed to load venues in food form", err);
+      }
+    };
+    fetchVenues();
+  }, []);
+
+  const getAutoRefreshmentVenues = useCallback(() => {
+    const blocks = new Set();
+    const uniqueVenues = Array.from(new Set(
+      venues.flatMap(day => (day.selectedVenues || [])).map(v => typeof v === 'string' ? v : v.roomName || v.venueName || String(v))
+    ));
+    uniqueVenues.forEach(venueName => {
+      const match = venuesList.find(v => v.venue === venueName);
+      if (match && match.block) blocks.add(match.block.toLowerCase());
+    });
+    
+    const refreshmentVenues = [];
+    let mainAdded = false;
+    let aidsMechAdded = false;
+
+    blocks.forEach(block => {
+      if (block.includes("main") && !mainAdded) {
+        refreshmentVenues.push("Main block - Guest dinning (opp. to II floor auditorium)");
+        mainAdded = true;
+      } else if ((block.includes("aids") || block.includes("mech") || block.includes("ai")) && !aidsMechAdded) {
+        refreshmentVenues.push("AI & Mech Block: Cyber lab (opp. to Vista hall)");
+        aidsMechAdded = true;
+      }
+    });
+
+    return refreshmentVenues;
+  }, [venues, venuesList]);
+
   // Inject dark datepicker styles once
   useEffect(() => {
     const id = "food-datepicker-dark";
@@ -742,7 +754,7 @@ export default function FoodAndRefreshments({
     return errors[idx]?.[meal]?.[field] || "";
   };
 
-  const buildPayload = (latest) => {
+  const buildPayload = (latest, autoVenues) => {
     return {
       refreshmentDetails: {
         refreshments: latest.map((form) => {
@@ -775,15 +787,26 @@ export default function FoodAndRefreshments({
               return payloadObj;
             }
             if (type === "Morning Refreshment" || type === "Evening Refreshment") {
-              const venuesData = type === "Morning Refreshment" ? form.morningRefreshmentVenues : form.eveningRefreshmentVenues;
               const totalCount = parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0;
+              const venue = type === "Morning Refreshment" ? form.morningRefreshmentVenue : form.eveningRefreshmentVenue;
+              
+              let venueWiseDetails = [];
+              if (autoVenues.length > 0) {
+                venueWiseDetails = autoVenues.map((vName, idx) => ({
+                  venueName: vName,
+                  count: idx === 0 ? totalCount : 0
+                }));
+              } else if (venue) {
+                venueWiseDetails = [{
+                  venueName: venue,
+                  count: totalCount
+                }];
+              }
+              
               return {
                 type,
                 refreshmentCount: totalCount,
-                venueWiseDetails: (venuesData || []).map(v => ({
-                  venueName: v.venue,
-                  count: parseInt(v.count) || 0
-                }))
+                venueWiseDetails
               };
             }
             return {
@@ -814,7 +837,8 @@ export default function FoodAndRefreshments({
 
   const handleNext = useCallback(async () => {
     const latest = formsRef.current;
-    const errs = validateFoodForms(latest);
+    const autoVenues = getAutoRefreshmentVenues();
+    const errs = validateFoodForms(latest, autoVenues);
     const hasErrors = !Array.isArray(errs)
       ? Object.keys(errs).length > 0
       : errs.some((e) => Object.keys(e).length > 0);
@@ -823,7 +847,7 @@ export default function FoodAndRefreshments({
     setIsLoading(true);
     setApiError("");
     try {
-      const payload = buildPayload(latest);
+      const payload = buildPayload(latest, autoVenues);
       // console.log("food payload:", payload);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
         method: "PUT",
@@ -1111,123 +1135,97 @@ export default function FoodAndRefreshments({
 
             {/* Refreshment Counts */}
             {form.foodTypes.includes("Morning Refreshment") && (() => {
-              const morningTotal = parseInt(form.morningRefreshmentCount) || 0;
-              const morningSum = (form.morningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
-              const morningExceeds = morningTotal > 0 && morningSum > morningTotal;
+              const autoVenues = getAutoRefreshmentVenues();
               return (
               <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
-                  <button type="button" onClick={() => handleAddVenue(form.id, "morningRefreshmentVenues")} className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add Venue</button>
                 </div>
                 
-                <div className="mb-4">
-                  <CustomInput
-                    label="Total Morning Refreshment Count *"
-                    labelBg="#2a2a4a"
-                    value={form.morningRefreshmentCount || ""}
-                    onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
-                    type="text"
-                  />
-                  {getError(form.id, "morningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentCount")}</p>}
-                </div>
-                
-                {(form.morningRefreshmentVenues || []).map((venueObj, vIndex) => (
-                  <div key={vIndex} className="flex gap-4 items-center mb-3">
-                    <div className="flex-1">
-                      <CustomInput
-                        label={`Venue ${vIndex + 1} Name *`}
-                        labelBg="#2a2a4a"
-                        value={venueObj.venue}
-                        onChange={(e) => handleVenueChange(form.id, "morningRefreshmentVenues", vIndex, "venue", e.target.value)}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <CustomInput
-                        label="Count *"
-                        labelBg="#2a2a4a"
-                        value={venueObj.count}
-                        onChange={(e) => handleVenueChange(form.id, "morningRefreshmentVenues", vIndex, "count", e.target.value.replace(/\D/g, ""))}
-                        type="text"
-                      />
-                    </div>
-                    <button type="button" onClick={() => handleRemoveVenue(form.id, "morningRefreshmentVenues", vIndex)} className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-full transition-all flex-shrink-0">
-                      <Trash2 size={16} />
-                    </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    {autoVenues.length > 0 ? (
+                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                          {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <CustomSelect
+                          label="Venue *"
+                          labelBg="#2a2a4a"
+                          options={[
+                            "Main block - Guest dinning (opp. to II floor auditorium)",
+                            "AI & Mech Block: Cyber lab (opp. to Vista hall)"
+                          ]}
+                          value={form.morningRefreshmentVenue || ""}
+                          onChange={(val) => handleChange(form.id, "morningRefreshmentVenue", val)}
+                        />
+                        {getError(form.id, "morningRefreshmentVenue") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentVenue")}</p>}
+                      </>
+                    )}
                   </div>
-                ))}
-
-                {morningExceeds && (
-                  <p className="text-red-400 text-sm mt-2 font-medium">
-                    ⚠ Venue count total ({morningSum}) exceeds the allowed total ({morningTotal})
-                  </p>
-                )}
-                {!morningExceeds && (form.morningRefreshmentVenues || []).length > 0 && (
-                  <p className="text-gray-400 text-xs mt-2">
-                    Allocated: {morningSum} / {morningTotal}
-                  </p>
-                )}
+                  <div className="mb-4">
+                    <CustomInput
+                      label="Total Morning Refreshment Count (Timing: 10.45 AM to 11.15 AM) *"
+                      labelBg="#2a2a4a"
+                      value={form.morningRefreshmentCount || ""}
+                      onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                      type="text"
+                    />
+                    {getError(form.id, "morningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentCount")}</p>}
+                  </div>
+                </div>
               </div>
               );
             })()}
 
             {form.foodTypes.includes("Evening Refreshment") && (() => {
-              const eveningTotal = parseInt(form.eveningRefreshmentCount) || 0;
-              const eveningSum = (form.eveningRefreshmentVenues || []).reduce((acc, v) => acc + (parseInt(v.count) || 0), 0);
-              const eveningExceeds = eveningTotal > 0 && eveningSum > eveningTotal;
+              const autoVenues = getAutoRefreshmentVenues();
               return (
               <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
-                  <button type="button" onClick={() => handleAddVenue(form.id, "eveningRefreshmentVenues")} className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1"><Plus size={14} /> Add Venue</button>
                 </div>
                 
-                <div className="mb-4">
-                  <CustomInput
-                    label="Total Evening Refreshment Count *"
-                    labelBg="#2a2a4a"
-                    value={form.eveningRefreshmentCount || ""}
-                    onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
-                    type="text"
-                  />
-                  {getError(form.id, "eveningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentCount")}</p>}
-                </div>
-                
-                {(form.eveningRefreshmentVenues || []).map((venueObj, vIndex) => (
-                  <div key={vIndex} className="flex gap-4 items-center mb-3">
-                    <div className="flex-1">
-                      <CustomInput
-                        label={`Venue ${vIndex + 1} Name *`}
-                        labelBg="#2a2a4a"
-                        value={venueObj.venue}
-                        onChange={(e) => handleVenueChange(form.id, "eveningRefreshmentVenues", vIndex, "venue", e.target.value)}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <CustomInput
-                        label="Count *"
-                        labelBg="#2a2a4a"
-                        value={venueObj.count}
-                        onChange={(e) => handleVenueChange(form.id, "eveningRefreshmentVenues", vIndex, "count", e.target.value.replace(/\D/g, ""))}
-                        type="text"
-                      />
-                    </div>
-                    <button type="button" onClick={() => handleRemoveVenue(form.id, "eveningRefreshmentVenues", vIndex)} className="w-10 h-10 flex items-center justify-center bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-full transition-all flex-shrink-0">
-                      <Trash2 size={16} />
-                    </button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    {autoVenues.length > 0 ? (
+                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                          {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <CustomSelect
+                          label="Venue *"
+                          labelBg="#2a2a4a"
+                          options={[
+                            "Main block - Guest dinning (opp. to II floor auditorium)",
+                            "AI & Mech Block: Cyber lab (opp. to Vista hall)"
+                          ]}
+                          value={form.eveningRefreshmentVenue || ""}
+                          onChange={(val) => handleChange(form.id, "eveningRefreshmentVenue", val)}
+                        />
+                        {getError(form.id, "eveningRefreshmentVenue") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentVenue")}</p>}
+                      </>
+                    )}
                   </div>
-                ))}
-
-                {eveningExceeds && (
-                  <p className="text-red-400 text-sm mt-2 font-medium">
-                    ⚠ Venue count total ({eveningSum}) exceeds the allowed total ({eveningTotal})
-                  </p>
-                )}
-                {!eveningExceeds && (form.eveningRefreshmentVenues || []).length > 0 && (
-                  <p className="text-gray-400 text-xs mt-2">
-                    Allocated: {eveningSum} / {eveningTotal}
-                  </p>
-                )}
+                  <div className="mb-4">
+                    <CustomInput
+                      label="Total Evening Refreshment Count (Timing: 3.30 PM to 4 PM) *"
+                      labelBg="#2a2a4a"
+                      value={form.eveningRefreshmentCount || ""}
+                      onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                      type="text"
+                    />
+                    {getError(form.id, "eveningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentCount")}</p>}
+                  </div>
+                </div>
               </div>
               );
             })()}
