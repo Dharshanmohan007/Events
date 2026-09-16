@@ -157,8 +157,8 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
 
   const count = parseInt(val, 10);
 
-  // Maximum 10 guests
-  if (count > 10) {
+  // Maximum 20 guests
+  if (count > 25) {
     return;
   }
 
@@ -404,13 +404,14 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
 
       {/* Guests count */}
       {/* <div className=' items-center'> */}
+      {/* Maximum 20 guest allowed */}
         <div>
           <CustomInput
             labelBg="#1E1E35"
-            label={`Day ${dayIndex} – Total Number of Guests (max 10 guest allowed) *`}
+            label={`Day ${dayIndex} – Total Number of Guests (max 25 guest allowed) *`}
             type="number"
             min={0}
-            max={10}
+            max={25}
             value={dayData?.numGuests ?? ""}
             onChange={handleGuestsChange}
             placeholder="Enter number of guests"

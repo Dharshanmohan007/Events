@@ -20,11 +20,16 @@ function flattenGuests(eventDays = []) {
   const result = [];
   eventDays.forEach((day, dayIdx) => {
     (day.guests || []).forEach((g, gIdx) => {
-      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
-        .replace(/\s+/g, "")
-        .toLowerCase()}`;
-      if (!seen.has(guestId)) {
-        seen.add(guestId);
+      // Deduplicate by actual guest identity (name + mobile) so that
+      // "Same as Day 1" copies don't appear as separate entries.
+      const normalizedName = (g.name || "").replace(/\s+/g, "").toLowerCase();
+      const normalizedMobile = (g.mobile || "").toString().trim();
+      const identityKey = `${normalizedName}_${normalizedMobile}`;
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey);
+        // Keep the original day-based guestId for selection tracking
+        const guestId = `day${dayIdx}_g${gIdx}_${normalizedName}`;
         result.push({ ...g, guestId });
       }
     });

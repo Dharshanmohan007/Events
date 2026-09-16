@@ -1948,7 +1948,7 @@ export default function Form() {
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,
-      venues: formData.venue,
+      venues: requirementKeys.includes("venue") ? formData.venue : [],
       onFoodDataChange: handleFoodDataChange,
       eventId, errors: formErrors.foodandrefreshments || {},
     },
