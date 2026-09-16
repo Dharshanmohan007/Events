@@ -300,8 +300,8 @@ function createForm() {
     foodTypes: [],
     morningRefreshmentCount: "",
     eveningRefreshmentCount: "",
-    morningRefreshmentVenue: "",
-    eveningRefreshmentVenue: "",
+    morningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
+    eveningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
     breakfast: {
       participants: { vegCount: "", nonVegCount: "" },
       vipGuests: { vegCount: "", nonVegCount: "" },
@@ -382,14 +382,12 @@ function validateFoodForms(forms, autoVenues = []) {
     if (form.foodTypes?.includes("Morning Refreshment")) {
       const totalStr = form.morningRefreshmentCount || "";
       if (!totalStr) err.morningRefreshmentCount = "Total count is required";
-      if (autoVenues.length === 0 && !form.morningRefreshmentVenue) err.morningRefreshmentVenue = "Venue is required";
     }
 
     // Validate Evening Refreshment
     if (form.foodTypes?.includes("Evening Refreshment")) {
       const totalStr = form.eveningRefreshmentCount || "";
       if (!totalStr) err.eveningRefreshmentCount = "Total count is required";
-      if (autoVenues.length === 0 && !form.eveningRefreshmentVenue) err.eveningRefreshmentVenue = "Venue is required";
     }
 
     Object.assign(err, mealErrors);
@@ -800,7 +798,7 @@ export default function FoodAndRefreshments({
             }
             if (type === "Morning Refreshment" || type === "Evening Refreshment") {
               const totalCount = parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0;
-              const venue = type === "Morning Refreshment" ? form.morningRefreshmentVenue : form.eveningRefreshmentVenue;
+              const venue = (type === "Morning Refreshment" ? form.morningRefreshmentVenue : form.eveningRefreshmentVenue) || "Main block - Guest dinning (opp. to II floor auditorium)";
               
               let venueWiseDetails = [];
               if (autoVenues.length > 0) {
@@ -808,7 +806,7 @@ export default function FoodAndRefreshments({
                   venueName: vName,
                   count: idx === 0 ? totalCount : 0
                 }));
-              } else if (venue) {
+              } else {
                 venueWiseDetails = [{
                   venueName: venue,
                   count: totalCount
@@ -855,7 +853,11 @@ export default function FoodAndRefreshments({
     const hasErrors = !Array.isArray(errs)
       ? Object.keys(errs).length > 0
       : errs.some((e) => Object.keys(e).length > 0);
-    if (hasErrors) { setErrors(errs); return; }
+    if (hasErrors) {
+      console.warn("Food form validation failed:", errs);
+      setErrors(errs);
+      return;
+    }
     setErrors({});
     setIsLoading(true);
     setApiError("");
