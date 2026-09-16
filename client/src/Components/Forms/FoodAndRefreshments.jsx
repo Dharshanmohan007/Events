@@ -291,7 +291,8 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
 function createForm() {
   return {
     id: crypto.randomUUID(),
-    date: null,
+    fromDate: null,
+    toDate: null,
     resourcePersonType: [],
     resourcePersons: "",
     internalCount: "",
@@ -328,7 +329,8 @@ function validateFoodForms(forms, autoVenues = []) {
   if (!forms || forms.length === 0) return { _global: "Enter at least one food entry" };
   const errors = forms.map((form) => {
     const err = {};
-    if (!form.date) err.date = "Date is required";
+    if (!form.fromDate) err.fromDate = "From Date is required";
+    if (!form.toDate) err.toDate = "To Date is required";
     if (!form.resourcePersonType || form.resourcePersonType.length === 0)
       err.resourcePersonType = "Resource person type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
@@ -504,7 +506,7 @@ export default function FoodAndRefreshments({
   const [forms, setForms] = useState(() => {
     if (initialFoodData && initialFoodData.length > 0) {
       const savedForms = initialFoodData
-        .filter((f) => f.date) // only keep entries that have actual saved data
+        .filter((f) => f.fromDate || f.toDate || f.date) // only keep entries that have actual saved data
         .map((f) => ({
           ...f,
           staffList: f.staffList || syncStaffList([], f.internalCount || ""),
@@ -523,7 +525,8 @@ export default function FoodAndRefreshments({
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ── DatePicker refs (one per form, keyed by form.id) ────────────────────────
-  const datePickerRefs = useRef({});
+  const fromDatePickerRefs = useRef({});
+  const toDatePickerRefs = useRef({});
 
   const formsRef = useRef(forms);
   useEffect(() => { formsRef.current = forms; }, [forms]);
@@ -755,6 +758,15 @@ export default function FoodAndRefreshments({
   };
 
   const buildPayload = (latest, autoVenues) => {
+    const formatLocalDate = (d) => {
+      if (!d) return "";
+      const date = new Date(d);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
     return {
       refreshmentDetails: {
         refreshments: latest.map((form) => {
@@ -819,7 +831,8 @@ export default function FoodAndRefreshments({
           });
 
           return {
-            date: form.date ? form.date.toISOString() : "",
+            fromDate: formatLocalDate(form.fromDate),
+            toDate: formatLocalDate(form.toDate),
             resourcePersonType: form.resourcePersonType || [],
             numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
             numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
@@ -950,25 +963,25 @@ export default function FoodAndRefreshments({
 
           <div className={`p-5 grid grid-cols-1 md:grid-cols-2 gap-5 ${index !== 0 ? "pt-2" : ""}`}>
 
-            {/* Row 1: Date + Resource Person Type */}
-            <div className="w-full">
-              <div className="relative">
+            {/* Row 1: Dates */}
+            <div className="col-span-1 md:col-span-2 w-full flex flex-col sm:flex-row gap-4">
+              {/* From Date */}
+              <div className="relative w-full">
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
-                  Select Date *
+                  From Date *
                 </label>
-                {/* Calendar icon — clicking it opens the picker */}
                 <button
                   type="button"
-                  onClick={() => datePickerRefs.current[form.id]?.setOpen(true)}
+                  onClick={() => fromDatePickerRefs.current[form.id]?.setOpen(true)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
                   tabIndex={-1}
                 >
                   <Calendar size={18} />
                 </button>
                 <DatePicker
-                  ref={(el) => { datePickerRefs.current[form.id] = el; }}
-                  selected={form.date}
-                  onChange={(date) => handleChange(form.id, "date", date)}
+                  ref={(el) => { fromDatePickerRefs.current[form.id] = el; }}
+                  selected={form.fromDate}
+                  onChange={(date) => handleChange(form.id, "fromDate", date)}
                   dateFormat="dd/MM/yyyy"
                   minDate={new Date()}
                   shouldCloseOnSelect
@@ -979,13 +992,45 @@ export default function FoodAndRefreshments({
                   wrapperClassName="w-full"
                   calendarClassName="food-dark-cal"
                 />
+                {getError(form.id, "fromDate") && (
+                  <p className="text-red-400 text-xs mt-1">{getError(form.id, "fromDate")}</p>
+                )}
               </div>
-              {getError(form.id, "date") && (
-                <p className="text-red-400 text-xs mt-1">{getError(form.id, "date")}</p>
-              )}
+              
+              {/* To Date */}
+              <div className="relative w-full">
+                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                  To Date *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => toDatePickerRefs.current[form.id]?.setOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  <Calendar size={18} />
+                </button>
+                <DatePicker
+                  ref={(el) => { toDatePickerRefs.current[form.id] = el; }}
+                  selected={form.toDate}
+                  onChange={(date) => handleChange(form.id, "toDate", date)}
+                  dateFormat="dd/MM/yyyy"
+                  minDate={form.fromDate || new Date()}
+                  shouldCloseOnSelect
+                  popperPlacement="bottom-start"
+                  popperClassName="food-datepicker-popper"
+                  popperProps={{ strategy: "fixed" }}
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  wrapperClassName="w-full"
+                  calendarClassName="food-dark-cal"
+                />
+                {getError(form.id, "toDate") && (
+                  <p className="text-red-400 text-xs mt-1">{getError(form.id, "toDate")}</p>
+                )}
+              </div>
             </div>
 
-            <div>
+            <div className="col-span-1 md:col-span-2">
               <MultiSelect
                 label="Type of Resource Person *"
                 options={RESOURCE_OPTIONS}
