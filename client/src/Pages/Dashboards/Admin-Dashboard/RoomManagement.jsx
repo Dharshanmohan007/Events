@@ -6,8 +6,10 @@ import AddRooms from "../../../Components/AddRooms";
 import DeleteRoomModal from "../../../Components/DeleteRoomModal";
 
 import { getRooms } from "../../../services/Admin/getRoomsService";
+import { useAuth } from "../../../Components/AuthContext";
 
 export default function RoomManagement() {
+  const { isAdminSecretary } = useAuth();
   const [rooms, setRooms] = useState([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
@@ -185,31 +187,33 @@ export default function RoomManagement() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAddRoom}
-          className="
-            flex items-center gap-2
-            cursor-pointer
-            px-4 py-2.5
-            rounded-lg
-            text-white
-            text-sm
-            font-medium
-            bg-gradient-to-r
-            from-[#7C3AE7]
-            to-[#4E2593]
-            hover:from-[#8A4EF0]
-            hover:to-[#5A2FA8]
-            transition-all
-            duration-200
-            shadow-lg
-            shadow-purple-900/20
-          "
-        >
-          <Plus className="w-4 h-4" />
-          Add Rooms
-        </button>
+        {!isAdminSecretary && (
+          <button
+            type="button"
+            onClick={handleAddRoom}
+            className="
+              flex items-center gap-2
+              cursor-pointer
+              px-4 py-2.5
+              rounded-lg
+              text-white
+              text-sm
+              font-medium
+              bg-gradient-to-r
+              from-[#7C3AE7]
+              to-[#4E2593]
+              hover:from-[#8A4EF0]
+              hover:to-[#5A2FA8]
+              transition-all
+              duration-200
+              shadow-lg
+              shadow-purple-900/20
+            "
+          >
+            <Plus className="w-4 h-4" />
+            Add Rooms
+          </button>
+        )}
       </div>
 
       {/* --------------------------------------------- */}
@@ -272,6 +276,7 @@ export default function RoomManagement() {
           onEdit={handleEditRoom}
           onDelete={handleDeleteRoom}
           onRetry={fetchRooms}
+          readOnly={isAdminSecretary}
         />
       </div>
 

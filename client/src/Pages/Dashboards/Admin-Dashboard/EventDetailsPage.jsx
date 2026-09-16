@@ -16,6 +16,7 @@ import RejectionReasonPopup from "./RejectionReasonPopup";
 import DeleteConfirmationPopup from "./DeleteConfirmationPopup";
 import ExternalTransportPreview from "../../../Components/Preview/ExternalTransportPreview";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../../Components/AuthContext";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -51,6 +52,7 @@ const getStatusClassName = (status) => {
 const EventDetailsPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { isAdminSecretary } = useAuth();
 
   // ── Tabs state ──────────────────────────────────────────────────────
   const [detailTabs, setDetailTabs] = useState([]);
@@ -964,7 +966,7 @@ const EventDetailsPage = () => {
               )}
             </div>
 
-            {role.toLowerCase() == "hod" ? (
+            {role.toLowerCase() == "hod" || isAdminSecretary ? (
               ""
             ) : (
               <>
@@ -1003,7 +1005,7 @@ const EventDetailsPage = () => {
               <Check size={16} className="text-white" />
               Closed
             </div>
-          ) : data?.adminApproval == false && data?.status.toLowerCase() !== "deleted" ?  (
+          ) : data?.adminApproval == false && data?.status.toLowerCase() !== "deleted" && !isAdminSecretary ?  (
             <div className="btn-container flex items-center gap-2">
               <button
                 onClick={handleApprove}
