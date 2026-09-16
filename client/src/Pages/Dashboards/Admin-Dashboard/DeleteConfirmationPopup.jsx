@@ -63,7 +63,7 @@ const DeleteConfirmationPopup = ({
                 <button
                     type="button"
                     onClick={onDelete}
-                    disabled={deleting || !reason.trim()}
+                    // disabled={deleting || !reason?.trim()}
                     className="h-11 rounded-xl bg-[#ff3045b9]/80 text-sm font-semibold text-white hover:bg-[#ff4256]/80 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     {deleting ? 'Deleting...' : 'Delete Event'}

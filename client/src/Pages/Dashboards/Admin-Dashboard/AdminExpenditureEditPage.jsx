@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "../../../Components/AuthContext";
 import IncomeSourceForm from "../Faculty-Dashboard/IncomeSourceForm";
 import ExpenditureDetailsForm from "../Faculty-Dashboard/ExpenditureDetailsForm";
 import OtherDetailsForm from "../Faculty-Dashboard/OtherDetailsForm";
@@ -145,8 +146,16 @@ const validateExpenditure = (expenditureData) => {
 };
 
 const AdminExpenditureEditPage = () => {
+  const { isAdminSecretary } = useAuth();
   const { eventId } = useParams();
   const navigate = useNavigate();
+
+  // Redirect admin secretary away from edit page
+  useEffect(() => {
+    if (isAdminSecretary) {
+      navigate(-1);
+    }
+  }, [isAdminSecretary, navigate]);
   const token = localStorage.getItem("token");
 
   const [step, setStep] = useState("documentUpload");

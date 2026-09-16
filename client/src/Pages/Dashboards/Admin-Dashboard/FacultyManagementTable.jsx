@@ -31,7 +31,7 @@ const SelectFilter = ({ value, onChange, options, label }) => (
     </div>
 )
 
-const FacultyManagementTable = ({ faculties = [], onEdit, onDelete, onView }) => {
+const FacultyManagementTable = ({ faculties = [], onEdit, onDelete, onView, readOnly = false }) => {
     const [searchQuery, setSearchQuery] = useState('')
     const [departmentFilter, setDepartmentFilter] = useState('all')
     const [designationFilter, setDesignationFilter] = useState('all')
@@ -117,22 +117,22 @@ const FacultyManagementTable = ({ faculties = [], onEdit, onDelete, onView }) =>
                                     {/* <td className="px-5 py-3.5 text-sm whitespace-nowrap truncate w-12">{faculty.designation}</td> */}
                                     <td className="px-5 py-3.5">
                                         <div className="flex items-center justify-center gap-3 text-gray-400">
-                                            <button
+                                            {!readOnly && (<button
                                                 type="button"
                                                 onClick={() => onEdit?.(faculty)}
                                                 className="hover:text-white"
                                                 title="Edit"
                                             >
                                                 <SquarePen size={17} />
-                                            </button>
-                                            <button
+                                            </button>)}
+                                            {!readOnly && (<button
                                                 type="button"
                                                 onClick={() => onDelete?.(faculty)}
                                                 className="hover:text-[#ff3045]"
                                                 title="Delete"
                                             >
                                                 <Trash2 size={17} />
-                                            </button>
+                                            </button>)}
                                             <button
                                                 type="button"
                                                 onClick={() => onView?.(faculty)}
