@@ -576,7 +576,11 @@ export default function IctsForm({
   const updateCardData = (dayIndex, venueName, updated) => {
     setIctsData((prev) => ({
       ...prev,
-      [dayIndex]: { ...(prev[dayIndex] || {}), [venueName]: updated },
+      [dayIndex]: { 
+        ...(prev[dayIndex] || {}), 
+        [venueName]: updated,
+        sameAsDay1: false
+      },
     }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -708,9 +712,52 @@ export default function IctsForm({
           completedDays={completedDays}
         />
 
-        <h2 className="text-white text-lg font-bold">
-          ICTS Details
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg font-bold">
+            ICTS Details
+          </h2>
+          {currentDayIndex > 0 && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={ictsData[currentDayIndex]?.sameAsDay1 || false}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked) {
+                    const day1Data = ictsData[0] || {};
+                    const day1Venues = Object.keys(day1Data).filter(k => k !== 'sameAsDay1');
+                    const defaultCard = day1Venues.length > 0 ? day1Data[day1Venues[0]] : {};
+                    
+                    const currentVenuesList = venueData[currentDayIndex]?.selectedVenues || [];
+                    const newDayData = { sameAsDay1: true };
+                    
+                    currentVenuesList.forEach((vName, idx) => {
+                      let sourceCard = day1Data[vName];
+                      if (!sourceCard && day1Venues[idx]) sourceCard = day1Data[day1Venues[idx]];
+                      if (!sourceCard) sourceCard = defaultCard;
+                      newDayData[vName] = JSON.parse(JSON.stringify(sourceCard || {}));
+                    });
+                    
+                    setIctsData(prev => ({
+                      ...prev,
+                      [currentDayIndex]: newDayData
+                    }));
+                  } else {
+                    setIctsData(prev => ({
+                      ...prev,
+                      [currentDayIndex]: {
+                        ...(prev[currentDayIndex] || {}),
+                        sameAsDay1: false
+                      }
+                    }));
+                  }
+                }}
+                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+            </label>
+          )}
+        </div>
         <h2 className="text-white text-lg ">
           If Guest Wifi needed, Kindly Contact <span className="text-[#9E25FD] font-bold">ICTS Admin</span>
         </h2>

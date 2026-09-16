@@ -1185,6 +1185,7 @@ const applyVenueSelection = (selectedVenues) => {
       ...updated[currentDayIndex],
       selectedVenues,
       venueCards: updatedCards,
+      sameAsDay1: false,
     };
 
     return updated;
@@ -1224,7 +1225,7 @@ const applyVenueSelection = (selectedVenues) => {
         ? { ...updated, autoFilled: false }
         : updated;
 
-      data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
+      data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards, sameAsDay1: false };
       return data;
     });
   };
@@ -1613,9 +1614,49 @@ const applyVenueSelection = (selectedVenues) => {
             </div>
         )}
 
-        <h2 className="text-white text-lg font-bold">
-          Venue Details
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg font-bold">
+            Venue Details
+          </h2>
+          
+          {currentDayIndex > 0 && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={currentDay.sameAsDay1 || false}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked) {
+                    const day1 = venueData[0];
+                    setVenueData((prev) => {
+                      const updated = [...prev];
+                      updated[currentDayIndex] = {
+                        ...updated[currentDayIndex],
+                        participants: day1.participants,
+                        selectedVenues: [...(day1.selectedVenues || [])],
+                        venueCards: JSON.parse(JSON.stringify(day1.venueCards || [])),
+                        sameAsDay1: true
+                      };
+                      return updated;
+                    });
+                    checkVenueAvailability(day1.selectedVenues || []);
+                  } else {
+                    setVenueData((prev) => {
+                      const updated = [...prev];
+                      updated[currentDayIndex] = {
+                        ...updated[currentDayIndex],
+                        sameAsDay1: false
+                      };
+                      return updated;
+                    });
+                  }
+                }}
+                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+            </label>
+          )}
+        </div>
 
         {(apiError || Object.keys(currentErrors).length > 0) && (
           <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
@@ -1652,7 +1693,7 @@ const applyVenueSelection = (selectedVenues) => {
 
             setVenueData((prev) => {
               const updated = [...prev];
-              const day = { ...updated[currentDayIndex], participants: newParticipants };
+              const day = { ...updated[currentDayIndex], participants: newParticipants, sameAsDay1: false };
 
               // Auto-fill only when exactly ONE venue is selected.
               if (day.selectedVenues && day.selectedVenues.length === 1) {
