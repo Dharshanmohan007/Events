@@ -465,9 +465,10 @@ export default function AudioForm({
   nextStep,
   prevStep,
   registerChildNavigation,
-  audioData: initialAudioData,
+  audioData: initialAudioData = {},
   onAudioDataChange,
   eventId,
+  isEditMode = false,
   errors: propErrors = {},
   eventDays = [],
   venueData = [],
@@ -574,7 +575,7 @@ export default function AudioForm({
     if (venueInfoLoading) {
       setErrors({});
     } else {
-      const dayErrors = validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
+      const dayErrors = isEditMode ? {} : validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
       const hasErrors = Object.keys(dayErrors).length > 0;
       setErrors(hasErrors ? dayErrors : {});
       if (hasErrors) return;
