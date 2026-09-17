@@ -226,9 +226,9 @@ const FacultyFormPopup = ({
     ].map(dep => ({ value: dep, label: dep }));
 
     const ROLE_OPTIONS = [
-        { value: 'Faculty', label: 'faculty' },
-        { value: 'HOD', label: 'hod' },
-        { value: 'admin secretary', label: 'admin Secretary' },
+        { value: 'faculty', label: 'Faculty' },
+        { value: 'hod', label: 'HOD' },
+        { value: 'admin secretary', label: 'Admin Secretary' },
 
     ];
 
