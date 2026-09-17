@@ -8,7 +8,7 @@
   body {
     font-family: "Times New Roman", Times, serif;
     font-size: 12px;
-    line-height: 1.15;
+    line-height: 1.35;
     color: #000;
     background: #e9e9e9;
     margin: 0;
@@ -20,11 +20,11 @@
     text-align: right;
     font-size: 11px;
     font-weight: bold;
-    padding: 0 4px 4px 0;
+    padding: 0 4px 10px 0; /* Increased bottom padding so it doesn't touch the line */
   }
 
   .sheet {
-    border: 2px solid #000;
+    border: 1px solid #666;
     background: #fff;
     padding: 6px 8px 8px 8px;
   }
@@ -45,46 +45,50 @@
   }
 
   .title-bar {
-    border-top: 1.5px solid #000;
-    border-bottom: 1.5px solid #000;
+    border-top: 1px solid #666;
+    border-bottom: 1px solid #666;
     text-align: center;
     font-weight: bold;
     font-size: 13px;
-    padding: 3px 0;
+    padding: 6px 0;
     margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   /* ---------- TOP INFO GRID ---------- */
-  table.info-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.info-table { width: 100%; border-collapse: collapse; }
   table.info-table td {
-    border: 1px solid #000;
+    border: 1px solid #666;
     border-top: none;
-    padding: 4px 6px;
+    padding: 6px 8px;
     font-size: 11px;
     vertical-align: top;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
   table.info-table td b { font-weight: bold; }
-  .full-row td { border-left: 1px solid #000; }
-  .tall-row td { height: 30px; vertical-align: top; padding-top: 4px; }
+  .full-row td { border-left: 1px solid #666; }
+  .tall-row td { height: 40px; vertical-align: top; padding-top: 4px; }
 
   /* ---------- SECTION HEADINGS INSIDE TABLE FLOW ---------- */
   .section-label-row td, th.section-label-row {
+    background: #f0f0f0;
     font-weight: bold;
-    background: #fff;
-    border-top: none;
-    padding: 3px 6px;
+    padding: 6px 8px;
+    border-top: 1px solid #666 !important;
+    border-bottom: 1px solid #666 !important;
   }
 
   /* Small consistent gap placed before a new, fully-bordered section */
-  .section-gap { margin-top: 0; }
+  .section-gap { margin-top: -1px; }
 
   /* ---------- DATA TABLES ---------- */
-  table.data { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.data { width: 100%; border-collapse: collapse; margin-top: -1px; }
   table.data th, table.data td {
-    border: 1px solid #000;
-    padding: 4px 6px;
+    border: 1px solid #666;
+    padding: 6px 8px;
     font-size: 11px;
     text-align: left;
     vertical-align: top;
@@ -97,23 +101,22 @@
   table.data tr.total-row td { font-weight: bold; }
   table.data tr.total-row td.label-span { text-align: right; }
   table.data td.blankrow { height: 22px; }
-  #expenditureTable { border-bottom: 1px solid #000; }
+  #expenditureTable { border-bottom: 1px solid #666; }
 
-  .cat-tag { font-weight: bold; vertical-align: middle; text-align: left; }
+  .cat-tag { font-weight: bold; vertical-align: middle; text-align: center; }
   .item-desc { }
 
   /* ---------- REMARKS + TOTALS SIDE BY SIDE ---------- */
-  table.remarks-block { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.remarks-block { width: 100%; border-collapse: collapse; margin-top: -1px; }
   table.remarks-block td {
-    border: 1px solid #000;
-    border-top: none;
+    border: 1px solid #666;
     font-size: 11px;
     vertical-align: top;
   }
-  .remarks-cell { width: 65%; text-align: center; font-weight: bold; padding-top: 16px; }
+  .remarks-cell { width: 65%; text-align: center; font-weight: bold; padding-top: 30px; }
   .totals-cell { width: 35%; padding: 0; }
-  .totals-cell table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  .totals-cell td { border: none; border-bottom: 1px solid #000; padding: 4px 6px; font-size: 10.5px; }
+  .totals-cell table { width: 100%; border-collapse: collapse; margin-top: -1px; }
+  .totals-cell td { border: none; border-bottom: 1px solid #666; padding: 4px 6px; font-size: 10.5px; }
   .totals-cell tr:last-child td { border-bottom: none; }
   .totals-cell td.tlabel { font-weight: bold; width: 60%; }
   .totals-cell td.tval { width: 40%; }
@@ -122,20 +125,20 @@
   .declaration {
     font-size: 10.5px;
     font-style: italic;
-    border: 1px solid #000;
+    border: 1px solid #666;
     border-top: none;
     padding: 4px 6px;
   }
 
   /* ---------- SIGNATURE BLOCK ---------- */
-  table.sign { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.sign { width: 100%; border-collapse: collapse; margin-top: -1px; }
   table.sign td {
-    border: 1px solid #000;
+    border: 1px solid #666;
     border-top: none;
     font-size: 9.5px;
     font-weight: bold;
     text-align: center;
-    padding: 10px 4px 6px 4px;
+    padding: 18px 4px 6px 4px;
     width: 16.66%;
   }
 
@@ -193,7 +196,7 @@
     </table>
 
     <!-- ================= A) INCOME SOURCE ================= -->
-    <table class="data" style="margin-top:4px;" id="incomeTable">
+    <table class="data" style="margin-top:0;" id="incomeTable">
       <thead>
         <tr>
           <th style="width:6%; border-top:none;">S No</th>
@@ -260,6 +263,7 @@
     </table>
 
     <!-- ================= REMARKS + TOTALS (side by side) ================= -->
+    <div id="footer-block">
     <table class="remarks-block section-gap">
       <tr>
         <td class="remarks-cell" rowspan="1">Remarks If Any</td>
@@ -288,6 +292,7 @@
         <td>Verified By Accounts</td>
       </tr>
     </table>
+    </div>
 
   </div>
 </div>
