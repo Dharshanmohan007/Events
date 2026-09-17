@@ -60,6 +60,9 @@ const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
 
 const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
 
+const sanitizeGuestName = (value) => value.replace(/[^A-Za-z\s]/g, "");
+const isValidIndianMobile = (value) => /^[6-9]\d{9}$/.test(String(value).trim());
+
 const TransportDetailsPage = () => {
   const { id } = useParams();
   const isEditMode = Boolean(id);
@@ -832,9 +835,13 @@ const TransportDetailsPage = () => {
       (form.guests || []).slice(0, numberOfGuests).forEach((guest, guestIndex) => {
         if (!guest.name?.trim()) {
           errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} name is required`);
+        } else if (!/^[A-Za-z\s]+$/.test(guest.name.trim())) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} name can contain only letters and spaces`);
         }
         if (!guest.mobile?.trim()) {
           errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} mobile number is required`);
+        } else if (!isValidIndianMobile(guest.mobile)) {
+          errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} mobile number must be a valid 10-digit Indian mobile number`);
         }
         if (!guest.organization?.trim()) {
           errors.push(`Form ${index + 1}: Guest ${guestIndex + 1} organization name is required`);
@@ -1719,7 +1726,12 @@ const TransportDetailsPage = () => {
                         type="text"
                         value={guest.name}
                         onChange={(e) =>
-                          updateGuestDetail(formIndex, guestIndex, "name", e.target.value)
+                          updateGuestDetail(
+                            formIndex,
+                            guestIndex,
+                            "name",
+                            sanitizeGuestName(e.target.value),
+                          )
                         }
                         placeholder="Enter guest name"
                         className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
@@ -1731,14 +1743,11 @@ const TransportDetailsPage = () => {
                       <input
                         type="tel"
                         value={guest.mobile}
-                        onChange={(e) =>
-                          updateGuestDetail(
-                            formIndex,
-                            guestIndex,
-                            "mobile",
-                            e.target.value.replace(/[^0-9]/g, ""),
-                          )
-                        }
+                        maxLength={10}
+                        onChange={(e) => {
+                          const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                          updateGuestDetail(formIndex, guestIndex, "mobile", digits);
+                        }}
                         placeholder="Enter mobile number"
                         className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
                       />
@@ -2000,10 +2009,21 @@ const TransportDetailsPage = () => {
                       value={form.vehicleCounts?.[vehicle] || ""}
                       onChange={(e) => {
                         const updatedForms = [...transportForms];
+                        const rawValue = e.target.value;
+                        let nextValue = rawValue;
+
+                        if (vehicle === "Bus") {
+                          const numericValue = Number(rawValue);
+                          if (rawValue === "" || Number.isNaN(numericValue)) {
+                            nextValue = rawValue;
+                          } else {
+                            nextValue = String(Math.min(numericValue, 10));
+                          }
+                        }
 
                         updatedForms[formIndex].vehicleCounts = {
                           ...updatedForms[formIndex].vehicleCounts,
-                          [vehicle]: e.target.value,
+                          [vehicle]: nextValue,
                         };
 
                         setTransportForms(updatedForms);
@@ -2129,7 +2149,7 @@ const TransportDetailsPage = () => {
                             formIndex,
                             staffIndex,
                             "name",
-                            e.target.value,
+                            e.target.value.replace(/[^A-Za-z\s]/g, ""),
                           )
                         }
                         placeholder="Enter staff name"

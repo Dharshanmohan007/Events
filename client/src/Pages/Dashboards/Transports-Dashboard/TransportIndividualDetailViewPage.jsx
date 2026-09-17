@@ -3,6 +3,7 @@ import { ChevronRight, Shield, Clock, CheckCircle2, XCircle } from "lucide-react
 import { Link, useParams } from "react-router-dom";
 import DashboardHeader from "../ICTC-Dashboard/DashboardHeader";
 import FacultyTransportationDetailsPanel from "../Faculty-Dashboard/FacultyTransportationDetailsPanel";
+import ExternalTransportPreview from "../../../Components/Preview/ExternalTransportPreview";
 import { API_BASE } from "../../../utils/apiConfig";
 
 const API_BASE_URL = API_BASE;
@@ -337,6 +338,18 @@ const TransportIndividualDetailViewPage = () => {
   const innerData = submission?.data || submission || {};
   const employee = innerData.employee || {};
   const status = submission?.status || innerData.overallStatus || "-";
+  const extTransports =
+    innerData.externalTransportDetails?.externalTransports ||
+    (Array.isArray(innerData.externalTransportDetails)
+      ? innerData.externalTransportDetails
+      : []) ||
+    innerData.externalTransports ||
+    submission?.externalTransportDetails?.externalTransports ||
+    (Array.isArray(submission?.externalTransportDetails)
+      ? submission.externalTransportDetails
+      : []) ||
+    submission?.externalTransports ||
+    [];
 
   return (
     <section className="min-h-screen bg-[#0b1326] text-white poppins">
@@ -442,6 +455,15 @@ const TransportIndividualDetailViewPage = () => {
                     eventSchedule={[]}
                   />
                 </div>
+
+                {extTransports.length > 0 && (
+                  <div className="mt-8 rounded-xl border border-[#374155] bg-[#1B2334] p-5">
+                    <h3 className="mb-4 text-base font-semibold text-white">
+                      External Transport Details
+                    </h3>
+                    <ExternalTransportPreview data={extTransports} />
+                  </div>
+                )}
 
                 <ApprovalStagesSection data={innerData} />
                 <ApprovalHistoryTimeline
