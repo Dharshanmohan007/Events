@@ -23,9 +23,13 @@ import {
   getEventTypeById,
 } from "../../../services/events/eventTypesService";
 
+import { useAuth } from "../../../Components/AuthContext";
+
 export default function ViewEventDocumentMapping({
   refreshKey,
 }) {
+  const { isAdmin, isAdminSecretary } = useAuth();
+
   const [eventTypes, setEventTypes] =
     useState([]);
 
@@ -883,7 +887,9 @@ const handleSyncDocuments = async () => {
             )}
           </div>
           <div className="text-right">
-            <button onClick={handleSyncDocuments} className="bg-[#7637DC] text-white px-4 py-2 rounded-lg text-sm cursor-pointer">Sync Documents</button>
+            {(isAdmin && !isAdminSecretary) && (
+              <button onClick={handleSyncDocuments} className="bg-[#7637DC] text-white px-4 py-2 rounded-lg text-sm cursor-pointer">Sync Documents</button>
+            )}
           </div>
         </div>
 

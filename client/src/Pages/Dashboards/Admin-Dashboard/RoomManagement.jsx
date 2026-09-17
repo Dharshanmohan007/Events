@@ -9,7 +9,7 @@ import { getRooms } from "../../../services/Admin/getRoomsService";
 import { useAuth } from "../../../Components/AuthContext";
 
 export default function RoomManagement() {
-  const { isAdminSecretary } = useAuth();
+  const { isAdminSecretary, isAdmin } = useAuth();
   const [rooms, setRooms] = useState([]);
 
   const [showDrawer, setShowDrawer] = useState(false);
@@ -276,7 +276,7 @@ export default function RoomManagement() {
           onEdit={handleEditRoom}
           onDelete={handleDeleteRoom}
           onRetry={fetchRooms}
-          readOnly={isAdminSecretary}
+          readOnly={!isAdmin || isAdminSecretary}
         />
       </div>
 
