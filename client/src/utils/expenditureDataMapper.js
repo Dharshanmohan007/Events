@@ -96,15 +96,29 @@ export const apiExpenditureToFormData = (expenditureObj = {}) => {
     const items = expenditureObj[cat];
     if (!Array.isArray(items)) return;
 
-    formData[cat] = items.map((item) => ({
-      expenseName: item.name || "",
-      billNo: item.billNo || "",
-      billDate: toISODate(item.date),
-      vendorGuestName: item.guestName || "",
-      amount: item.billAmount != null ? String(item.billAmount) : "",
-      file: null, // File objects can't be round-tripped from URLs
-      _existingDocuments: item.supportingDocuments || [], // preserve for reference
-    }));
+    formData[cat] = items.map((item) => {
+      const existingDocuments = Array.isArray(item.supportingDocuments)
+        ? item.supportingDocuments
+        : item.supportingDocument
+          ? [item.supportingDocument]
+          : Array.isArray(item.documents)
+            ? item.documents
+            : Array.isArray(item.attachments)
+              ? item.attachments
+              : item.file
+                ? [item.file]
+                : [];
+
+      return {
+        expenseName: item.name || "",
+        billNo: item.billNo || "",
+        billDate: toISODate(item.date),
+        vendorGuestName: item.guestName || "",
+        amount: item.billAmount != null ? String(item.billAmount) : "",
+        file: null,
+        _existingDocuments: existingDocuments,
+      };
+    });
   });
 
   return formData;

@@ -82,15 +82,49 @@ const MediaDetailsPage = () => {
   const [selectedDisplays, setSelectedDisplays] =
     useState([]);
 
+  const [posterDeliveryDates, setPosterDeliveryDates] =
+    useState({});
+
+  const updatePosterDeliveryDate = (designType, dateValue) => {
+    setPosterDeliveryDates((prev) => ({
+      ...prev,
+      [designType]: dateValue ? new Date(dateValue).toISOString() : "",
+    }));
+  };
+
   const displayOptions = [
+    "Institution Event Poster",
+    "Department Event Poster",
+    "IR Posters",
+    "Innovation event posters",
+    "Banner - Size needed",
+    "Pre event Posters",
     "Flex",
+    "Acrylic boards",
+    "Faculty name baord - Foam",
+    "Faculty name board - Aluminum board",
+    "Web Banner",
     "A type Standee",
-    "Website Banner",
-    "TV Display",
-    "Id card",
-    "Plug card",
-    "Momento card",
-    "Glass Sticker",
+    "Selfie booth ",
+    "Glass stickers",
+    "Wall stickers",
+    "Memento stickers",
+    "Pluck cards",
+    "Stationaries Requirements",
+    "Brochure",
+    "Flyer",
+    "Booklets",
+    "Certificates",
+    "LED display",
+    "Power Point Presentation",
+    "Badges",
+    "Newsletter",
+    "Lab manual",
+    "Lab stickers",
+    "Box-Arch",
+    "Selfie sticks",
+    "Customized Foam Boards",
+    "Others",
   ];
 
   const toggleDisplaySelection = (item) => {
@@ -570,63 +604,31 @@ const [trophyContent, setTrophyContent] = useState("");
   };
 
   const validatePoster = () => {
-    // console.log("validating poster...");
     const errors = [];
     if (!selectedTypes.includes("Poster")) {
       return errors;
     }
-    if (selectedTypes.includes("Poster")) {
-      if (!posterContent.trim()) {
-        errors.push("Content for Poster is required.");
-      }
-      if (!selectedDisplays.length) {
-        errors.push("Display Needed is required.");
-      }
-      if (selectedDisplays.length) {
-        if (selectedDisplays.includes("Glass Sticker")) {
-          if (!glassStickerSize.trim()) {
-            errors.push("Size for Glass Sticker is required.");
-          }
-        }
-        if (selectedDisplays.includes("Flex")) {
-          if (!displaySize.trim()) {
-            errors.push("Size for Flex is required.");
-          }
-        }
-      }
-      if (!posterDeliveryDate) {
-        errors.push("Delivery Date is required.");
-      }
-      if (!posterPriority) {
-        errors.push("Priority is required.");
-      }
-      if (!posterRequirement.trim()) {
-        errors.push("Special Requirements is required."); 
-      }
-      if (financeRequired === "Yes") {
-        if (!financeEstimatedAmount || Number.isNaN(Number(financeEstimatedAmount)) || Number(financeEstimatedAmount) <= 0) {
-          errors.push("Estimated budget amount is required.");
-        }
-        if (!financeAdvanceAmount || financeAdvanceAmount.toString().trim() === "") {
-          errors.push("Advance amount is required.");
-        }
-        if (!financeAdvancePurpose || !financeAdvancePurpose.trim()) {
-          errors.push("Advance purpose is required.");
-        }
-        if (!financeAdvanceToBeReceviedWithin) {
-          errors.push("Advance to be received within is required.");
-        }
-        if (
-          !Number.isNaN(Number(financeEstimatedAmount)) &&
-          !Number.isNaN(Number(financeAdvanceAmount)) &&
-          Number(financeAdvanceAmount) > Number(financeEstimatedAmount)
-        ) {
-          errors.push("Advance amount cannot exceed the estimated budget amount.");
-        }
-      }
+
+    if (!selectedDisplays.length) {
+      errors.push("Design type is required.");
+      return errors;
     }
 
-    // console.log("Poster validation errors:", errors);
+    const sizeRequiredDesigns = ["Flex", "Box-Arch"];
+    const needsSize = selectedDisplays.some((designType) =>
+      sizeRequiredDesigns.includes((designType || "").trim())
+    );
+
+    if (needsSize && !displaySize.trim()) {
+      errors.push("Size is required for Flex or Box-Arch.");
+    }
+
+    selectedDisplays.forEach((designType) => {
+      if (!posterDeliveryDates[designType]) {
+        errors.push(`${designType} delivery date is required.`);
+      }
+    });
+
     return errors;
   };
 
@@ -799,7 +801,13 @@ const [trophyContent, setTrophyContent] = useState("");
       formData.append("poster[trophyContent]", trophyContent);
       formData.append("poster[priority]", posterPriority);
       formData.append("poster[specialRequirements]", posterRequirement);
-      formData.append("poster[deliveryDate]", posterDeliveryDate);
+      formData.append(
+        "poster[deliveryDate]",
+        selectedDisplays
+          .map((designType) => posterDeliveryDates[designType])
+          .filter(Boolean)
+          .join(", ")
+      );
       
       // Append display options
       selectedDisplays.forEach((d) => formData.append("poster[displayNeeded][]", d));
@@ -1391,199 +1399,16 @@ const [trophyContent, setTrophyContent] = useState("");
       </div>
 
       {selectedTypes.includes("Poster") && (
-        <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6">
+        <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6 mt-8">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">Poster</h2>
 
           <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>Content for poster*</label>
-            <textarea
-              rows={4}
-              value={posterContent}
-              onChange={(e) => setPosterContent(e.target.value)}
-              placeholder="reason"
-              className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
-            />
-          </div>
-
-          {/* Poster Upload */}
-          <div className="relative mb-8">
-            <span className={cardFloatingLabelClass}>
-              Reference Poster ( If any )
-            </span>
-
-            <label
-              className="
-                border-2
-                border-dashed
-                border-[#2F2F3E]
-                rounded-lg
-                p-8
-                flex
-                flex-col
-                justify-center
-                items-center
-                gap-3
-                cursor-pointer
-              "
-            >
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  const validation = validateFileType(file);
-                  if (!validation.valid) {
-                    setValidationErrors([validation.error]);
-                    return;
-                  }
-                  setValidationErrors([]);
-                  setPosterFile(file);
-                }}
-              />
-
-              <Upload size={24} />
-
-              <span className="text-sm text-center">
-                Drag and drop the files here or{" "}
-                <span className="text-[#8b5cf6] underline">
-                  choose file
-                </span>
-              </span>
-            </label>
-
-            {posterFile && (
-              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText size={18} />
-
-                  <span className="text-sm">
-                    {posterFile.name}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() =>
-                    removeFile("poster")
-                  }
-                >
-                  <X className="text-red-500" />
-                </button>
-              </div>
-            )}
-          </div>
-
-           <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Content for Certificate *
-            </label>
-
-           <textarea
-  rows={4}
-  value={certificateContent}
-  onChange={(e) => setCertificateContent(e.target.value)}
-  placeholder="reason"
-  className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
-/>
-          </div>
-
-           <div className="relative mb-8">
-            <span className={cardFloatingLabelClass}>
-              Reference Certificate ( If any )
-            </span>
-
-            <label
-              className="
-                border-2
-                border-dashed
-                border-[#2F2F3E]
-                rounded-lg
-                p-8
-                flex
-                flex-col
-                justify-center
-                items-center
-                gap-3
-                cursor-pointer
-              "
-            >
-              <input
-                type="file"
-                accept=".jpg,.jpeg,.png,.pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  const validation = validateFileType(file);
-                  if (!validation.valid) {
-                    setValidationErrors([validation.error]);
-                    return;
-                  }
-                  setValidationErrors([]);
-                  setCertificateFile(file);
-                }}
-              />
-
-              <Upload size={24} />
-
-              <span className="text-sm text-center">
-                Drag and drop the files here or{" "}
-                <span className="text-[#8b5cf6] underline">
-                  choose file
-                </span>
-              </span>
-            </label>
-
-            {certificateFile && (
-              <div className="mt-4 bg-[#141428] border border-[#3a3a5a] rounded-md px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <FileText size={18} />
-
-                  <span className="text-sm">
-                    {certificateFile.name}
-                  </span>
-                </div>
-
-                <button
-                  onClick={() =>
-                    removeFile("certificate")
-                  }
-                >
-                  <X className="text-red-500" />
-                </button>
-              </div>
-            )}
-          </div>
-
-           <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Content for Trophy *
-            </label>
-
-            <textarea
-  rows={4}
-  value={trophyContent}
-  onChange={(e) => setTrophyContent(e.target.value)}
-  placeholder="reason"
-  className="w-full border border-[#2F2F3E] rounded-md p-4 text-white outline-none"
-/>
-          </div>
-
-
-          {/* Display Needed */}
-          <div className="relative mb-6">
-            <label className={cardFloatingLabelClass}>
-              Display Needed *
-            </label>
+            <label className={cardFloatingLabelClass}>Design Types *</label>
 
             <div
-              onClick={() =>
-                setShowDisplayDropdown(
-                  !showDisplayDropdown
-                )
-              }
+              onClick={() => setShowDisplayDropdown(!showDisplayDropdown)}
               className="
                 w-full
-               
                 border
                 border-[#2F2F3E]
                 rounded-md
@@ -1595,216 +1420,72 @@ const [trophyContent, setTrophyContent] = useState("");
                 cursor-pointer
               "
             >
-              <span
-                className={
-                  selectedDisplays.length
-                    ? "text-white"
-                    : "text-[#8d8da8]"
-                }
-              >
-                {selectedDisplays.length
-                  ? selectedDisplays.join(", ")
-                  : "Select Display"}
+              <span className={selectedDisplays.length ? "text-white" : "text-[#8d8da8]"}>
+                {selectedDisplays.length ? selectedDisplays.join(", ") : "Select design type"}
               </span>
 
               <ChevronDown size={18} />
             </div>
 
             {showDisplayDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-                {displayOptions.map(
-                  (item, index) => {
-                    const isSelected = selectedDisplays.includes(item);
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => {
-                          toggleDisplaySelection(item);
-                          // clear size inputs when deselecting an option
-                          if (isSelected) {
-                            setDisplaySize("");
-                            setGlassStickerSize("");
-                          }
-                        }}
-                        className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200 ${isSelected ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-                      >
-                        <span>{item}</span>
-                        {isSelected && <Check size={16} className="text-white" />}
-                      </div>
-                    );
-                  }
-                )}
+              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50 max-h-[280px] overflow-y-auto">
+                {displayOptions.map((item, index) => {
+                  const isSelected = selectedDisplays.includes(item);
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => {
+                        toggleDisplaySelection(item);
+                        if (isSelected) {
+                          setDisplaySize("");
+                          setGlassStickerSize("");
+                        }
+                      }}
+                      className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors duration-200 ${isSelected ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
+                    >
+                      <span>{item}</span>
+                      {isSelected && <Check size={16} className="text-white" />}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
 
-          {/* SIZE INPUT */}
-          {(selectedDisplays.includes("Flex") || selectedDisplays.includes("Glass Sticker")) && (
-            <div className="mb-6 space-y-4">
-              {selectedDisplays.includes("Flex") && (
-                <div className="relative">
-                  <label className={cardFloatingLabelClass}>
-                    Size for Flex *
-                  </label>
-
-                  <input
-                    type="text"
-                    value={displaySize}
-                    onChange={(e) => setDisplaySize(e.target.value)}
-                    placeholder="e.g. 2 * 2 px"
-                    className="
-                      w-full
-                      border
-                      border-[#2F2F3E]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-              )}
-
-              {selectedDisplays.includes("Glass Sticker") && (
-                <div className="relative">
-                  <label className={cardFloatingLabelClass}>
-                    Size for Glass Sticker *
-                  </label>
-
-                  <input
-                    type="text"
-                    value={glassStickerSize}
-                    onChange={(e) => setGlassStickerSize(e.target.value)}
-                    placeholder="e.g. 4 * 4 px"
-                    className="
-                      w-full
-                      border
-                      border-[#3a3a5a]
-                      rounded-md
-                      px-4
-                      py-3
-                      text-white
-                      outline-none
-                    "
-                  />
-                </div>
-              )}
+          {selectedDisplays.some((designType) => ["Flex", "Box-Arch"].includes((designType || "").trim())) && (
+            <div className="relative mb-4">
+              <label className={cardFloatingLabelClass}>Size Required *</label>
+              <input
+                type="text"
+                value={displaySize}
+                onChange={(e) => setDisplaySize(e.target.value)}
+                placeholder={
+                  selectedDisplays.includes("Flex") && selectedDisplays.includes("Box-Arch")
+                    ? "Enter size for Flex or Box-Arch"
+                    : selectedDisplays.includes("Flex")
+                      ? "Enter size for Flex"
+                      : selectedDisplays.includes("Box-Arch")
+                        ? "Enter size for Box-Arch"
+                        : "Enter size"
+                }
+                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+              />
             </div>
           )}
 
-          {/* DATE + PRIORITY */}
-         
-{/* DATE + PRIORITY */}
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 items-start">
-
-  {/* DELIVERY DATE */}
-  <div className="w-full">
-    <CustomDateTimePicker
-      label="Delivery Date *"
-      value={
-        posterDeliveryDate
-          ? new Date(posterDeliveryDate)
-          : null
-      }
-      onChange={(date) =>
-        setPosterDeliveryDate(
-          date.toISOString()
-        )
-      }
-      placeholder="Select Delivery Date"
-      showTime={false}
-      minDate={new Date()}
-    />
-  </div>
-
-  {/* PRIORITY */}
-  {/* PRIORITY */}
-<div className="relative w-full pt-px">
-  <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
-    Priority *
-  </label>
-
-  <div
-    onClick={() =>
-      setShowPosterPriorityDropdown(
-        !showPosterPriorityDropdown
-      )
-    }
-    className="
-      w-full
-      bg-transparent
-      border
-      border-[#2F2F3E]
-      rounded-lg
-      px-4
-      py-3.25
-      flex
-      justify-between
-      items-center
-      cursor-pointer
-      text-white
-    "
-  >
-    <span>{posterPriority}</span>
-
-    <ChevronDown
-      size={18}
-      className="text-gray-400"
-    />
-  </div>
-
-  {showPosterPriorityDropdown && (
-    <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
-      {priorityOptions.map(
-        (item, index) => (
-          <div
-            key={index}
-            onClick={() => {
-              setPosterPriority(item);
-
-              setShowPosterPriorityDropdown(
-                false
-              );
-            }}
-            className={`px-4 py-3 cursor-pointer transition-colors duration-200 ${posterPriority === item ? "bg-[#492A6F] text-white" : "text-white hover:bg-[#492A6F] hover:text-white"}`}
-          >
-            {item}
-          </div>
-        )
-      )}
-    </div>
-  )}
-</div>
-</div>
-
-          {/* Requirement */}
-          {/* FINANCE REQUIRED */}
-          <div className="relative">
-            <label className={cardFloatingLabelClass}>
-              Special Requirements, If any 
-            </label>
-
-            <textarea
-              rows={4}
-              value={posterRequirement}
-              onChange={(e) =>
-                setPosterRequirement(
-                  e.target.value
-                )
-              }
-              placeholder="reason"
-              className="
-                w-full
-               
-                border
-                border-[#2F2F3E]
-                rounded-md
-                p-4
-                text-white
-                outline-none
-              "
-            />
+          <div className="space-y-4">
+            {selectedDisplays.map((designType) => (
+              <div key={designType} className="w-full">
+                <CustomDateTimePicker
+                  label={`${designType} Delivery Date *`}
+                  value={posterDeliveryDates[designType] ? new Date(posterDeliveryDates[designType]) : null}
+                  onChange={(date) => updatePosterDeliveryDate(designType, date ? date.toISOString() : "")}
+                  placeholder="Select Delivery Date"
+                  showTime={false}
+                  minDate={new Date()}
+                />
+              </div>
+            ))}
           </div>
         </div>
       )}
