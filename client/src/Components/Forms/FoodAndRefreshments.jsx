@@ -439,6 +439,7 @@ export default function FoodAndRefreshments({
   venues = [],
   onFoodDataChange,
   eventId,
+  isEditMode = false,
   errors: propErrors = {},
 }) {
   const [venuesList, setVenuesList] = useState([]);
@@ -849,7 +850,7 @@ export default function FoodAndRefreshments({
   const handleNext = useCallback(async () => {
     const latest = formsRef.current;
     const autoVenues = getAutoRefreshmentVenues();
-    const errs = validateFoodForms(latest, autoVenues);
+    const errs = isEditMode ? {} : validateFoodForms(latest, autoVenues);
     const hasErrors = !Array.isArray(errs)
       ? Object.keys(errs).length > 0
       : errs.some((e) => Object.keys(e).length > 0);

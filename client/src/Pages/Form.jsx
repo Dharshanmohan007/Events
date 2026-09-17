@@ -1132,6 +1132,24 @@ function hydrateEventData(apiData) {
     };
   });
 
+  if (venue.length > 1) {
+    const day1str = JSON.stringify({
+      participants: venue[0].participants,
+      selectedVenues: venue[0].selectedVenues,
+      venueCards: venue[0].venueCards
+    });
+    for (let i = 1; i < venue.length; i++) {
+      const currStr = JSON.stringify({
+        participants: venue[i].participants,
+        selectedVenues: venue[i].selectedVenues,
+        venueCards: venue[i].venueCards
+      });
+      if (currStr === day1str && venue[0].selectedVenues.length > 0) {
+        venue[i].sameAsDay1 = true;
+      }
+    }
+  }
+
   // 4. ICTS — group by dayIndex + venueName
   const ictsBackend = apiData.ictsDetails?.ictses || [];
   const icts = {};
@@ -1159,6 +1177,18 @@ function hydrateEventData(apiData) {
     });
     icts[dayKey][item.venueName] = card;
   });
+
+  if (icts["0"]) {
+    const day1str = JSON.stringify(icts["0"]);
+    for (let i = 1; i < numDays; i++) {
+      const dayKey = String(i);
+      if (icts[dayKey] && Object.keys(icts[dayKey]).length > 0) {
+        if (JSON.stringify(icts[dayKey]) === day1str) {
+          icts[dayKey].sameAsDay1 = true;
+        }
+      }
+    }
+  }
 
   // 5. Audio — the API stores a flat list; AudioForm reads day -> venue -> data.
   const audio = {};
@@ -1195,6 +1225,18 @@ function hydrateEventData(apiData) {
       },
     };
   });
+
+  if (audio["0"]) {
+    const day1str = JSON.stringify(audio["0"]);
+    for (let i = 1; i < numDays; i++) {
+      const dayKey = String(i);
+      if (audio[dayKey] && Object.keys(audio[dayKey]).length > 0) {
+        if (JSON.stringify(audio[dayKey]) === day1str) {
+          audio[dayKey].sameAsDay1 = true;
+        }
+      }
+    }
+  }
 
   // 6. Transport — unwrap the API container and restore date-picker values.
   const transportItems = apiData.transportDetails?.transports || apiData.transportDetails || [];
@@ -2051,6 +2093,7 @@ export default function Form() {
             setEventDays={(days) => updateFormSection("event", { ...formData.event, eventDays: days })}
             eventId={eventId}
             setEventId={setEventId}
+            isEditMode={isEditMode}
             {...(sectionProps[currentStepKey] || {})}
             onSave={sectionProps[currentStepKey]?.onSave}
           />
