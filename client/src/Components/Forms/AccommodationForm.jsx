@@ -851,6 +851,7 @@ export default function AccommodationForm({
   onAccommodationDataChange,
   eventId,
   eventDays: eventDaysProp,
+  isEditMode = false,
   errors: propErrors = {},
 }) {
   const allGuests = flattenGuests(eventDaysProp || []);
@@ -962,7 +963,7 @@ export default function AccommodationForm({
     const latest = accommodationsRef.current;
     const latestGuests = allGuestsRef.current;
 
-    const allErrors = latest.map((acc) => validateAccommodation(acc));
+    const allErrors = isEditMode ? latest.map(() => ({})) : latest.map((acc) => validateAccommodation(acc));
     setBlockErrors(allErrors);
     if (allErrors.some((e) => Object.keys(e).length > 0)) return;
 

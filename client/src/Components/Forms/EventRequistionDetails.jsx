@@ -195,6 +195,7 @@ export default function EventRequisitionDetails({
   errors: parentErrors = {},
   isLoading: parentIsLoading = false,
   registerChildNavigation,
+  isEditMode = false,
 }) {
   const [doc, setDoc] = useState(initialEventRequisition.doc || "");
   const [finance, setFinance] = useState(initialEventRequisition.finance || "");
@@ -290,11 +291,11 @@ export default function EventRequisitionDetails({
   const handleSaveAndNext = async (selectedReqs) => {
     const currentRequirements = selectedReqs ?? requirements;
 
-    const oErr = validateOrganizerSection({
+    const oErr = isEditMode ? {} : validateOrganizerSection({
       principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, department, numOrganizers, organizers,
     });
-    const eErr = validateEventDetails(eventData, eventDaysLocal);
-    const rErr = validateRequirements(currentRequirements);
+    const eErr = isEditMode ? {} : validateEventDetails(eventData, eventDaysLocal);
+    const rErr = isEditMode ? {} : validateRequirements(currentRequirements);
 
     setOrgErrors(oErr);
     setEventErrors(eErr);

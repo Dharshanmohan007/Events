@@ -518,6 +518,7 @@ export default function IctsForm({
   ictsData: initialIctsData = {},
   onIctsDataChange,
   eventId,
+  isEditMode = false,
 }) {
   const dayCount = eventDays.length;
 
@@ -600,7 +601,7 @@ export default function IctsForm({
     const latestIctsData = ictsDataRef.current;
     const venues = getVenuesForDay(currentDayIndex);
 
-    const dayErrors = validateDay(currentDayIndex, venues, latestIctsData, showProctoring);
+    const dayErrors = isEditMode ? {} : validateDay(currentDayIndex, venues, latestIctsData, showProctoring);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;

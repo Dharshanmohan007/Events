@@ -2093,6 +2093,7 @@ export default function Form() {
             setEventDays={(days) => updateFormSection("event", { ...formData.event, eventDays: days })}
             eventId={eventId}
             setEventId={setEventId}
+            isEditMode={isEditMode}
             {...(sectionProps[currentStepKey] || {})}
             onSave={sectionProps[currentStepKey]?.onSave}
           />

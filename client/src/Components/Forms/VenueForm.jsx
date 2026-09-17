@@ -875,6 +875,7 @@ export default function VenueForm({
   venueData: initialVenueData = [],
   onVenueDataChange,
   eventId,
+  isEditMode = false,
 }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays]     = useState([]);
@@ -1339,7 +1340,7 @@ const applyVenueSelection = (selectedVenues) => {
     }
 
     const dayData   = venueData[currentDayIndex];
-    const dayErrors = validateDay(dayData, currentVenuesList);
+    const dayErrors = isEditMode ? {} : validateDay(dayData, currentVenuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return false;

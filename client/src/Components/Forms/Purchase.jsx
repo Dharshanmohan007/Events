@@ -785,6 +785,7 @@ export default function Purchase({
   purchaseData: initialPurchaseData,
   venueData = [],
   onPurchaseDataChange,
+  isEditMode = false,
   errors: propErrors = {},
 }) {
   const dayCount = eventDays.length;
@@ -883,7 +884,7 @@ export default function Purchase({
     const latestDayData  = dayDataRef.current;
     const currentDayData = latestDayData[currentDayIndex] ?? emptyPurchaseDay();
     const maxParticipants = parseInt(venueData?.[currentDayIndex]?.participants) || 0;
-    const dayErrors      = validateDay(currentDayData, maxParticipants);
+    const dayErrors      = isEditMode ? {} : validateDay(currentDayData, maxParticipants);
     const hasErrors      = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return;
