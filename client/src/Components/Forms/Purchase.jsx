@@ -427,84 +427,15 @@ function VoucherWorthQtyGrid({ selectedWorths, worthQty, onQtyChange, errors = {
 // ── Validation ────────────────────────────────────────────────────────────────
 
 function validateStudentCard(data) {
-  const e = {};
-  if (!data.giftType || data.giftType.length === 0) e.giftType = "Gift type is required";
-  if (!data.registrationKitNeeded) e.registrationKitNeeded = "This field is required";
-  if (data.giftType?.includes("Trophy")) {
-    if (!data.trophyType || data.trophyType.length === 0) e.trophyType = "Trophy type is required";
-    if (data.trophyType?.includes("Basic") && !data.basicTrophyQty?.trim()) e.basicTrophyQty = "Basic trophy quantity is required";
-    if (data.trophyType?.includes("Elite") && !data.eliteTrophyQty?.trim()) e.eliteTrophyQty = "Elite trophy quantity is required";
-  }
-  if (data.giftType?.includes("Cash Prize") && !data.cashPrizeAmount?.trim()) e.cashPrizeAmount = "Cash prize amount is required";
-  if (data.giftType?.includes("Voucher")) {
-    const selectedWorths = Array.isArray(data.voucherWorth) ? data.voucherWorth : (data.voucherWorth ? [data.voucherWorth] : []);
-    if (selectedWorths.length === 0) {
-      e.voucherWorth = "Voucher worth is required";
-    } else {
-      const qtyErrors = {};
-      selectedWorths.forEach((w) => {
-        if (!data.voucherWorthQty?.[w]?.trim()) qtyErrors[w] = `Quantity for ${w} is required`;
-      });
-      if (Object.keys(qtyErrors).length > 0) e.voucherWorthQty = qtyErrors;
-    }
-  }
-  if (data.registrationKitNeeded === "Yes" && !data.registrationKitQty?.trim()) e.registrationKitQty = "Registration kit quantity is required";
-  return e;
+  return {};
 }
 
 function validateGuestCard(data) {
-  const e = {};
-  if (!data.giftType || data.giftType.length === 0) e.giftType = "Gift type is required";
-  if (!data.registrationKitNeeded) e.registrationKitNeeded = "This field is required";
-  if (data.giftType?.includes("Trophy")) {
-    if (!data.trophyType || data.trophyType.length === 0) e.trophyType = "Trophy type is required";
-    if (data.trophyType?.includes("Basic") && !data.basicTrophyQty?.trim()) e.basicTrophyQty = "Basic trophy quantity is required";
-    if (data.trophyType?.includes("Elite") && !data.eliteTrophyQty?.trim()) e.eliteTrophyQty = "Elite trophy quantity is required";
-  }
-  if (data.giftType?.includes("Gifts") && !data.giftsQty?.trim()) e.giftsQty = "Gift count is required";
-  if (data.giftType?.includes("Voucher")) {
-    const selectedWorths = Array.isArray(data.voucherWorth) ? data.voucherWorth : (data.voucherWorth ? [data.voucherWorth] : []);
-    if (selectedWorths.length === 0) {
-      e.voucherWorth = "Voucher worth is required";
-    } else {
-      const qtyErrors = {};
-      selectedWorths.forEach((w) => {
-        if (!data.voucherWorthQty?.[w]?.trim()) qtyErrors[w] = `Quantity for ${w} is required`;
-      });
-      if (Object.keys(qtyErrors).length > 0) e.voucherWorthQty = qtyErrors;
-    }
-  }
-  if (data.registrationKitNeeded === "Yes" && !data.registrationKitQty?.trim()) e.registrationKitQty = "Registration kit quantity is required";
-  return e;
+  return {};
 }
 
 function validateDay(data, maxParticipants = 0) {
-  const e = {};
-  if (data.requirementNeeded?.includes("Id Card")) {
-    if (!data.idCardQty?.toString().trim()) {
-      e.idCardQty = "ID Card quantity is required";
-    } else if (parseInt(data.idCardQty) > maxParticipants) {
-      e.idCardQty = `Max allowed is ${maxParticipants}`;
-    }
-  }
-  if (data.requirementNeeded?.includes("Certificate")) {
-    if (!data.certificateQty?.toString().trim()) {
-      e.certificateQty = "Certificate quantity is required";
-    } else if (parseInt(data.certificateQty) > maxParticipants) {
-      e.certificateQty = `Max allowed is ${maxParticipants}`;
-    }
-  }
-  if (!data.selectedPersons)
-    e.selectedPersons = "Please select required persons";
-  if (data.selectedPersons === "Students" || data.selectedPersons === "Both") {
-    const se = validateStudentCard(data.studentData || {});
-    if (Object.keys(se).length > 0) e.studentData = se;
-  }
-  if (data.selectedPersons === "Guest" || data.selectedPersons === "Both") {
-    const ge = validateGuestCard(data.guestData || {});
-    if (Object.keys(ge).length > 0) e.guestData = ge;
-  }
-  return e;
+  return {};
 }
 
 // ── StudentCard ───────────────────────────────────────────────────────────────

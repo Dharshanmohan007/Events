@@ -746,7 +746,6 @@ export default function IctsForm({
                     setIctsData(prev => ({
                       ...prev,
                       [currentDayIndex]: {
-                        ...(prev[currentDayIndex] || {}),
                         sameAsDay1: false
                       }
                     }));

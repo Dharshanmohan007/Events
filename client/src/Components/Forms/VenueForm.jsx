@@ -1199,6 +1199,7 @@ const applyVenueSelection = (selectedVenues) => {
     };
 
     delete currentDayErrors.selectedVenues;
+    delete currentDayErrors.venueCards;
 
     updatedErrors[currentDayIndex] = currentDayErrors;
 
@@ -1288,7 +1289,32 @@ const applyVenueSelection = (selectedVenues) => {
 
       setVenueAvailability(data);
       if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
-        setBookedVenueNames(data.data.unavailable.map((u) => u.venueName));
+        const unavailableNames = data.data.unavailable.map((u) => u.venueName);
+        setBookedVenueNames(unavailableNames);
+
+        setVenueData((prev) => {
+          const updated = [...prev];
+          const currentDayData = updated[currentDayIndex];
+          const currentSelected = currentDayData.selectedVenues || [];
+          
+          const unavailableIds = unavailableNames.map(name => {
+             const venueObj = stateRef.current.venuesList.find(v => v.venue === name);
+             return venueObj ? venueObj.id : name;
+          });
+
+          const filteredVenues = currentSelected.filter(id => !unavailableIds.includes(id));
+          const filteredCards = (currentDayData.venueCards || []).filter(card => !unavailableIds.includes(card.venueId));
+
+          if (filteredVenues.length !== currentSelected.length) {
+            updated[currentDayIndex] = {
+              ...currentDayData,
+              selectedVenues: filteredVenues,
+              venueCards: filteredCards
+            };
+            return updated;
+          }
+          return prev;
+        });
       } else if (data?.status === "AVAILABLE") {
         setBookedVenueNames([]);
       }
@@ -1309,11 +1335,6 @@ const applyVenueSelection = (selectedVenues) => {
 
     if (checkingVenueAvailability) {
       setApiError("Please wait, checking venue availability...");
-      return false;
-    }
-
-    if (venueAvailability?.status === "NOT_AVAILABLE") {
-      setApiError("Please choose another venue, this venue is already booked.");
       return false;
     }
 
@@ -1624,29 +1645,149 @@ const applyVenueSelection = (selectedVenues) => {
               <input
                 type="checkbox"
                 checked={currentDay.sameAsDay1 || false}
-                onChange={(e) => {
+                onChange={async (e) => {
                   const checked = e.target.checked;
                   if (checked) {
                     const day1 = venueData[0];
-                    setVenueData((prev) => {
-                      const updated = [...prev];
-                      updated[currentDayIndex] = {
-                        ...updated[currentDayIndex],
-                        participants: day1.participants,
-                        selectedVenues: [...(day1.selectedVenues || [])],
-                        venueCards: JSON.parse(JSON.stringify(day1.venueCards || [])),
-                        sameAsDay1: true
+                    const selectedVenues = day1.selectedVenues || [];
+
+                    if (selectedVenues.length === 0) {
+                      setVenueData((prev) => {
+                        const updated = [...prev];
+                        updated[currentDayIndex] = {
+                          ...updated[currentDayIndex],
+                          participants: day1.participants,
+                          selectedVenues: [],
+                          venueCards: [],
+                          sameAsDay1: true
+                        };
+                        return updated;
+                      });
+                      return;
+                    }
+
+                    setCheckingVenueAvailability(true);
+                    setApiError("");
+                    try {
+                      const currentEventDay = eventDays[currentDayIndex];
+                      const payload = {
+                        eventSchedule: [
+                          {
+                            dayIndex: currentDayIndex,
+                            eventDate: currentEventDay.date,
+                            startTime: currentEventDay.startTime,
+                            endTime: currentEventDay.endTime,
+                          },
+                        ],
+                        venues: selectedVenues.map((id) => {
+                          const venueObj = stateRef.current.venuesList.find(v => v.id === id);
+                          return {
+                            dayIndex: currentDayIndex,
+                            venueName: venueObj ? venueObj.venue : id,
+                          };
+                        }),
                       };
-                      return updated;
-                    });
-                    checkVenueAvailability(day1.selectedVenues || []);
+
+                      const response = await fetch(
+                        `${import.meta.env.VITE_API_BASE_URL}/api/events/check-venue-availability`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                          },
+                          body: JSON.stringify(payload),
+                        }
+                      );
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(data.message || "Unable to check venue availability.");
+                      }
+
+                      setVenueAvailability(data);
+
+                      if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
+                        const unavailableNames = data.data.unavailable.map((u) => u.venueName);
+                        setBookedVenueNames(unavailableNames);
+                        
+                        const availableVenues = selectedVenues.filter((id) => {
+                          const venueObj = stateRef.current.venuesList.find(v => v.id === id);
+                          return !unavailableNames.includes(venueObj ? venueObj.venue : id);
+                        });
+
+                        if (availableVenues.length === 0) {
+                          setApiError(`All selected venues from Day 1 are already booked for this day. (${unavailableNames.join(", ")})`);
+                          setVenueData((prev) => {
+                            const updated = [...prev];
+                            updated[currentDayIndex] = {
+                              ...updated[currentDayIndex],
+                              sameAsDay1: false
+                            };
+                            return updated;
+                          });
+                        } else {
+                          setApiError(`Some venues from Day 1 are already booked (${unavailableNames.join(", ")}). Only available venues were selected.`);
+                          const availableVenueCards = (day1.venueCards || []).filter((card) => {
+                            return availableVenues.includes(card.venueId);
+                          });
+                          setVenueData((prev) => {
+                            const updated = [...prev];
+                            updated[currentDayIndex] = {
+                              ...updated[currentDayIndex],
+                              participants: day1.participants,
+                              selectedVenues: availableVenues,
+                              venueCards: JSON.parse(JSON.stringify(availableVenueCards)),
+                              sameAsDay1: true
+                            };
+                            return updated;
+                          });
+                        }
+                      } else {
+                        setBookedVenueNames([]);
+                        setVenueData((prev) => {
+                          const updated = [...prev];
+                          updated[currentDayIndex] = {
+                            ...updated[currentDayIndex],
+                            participants: day1.participants,
+                            selectedVenues: [...selectedVenues],
+                            venueCards: JSON.parse(JSON.stringify(day1.venueCards || [])),
+                            sameAsDay1: true
+                          };
+                          return updated;
+                        });
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      setApiError(err.message || "Failed to check venue availability.");
+                      setVenueData((prev) => {
+                        const updated = [...prev];
+                        updated[currentDayIndex] = {
+                          ...updated[currentDayIndex],
+                          sameAsDay1: false
+                        };
+                        return updated;
+                      });
+                    } finally {
+                      setCheckingVenueAvailability(false);
+                    }
                   } else {
                     setVenueData((prev) => {
                       const updated = [...prev];
                       updated[currentDayIndex] = {
                         ...updated[currentDayIndex],
+                        participants: "",
+                        selectedVenues: [],
+                        venueCards: [],
                         sameAsDay1: false
                       };
+                      return updated;
+                    });
+                    setApiError("");
+                    setErrors((prev) => {
+                      const updated = { ...prev };
+                      delete updated[currentDayIndex];
                       return updated;
                     });
                   }

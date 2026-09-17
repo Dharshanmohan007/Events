@@ -80,12 +80,13 @@ function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
   eventDays.forEach((_day, dayIndex) => {
     const venueNames = venueData[dayIndex]?.selectedVenues || [];
     venueNames.forEach((venueName) => {
-      const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
-      if (!hasEquipment) return;
-
       const s = audioData[dayIndex]?.[venueName] || defaultVenueSection();
 
-      if (!s.audioRequired || s.audioRequired.length === 0) return;
+      const hasAudio = s.audioRequired && s.audioRequired.length > 0;
+      const hasOthers = s.others && s.others.trim().length > 0;
+      const hasSpecial = s.specialRequirements && s.specialRequirements.trim().length > 0;
+
+      if (!hasAudio && !hasOthers && !hasSpecial) return;
 
       const audioItems = (s.audioRequired || []).map((key) => ({
         type: AUDIO_KEY_META.find(m => m.key === key)?.label || key,
@@ -705,7 +706,6 @@ export default function AudioForm({
                       setAudioData(prev => ({
                         ...prev,
                         [currentDayIndex]: {
-                          ...(prev[currentDayIndex] || {}),
                           sameAsDay1: false
                         }
                       }));
