@@ -38,18 +38,35 @@ export default function EventRequirements({
   const [localErrors, setLocalErrors] = useState({});
 
   const handleChange = (key, val) => {
+    if ((key === "icts" || key === "audio") && val === "Yes" && values.venue === "No") {
+      setLocalErrors((prev) => ({
+        ...prev,
+        [key]: "Venue Required should be true to unlock the ICTS and Audio",
+      }));
+      return;
+    }
+
     const nextValues = {
       ...values,
       [key]: val,
     };
 
+    if (key === "venue" && val === "No") {
+      nextValues.icts = "No";
+      nextValues.audio = "No";
+    }
+
     setValues(nextValues);
 
     // Clear validation error for this field as soon as the user picks a value
-    setLocalErrors((prev) => ({
-      ...prev,
-      [key]: "",
-    }));
+    setLocalErrors((prev) => {
+      const newErrors = { ...prev, [key]: "" };
+      if (key === "venue" && val === "No") {
+        newErrors.icts = "";
+        newErrors.audio = "";
+      }
+      return newErrors;
+    });
 
     if (onRequirementsChange) {
       onRequirementsChange(nextValues);
@@ -87,9 +104,8 @@ export default function EventRequirements({
 
   return (
     <div
-      className={`${
-        disabled ? "opacity-50 pointer-events-none select-none" : ""
-      }`}
+      className={`${disabled ? "opacity-50 pointer-events-none select-none" : ""
+        }`}
     >
       <div className="px-1 py-6 rounded-xl">
         <h1 className="text-white text-lg font-bold mb-6 playfair">Event Requirements</h1>
