@@ -214,6 +214,13 @@ const IndividualFoodDetailPage = ({ data }) => {
     console.log("food item : ", item.foodTypes);
   });
 
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
   // ─── JSX ────────────────────────────────────────────────────────────
   return (
     <main>
@@ -233,6 +240,11 @@ const IndividualFoodDetailPage = ({ data }) => {
             role.toLowerCase() == "super admin 2") && (
             <>
               <div className="flex items-center gap-2">
+                <h1 className="text-amber-400">
+                  Submitted at :{" "}
+                  {convertToIST(data?.approvalHistory[0]?.actionDate)}
+                </h1>
+                <ChevronRight size={16} />
                 <button
                   className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
                 >

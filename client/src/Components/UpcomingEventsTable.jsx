@@ -214,8 +214,8 @@ const getStatusColor = (status = "") => {
   }
   if (normalizedStatus.includes("completed")) {
     return {
-      text: "text-emerald-400",
-      dot: "bg-emerald-400",
+      text: "text-violet-600",
+      dot: "bg-violet-600",
     };
   }
 
@@ -352,8 +352,7 @@ const UpcomingEventsTable = ({
 }) => {
   const [activeTab, setActiveTab] = useState("events");
 
-console.log("individual trabsport data : ", individualEvents)
-
+  console.log("individual trabsport data : ", individualEvents);
 
   const config = HEADERS_CONFIG[module] || HEADERS_CONFIG.default;
   const hasTabs = MODULES_WITH_TABS.includes(module);

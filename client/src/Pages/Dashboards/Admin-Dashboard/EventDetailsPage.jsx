@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Pencil, Trash, X } from "lucide-react";
+import { Check, ChevronRight, Clock, Pencil, Trash, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -17,6 +17,7 @@ import DeleteConfirmationPopup from "./DeleteConfirmationPopup";
 import ExternalTransportPreview from "../../../Components/Preview/ExternalTransportPreview";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "../../../Components/AuthContext";
+import ApprovalHistoryCanvas from "../../../Components/ApprovalHistoryCanvas";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -53,6 +54,8 @@ const EventDetailsPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
   const { isAdminSecretary } = useAuth();
+
+  const [showAppprovalCanvas, setShowApprovalCanvas] = useState(false);
 
   // ── Tabs state ──────────────────────────────────────────────────────
   const [detailTabs, setDetailTabs] = useState([]);
@@ -732,6 +735,14 @@ const EventDetailsPage = () => {
     }
   };
 
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
+
   // ── Render active panel based on tab ────────────────────────────────
   const renderActivePanel = () => {
     // Determine if we're in a loading/error state for the current module
@@ -961,7 +972,7 @@ const EventDetailsPage = () => {
                 <span
                   className={`rounded-full px-5 py-2 whitespace-nowrap text-sm font-medium ${getStatusClassName(activeTabConfig.status)}`}
                 >
-                  {activeTabConfig?.status} 
+                  {activeTabConfig?.status}
                 </span>
               )}
             </div>
@@ -1005,7 +1016,9 @@ const EventDetailsPage = () => {
               <Check size={16} className="text-white" />
               Closed
             </div>
-          ) : data?.adminApproval == false && data?.status.toLowerCase() !== "deleted" && !isAdminSecretary ?  (
+          ) : data?.adminApproval == false &&
+            data?.status.toLowerCase() !== "deleted" &&
+            !isAdminSecretary ? (
             <div className="btn-container flex items-center gap-2">
               <button
                 onClick={handleApprove}
@@ -1031,6 +1044,21 @@ const EventDetailsPage = () => {
           ) : (
             ""
           )}
+
+          {/* approval history button  */}
+          {/* <button
+            onClick={() => setShowApprovalCanvas(true)}
+            className="text-white flex items-center gap-1 bg-linear-to-r from-amber-800 via-amber-600 to-amber-300 hover:bg-linear-to-l hover:from-amber-800  hover:via-amber-600 hover:to-amber-300  px-3 py-1 rounded-md cursor-pointer"
+          >
+            <span>
+              <Clock size={16} />
+            </span>{" "}
+            Timeline
+          </button> */}
+          <h1 className="text-amber-400">
+            Submitted at :{" "}
+            <span>{convertToIST(data?.timeline?.submittedAt)}</span>{" "}
+          </h1>
         </header>
 
         {/* Status summary bar */}
@@ -1135,6 +1163,12 @@ const EventDetailsPage = () => {
           onDelete={handleDeleteEvent}
         />
       )}
+      {/* {showAppprovalCanvas && (
+        <ApprovalHistoryCanvas
+          timeLineData={data.timeline}
+          setShowApprovalCanvas={setShowApprovalCanvas}
+        />
+      )} */}
     </>
   );
 };

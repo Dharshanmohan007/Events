@@ -216,20 +216,28 @@ const IndividualTrasnportDetailPage = ({ data }) => {
     });
   };
 
-const time = (dateTime) => {
-  if (!dateTime) return "-";
+  const time = (dateTime) => {
+    if (!dateTime) return "-";
 
-  const timeValue = dateTime.split("T")[1].split(".")[0];
-  const [hours, minutes] = timeValue.split(":");
+    const timeValue = dateTime.split("T")[1].split(".")[0];
+    const [hours, minutes] = timeValue.split(":");
 
-  const hour = Number(hours);
-  const period = hour >= 12 ? "PM" : "AM";
-  const formattedHour = hour % 12 || 12;
+    const hour = Number(hours);
+    const period = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 || 12;
 
-  return `${String(formattedHour).padStart(2, "0")}:${minutes} ${period}`;
-};
+    return `${String(formattedHour).padStart(2, "0")}:${minutes} ${period}`;
+  };
 
   const car = data?.data?.vehicles?.find((item) => item.type == "Car");
+
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
 
   // ─── JSX ────────────────────────────────────────────────────────────
   return (
@@ -250,6 +258,11 @@ const time = (dateTime) => {
             role.toLowerCase() == "super admin 2") && (
             <>
               <div className="flex items-center gap-2">
+                <h1 className="text-amber-400">
+                  Submitted at :{" "}
+                  {convertToIST(data?.approvalHistory[0]?.actionDate)}
+                </h1>
+                <ChevronRight size={16} />
                 <button
                   className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
                 >
