@@ -943,19 +943,6 @@ export default function ExternalTransportForm({
         </div>
       ))}
 
-      {!nextStep && (
-        <div className="flex justify-end mt-6">
-          <button
-            type="button"
-            onClick={handleNext}
-            disabled={isLoading || disabled}
-            className="px-6 py-3 rounded-lg bg-[#9810FA] text-white font-medium text-sm hover:bg-[#850ee0] transition-colors disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {isLoading ? "Submitting..." : "Submit"}
-          </button>
-        </div>
-      )}
-
       <ConfirmDeleteModal
         isOpen={deleteIndex !== null}
         message="Are you sure you want to delete this transport entry?"

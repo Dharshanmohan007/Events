@@ -93,6 +93,7 @@ import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboa
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
 import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
+import Eventsattended from './Pages/IndividualForm/Eventsattended.jsx';
 
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
@@ -792,6 +793,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="events-attended" element={<Eventsattended />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
