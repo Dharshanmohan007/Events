@@ -41,7 +41,7 @@ function formatAccommodationDateTime(date) {
   if (!date) return "";
   const value = new Date(date);
   const pad = (part) => String(part).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000+05:30`;
 }
 
 function emptyAccommodation() {
