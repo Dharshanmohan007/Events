@@ -1019,7 +1019,11 @@ const EventDetailsPage = () => {
           ) : data?.adminApproval == false &&
             data?.status.toLowerCase() !== "deleted" &&
             !isAdminSecretary ? (
-            <div className="btn-container flex items-center gap-2">
+            <div className="btn-container flex items-center gap-3">
+               <h1 className="text-amber-400">
+                Submitted at :{" "}
+                <span>{convertToIST(data?.timeline?.submittedAt)}</span>{" "}
+              </h1>
               <button
                 onClick={handleApprove}
                 disabled={actionLoading !== null}
@@ -1040,6 +1044,7 @@ const EventDetailsPage = () => {
                 </span>{" "}
                 {actionLoading === "reject" ? "Processing..." : "Reject"}
               </button>
+             
             </div>
           ) : (
             ""
@@ -1055,10 +1060,6 @@ const EventDetailsPage = () => {
             </span>{" "}
             Timeline
           </button> */}
-          <h1 className="text-amber-400">
-            Submitted at :{" "}
-            <span>{convertToIST(data?.timeline?.submittedAt)}</span>{" "}
-          </h1>
         </header>
 
         {/* Status summary bar */}
