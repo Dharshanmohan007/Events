@@ -235,7 +235,21 @@ let decodedToken = jwtDecode(token);
         ? [eventRequisition.eventData.logos]
         : [],
       logosOther: eventRequisition.eventData.logosOther || "",
-      targetAudience: eventRequisition.eventData.audience || "",
+      targetAudience: Array.isArray(eventRequisition.eventData.audience)
+        ? eventRequisition.eventData.audience
+        : eventRequisition.eventData.audience
+        ? [eventRequisition.eventData.audience]
+        : [],
+      internalStudentsBreakdown: (eventRequisition.eventData.internalStudentsBreakdown || []).map(y => ({
+        year: y.year,
+        departments: (y.departments || []).map(d => ({
+          department: d.department,
+          sections: (d.sections || []).map(s => ({
+            section: s.section,
+            count: s.count
+          }))
+        }))
+      })),
       numberOfDays: eventRequisition.eventDays.length,
       eventSchedule: (eventRequisition.eventDays || []).map((day) => ({
         eventDate: day.date ? new Date(day.date).toISOString() : "",
@@ -314,10 +328,18 @@ const buildVenuePayload = (venueData) => {
         numberOfParticipants: parseInt(card.participants) || 0,
         seatingCapacity: parseInt(card.seatingCapacity) || 0,
         hallRequirements, specialRequirements: card.specialReqs || "",
+        isDepartmentHeadContacted: Boolean(card.isDepartmentHeadContacted),
+        department: card.department || "",
+        departmentHeadName: card.departmentHeadName || "",
+        departmentHeadDesignation: card.departmentHeadDesignation || "",
+        departmentHeadMobile: card.departmentHeadMobile || ""
       });
     });
   });
-  return { venues };
+  return { 
+    totalParticipants: parseInt(venueData[0]?.participants) || 0,
+    venues 
+  };
 };
 
 function getIctsDepartmentFromStorage() {
@@ -1084,6 +1106,7 @@ function hydrateEventData(apiData) {
       logos: ed.logosInPoster || [],
       logosOther: ed.logosOther || "",
       audience: ed.targetAudience || "",
+      internalStudentsBreakdown: ed.internalStudentsBreakdown || [],
       iic: ed.involvedIIC ? "Yes" : ed.iic ? "Yes" : "No",
       eventDays,
     },
@@ -1127,6 +1150,11 @@ function hydrateEventData(apiData) {
           seatingCapacity: v.seatingCapacity ? String(v.seatingCapacity) : "",
           hallReqs: (v.hallRequirements || []).map((h) => h.type),
           specialReqs: v.specialRequirements || "",
+          isDepartmentHeadContacted: Boolean(v.isDepartmentHeadContacted),
+          department: v.department || "",
+          departmentHeadName: v.departmentHeadName || "",
+          departmentHeadDesignation: v.departmentHeadDesignation || "",
+          departmentHeadMobile: v.departmentHeadMobile || ""
         };
         (v.hallRequirements || []).forEach((h) => {
           if (h.type === "Guest Chair") card.guestChairs = String(h.quantity);

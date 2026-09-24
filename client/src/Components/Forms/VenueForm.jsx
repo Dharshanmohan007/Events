@@ -896,6 +896,13 @@ export default function VenueForm({
   const [permissionPopupOpen, setPermissionPopupOpen] = useState(false);
   const [contactedAdmin, setContactedAdmin] = useState(false);
   const [pendingPermissionVenues, setPendingPermissionVenues] = useState([]);
+  const [adminDetails, setAdminDetails] = useState({
+    department: "",
+    departmentHeadName: "",
+    departmentHeadDesignation: "",
+    departmentHeadMobile: ""
+  });
+  const [adminErrors, setAdminErrors] = useState({});
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -934,6 +941,7 @@ export default function VenueForm({
           remarks: v.remarks || "",
           audio: v.audio,
           seating: v.seating,
+          contactDepartmentHead: v.contactDepartmentHead,
         }));
         setVenuesList(normalized);
       } catch (err) {
@@ -1066,15 +1074,12 @@ export default function VenueForm({
       (v) => v.id === id
     );
 
-    if (!venueObj?.category) return false;
-
-    const category = venueObj.category.toLowerCase().trim();
-
+    const rawContact = venueObj?.contactDepartmentHead;
     return (
-      category.includes("classroom") ||
-      category.includes("lab") ||
-      category.includes("department") ||
-      category.includes("center")
+      rawContact === true || 
+      String(rawContact).toLowerCase() === "true" ||
+      String(rawContact).toLowerCase() === "yes" ||
+      rawContact === 1
     );
   });
 
@@ -1117,7 +1122,7 @@ export default function VenueForm({
 //
 // This is the ONLY place where venueCards are created.
 // ─────────────────────────────────────────────────────────────
-const applyVenueSelection = (selectedVenues) => {
+const applyVenueSelection = (selectedVenues, adminDetailsObj = null) => {
   const existingCards = currentDay.venueCards || [];
 
   // Auto-fill only applies when exactly ONE venue is selected.
@@ -1138,6 +1143,14 @@ const applyVenueSelection = (selectedVenues) => {
 
     const name = venueObj ? venueObj.venue : "";
 
+    // Determine if this venue needs admin details (very loose check for safety)
+    const rawContact = venueObj?.contactDepartmentHead;
+    const needsAdmin = 
+      rawContact === true || 
+      String(rawContact).toLowerCase() === "true" ||
+      String(rawContact).toLowerCase() === "yes" ||
+      rawContact === 1;
+
     if (existing) {
       if (isSingleVenue) {
         // Sole selected venue → keep it synced with total participants.
@@ -1146,6 +1159,13 @@ const applyVenueSelection = (selectedVenues) => {
           participants: totalParticipantsValue,
           seatingCapacity: totalParticipantsValue,
           autoFilled: true,
+          ...(needsAdmin && adminDetailsObj ? {
+            isDepartmentHeadContacted: true,
+            department: adminDetailsObj.department,
+            departmentHeadName: adminDetailsObj.departmentHeadName,
+            departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+            departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+          } : {})
         };
       }
 
@@ -1157,10 +1177,26 @@ const applyVenueSelection = (selectedVenues) => {
           participants: "",
           seatingCapacity: "",
           autoFilled: false,
+          ...(needsAdmin && adminDetailsObj ? {
+            isDepartmentHeadContacted: true,
+            department: adminDetailsObj.department,
+            departmentHeadName: adminDetailsObj.departmentHeadName,
+            departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+            departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+          } : {})
         };
       }
 
-      return existing;
+      return {
+        ...existing,
+        ...(needsAdmin && adminDetailsObj ? {
+          isDepartmentHeadContacted: true,
+          department: adminDetailsObj.department,
+          departmentHeadName: adminDetailsObj.departmentHeadName,
+          departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+          departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+        } : {})
+      };
     }
 
     // New venue card is created ONLY here.
@@ -1176,6 +1212,19 @@ const applyVenueSelection = (selectedVenues) => {
       audienceChair: "",
       specialReqs: "",
       autoFilled: isSingleVenue,
+      ...(needsAdmin && adminDetailsObj ? {
+        isDepartmentHeadContacted: true,
+        department: adminDetailsObj.department,
+        departmentHeadName: adminDetailsObj.departmentHeadName,
+        departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+        departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+      } : {
+        isDepartmentHeadContacted: false,
+        department: "",
+        departmentHeadName: "",
+        departmentHeadDesignation: "",
+        departmentHeadMobile: "",
+      })
     };
   });
 
@@ -1478,32 +1527,7 @@ const applyVenueSelection = (selectedVenues) => {
                   type="checkbox"
                   checked={contactedAdmin}
                   onChange={(e) => {
-                    const checked = e.target.checked;
-
-                    setContactedAdmin(checked);
-
-                    if (checked) {
-                      // ─────────────────────────────────────────────
-                      // User has confirmed permission.
-                      // Now actually add the pending venues.
-                      // ─────────────────────────────────────────────
-                      const currentSelected =
-                        stateRef.current.venueData?.[currentDayIndex]
-                          ?.selectedVenues || [];
-
-                      const finalSelectedVenues = [
-                        ...new Set([
-                          ...currentSelected,
-                          ...pendingPermissionVenues,
-                        ]),
-                      ];
-
-                      setPermissionPopupOpen(false);
-                      setPendingPermissionVenues([]);
-
-                      // NOW create the venue container.
-                      applyVenueSelection(finalSelectedVenues);
-                    }
+                    setContactedAdmin(e.target.checked);
                   }}
                   className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
                 />
@@ -1512,28 +1536,120 @@ const applyVenueSelection = (selectedVenues) => {
                   Contacted Admin
                 </span>
               </label>
+
+              {contactedAdmin && (
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Department</label>
+                    <input
+                      type="text"
+                      value={adminDetails.department}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, department: e.target.value }));
+                        if (adminErrors.department) setAdminErrors(prev => ({ ...prev, department: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.department ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. CSE"
+                    />
+                    {adminErrors.department && <p className="text-red-400 text-xs">{adminErrors.department}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Department Head Name</label>
+                    <input
+                      type="text"
+                      value={adminDetails.departmentHeadName}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, departmentHeadName: e.target.value }));
+                        if (adminErrors.departmentHeadName) setAdminErrors(prev => ({ ...prev, departmentHeadName: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadName ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. Dr. Raj Kumar"
+                    />
+                    {adminErrors.departmentHeadName && <p className="text-red-400 text-xs">{adminErrors.departmentHeadName}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Head Designation</label>
+                    <input
+                      type="text"
+                      value={adminDetails.departmentHeadDesignation}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, departmentHeadDesignation: e.target.value }));
+                        if (adminErrors.departmentHeadDesignation) setAdminErrors(prev => ({ ...prev, departmentHeadDesignation: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadDesignation ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. Head of Department"
+                    />
+                    {adminErrors.departmentHeadDesignation && <p className="text-red-400 text-xs">{adminErrors.departmentHeadDesignation}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Head Mobile No</label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={adminDetails.departmentHeadMobile}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setAdminDetails(prev => ({ ...prev, departmentHeadMobile: val }));
+                        if (adminErrors.departmentHeadMobile) setAdminErrors(prev => ({ ...prev, departmentHeadMobile: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadMobile ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="10 digit number"
+                    />
+                    {adminErrors.departmentHeadMobile && <p className="text-red-400 text-xs">{adminErrors.departmentHeadMobile}</p>}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end px-6 pb-6">
+            <div className="flex items-center justify-between px-6 pb-6 mt-2">
               <button
                 type="button"
                 onClick={() => {
-                  // ─────────────────────────────────────────────
-                  // User did NOT get permission.
-                  //
-                  // Remove the pending venue completely.
-                  // No selected venue.
-                  // No venue container.
-                  // ─────────────────────────────────────────────
                   setPermissionPopupOpen(false);
                   setContactedAdmin(false);
                   setPendingPermissionVenues([]);
+                  setAdminDetails({ department: "", departmentHeadName: "", departmentHeadDesignation: "", departmentHeadMobile: "" });
+                  setAdminErrors({});
                 }}
                 className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
               >
-                Remove this message
+                Cancel
               </button>
+              
+              {contactedAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const errors = {};
+                    if (!adminDetails.department.trim()) errors.department = "Required";
+                    if (!adminDetails.departmentHeadName.trim()) errors.departmentHeadName = "Required";
+                    if (!adminDetails.departmentHeadDesignation.trim()) errors.departmentHeadDesignation = "Required";
+                    if (!adminDetails.departmentHeadMobile.trim()) {
+                      errors.departmentHeadMobile = "Required";
+                    } else if (adminDetails.departmentHeadMobile.trim().length !== 10) {
+                      errors.departmentHeadMobile = "Invalid";
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                      setAdminErrors(errors);
+                      return;
+                    }
+
+                    const currentSelected = stateRef.current.venueData?.[currentDayIndex]?.selectedVenues || [];
+                    const finalSelectedVenues = [...new Set([...currentSelected, ...pendingPermissionVenues])];
+
+                    setPermissionPopupOpen(false);
+                    setPendingPermissionVenues([]);
+                    setContactedAdmin(false);
+
+                    applyVenueSelection(finalSelectedVenues, adminDetails);
+                  }}
+                  className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+                >
+                  Continue venue booking
+                </button>
+              )}
             </div>
 
           </div>
