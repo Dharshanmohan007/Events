@@ -10,7 +10,7 @@ const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
-
+ 
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return dateValue;
 
@@ -343,7 +343,7 @@ const AdminUpcomingEventsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap">
                         {console.log("admin individual status  : ", row)}
                         {/* <StatusBadge status={row.status} /> */}
-                        <StatusBadge status={row.status} />
+                        <StatusBadge status={row.superAdminStatus} />
                       </td>
                       <td className="px-6 py-4">
                         {/* <Link

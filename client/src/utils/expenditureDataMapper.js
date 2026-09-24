@@ -43,8 +43,8 @@ export const apiIncomeToFormData = (incomeArray = []) => {
   const formData = {
     registrationFees: { amount: "", details: "" },
     scholarship: { amount: "", details: "" },
-    institutionalAmount: { selectRequired: "", amount: "", details: "" },
-    departmentFund: { details: "", amount: "" },
+    institutionalAmount: { amount: "", details: "" },
+    departmentFund: { selectRequired: "", details: "", amount: "" },
     others: { amount: "", details: "" },
   };
 
@@ -54,8 +54,8 @@ export const apiIncomeToFormData = (incomeArray = []) => {
 
     formData[key].amount = item.amount != null ? String(item.amount) : "";
     formData[key].details = item.details || "";
-    // Map selectRequired for institutionalAmount if present
-    if (key === 'institutionalAmount' && item.selectRequired) {
+    // Map selectRequired for institutionalAmount or departmentFund if present
+    if (item.selectRequired && (key === 'institutionalAmount' || key === 'departmentFund')) {
       formData[key].selectRequired = item.selectRequired;
     }
   });
@@ -96,15 +96,29 @@ export const apiExpenditureToFormData = (expenditureObj = {}) => {
     const items = expenditureObj[cat];
     if (!Array.isArray(items)) return;
 
-    formData[cat] = items.map((item) => ({
-      expenseName: item.name || "",
-      billNo: item.billNo || "",
-      billDate: toISODate(item.date),
-      vendorGuestName: item.guestName || "",
-      amount: item.billAmount != null ? String(item.billAmount) : "",
-      file: null, // File objects can't be round-tripped from URLs
-      _existingDocuments: item.supportingDocuments || [], // preserve for reference
-    }));
+    formData[cat] = items.map((item) => {
+      const existingDocuments = Array.isArray(item.supportingDocuments)
+        ? item.supportingDocuments
+        : item.supportingDocument
+          ? [item.supportingDocument]
+          : Array.isArray(item.documents)
+            ? item.documents
+            : Array.isArray(item.attachments)
+              ? item.attachments
+              : item.file
+                ? [item.file]
+                : [];
+
+      return {
+        expenseName: item.name || "",
+        billNo: item.billNo || "",
+        billDate: toISODate(item.date),
+        vendorGuestName: item.guestName || "",
+        amount: item.billAmount != null ? String(item.billAmount) : "",
+        file: null,
+        _existingDocuments: existingDocuments,
+      };
+    });
   });
 
   return formData;

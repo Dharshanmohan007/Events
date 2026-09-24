@@ -297,6 +297,23 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             day1Guests={i > 0 ? daysData[0].guests : []}
             minDate={calculatedMinDate}
             errors={(errors.days && errors.days[i]) || {}}
+            onDelete={() => {
+              const updated = daysData.filter((_, index) => index !== i);
+
+              setEventDays(updated);
+              setEventData((prev) => ({
+                ...prev,
+                eventDays: updated,
+              }));
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  days: (prev.days || []).filter((_, index) => index !== i),
+                  numDays: "",
+                }));
+              }
+            }}
             updateDay={(updatedDay) => {
               const updated = [...daysData];
               updated[i] = updatedDay;

@@ -305,18 +305,79 @@ const EventRequestDetails = () => {
   const resolveFileName = (file) => {
     if (!file) return "";
     if (typeof file === "string") return file.split("/").pop() || file;
-    return file.originalName || file.name || file.filename || file.originalFilename || file.fileName || file.file?.name || "";
+
+    if (file.file && typeof file.file !== "string") return resolveFileName(file.file);
+    if (file.document && typeof file.document !== "string") return resolveFileName(file.document);
+
+    return (
+      file.originalName ||
+      file.name ||
+      file.filename ||
+      file.originalFilename ||
+      file.fileName ||
+      file.documentName ||
+      file.label ||
+      file.file?.name ||
+      ""
+    );
   };
+
   const resolveFileUrl = (file) => {
     if (!file) return "";
     if (typeof file === "string") return file;
-    return file.url || file.fileUrl || file.downloadUrl || file.link || file.path || "";
+
+    if (file.file && (typeof file.file === "string" || file.file.url || file.file.fileUrl || file.file.downloadUrl)) {
+      return resolveFileUrl(file.file);
+    }
+    if (file.document && (typeof file.document === "string" || file.document.url || file.document.fileUrl || file.document.downloadUrl)) {
+      return resolveFileUrl(file.document);
+    }
+
+    return (
+      file.url ||
+      file.fileUrl ||
+      file.downloadUrl ||
+      file.link ||
+      file.path ||
+      file.publicUrl ||
+      file.webViewLink ||
+      file.file?.url ||
+      file.file?.fileUrl ||
+      file.file?.downloadUrl ||
+      ""
+    );
   };
+
+  const resolveSupportFile = (item) => {
+    if (!item) return null;
+
+    const candidates = [
+      item.supportingDocument,
+      item.supportingDocuments?.[0],
+      item.file,
+      item.document,
+      item.attachment,
+      item.attachmentFile,
+      Array.isArray(item.supportingDocuments) ? item.supportingDocuments[0] : null,
+      Array.isArray(item.documents) ? item.documents[0] : null,
+      Array.isArray(item.attachments) ? item.attachments[0] : null,
+    ];
+
+    return candidates.find(Boolean) || null;
+  };
+
   const supportFile =
-    expenseItem?.supportingDocument ||
-    expenseItem?.supportingDocuments?.[0] ||
-    expenditure?.supportingDocument ||
-    expenditure?.supportingDocuments?.[0];
+    resolveSupportFile(expenseItem) ||
+    [
+      ...purchaseRows,
+      ...othersRows,
+      ...foodRows,
+      ...transportRows,
+      ...mediaRows,
+    ].map(resolveSupportFile).find(Boolean) ||
+    resolveSupportFile(expenditure) ||
+    resolveSupportFile(detailData) ||
+    null;
   const supportFileName = resolveFileName(supportFile);
   const supportFileUrl = resolveFileUrl(supportFile);
 
@@ -421,7 +482,7 @@ const EventRequestDetails = () => {
             bg-[#172033]
             p-[13px]
           "
-        >
+        >  
 
           {/* TITLE */}
 
@@ -689,17 +750,26 @@ const EventRequestDetails = () => {
                   </div>
 
                   {supportFileName ? (
-                    <a
-                      href={supportFileUrl || "#"}
-                      target={supportFileUrl ? "_blank" : undefined}
-                      rel={supportFileUrl ? "noopener noreferrer" : undefined}
-                      className="inline-flex items-center gap-[8px] text-[12px] text-[#dfe3ec] underline decoration-[#bc7cff] underline-offset-2"
-                    >
-                      <span className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-[6px] bg-[#0d7268] text-[#c9fff8]">
-                        <FileCheck2 size={14} strokeWidth={1.8} />
-                      </span>
-                      {supportFileName}
-                    </a>
+                    supportFileUrl ? (
+                      <a
+                        href={supportFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-[8px] text-[12px] text-[#dfe3ec] underline decoration-[#bc7cff] underline-offset-2"
+                      >
+                        <span className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-[6px] bg-[#0d7268] text-[#c9fff8]">
+                          <FileCheck2 size={14} strokeWidth={1.8} />
+                        </span>
+                        {supportFileName}
+                      </a>
+                    ) : (
+                      <div className="inline-flex items-center gap-[8px] text-[12px] text-[#dfe3ec]">
+                        <span className="inline-flex h-[24px] w-[24px] items-center justify-center rounded-[6px] bg-[#0d7268] text-[#c9fff8]">
+                          <FileCheck2 size={14} strokeWidth={1.8} />
+                        </span>
+                        {supportFileName}
+                      </div>
+                    )
                   ) : (
                     <div className="text-[12px]">
                       Drag and drop the files here or

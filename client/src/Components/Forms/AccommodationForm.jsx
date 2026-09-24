@@ -20,11 +20,16 @@ function flattenGuests(eventDays = []) {
   const result = [];
   eventDays.forEach((day, dayIdx) => {
     (day.guests || []).forEach((g, gIdx) => {
-      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
-        .replace(/\s+/g, "")
-        .toLowerCase()}`;
-      if (!seen.has(guestId)) {
-        seen.add(guestId);
+      // Deduplicate by actual guest identity (name + mobile) so that
+      // "Same as Day 1" copies don't appear as separate entries.
+      const normalizedName = (g.name || "").replace(/\s+/g, "").toLowerCase();
+      const normalizedMobile = (g.mobile || "").toString().trim();
+      const identityKey = `${normalizedName}_${normalizedMobile}`;
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey);
+        // Keep the original day-based guestId for selection tracking
+        const guestId = `day${dayIdx}_g${gIdx}_${normalizedName}`;
         result.push({ ...g, guestId });
       }
     });
@@ -36,7 +41,7 @@ function formatAccommodationDateTime(date) {
   if (!date) return "";
   const value = new Date(date);
   const pad = (part) => String(part).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000+05:30`;
 }
 
 function emptyAccommodation() {
@@ -560,6 +565,7 @@ function AccommodationBlock({
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
   const filteredRoomOptions = roomOptions.filter((room) => {
+    if (room.available === false) return false;
     const capacity = Number(room.occupantCount) || 0;
     if (selectedCount === 1) return capacity === 2;
     return true;
@@ -845,6 +851,7 @@ export default function AccommodationForm({
   onAccommodationDataChange,
   eventId,
   eventDays: eventDaysProp,
+  isEditMode = false,
   errors: propErrors = {},
 }) {
   const allGuests = flattenGuests(eventDaysProp || []);
@@ -956,7 +963,7 @@ export default function AccommodationForm({
     const latest = accommodationsRef.current;
     const latestGuests = allGuestsRef.current;
 
-    const allErrors = latest.map((acc) => validateAccommodation(acc));
+    const allErrors = isEditMode ? latest.map(() => ({})) : latest.map((acc) => validateAccommodation(acc));
     setBlockErrors(allErrors);
     if (allErrors.some((e) => Object.keys(e).length > 0)) return;
 

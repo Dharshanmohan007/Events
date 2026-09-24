@@ -1,5 +1,5 @@
 import { Pencil, Trash2, MapPin, Info } from "lucide-react";
-export default function VenueCard({ venues = [], onEdit, onDelete }) {
+export default function VenueCard({ venues = [], onEdit, onDelete, readOnly = false }) {
   if (venues.length === 0) {
     return (
       <div className="mt-4 rounded-xl border border-gray-700 bg-[#171F31] px-6 py-10 text-center text-sm text-[#8b93a7]">
@@ -37,20 +37,20 @@ export default function VenueCard({ venues = [], onEdit, onDelete }) {
             </div>
 
             <div className="flex items-center gap-2">
-              <button
+              {!readOnly && (<button
                 type="button"
                 onClick={() => onEdit?.(venue)}
                 className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-white hover:bg-[#32354a] transition-colors"
               >
                 <Pencil size={14} className="text-[#059669]" />
-              </button>
-              <button
+              </button>)}
+              {!readOnly && (<button
                 type="button"
                 onClick={() => onDelete?.(venue)}
                 className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-[#32354a] transition-colors"
               >
                 <Trash2 size={14} className="text-[#FF0063]" />
-              </button>
+              </button>)}
             </div>
           </div>
 

@@ -53,8 +53,6 @@ async function fetchTemplateHtml() {
   return res.text();
 }
 
-
-console.log("")
 /**
  * Sanitize a string for use as a PDF filename.
  * Keeps alphanumeric, spaces, hyphens, and underscores only.
@@ -241,6 +239,36 @@ export async function generateSettlementPdf(eventId, token, mapper) {
 
   // Allow a small extra delay for CSS/fonts to settle
   await new Promise((r) => setTimeout(r, 300));
+
+  // ── Prevent Footer from Splitting Across Pages (and split .sheet) ──────
+  const footerBlock = iframe.contentDocument.getElementById("footer-block");
+  if (footerBlock) {
+    const PDF_WIDTH_MM = 200; // 210 - 10 (margins)
+    const PDF_HEIGHT_MM = 287; // 297 - 10 (margins)
+    const PAGE_HEIGHT_PX = (PDF_HEIGHT_MM / PDF_WIDTH_MM) * PDF_USABLE_WIDTH_PX;
+
+    const rect = footerBlock.getBoundingClientRect();
+    const pageOfTop = Math.floor(rect.top / PAGE_HEIGHT_PX);
+    const pageOfBottom = Math.floor(rect.bottom / PAGE_HEIGHT_PX);
+
+    if (pageOfTop !== pageOfBottom) {
+      // The footer crosses a page boundary!
+      const sheet = footerBlock.closest('.sheet');
+      
+      // Create a new sheet for the second page
+      const newSheet = iframe.contentDocument.createElement('div');
+      newSheet.className = 'sheet';
+      
+      // Move the footer block to the new sheet
+      newSheet.appendChild(footerBlock);
+      sheet.parentNode.insertBefore(newSheet, sheet.nextSibling);
+
+      // Push the new sheet down so it starts exactly on the next page
+      const newRect = newSheet.getBoundingClientRect();
+      const pushAmount = ((pageOfTop + 1) * PAGE_HEIGHT_PX) - newRect.top;
+      newSheet.style.marginTop = pushAmount + 10 + "px";
+    }
+  }
 
   // ── Step 6: Capture with html2canvas ───────────────────────────────────
   const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
