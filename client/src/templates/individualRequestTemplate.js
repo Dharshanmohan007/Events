@@ -328,7 +328,7 @@ export function buildIndividualRequestTemplate(payload = {}) {
     .form-title { font-size: 12px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px; }
     .header h1 { font-size: 18px; color: #1e3a8a; margin: 4px 0 0 0; }
     .header .meta { flex: 1; font-size: 10px; color: #555; text-align: right; line-height: 1.8; }
-    .section { margin-bottom: 18px; page-break-inside: avoid; }
+    .section { margin-bottom: 18px; page-break-inside: avoid; break-inside: avoid; }
     .section h2 { font-size: 13px; color: #fff; background: #1e3a8a; padding: 5px 10px; margin: 0 0 8px 0; border-radius: 3px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     table { width: 100%; border-collapse: separate; border-spacing: 1px; background-color: #bbb; margin-bottom: 8px; }
     th, td { background-color: #fff; padding: 5px 8px; text-align: left; vertical-align: top; font-size: 10.5px; }
@@ -336,13 +336,14 @@ export function buildIndividualRequestTemplate(payload = {}) {
     .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; margin-bottom: 8px; }
     .meta-grid div { padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
     .meta-grid div span.label { color: #555; font-weight: 600; margin-right: 5px; }
-    .signatures { margin-top: 50px; display: flex; justify-content: space-between; align-items: flex-end; page-break-inside: avoid; }
+    .signatures-wrapper { margin-top: 30px; page-break-inside: avoid; break-inside: avoid; page-break-before: auto; break-before: auto; display: inline-block; width: 100%; }
+    .signatures { display: flex; justify-content: space-between; align-items: flex-end; }
     .signature-block { text-align: center; width: 28%; }
     .signature-line { border-top: 1px solid #1a1a1a; margin-bottom: 6px; height: 1px; width: 100%; }
     .signature-label { font-size: 11px; font-weight: 600; color: #1e3a8a; }
     .footer { margin-top: 24px; display: flex; justify-content: space-between; font-size: 10px; color: #555; border-top: 1px solid #ccc; padding-top: 8px; }
     .no-data { color: #999; font-style: italic; padding: 6px 8px; }
-    @media print { body { padding: 0; } .section { page-break-inside: avoid; } }
+    @media print { body { padding: 0; } .section { page-break-inside: avoid; break-inside: avoid; } }
   </style>
 </head>
 <body>
@@ -388,24 +389,26 @@ export function buildIndividualRequestTemplate(payload = {}) {
 
 
 
-  <div class="signatures">
-    <div class="signature-block">
-      <div class="signature-line"></div>
-      <div class="signature-label">Event Organizer</div>
+  <div class="signatures-wrapper">
+    <div class="signatures">
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <div class="signature-label">Event Organizer</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <div class="signature-label">HoD / Section Head</div>
+      </div>
+      <div class="signature-block">
+        <div class="signature-line"></div>
+        <div class="signature-label">IQAC Team</div>
+      </div>
     </div>
-    <div class="signature-block">
-      <div class="signature-line"></div>
-      <div class="signature-label">HoD / Section Head</div>
-    </div>
-    <div class="signature-block">
-      <div class="signature-line"></div>
-      <div class="signature-label">IQAC Team</div>
-    </div>
-  </div>
 
-  <div class="footer">
-    <div>Submitted on: ${createdAt ? new Date(createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</div>
-    <div>Generated on: ${new Date().toLocaleString('en-IN')}</div>
+    <div class="footer">
+      <div>Submitted on: ${createdAt ? new Date(createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</div>
+      <div>Generated on: ${new Date().toLocaleString('en-IN')}</div>
+    </div>
   </div>
 
 </body>

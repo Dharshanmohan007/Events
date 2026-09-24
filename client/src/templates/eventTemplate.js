@@ -285,9 +285,45 @@ function buildEventTemplate(event = {}) {
   const MEAL_TYPES    = ['Breakfast', 'Lunch', 'Dinner'];
   const REFRESH_TYPES = ['Morning Refreshment', 'Evening Refreshment'];
 
+  // ── Helper for Date and Venue extraction ──────────────────────────────────
+  const getDayInfo = (r, idx, eventDetails, venueDetails) => {
+    const dayIdx = r?.dayIndex ?? idx;
+    const scheduleDate = (eventDetails?.eventSchedule || [])[dayIdx]?.eventDate;
+    const dateToUse = r?.date || scheduleDate;
+    const formattedDate = dateToUse ? formatDate(dateToUse) : `Day ${dayIdx + 1}`;
+    
+    const allVenues = new Set();
+    
+    // 1. Add specific food venues (from morning/evening refreshments)
+    (r?.foodTypes || []).forEach(ft => {
+      (ft?.venueWiseDetails || []).forEach(v => {
+        if (v?.venueName) allVenues.add(v.venueName);
+        else if (v?.venue) allVenues.add(v.venue);
+      });
+    });
+
+    // 2. Fallback: If no specific food venues exist, use the event's main venue(s) for this day
+    if (allVenues.size === 0 && venueDetails && venueDetails.venues) {
+      venueDetails.venues
+        .filter(v => (v?.dayIndex || 0) === dayIdx)
+        .forEach(v => {
+          if (v?.venueName) allVenues.add(v.venueName);
+        });
+    }
+
+    // 3. Legacy fallback
+    if (allVenues.size === 0 && r?.venue) {
+      allVenues.add(r.venue);
+    }
+    
+    const venueStr = allVenues.size > 0 ? Array.from(allVenues).join(', ') : '-';
+    
+    return { formattedDate, venueStr, rawDate: dateToUse || `Day ${dayIdx + 1}` };
+  };
+
   // ── Food section (Breakfast / Lunch / Dinner) ────────────────────────────
   const foodBlocks = (refreshmentDetails?.refreshments || [])
-    .map((r) => {
+    .map((r, idx) => {
       const foodTypes = (r?.foodTypes || []).filter(f => MEAL_TYPES.includes(f?.type));
       if (foodTypes.length === 0) return '';
       const foodRows = foodTypes.map((f) => {
@@ -305,12 +341,12 @@ function buildEventTemplate(event = {}) {
         </tr>`;
       }).join('');
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-      const venue = r?.venue || '-';
+      const { formattedDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
       return `
       <tr style="background:#f7f7f7;">
         <td colspan="5">
-          <strong>${formatDate(r?.date)}</strong> — 
-          Venue: ${venue} | 
+          <strong>${formattedDate}</strong> — 
+          Venue: ${venueStr} | 
           Resource: ${(r?.resourcePersonType || []).join(', ') || '-'} — ${r?.numberOfResourcePersons || 0} person(s)${r?.numberOfInternalAccompanyingStaff ? ', Internal Staff: '+r.numberOfInternalAccompanyingStaff : ''}${staff ? ' | Staff: '+staff : ''}${r?.specialRequirements ? ' | Special: '+r.specialRequirements : ''}
         </td>
       </tr>
@@ -322,11 +358,13 @@ function buildEventTemplate(event = {}) {
 
   // Collect distinct dates that have meal-type food entries
   const foodDates = [];
-  allRefreshments.forEach(r => {
+  allRefreshments.forEach((r, idx) => {
     const hasMeals = (r?.foodTypes || []).some(f => MEAL_TYPES.includes(f?.type));
     if (hasMeals) {
-      const label = (() => { const d = new Date(r?.date); return isNaN(d) ? (r?.date || '') : `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; })();
-      if (!foodDates.find(fd => fd.raw === r?.date)) foodDates.push({ raw: r?.date, label, entry: r });
+      const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
+      if (!foodDates.find(fd => fd.raw === rawDate)) {
+        foodDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
+      }
     }
   });
 
@@ -338,8 +376,7 @@ function buildEventTemplate(event = {}) {
     const summaryLines = foodDates.map(fd => {
       const r = fd.entry;
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-      const venue = r?.venue || '-';
-      return `<strong>${fd.label}</strong>: Venue: ${venue} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+      return `<strong>${fd.label}</strong>: Venue: ${fd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
     }).join('<br/>');
 
     // Header row: date groups, each split into V / NV
@@ -376,11 +413,13 @@ function buildEventTemplate(event = {}) {
 
   // ── Pivot Refreshment table (Morning / Evening per date column) ───────────
   const refreshDates = [];
-  allRefreshments.forEach(r => {
+  allRefreshments.forEach((r, idx) => {
     const hasRefresh = (r?.foodTypes || []).some(f => REFRESH_TYPES.includes(f?.type));
     if (hasRefresh) {
-      const label = (() => { const d = new Date(r?.date); return isNaN(d) ? (r?.date || '') : `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; })();
-      if (!refreshDates.find(rd => rd.raw === r?.date)) refreshDates.push({ raw: r?.date, label, entry: r });
+      const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
+      if (!refreshDates.find(rd => rd.raw === rawDate)) {
+        refreshDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
+      }
     }
   });
 
@@ -390,8 +429,7 @@ function buildEventTemplate(event = {}) {
     const summaryLines = refreshDates.map(rd => {
       const r = rd.entry;
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-      const venue = r?.venue || '-';
-      return `<strong>${rd.label}</strong>: Venue: ${venue} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+      return `<strong>${rd.label}</strong>: Venue: ${rd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
     }).join('<br/>');
 
     const dateHeaders = refreshDates.map(rd =>
@@ -558,14 +596,9 @@ function buildEventTemplate(event = {}) {
         font-size: 11px;
         line-height: 1.4;
         padding: 28px 36px;
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
       }
       .page-wrap {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
+        display: block;
       }
       .top-status {
         font-size: 13px;
@@ -619,6 +652,7 @@ function buildEventTemplate(event = {}) {
       .section {
         margin-bottom: 18px;
         page-break-inside: avoid;
+        break-inside: avoid;
       }
       .section h2 {
         font-size: 13px;
@@ -652,13 +686,19 @@ function buildEventTemplate(event = {}) {
       }
       .meta-grid div span.label { color: #555; font-weight: 600; }
       
+      .signatures-wrapper {
+        margin-top: 30px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-before: auto;
+        break-before: auto;
+        display: inline-block;
+        width: 100%;
+      }
       .signatures {
-        margin-top: auto;
-        padding-top: 40px;
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        page-break-inside: avoid;
       }
       .signature-block {
         text-align: center;
@@ -750,24 +790,26 @@ function buildEventTemplate(event = {}) {
     ${foodSection}
     ${refreshmentSection}
 
-    <div class="signatures">
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">Event Organizer</div>
+    <div class="signatures-wrapper">
+      <div class="signatures">
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">Event Organizer</div>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">HoD / Section Head</div>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">IQAC Team</div>
+        </div>
       </div>
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">HoD / Section Head</div>
-      </div>
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">IQAC Team</div>
-      </div>
-    </div>
 
-    <div class="footer">
-      <div>Submitted on: ${formatDate(event?.createdAt || event?.updatedAt)}</div>
-      <div>Generated on: ${new Date().toLocaleString("en-IN")}</div>
+      <div class="footer">
+        <div>Submitted on: ${formatDate(event?.createdAt || event?.updatedAt)}</div>
+        <div>Generated on: ${new Date().toLocaleString("en-IN")}</div>
+      </div>
     </div>
 
   </div>

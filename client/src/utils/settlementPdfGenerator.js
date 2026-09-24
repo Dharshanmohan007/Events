@@ -41,9 +41,12 @@ async function fetchTemplateHtml() {
   // Vite serves files under /src when using ?raw or via the dev server.
   // During build, the file is available at its source path relative to the project root.
   // We use a relative URL that works in both dev and production builds.
-  const urlObj = new URL("../templates/settlement_form_template.html", import.meta.url);
-  urlObj.searchParams.set('t', Date.now());
-  const res = await fetch(urlObj.href);
+  const templateUrl = new URL(
+    "../templates/settlement_form_template.html",
+    import.meta.url
+  ).href + "?t=" + new Date().getTime();
+
+  const res = await fetch(templateUrl);
   if (!res.ok) {
     throw new Error(`Failed to fetch settlement template: ${res.status}`);
   }
@@ -151,6 +154,7 @@ document.addEventListener("DOMContentLoaded", function() {
   }
   setText("eventName", ${JSON.stringify(data.eventName)});
   setText("submissionDate", ${JSON.stringify(data.submissionDate)});
+  setText("eventDate", ${JSON.stringify(data.eventDate)});
   setText("guestNames", ${JSON.stringify(data.guestNames)});
   setText("iqacNumber", ${JSON.stringify(data.iqacNumber)});
   setText("facultyName", ${JSON.stringify(data.facultyName)});
@@ -174,9 +178,11 @@ document.addEventListener("DOMContentLoaded", function() {
   )});
 
   // ── Populate remarks cell ────────────────────────────────────────────
-  var remarksCell = document.querySelector(".remarks-cell");
-  if (remarksCell && ${JSON.stringify(data.remarks)}) {
-    remarksCell.innerHTML = '<div style="font-weight:bold; font-size:11px;">Remarks If Any</div><div style="font-size:10px; margin-top:4px;">${data.remarks.replace(/'/g, "\\'")}</div>';
+  var remarksCell = document.getElementById("remarksCell");
+  var remarksData = ${JSON.stringify(data.remarks || "")};
+  if (remarksCell) {
+    var remarksHtml = (remarksData && remarksData.toUpperCase() !== "NA") ? '<div style="font-size:10px; margin-top:4px;">' + remarksData + '</div>' : '';
+    remarksCell.innerHTML = '<div style="font-weight:bold; font-size:11px;">Remarks</div>' + remarksHtml;
   }
 });
 </script>`;
