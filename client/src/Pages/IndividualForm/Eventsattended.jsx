@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { CalendarDays } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import IndividualExternalTransportDetails from "./IndividualExternalTransportDetails";
+import FormSubmitted from "./FormSubmitted";
 import { buildIndividualReportHtml } from "./IndividualReport";
 import { API_BASE } from "../../utils/apiConfig";
+
+const INDIVIDUAL_EVENT_API_BASE = import.meta.env.DEV ? "" : API_BASE;
 
 const Eventsattended = () => {
   const [form, setForm] = useState({
@@ -16,11 +20,18 @@ const Eventsattended = () => {
     programTo: "",
     onDutyFrom: "",
     onDutyTo: "",
+    foodRequired: "No",
+    transportRequired: "No",
+    accommodationRequired: "No",
+    otherRequirements: "",
   });
   const [participantDetails, setParticipantDetails] = useState([]);
   const [externalTransportDetails, setExternalTransportDetails] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const navigate = useNavigate();
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -79,8 +90,6 @@ const Eventsattended = () => {
     const apiIqacNumber = Number(responseReportData.iqacNumber) || 0;
     const nextIqacNumber = apiIqacNumber || storedIqacNumber + 1;
 
-    // Some deployed API versions do not yet return iqacNumber. Keep the receipt
-    // numbered in that case, while using the server value whenever it is available.
     localStorage.setItem(
       "individualEventIqacNumber",
       String(Math.max(storedIqacNumber, nextIqacNumber))
@@ -90,17 +99,14 @@ const Eventsattended = () => {
       ...responseReportData,
       iqacNumber: String(nextIqacNumber).padStart(3, "0"),
     };
+
     const html = buildIndividualReportHtml({
       payload,
       reportData,
     });
 
-    const reportUrl = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
-    const newTab = window.open(reportUrl, "_blank", "noopener,noreferrer");
-
-    if (!newTab) {
-      window.location.href = reportUrl;
-    }
+    sessionStorage.setItem("individualEventReportHtml", html);
+    navigate("/individual-report", { state: { reportHtml: html } });
   };
 
   const normalizeExternalTransport = (items = []) =>
@@ -145,8 +151,25 @@ const Eventsattended = () => {
       };
     });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (event) => {
+    if (event) {
+      event.preventDefault();
+    }
+
     setSubmitMessage("");
+    sessionStorage.removeItem("individualEventReportHtml");
+
+    const missingFields = [];
+    if (!form.type) missingFields.push("program type");
+    if (!String(form.name || "").trim()) missingFields.push("program name");
+    if (!form.participants || Number(form.participants) <= 0) missingFields.push("number of participants");
+    if (!form.programFrom || !form.programTo) missingFields.push("program date range");
+    if (!form.onDutyFrom || !form.onDutyTo) missingFields.push("on-duty date range");
+
+    if (missingFields.length > 0) {
+      setSubmitMessage(`Please complete the ${missingFields.join(", ")}.`);
+      return;
+    }
 
     if (form.transport === "yes" && (!Array.isArray(externalTransportDetails) || externalTransportDetails.length === 0)) {
       setSubmitMessage("Please fill in external transport details before submitting.");
@@ -181,13 +204,18 @@ const Eventsattended = () => {
         programToDate: form.programTo || "",
         onDutyFrom: formatDateTime(form.onDutyFrom, "09:00:00"),
         onDutyTo: formatDateTime(form.onDutyTo, "17:00:00"),
+        foodRequired: form.foodRequired === "Yes",
+        transportRequired: form.transportRequired === "Yes",
+        accommodationRequired: form.accommodationRequired === "Yes",
+        otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
         externalTransport: form.transport === "yes" ? normalizeExternalTransport(externalTransportDetails) : [],
       };
 
       const token = localStorage.getItem("token");
 
-      const response = await fetch(`${API_BASE}/api/individual-event-attending`, {
+      console.info("Submitting individual event request to /api/individual-event-attending");
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/individual-event-attending`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,23 +224,41 @@ const Eventsattended = () => {
         body: JSON.stringify(payload),
       });
 
-      const data = await response.json().catch(() => ({}));
+      const responseText = await response.text();
+      let data = {};
+
+      if (responseText) {
+        try {
+          data = JSON.parse(responseText);
+        } catch {
+          data = { message: responseText };
+        }
+      }
 
       if (!response.ok) {
-        throw new Error(data?.message || "Failed to submit request");
+        const serverMessage =
+          data?.message ||
+          data?.error ||
+          responseText ||
+          `Request failed with status ${response.status}`;
+        throw new Error(serverMessage || "Failed to submit request");
       }
 
       setSubmitMessage("Request submitted successfully.");
-      openSubmittedReport(payload, data);
+      setSubmitSuccess(true);
       console.log("Event attended submission payload:", payload);
       console.log("API response:", data);
     } catch (error) {
       console.error("Submit error:", error);
-      setSubmitMessage(error.message || "Something went wrong while submitting.");
+      setSubmitMessage(error?.message || "Something went wrong while submitting.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (submitSuccess) {
+    return <FormSubmitted />;
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#081b2d] px-6 py-8 text-white">
@@ -227,7 +273,7 @@ const Eventsattended = () => {
           </p>
         </div>
 
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
@@ -429,7 +475,53 @@ const Eventsattended = () => {
             )}
           </div>
 
-          <div>
+          <div className="space-y-5 pt-2">
+            <div className="grid gap-4 md:grid-cols-3">
+              {[
+                { label: "Food Required", field: "foodRequired" },
+                { label: "Transport Required", field: "transportRequired" },
+                { label: "Accomodation Required", field: "accommodationRequired" },
+              ].map(({ label, field }) => (
+                <div key={field}>
+                  <label className="mb-2 block text-sm font-medium text-slate-200">{label}</label>
+                  <div className="relative">
+                    <select
+                      value={form[field]}
+                      onChange={(e) => updateField(field, e.target.value)}
+                      className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                    >
+                      <option value="No">No</option>
+                      <option value="Yes">Yes</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                        <path
+                          fillRule="evenodd"
+                          d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                Others, If any requirements
+              </label>
+              <textarea
+                value={form.otherRequirements}
+                onChange={(e) => updateField("otherRequirements", e.target.value)}
+                rows={3}
+                className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                placeholder="Mention any other requirements"
+              />
+            </div>
+          </div>
+
+          {/* <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
               If you want any external transport request
             </label>
@@ -459,9 +551,9 @@ const Eventsattended = () => {
                 <IndividualExternalTransportDetails onDataChange={setExternalTransportDetails} />
               </div>
             )}
-          </div>
+          </div> */}
 
-          <div>
+          {/* <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
               In case of expense
             </label>
@@ -486,7 +578,7 @@ const Eventsattended = () => {
                 </svg>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <div className="flex flex-col items-end gap-3 pt-2">
             {submitMessage && (
@@ -496,15 +588,14 @@ const Eventsattended = () => {
             )}
 
             <button
-              type="button"
+              type="submit"
               disabled={isSubmitting}
-              onClick={handleSubmit}
-              className="rounded-xl bg-gradient-to-r from-violet-600 to-violet-500 px-10 py-3 text-base font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+              className="rounded-xl bg-linear-to-r from-violet-600 to-violet-500 px-10 py-3 text-base font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

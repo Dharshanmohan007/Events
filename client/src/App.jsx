@@ -94,6 +94,7 @@ import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashbo
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
 import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
 import Eventsattended from './Pages/IndividualForm/Eventsattended.jsx';
+import IndividualReportPage from "./Pages/Dashboards/IndividualReportPage/IndividualReportPage.jsx";
 
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
@@ -158,6 +159,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <EventsForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/individual-report"
+        element={
+          <ProtectedRoute>
+            <IndividualReportPage />
           </ProtectedRoute>
         }
       />

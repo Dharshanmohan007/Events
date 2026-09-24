@@ -43,11 +43,39 @@ router.get("/:id", (req: Request, res: Response): void => {
 router.post("/", (req: Request, res: Response): void => {
   try {
     const payload = req.body || {};
+
+    const requiredFields = [
+      { key: "programType", label: "Program type" },
+      { key: "programName", label: "Program name" },
+      { key: "numberOfParticipants", label: "Number of participants" },
+      { key: "programFromDate", label: "Program from date" },
+      { key: "programToDate", label: "Program to date" },
+      { key: "onDutyFrom", label: "On-duty from date" },
+      { key: "onDutyTo", label: "On-duty to date" },
+    ];
+
+    const missingFields = requiredFields.filter(({ key, label }) => {
+      const value = payload[key];
+      if (key === "numberOfParticipants") {
+        return Number(value) <= 0;
+      }
+      return value === undefined || value === null || String(value).trim() === "";
+    }).map(({ label }) => label);
+
+    if (missingFields.length > 0) {
+      res.status(400).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(", ")}`,
+      });
+      return;
+    }
+
     const nextIqacNumber =
       records.reduce((highest, item) => Math.max(highest, Number(item.iqacNumber) || 0), 0) + 1;
     const iqacNumber = String(nextIqacNumber).padStart(3, "0");
+    const generatedId = globalThis.crypto?.randomUUID?.() ?? `evt-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const record = {
-      id: crypto.randomUUID(),
+      id: generatedId,
       ...payload,
       iqacNumber,
       createdAt: new Date().toISOString(),
