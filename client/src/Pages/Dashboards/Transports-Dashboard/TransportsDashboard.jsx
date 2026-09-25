@@ -26,13 +26,24 @@ const formatDate = (dateStr) => {
         .replace(/\//g, "-");
 };
 
+// Head's workflow state — string or { status } shape both handled
+const headApprovalStatus = (source) => {
+  const head = source?.headApproval;
+  if (!head) return "";
+  return (typeof head === "string" ? head : head.status) || "";
+};
+
 const transformTransportData = (apiData) =>
   apiData.map((item) => ({
     eventId: item.eventId,
     eventName: item.eventName || "-",
     eventDate: item.dates || [],
     department: item.organizingDepartment || "-",
-    acknowledgeStatus: item.departmentStatus || item.overallStatus || "-",
+    acknowledgeStatus:
+      headApprovalStatus(item) ||
+      item.departmentStatus ||
+      item.overallStatus ||
+      "-",
   }));
 
 const transformIndividualData = (apiData) =>
@@ -53,7 +64,12 @@ const transformIndividualData = (apiData) =>
 
       organizerPhone: employee?.phone || "-",
 
-      acknowledgeStatus: record.status || item.status || "-",
+      acknowledgeStatus:
+        headApprovalStatus(record) ||
+        headApprovalStatus(item) ||
+        record.status ||
+        item.status ||
+        "-",
 
       eventId: record._id || item.requestId || item._id || item.id,
     };
