@@ -840,6 +840,10 @@ const formatExternalTransportPayload = (externalTransportData) => {
           .join(", ")
       : (item.classOrBerth || (item.travelOption === "Flight" ? "Economy" : ""));
 
+    const trainNumber = item.travelOption === "Train" ? (item.trainNumber || "") : "";
+    const flightNumber = item.travelOption === "Flight" ? (item.flightNumber || "") : "";
+    const transportNumber = trainNumber || flightNumber;
+
     return {
       travelOption: item.travelOption || "",
       travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
@@ -847,8 +851,9 @@ const formatExternalTransportPayload = (externalTransportData) => {
       to: item.to || "",
       totalPassengers: Number(item.totalPassengers) || 0,
       classOrBerth: classOrBerthStr,
-      trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
-      flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
+      transportNumber,
+      trainNumber,
+      flightNumber,
       specialRequirements: item.specialRequirements?.trim() || "None",
       passengers: (item.passengers || []).map((p) => ({
         name: p.name || "",

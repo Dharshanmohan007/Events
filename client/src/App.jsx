@@ -92,7 +92,10 @@ import IndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/Indiv
 import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/PurchaseIndividualDocumentUpload";
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
-import IndividualExpenditureDetailView from "./Components/IndividualExpenditureDetailView";
+import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
+import Eventsattended from './Pages/IndividualForm/Eventsattended.jsx';
+import IndividualReportPage from "./Pages/Dashboards/IndividualReportPage/IndividualReportPage.jsx";
+
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
 import AllVenuesFullscreenPage from "./Pages/Calendar/AllVenuesFullscreenPage.jsx";
@@ -167,6 +170,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <EventsForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/individual-report"
+        element={
+          <ProtectedRoute>
+            <IndividualReportPage />
           </ProtectedRoute>
         }
       />
@@ -823,6 +835,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="events-attended" element={<Eventsattended />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
