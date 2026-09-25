@@ -2,6 +2,7 @@ import { ExternalLink, ListFilter, Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ThemedDatePicker from "./ThemedDatePicker";
+import { useAuth } from "./AuthContext";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
@@ -64,6 +65,15 @@ const normalizeEventRequest = (event) => ({
     : [event.eventDate || event.requiredDate].filter(Boolean).map(toDateKey),
   department: safeString(event.organizingDepartment || event.department),
   approvedStatus: event.adminApproval ? "Approved" : "Pending",
+  // Acknowledgement state as tracked by the module (e.g. transport head)
+  acknowledgeStatus: safeString(
+    event.acknowledgeStatus ||
+      event.departmentStatus ||
+      event.eventStatus ||
+      event.overallStatus ||
+      event.status,
+    "",
+  ),
   eventStatus: safeString(event.overallStatus || event.eventStatus),
   rawEventId: event.eventId || event.id,
 });
@@ -104,11 +114,25 @@ const getEventStatusClassName = (status = "") => {
   return "text-white";
 };
 
-const StatusBadge = ({ status, className }) => {
+// Colour palette for the acknowledgement lifecycle (transport list):
+// completed → violet-700, acknowledged → green-700, pending → red-600
+const getAcknowledgedStatusColorClass = (status = "") => {
+  const s = status.toLowerCase();
+  if (s.includes("completed")) return "text-violet-700";
+  if (s.includes("acknowledged")) return "text-green-700";
+  if (s.includes("pending") || s.includes("reject") || s.includes("cancel"))
+    return "text-red-600";
+  if (s.includes("approved")) return "text-green-700";
+  return null;
+};
+
+const StatusBadge = ({ status, className, acknowledgeMode = false }) => {
   const s = (status || "").toLowerCase();
   const isPositive = s.includes("approved") || s.includes("acknowledged");
   const colorClass =
-    className || (isPositive ? "text-[#34D399]" : "text-[#B32058]");
+    className ||
+    (acknowledgeMode ? getAcknowledgedStatusColorClass(status) : null) ||
+    (isPositive ? "text-[#34D399]" : "text-[#B32058]");
   return (
     <span className={`inline-flex items-center gap-2 ${colorClass}`}>
       <span
@@ -197,7 +221,12 @@ const EmptyRow = ({ colSpan }) => (
   </tr>
 );
 
-const EventRequestTable = ({ rows, selectedDateKey, detailViewPath }) => (
+const EventRequestTable = ({
+  rows,
+  selectedDateKey,
+  detailViewPath,
+  acknowledgeMode = false,
+}) => (
   <table className="w-full text-left">
     <thead className="sticky top-0 bg-[#151c2c]">
       <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
@@ -207,7 +236,9 @@ const EventRequestTable = ({ rows, selectedDateKey, detailViewPath }) => (
         <th className="px-6 py-4 font-semibold">Event Date</th>
         <th className="px-6 py-4 font-semibold">Dpt</th>
         <th className="px-6 py-4 font-semibold">Event Status</th>
-        <th className="px-6 py-4 font-semibold">Approved Status</th>
+        <th className="px-6 py-4 font-semibold">
+          {acknowledgeMode ? "Acknowledged Status" : "Approved Status"}
+        </th>
         <th className="px-6 py-4 font-semibold text-center">Action</th>
       </tr>
     </thead>
@@ -245,7 +276,14 @@ const EventRequestTable = ({ rows, selectedDateKey, detailViewPath }) => (
               </span>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <StatusBadge status={event.approvedStatus} />
+              <StatusBadge
+                acknowledgeMode={acknowledgeMode}
+                status={
+                  acknowledgeMode
+                    ? event.acknowledgeStatus || event.approvedStatus || "-"
+                    : event.approvedStatus
+                }
+              />
             </td>
             <td className="px-6 py-4">
               {detailViewPath ? (
@@ -274,7 +312,11 @@ const EventRequestTable = ({ rows, selectedDateKey, detailViewPath }) => (
   </table>
 );
 
-const IndividualRequestTable = ({ rows, individualDetailViewPath }) => (
+const IndividualRequestTable = ({
+  rows,
+  individualDetailViewPath,
+  acknowledgeMode = false,
+}) => (
   <table className="w-full text-left">
     <thead className="sticky top-0 bg-[#151c2c]">
       <tr className="bg-[#1b2335] text-[#7f8799] uppercase text-xs">
@@ -307,7 +349,10 @@ const IndividualRequestTable = ({ rows, individualDetailViewPath }) => (
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <StatusBadge status={row.status} />
+              <StatusBadge
+                acknowledgeMode={acknowledgeMode}
+                status={row.status}
+              />
             </td>
             <td className="px-6 py-4">
               {individualDetailViewPath ? (
@@ -344,6 +389,7 @@ const RequestListTable = ({
   onFetchEvents,
   onFetchIndividuals,
   showIndividualTab = false,
+  module = "",
 }) => {
   const [activeTab, setActiveTab] = useState("event");
   const [internalEventRows, setInternalEventRows] = useState([]);
@@ -352,6 +398,15 @@ const RequestListTable = ({
   const [eventTypeFilter, setEventTypeFilter] = useState("all");
   const [approvalFilter, setApprovalFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("");
+
+  // Date filter is exclusive to the Transport Head (role: "head", department: "Transport")
+  const { user } = useAuth();
+  const isTransportHead =
+    (user?.role || "").toLowerCase().trim() === "head" &&
+    (user?.department || "").toLowerCase().trim() === "transport";
+
+  // Transport list shows the module's acknowledgement state instead of admin approval
+  const acknowledgeMode = module === "transport";
 
   const hasExternalEvents = Boolean(propEventRows);
   const hasExternalIndividuals = Boolean(propIndividualRows);
@@ -416,11 +471,18 @@ const RequestListTable = ({
       !isEventTab ||
       eventTypeFilter === "all" ||
       row.eventType === eventTypeFilter;
+    const displayedStatus = acknowledgeMode
+      ? row.acknowledgeStatus || row.approvedStatus || row.status || ""
+      : row.approvedStatus || "";
     const matchesApproval =
       approvalFilter === "all" ||
-      (row.approvedStatus || "").toLowerCase() === approvalFilter;
+      (acknowledgeMode
+        ? displayedStatus.toLowerCase().includes(approvalFilter)
+        : displayedStatus.toLowerCase() === approvalFilter);
     const matchesDate =
-      !dateFilter || (row.dateKeys || []).includes(dateFilter);
+      !isTransportHead ||
+      !dateFilter ||
+      (row.dateKeys || []).includes(dateFilter);
     return matchesSearch && matchesEventType && matchesApproval && matchesDate;
   });
 
@@ -484,19 +546,30 @@ const RequestListTable = ({
             icon={<ListFilter size={14} className="text-[#8b93a4]" />}
             value={approvalFilter}
             onChange={setApprovalFilter}
-            options={[
-              { value: "all", label: "All Approval" },
-              { value: "approved", label: "Approved" },
-              { value: "pending", label: "Pending" },
-            ]}
+            options={
+              acknowledgeMode
+                ? [
+                    { value: "all", label: "All Status" },
+                    { value: "acknowledged", label: "Acknowledged" },
+                    { value: "pending", label: "Pending" },
+                    { value: "completed", label: "Completed" },
+                  ]
+                : [
+                    { value: "all", label: "All Approval" },
+                    { value: "approved", label: "Approved" },
+                    { value: "pending", label: "Pending" },
+                  ]
+            }
             ariaLabel="Filter by approval status"
           />
 
-          <ThemedDatePicker
-            value={dateFilter}
-            onChange={setDateFilter}
-            placeholder="Date"
-          />
+          {isTransportHead && (
+            <ThemedDatePicker
+              value={dateFilter}
+              onChange={setDateFilter}
+              placeholder="Date"
+            />
+          )}
         </div>
       </div>
 
@@ -504,13 +577,15 @@ const RequestListTable = ({
         {isEventTab ? (
           <EventRequestTable
             rows={filteredRows}
-            selectedDateKey={dateFilter}
+            selectedDateKey={isTransportHead ? dateFilter : ""}
             detailViewPath={detailViewPath}
+            acknowledgeMode={acknowledgeMode}
           />
         ) : (
           <IndividualRequestTable
             rows={filteredRows}
             individualDetailViewPath={individualDetailViewPath}
+            acknowledgeMode={acknowledgeMode}
           />
         )}
       </div>
