@@ -14,7 +14,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
       <div>
         <CustomInput
-          labelBg="#2E3645"
+          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Name *`}
           value={data.name || ""}
           onChange={(e) => {
@@ -30,7 +30,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomInput
-          labelBg="#2E3645"
+          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Designation *`}
           value={data.designation || ""}
           onChange={(e) => onChange({ ...data, designation: e.target.value })}
@@ -41,7 +41,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomInput
-          labelBg="#2E3645"
+          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Organization *`}
           value={data.organization || ""}
           onChange={(e) => onChange({ ...data, organization: e.target.value })}
@@ -55,7 +55,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
     <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
       <div>
         <CustomInput
-          labelBg="#2E3645"
+          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Mobile Number *`}
           type="tel"
           value={data.mobile || ""}
@@ -71,7 +71,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomSelect
-          labelBg="#2E3645"
+          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
           options={["Male", "Female", "Other"]}
           label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`}
           value={data.gender || ""}
@@ -193,11 +193,11 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
   const guestCount = parseInt(dayData?.numGuests) > 0 ? parseInt(dayData.numGuests) : 0;
 
   return (
-    <div className='relative rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-6 mb-4'>
+    <div className='relative rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-6 mb-4 shadow-sm dark:shadow-none'>
       {/* Delete Confirmation Popup */}
     {showDeleteConfirmation && (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-        <div className="w-full max-w-md rounded-xl border border-[#3A3A5A] bg-[#1E1E35] shadow-2xl p-6">
+        <div className="w-full max-w-md rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] shadow-2xl p-6">
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-4">
@@ -218,53 +218,53 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
               </svg>
             </div>
 
-            <h3 className="text-white text-lg font-semibold">
+            <h3 className="text-slate-900 dark:text-white text-lg font-semibold">
               Delete Day {dayIndex}?
             </h3>
           </div>
 
           {/* Message */}
-          <p className="text-gray-300 text-sm leading-6">
+          <p className="text-slate-600 dark:text-gray-300 text-sm leading-6">
             Are you sure you want to delete this day with the following
             date and time?
           </p>
 
           {/* Day Details */}
-          <div className="mt-4 rounded-lg border border-[#3A3A5A] bg-[#16162A] p-4">
+          <div className="mt-4 rounded-lg border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#16162A] p-4">
             <div className="space-y-2 text-sm">
 
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">
+                <span className="text-slate-500 dark:text-gray-400">
                   Day
                 </span>
-                <span className="text-white font-medium">
+                <span className="text-slate-900 dark:text-white font-medium">
                   Day {dayIndex}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">
+                <span className="text-slate-500 dark:text-gray-400">
                   Date
                 </span>
-                <span className="text-white font-medium">
+                <span className="text-slate-900 dark:text-white font-medium">
                   {dayData?.date || "Not selected"}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">
+                <span className="text-slate-500 dark:text-gray-400">
                   Start Time
                 </span>
-                <span className="text-white font-medium">
+                <span className="text-slate-900 dark:text-white font-medium">
                   {dayData?.startTime || "Not selected"}
                 </span>
               </div>
 
               <div className="flex justify-between gap-4">
-                <span className="text-gray-400">
+                <span className="text-slate-500 dark:text-gray-400">
                   End Time
                 </span>
-                <span className="text-white font-medium">
+                <span className="text-slate-900 dark:text-white font-medium">
                   {dayData?.endTime || "Not selected"}
                 </span>
               </div>
@@ -279,7 +279,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
             <button
               type="button"
               onClick={() => setShowDeleteConfirmation(false)}
-              className="px-5 py-2.5 rounded-lg border border-[#3A3A5A] text-gray-300 hover:bg-white/5 hover:text-white transition-colors text-sm font-medium"
+              className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-[#3A3A5A] text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-colors text-sm font-medium"
             >
               Cancel
             </button>
@@ -333,8 +333,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
       <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
         <div className="relative w-full">
           <span
-            className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-            style={{ backgroundColor: "#1E1E35" }}
+            className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none bg-white dark:bg-[#1E1E35]"
           >
             {`Day ${dayIndex} – Event Date *`}
           </span>
@@ -353,13 +352,13 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
 
               return minDate > tomorrowStr ? minDate : tomorrowStr;
             })()}
-            className="w-full !h-[50px] !text-sm !px-3.5 !rounded-lg !border-[#3A3A5A] !bg-transparent text-white"
+            className="w-full !h-[50px] !text-sm !px-3.5 !rounded-lg border border-slate-300 dark:!border-[#3A3A5A] !bg-transparent text-slate-900 dark:text-white"
           />
           {errors.date && <p className="text-red-400 text-xs mt-1">{errors.date}</p>}
         </div>
                 <div>
           <TimePickerInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label={`Day ${dayIndex} – Start Time *`}
             value={dayData?.startTime || "08:40"}
             onChange={(e) =>
@@ -383,7 +382,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
 
         <div>
           <TimePickerInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label={`Day ${dayIndex} – End Time *`}
             value={dayData?.endTime || "16:10"}
             onChange={(e) =>
@@ -407,7 +406,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
       {/* Maximum 20 guest allowed */}
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label={`Day ${dayIndex} – Total Number of Guests (max 25 guest allowed) *`}
             type="number"
             min={0}
@@ -435,7 +434,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
               }
             }}
           />
-          <label htmlFor={`same-as-day1-${dayIndex}`} className="text-white text-sm cursor-pointer">
+          <label htmlFor={`same-as-day1-${dayIndex}`} className="text-slate-800 dark:text-white text-sm cursor-pointer">
             Same as Day 1 Guests
           </label>
         </div>
@@ -447,7 +446,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
           {Array.from({ length: guestCount }, (_, i) => (
             <div
               key={i}
-              className='rounded-xl border border-[#3A3A5A] bg-[#2E3645] p-4 sm:p-6'
+              className='rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#2E3645] p-4 sm:p-6'
             >
               <GuestFields
                 guestIndex={i + 1}

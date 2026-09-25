@@ -219,7 +219,7 @@ export function buildMediaFormData(mediaData) {
 
 // ── Multi-select dropdown ─────────────────────────────────────────────────────
 
-function MultiSelectDropdown({ label, options, selected, onChange, error, labelBg = "#1E1E35" }) {
+function MultiSelectDropdown({ label, options, selected, onChange, error, labelClassName = "bg-slate-50 dark:bg-[#1E1E35]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -238,19 +238,18 @@ function MultiSelectDropdown({ label, options, selected, onChange, error, labelB
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
         >
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg px-4 py-3 flex items-center justify-between cursor-pointer transition-colors duration-200 min-h-[54px] ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
           }`}
         >
           <span
-            className={`text-sm leading-snug flex-1 mr-2 ${selected.length ? "text-white" : "text-gray-500"}`}
+            className={`text-sm leading-snug flex-1 mr-2 ${selected.length ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-gray-500"}`}
             style={{ whiteSpace: "normal", wordBreak: "break-word" }}
           >
             {displayText || "Select options..."}
@@ -262,13 +261,13 @@ function MultiSelectDropdown({ label, options, selected, onChange, error, labelB
           </svg>
         </div>
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar shadow-2xl">
             {options.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
                 <div key={i} onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-purple-600/30 text-slate-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/20"
                   }`}>
                   <span>{item}</span>
                   {isSelected && (
@@ -346,7 +345,7 @@ function ImagePreviewModal({ file, onClose }) {
 // Drop zone on top; uploaded files render as rounded pill tags with a cancel
 // button inside each. Clicking an image pill opens a full-screen preview.
 
-function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYPES, labelBg = "#1E1E35", sizeErrorPrefix = "" }) {
+function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYPES, labelClassName = "bg-white dark:bg-[#1E1E35]", sizeErrorPrefix = "" }) {
   const inputRef = useRef();
   const [sizeError,   setSizeError]   = useState("");
   const [previewFile, setPreviewFile] = useState(null);
@@ -412,13 +411,12 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
         <div className="relative w-full">
           {/* Floating label */}
           <span
-            className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-            style={{ backgroundColor: labelBg }}
+            className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
           >
             {label}
           </span>
 
-          <div className="w-full bg-transparent border border-[#3A3A5A] rounded-lg overflow-hidden transition-colors duration-200 focus-within:border-purple-500">
+          <div className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg overflow-hidden transition-colors duration-200 focus-within:border-purple-500">
 
             {/* ── Drop zone (always visible) ── */}
             <div
@@ -436,7 +434,7 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
                 onChange={(e) => handleFiles(e.target.files)}
                 onClick={(e) => { e.target.value = ""; }}
               />
-              <div className="flex items-center gap-2 text-gray-500 text-sm">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-gray-500 text-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400 flex-shrink-0" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="16 16 12 12 8 16" />
@@ -457,7 +455,7 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
                   <div
                     key={idx}
                     onClick={() => { if (isImage(file)) setPreviewFile(file); }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#2A2A45] border border-[#3A3A5A] text-xs text-white select-none transition-colors duration-150 ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-[#2A2A45] border border-slate-300 dark:border-[#3A3A5A] text-xs text-slate-700 dark:text-white select-none transition-colors duration-150 ${
                       isImage(file)
                         ? "cursor-pointer hover:border-purple-500/60 hover:bg-[#2E2E50]"
                         : ""
@@ -513,15 +511,15 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
   const showGlass = data.displayNeeded?.includes("Glass Sticker");
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
-      <div className="flex items-center gap-3 pb-3  border-[#3A3A5A]">
+    <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5 shadow-sm dark:shadow-none">
+      <div className="flex items-center gap-3 pb-3  border-slate-300 dark:border-[#3A3A5A]">
         <h3 className="text-[#9810fa] text-base font-semibold">Poster</h3>
       </div>
 
       {/* Content for Poster */}
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Content for Poster *
           </span>
           <textarea
@@ -529,7 +527,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
             onChange={updateInput("contentPoster")}
             rows={3}
             placeholder="content"
-            className={`w-full bg-transparent border ${errors.contentPoster ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${errors.contentPoster ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"} text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600`}
           />
         </div>
         <ErrorMsg msg={errors.contentPoster} />
@@ -541,7 +539,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         value={Array.isArray(data.referencePoster) ? data.referencePoster : (data.referencePoster ? [data.referencePoster] : [])}
         onChange={update("referencePoster")}
         accept={ACCEPTED_FILE_TYPES}
-        labelBg="#1E1E35"
+        labelClassName="bg-white dark:bg-[#1E1E35]"
         sizeErrorPrefix="Poster: "
       />
 
@@ -550,7 +548,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         <>
           <div>
             <div className="relative w-full">
-              <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
                 Content for Certificate *
               </span>
               <textarea
@@ -558,7 +556,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
                 onChange={updateInput("contentCertificate")}
                 rows={3}
                 placeholder="content"
-                className={`w-full bg-transparent border ${errors.contentCertificate ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+                className={`w-full bg-transparent border ${errors.contentCertificate ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"} text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600`}
               />
             </div>
             <ErrorMsg msg={errors.contentCertificate} />
@@ -570,7 +568,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
             value={Array.isArray(data.referenceCertificate) ? data.referenceCertificate : (data.referenceCertificate ? [data.referenceCertificate] : [])}
             onChange={update("referenceCertificate")}
             accept={ACCEPTED_FILE_TYPES}
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             sizeErrorPrefix="Certificate: "
           />
         </>
@@ -579,7 +577,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
       {/* Content for Trophy */}
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Content for Trophy *
           </span>
           <textarea
@@ -587,7 +585,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
             onChange={updateInput("contentTrophy")}
             rows={3}
             placeholder="content"
-            className={`w-full bg-transparent border ${errors.contentTrophy ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${errors.contentTrophy ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"} text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600`}
           />
         </div>
         <ErrorMsg msg={errors.contentTrophy} />
@@ -600,7 +598,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
           options={DISPLAY_OPTIONS}
           selected={data.displayNeeded || []}
           onChange={update("displayNeeded")}
-          error={errors.displayNeeded}
+          labelClassName="bg-white dark:bg-[#1E1E35]"
         />
       </div>
 
@@ -608,14 +606,14 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
         <div className="flex gap-4">
           {showFlex && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Flex in feet*" type='text'
+              <CustomInput labelClassName="bg-white dark:bg-[#1E1E35]" label="Size for Flex in feet*" type='text'
                 value={data.sizeForFlex || ""} onChange={updateSizeInput("sizeForFlex")} placeholder="e.g. 4 * 6" />
               <ErrorMsg msg={errors.sizeForFlex} />
             </div>
           )}
           {showGlass && (
             <div className="flex-1">
-              <CustomInput labelBg="#1e1e35" label="Size for Glass Sticker in inches *" type='text'
+              <CustomInput labelClassName="bg-white dark:bg-[#1E1E35]" label="Size for Glass Sticker in inches *" type='text'
                 value={data.sizeForGlass || ""}  onChange={updateSizeInput("sizeForGlass")} placeholder="e.g. 12 * 18" />
               <ErrorMsg msg={errors.sizeForGlass} />
             </div>
@@ -625,12 +623,12 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <CustomInput labelBg="#1E1E35" label="Delivery Date *" type="date"
+          <CustomInput labelClassName="bg-white dark:bg-[#1E1E35]" label="Delivery Date *" type="date"
             value={data.deliveryDate || ""} onChange={updateInput("deliveryDate")} />
           <ErrorMsg msg={errors.deliveryDate} />
         </div>
         <div>
-          <CustomSelect labelBg="#1E1E35" label="Priority *" value={data.priority || ""}
+          <CustomSelect labelClassName="bg-white dark:bg-[#1E1E35]" label="Priority *" value={data.priority || ""}
             onChange={update("priority")} options={PRIORITY_OPTIONS} />
           <ErrorMsg msg={errors.priority} />
         </div>
@@ -656,26 +654,26 @@ function VideoSection({ data, onChange, errors = {} }) {
   const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
-      <div className="flex items-center gap-3 pb-3 border-[#3A3A5A]">
+    <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5 shadow-sm dark:shadow-none">
+      <div className="flex items-center gap-3 pb-3 border-slate-300 dark:border-[#3A3A5A]">
         <h3 className="text-[#9810fa] text-base font-semibold">Video</h3>
       </div>
 
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Content for Video *
           </span>
           <textarea value={data.contentVideo || ""} onChange={updateInput("contentVideo")} rows={3} placeholder="content"
-            className={`w-full bg-transparent border ${errors.contentVideo ? "border-red-400" : "border-[#3A3A5A]"} text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`} />
+            className={`w-full bg-transparent border ${errors.contentVideo ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"} text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600`} />
         </div>
         <ErrorMsg msg={errors.contentVideo} />
       </div>
 
-      <div><MultiSelectDropdown label="Pre-Event Videos Needed *"  options={PRE_EVENT_OPTIONS}       selected={data.preEvent      || []} onChange={update("preEvent")}      error={errors.preEvent}      /></div>
-      <div><MultiSelectDropdown label="Event Coverage Needed *"    options={EVENT_COVERAGE_OPTIONS}  selected={data.eventCoverage || []} onChange={update("eventCoverage")} error={errors.eventCoverage} /></div>
-      <div><MultiSelectDropdown label="Post-Event Videos Needed *" options={POST_EVENT_OPTIONS}      selected={data.postEvent     || []} onChange={update("postEvent")}     error={errors.postEvent}     /></div>
-      <div><MultiSelectDropdown label="Special Videos Needed *"    options={SPECIAL_VIDEO_OPTIONS}   selected={data.specialVideos || []} onChange={update("specialVideos")} error={errors.specialVideos} /></div>
+      <div><MultiSelectDropdown label="Pre-Event Videos Needed *"  options={PRE_EVENT_OPTIONS}       selected={data.preEvent      || []} onChange={update("preEvent")}      error={errors.preEvent}      labelClassName="bg-white dark:bg-[#1E1E35]" /></div>
+      <div><MultiSelectDropdown label="Event Coverage Needed *"    options={EVENT_COVERAGE_OPTIONS}  selected={data.eventCoverage || []} onChange={update("eventCoverage")} error={errors.eventCoverage} labelClassName="bg-white dark:bg-[#1E1E35]" /></div>
+      <div><MultiSelectDropdown label="Post-Event Videos Needed *" options={POST_EVENT_OPTIONS}      selected={data.postEvent     || []} onChange={update("postEvent")}     error={errors.postEvent}     labelClassName="bg-white dark:bg-[#1E1E35]" /></div>
+      <div><MultiSelectDropdown label="Special Videos Needed *"    options={SPECIAL_VIDEO_OPTIONS}   selected={data.specialVideos || []} onChange={update("specialVideos")} error={errors.specialVideos} labelClassName="bg-white dark:bg-[#1E1E35]" /></div>
 
       {/* Reference Video — tab-based file upload */}
       <FileTabUpload
@@ -683,18 +681,18 @@ function VideoSection({ data, onChange, errors = {} }) {
         value={Array.isArray(data.referenceVideo) ? data.referenceVideo : (data.referenceVideo ? [data.referenceVideo] : [])}
         onChange={update("referenceVideo")}
         accept={ACCEPTED_VIDEO_TYPES}
-        labelBg="#1E1E35"
+        labelClassName="bg-white dark:bg-[#1E1E35]"
         sizeErrorPrefix="Video: "
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <CustomInput labelBg="#1E1E35" label="Delivery Date *" type="date"
+          <CustomInput labelClassName="bg-white dark:bg-[#1E1E35]" label="Delivery Date *" type="date"
             value={data.deliveryDate || ""} onChange={updateInput("deliveryDate")} />
           <ErrorMsg msg={errors.deliveryDate} />
         </div>
         <div>
-          <CustomSelect labelBg="#1E1E35" label="Priority *" value={data.priority || ""}
+          <CustomSelect labelClassName="bg-white dark:bg-[#1E1E35]" label="Priority *" value={data.priority || ""}
             onChange={update("priority")} options={PRIORITY_OPTIONS} />
           <ErrorMsg msg={errors.priority} />
         </div>
@@ -702,11 +700,11 @@ function VideoSection({ data, onChange, errors = {} }) {
 
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, If any
           </span>
           <textarea value={data.specialReq || ""} onChange={updateInput("specialReq")} rows={3} placeholder="notes"
-            className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600" />
+            className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600" />
         </div>
       </div>
     </div>
@@ -953,8 +951,8 @@ export default function MediaForm({
   if (dayCount === 0) {
     return (
       <div className="flex flex-col gap-6 pb-6">
-        <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-center">
-          <p className="text-gray-400 text-sm">
+        <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#1E1E35] p-6 text-center">
+          <p className="text-slate-600 dark:text-gray-400 text-sm">
             No event days found. Please go back and add event days first.
           </p>
         </div>
@@ -970,7 +968,7 @@ export default function MediaForm({
         completedDays={completedDays}
       />
 
-      <h2 className="text-white text-lg font-bold">
+      <h2 className="text-slate-900 dark:text-white text-lg font-bold">
         Media Requirement Details
         {/* {dayCount > 1 && (
           <span className="ml-2 text-sm font-normal text-gray-400">

@@ -54,7 +54,7 @@ export default function WeekView({ currentDate, events, onSelectEvent }) {
 
   return (
     <div className="flex-1 overflow-auto px-8 pb-8 mt-4 table-custom-scrollbar">
-      <div className="sticky top-0 z-30 bg-[#0b0f1a]">
+      <div className="sticky top-0 z-30 bg-white dark:bg-[#0b0f1a]">
         <div className="grid grid-cols-[64px_repeat(7,1fr)]">
           <div />
           {days.map((day, i) => (
@@ -66,7 +66,7 @@ export default function WeekView({ currentDate, events, onSelectEvent }) {
               <p
                 className={[
                   "mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
-                  isToday(day) ? "bg-violet-500 text-white" : "text-slate-200",
+                  isToday(day) ? "bg-violet-500 text-white" : "text-slate-700 dark:text-slate-200",
                 ].join(" ")}
               >
                 {day.getDate()}
@@ -95,11 +95,11 @@ export default function WeekView({ currentDate, events, onSelectEvent }) {
 
         {/* day columns */}
         {days.map((day, dayIdx) => (
-          <div key={dayIdx} className="relative border-l border-white/5">
+          <div key={dayIdx} className="relative border-l border-slate-200 dark:border-white/5">
             {hours.map((h) => (
               <div
                 key={h.hour}
-                className="absolute left-0 right-0 border-t border-white/5"
+                className="absolute left-0 right-0 border-t border-slate-200 dark:border-white/5"
                 style={{ top: topFor(h.hour * 60) }}
               />
             ))}

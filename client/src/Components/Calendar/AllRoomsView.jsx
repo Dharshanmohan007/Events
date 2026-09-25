@@ -70,10 +70,10 @@ function RoomBookingChip({ booking, onClick }) {
       {tt && (
         <div
           style={{ position: "fixed", top: tt.top, left: tt.left, width: TT_W, zIndex: 9999 }}
-          className="rounded-xl border border-[#2e394e] bg-[#0f172a] p-3 shadow-2xl text-left pointer-events-none"
+          className="rounded-xl border border-slate-200 dark:border-[#2e394e] bg-white dark:bg-[#0f172a] p-3 shadow-2xl text-left pointer-events-none"
         >
           {/* Event name */}
-          <p className="text-[13px] font-bold text-white truncate mb-0.5">
+          <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate mb-0.5">
             {booking.eventName}
           </p>
 
@@ -85,7 +85,7 @@ function RoomBookingChip({ booking, onClick }) {
           )}
 
           {/* Check-in / out */}
-          <div className="border-t border-[#1e293b] pt-2 space-y-1 text-[11px] text-slate-300">
+          <div className="border-t border-slate-100 dark:border-[#1e293b] pt-2 space-y-1 text-[11px] text-slate-600 dark:text-slate-300">
             <p>
               <span className="text-slate-400 font-medium">Check-in: </span>
               {fmtDateTime(booking.checkInDateTime)}
@@ -103,7 +103,7 @@ function RoomBookingChip({ booking, onClick }) {
           </div>
 
           {/* Organizer */}
-          <div className="border-t border-[#1e293b] mt-2 pt-2 space-y-0.5 text-[11px] text-slate-300">
+          <div className="border-t border-slate-100 dark:border-[#1e293b] mt-2 pt-2 space-y-0.5 text-[11px] text-slate-600 dark:text-slate-300">
             <p><span className="text-slate-400 font-medium">Organizer: </span>{booking.organizerName}</p>
             <p><span className="text-slate-400 font-medium">Emp ID: </span>{booking.organizerEmpId}</p>
             <p><span className="text-slate-400 font-medium">Mobile: </span>{booking.organizerMobile}</p>
@@ -195,18 +195,18 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
   return (
     <div className="flex-1 overflow-auto table-custom-scrollbar">
       <div
-        className="relative rounded-xl border border-white/5 bg-[#0d1220]"
+        className="relative rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#0d1220]"
         style={{ minWidth: totalW }}
       >
 
         {/* ── sticky header row ───────────────────────────────────────── */}
-        <div className="sticky top-0 z-20 flex border-b border-white/10" style={{ minWidth: totalW }}>
+        <div className="sticky top-0 z-20 flex border-b border-slate-200 dark:border-white/10" style={{ minWidth: totalW }}>
           {/* room label corner */}
           <div
-            className="sticky left-0 z-30 flex shrink-0 items-center border-r border-white/10 bg-[#0b0f1a] px-4 py-3"
+            className="sticky left-0 z-30 flex shrink-0 items-center border-r border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0b0f1a] px-4 py-3"
             style={{ width: ROOM_W, minWidth: ROOM_W }}
           >
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Room / Date
             </span>
           </div>
@@ -219,7 +219,7 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
               <div
                 key={i}
                 className={[
-                  "flex shrink-0 flex-col items-center justify-center border-r border-white/5 bg-[#0b0f1a] py-2.5",
+                  "flex shrink-0 flex-col items-center justify-center border-r border-slate-200 dark:border-white/5 bg-white dark:bg-[#0b0f1a] py-2.5",
                   today ? "bg-teal-500/10" : "",
                 ].join(" ")}
                 style={{ width: COL_W, minWidth: COL_W }}
@@ -230,7 +230,7 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
                     "mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
                     today
                       ? "bg-teal-500 text-white shadow-lg shadow-teal-500/30"
-                      : "text-slate-300",
+                      : "text-slate-700 dark:text-slate-300",
                   ].join(" ")}
                 >
                   {day.getDate()}
@@ -257,7 +257,7 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
             rows.push(
               <div
                 key={`vh-${venueName}`}
-                className="relative flex border-y border-gray-500/30"
+                className="relative flex border-y border-slate-300 dark:border-gray-500/30"
                 style={{ minWidth: totalW }}
               >
                 {/* full-row gradient overlay */}
@@ -265,11 +265,11 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
 
                 {/* sticky left label cell */}
                 <div
-                  className="relative sticky left-0 z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5 bg-white/10 border-r border-gray-400/30"
+                  className="relative sticky left-0 z-10 flex shrink-0 items-center gap-2.5 px-4 py-2.5 bg-slate-100 dark:bg-white/10 border-r border-slate-300 dark:border-gray-400/30"
                   style={{ width: ROOM_W, minWidth: ROOM_W }}
                 >
                  
-                  <span className="text-[12px] font-extrabold uppercase tracking-[0.18em] text-white drop-shadow truncate">
+                  <span className="text-[12px] font-extrabold uppercase tracking-[0.18em] text-slate-900 dark:text-white drop-shadow truncate">
                     {venueName}
                   </span>
                 </div>
@@ -279,7 +279,7 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
                   <div
                     key={di}
                     className={[
-                      "relative shrink-0 border-r border-teal-500/10 py-2.5",
+                      "relative shrink-0 border-r border-slate-200 dark:border-teal-500/10 py-2.5",
                       isToday(day) ? "bg-teal-400/10" : "",
                     ].join(" ")}
                     style={{ width: COL_W, minWidth: COL_W }}
@@ -295,20 +295,20 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
                 <div
                   key={room.roomId}
                   className={[
-                    "flex border-b border-white/5",
-                    vi % 2 === 0 ? "bg-white/[0.01]" : "bg-white/[0.025]",
+                    "flex border-b border-slate-200 dark:border-white/5",
+                    vi % 2 === 0 ? "bg-slate-50 dark:bg-white/[0.01]" : "bg-white dark:bg-white/[0.025]",
                   ].join(" ")}
                   style={{ minHeight: ROW_MIN }}
                 >
                   {/* sticky room label */}
                   <div
                     className={[
-                      "sticky left-0 z-10 flex shrink-0 flex-col justify-center px-4 py-3",
-                      vi % 2 === 0 ? "bg-[#0c1120]" : "bg-[#0e1325]",
+                      "sticky left-0 z-10 flex shrink-0 flex-col justify-center px-4 py-3 border-r border-slate-200 dark:border-transparent",
+                      vi % 2 === 0 ? "bg-slate-50 dark:bg-[#0c1120]" : "bg-white dark:bg-[#0e1325]",
                     ].join(" ")}
                     style={{ width: ROOM_W, minWidth: ROOM_W }}
                   >
-                    <span className="text-[13px] font-semibold text-slate-200 leading-tight">
+                    <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 leading-tight">
                       {room.roomNumber}
                     </span>
                     <span className="text-[10px] text-slate-500 leading-tight mt-0.5">
@@ -324,7 +324,7 @@ export default function AllRoomsView({ currentDate, onSelectEvent }) {
                       <div
                         key={di}
                         className={[
-                          "flex shrink-0 flex-col gap-1.5 border-r border-white/5 p-1.5",
+                          "flex shrink-0 flex-col gap-1.5 border-r border-slate-200 dark:border-white/5 p-1.5",
                           today ? "bg-teal-500/[0.04]" : "",
                         ].join(" ")}
                         style={{ width: COL_W, minWidth: COL_W, minHeight: ROW_MIN }}

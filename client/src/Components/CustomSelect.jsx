@@ -29,7 +29,7 @@ export default function CustomSelect({
   value,
   onChange,
   required,
-  labelBg = "#16162A",
+  labelClassName = "bg-slate-50 dark:bg-[#16162A]",
   borderColor = "#3A3A5A",
   readOnly = false,
   placeholder = "",
@@ -134,8 +134,7 @@ export default function CustomSelect({
     return (
       <div className="relative w-full" ref={ref}>
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
         >
           {label} {required && "*"}
         </span>
@@ -146,20 +145,17 @@ export default function CustomSelect({
               setOpen(!open);
             }
           }}
-          className={`w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
+          className={`w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
               readOnly
                 ? "cursor-not-allowed opacity-70"
                 : "cursor-pointer"
-            }`}
+            } ${open ? "border-purple-500 dark:border-purple-500" : ""}`}
           style={{
-            borderWidth: "1px",
-            borderStyle: "solid",
-            borderColor: open ? "#a855f7" : borderColor,
             height: "47px",
           }}
         >
-          <span className={value ? "text-white text-sm" : "text-gray-500 text-sm"}>
-            {value || <span className="text-gray-500">{derivedPlaceholder}</span>}
+          <span className={value ? "text-slate-900 dark:text-white text-sm" : "text-slate-500 dark:text-gray-500 text-sm"}>
+            {value || <span className="text-slate-500 dark:text-gray-500">{derivedPlaceholder}</span>}
           </span>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -433,8 +429,7 @@ export default function CustomSelect({
       aria-haspopup="listbox"
     >
       <span
-        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-        style={{ backgroundColor: labelBg }}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label} {required && "*"}
       </span>
@@ -445,18 +440,13 @@ export default function CustomSelect({
             setOpen(!open);
           }
         }}
-        className={`w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
+        className={`w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
           readOnly
             ? "cursor-not-allowed opacity-70"
             : "cursor-pointer"
-        }`}
-        style={{
-          borderWidth: "1px",
-          borderStyle: "solid",
-          borderColor: open ? "#a855f7" : borderColor,
-        }}
+        } ${open ? "border-purple-500 dark:border-purple-500" : ""}`}
       >
-        <span className={selectedArr.length > 0 ? "text-white text-sm truncate pr-2" : "text-gray-500 text-sm"}>
+        <span className={selectedArr.length > 0 ? "text-slate-900 dark:text-white text-sm truncate pr-2" : "text-slate-500 dark:text-gray-500 text-sm"}>
           {selectedArr.length > 0 ? displayValue : derivedPlaceholder}
         </span>
         <svg

@@ -281,9 +281,9 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
   }, [breakdown]);
 
   return (
-    <div className="relative rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-4 mb-4 mt-2">
+    <div className="relative rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-4 mb-4 mt-2 shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center">
-        <h2 className="text-white text-md font-semibold">Internal Students Breakdown</h2>
+        <h2 className="text-slate-900 dark:text-white text-md font-semibold">Internal Students Breakdown</h2>
         {inputGroups.length < 4 && (
           <button
             type="button"
@@ -297,7 +297,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
       
       <div className="space-y-4 mb-2">
         {inputGroups.map((group, index) => (
-          <div key={group.id} className="relative p-4 border border-[#3A3A5A] rounded-lg bg-[#2E3645]">
+          <div key={group.id} className="relative p-4 border border-slate-300 dark:border-[#3A3A5A] rounded-lg bg-slate-50 dark:bg-[#2E3645]">
             {inputGroups.length > 1 && (
               <button
                 type="button"
@@ -311,7 +311,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
                   label="Year *"
                   value={group.year}
                   onChange={(val) => {
@@ -326,7 +326,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
                   label="Departments *"
                   multi
                   searchable
@@ -350,7 +350,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
                   label="Sections *"
                   multi
                   searchable
@@ -384,7 +384,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
           {breakdown.map((yearGroup, yIdx) => {
             if (yearGroup.departments.length === 0) return null;
             return (
-            <div key={yearGroup.year} className="rounded-xl border border-[#3A3A5A] bg-[#2E3645] p-4 sm:p-6">
+            <div key={yearGroup.year} className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#2E3645] p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-purple-400 text-sm font-semibold tracking-wide">Year {yearGroup.year}</h3>
                 <button
@@ -399,19 +399,19 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               <div className="overflow-x-auto rounded-lg border border-[#3A3A5A]">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#1E1E35] border-b border-[#3A3A5A]">
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm">Department</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm">Section</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm w-32">Count</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm w-20">Action</th>
+                    <tr className="bg-slate-200 dark:bg-[#1E1E35] border-b border-slate-300 dark:border-[#3A3A5A]">
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm">Department</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm">Section</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm w-32">Count</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm w-20">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#3A3A5A] bg-transparent">
+                  <tbody className="divide-y divide-slate-300 dark:divide-[#3A3A5A] bg-transparent">
                     {yearGroup.departments.map((deptGroup, dIdx) =>
                       deptGroup.sections.map((sec, sIdx) => (
-                        <tr key={`${yearGroup.year}-${deptGroup.department}-${sec.section}`} className="hover:bg-[#1E1E35]/50 transition-colors">
-                          <td className="py-3 px-4 text-white text-sm">{deptGroup.department}</td>
-                          <td className="py-3 px-4 text-white text-sm">{getDisplaySectionName(deptGroup.department, sec.section)}</td>
+                        <tr key={`${yearGroup.year}-${deptGroup.department}-${sec.section}`} className="hover:bg-slate-100 dark:hover:bg-[#1E1E35]/50 transition-colors">
+                          <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{deptGroup.department}</td>
+                          <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{getDisplaySectionName(deptGroup.department, sec.section)}</td>
                           <td className="py-3 px-4 relative">
                             <input
                               type="number"
@@ -420,7 +420,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                               onKeyDown={(e) => {
                                 if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === '.') e.preventDefault();
                               }}
-                              className={`bg-[#1E1E35] border ${countErrors[`${yIdx}-${dIdx}-${sIdx}`] ? 'border-red-500' : 'border-[#3A3A5A]'} text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2`}
+                              className={`bg-white dark:bg-[#1E1E35] border ${countErrors[`${yIdx}-${dIdx}-${sIdx}`] ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} text-slate-900 dark:text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2`}
                               value={sec.count === 0 && !sec.count.toString().length ? "" : sec.count}
                               onChange={(e) => handleCountChange(yIdx, dIdx, sIdx, e.target.value)}
                             />
@@ -432,7 +432,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                             <button
                               type="button"
                               onClick={() => handleDeleteSection(yIdx, dIdx, sIdx)}
-                              className="text-red-400 hover:text-red-300 p-2 hover:bg-[#1E1E35] rounded-lg transition-colors"
+                              className="text-red-400 hover:text-red-300 p-2 hover:bg-slate-200 dark:hover:bg-[#1E1E35] rounded-lg transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -446,9 +446,9 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
             </div>
           )})}
           <div className="mt-4 flex justify-end">
-            <div className="bg-[#1E1E35] border border-[#3A3A5A] px-6 py-3 rounded-lg flex items-center gap-4">
-              <span className="text-gray-400 font-medium text-sm">Consolidated Total:</span>
-              <span className="text-white font-bold text-lg">{totalCount}</span>
+            <div className="bg-white dark:bg-[#1E1E35] border border-slate-300 dark:border-[#3A3A5A] px-6 py-3 rounded-lg flex items-center gap-4">
+              <span className="text-slate-600 dark:text-gray-400 font-medium text-sm">Consolidated Total:</span>
+              <span className="text-slate-900 dark:text-white font-bold text-lg">{totalCount}</span>
             </div>
           </div>
         </div>

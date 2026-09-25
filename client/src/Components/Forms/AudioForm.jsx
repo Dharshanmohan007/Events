@@ -134,7 +134,7 @@ function AudioRequirementsSelect({
   selected = [],
   onChange,
   error,
-  labelBg = "#1E1E35",
+  labelClassName = "bg-white dark:bg-[#1E1E35]",
   availableOptions = [],
   hasNoEquipment = false,
 }) {
@@ -169,18 +169,17 @@ function AudioRequirementsSelect({
       <div className="w-full">
         <div className="relative w-full">
           <span
-            className="absolute left-3 -top-[9px] text-xs text-gray-500 px-1 z-10 pointer-events-none"
-            style={{ backgroundColor: labelBg }}
+            className={`absolute left-3 -top-[9px] text-xs text-slate-500 dark:text-gray-500 px-1 z-10 pointer-events-none ${labelClassName}`}
           >
             Audio Requirements
           </span>
-          <div className="w-full bg-transparent border border-[#3A3A5A] rounded-lg p-4 flex items-center justify-between cursor-not-allowed opacity-50">
-            <span className="text-gray-500 text-sm">Select requirements...</span>
+          <div className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg p-4 flex items-center justify-between cursor-not-allowed opacity-50">
+            <span className="text-slate-500 dark:text-gray-500 text-sm">Select requirements...</span>
             <svg
               xmlns="http://www.w3.org/2000/svg" width="16" height="16"
               viewBox="0 0 24 24" fill="none" stroke="currentColor"
               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              className="text-gray-600 flex-shrink-0"
+              className="text-slate-400 dark:text-gray-600 flex-shrink-0"
             >
               <polyline points="6 9 12 15 18 9" />
             </svg>
@@ -194,18 +193,17 @@ function AudioRequirementsSelect({
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
         >
           Audio Requirements *
         </span>
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
           }`}
         >
-          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-white" : "text-gray-500"}`}>
+          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-gray-500"}`}>
             {displayText || "Select requirements..."}
           </span>
           <svg
@@ -218,7 +216,7 @@ function AudioRequirementsSelect({
           </svg>
         </div>
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar shadow-2xl">
             {availableOptions.map(({ key, label }) => {
               const isSelected = selected.includes(key);
               return (
@@ -226,7 +224,7 @@ function AudioRequirementsSelect({
                   key={key}
                   onClick={() => toggle(key)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-purple-600/30 text-slate-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{label}</span>
@@ -255,7 +253,7 @@ function EquipmentQuantityInputs({
   quantities,
   onChange,
   errors = {},
-  labelBg = "#1E1E35",
+  labelClassName = "bg-white dark:bg-[#1E1E35]",
   venueName,
   venueInfoMap,
 }) {
@@ -322,7 +320,7 @@ function EquipmentQuantityInputs({
             {/* Red border overlay when error — sits on top of CustomInput's own border */}
             <div className={`relative rounded-lg ${hasError ? "ring-1 ring-red-400" : ""}`}>
               <CustomInput
-                labelBg={labelBg}
+                labelClassName={labelClassName}
                 label={`${label} Quantity *`}
                 type="number"
                 min={0}
@@ -371,7 +369,7 @@ function InfoButton({ onClick }) {
       type="button"
       onClick={onClick}
       aria-label="View venue info"
-      className="w-7 h-7 rounded-full flex items-center justify-center bg-[#2C2C3E] text-purple-400 hover:text-white hover:bg-purple-600/40 transition-all border border-purple-500/30"
+      className="w-7 h-7 rounded-full flex items-center justify-center bg-slate-100 dark:bg-[#2C2C3E] text-purple-600 dark:text-purple-400 hover:text-white hover:bg-purple-600 dark:hover:bg-purple-600/40 transition-all border border-purple-300 dark:border-purple-500/30"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -412,13 +410,13 @@ function AudioVenueCard({
   };
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5 shadow-sm dark:shadow-none">
       {/* Card Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5 flex-wrap">
           <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
           {hasNoEquipment && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#2C2C3E] text-gray-400 border border-[#3A3A5A]">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-[#2C2C3E] text-slate-600 dark:text-gray-400 border border-slate-300 dark:border-[#3A3A5A]">
               <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
@@ -445,7 +443,7 @@ function AudioVenueCard({
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Others (If required)"
             value={data.others || ""}
             onChange={(e) => updateField("others", e.target.value)}
@@ -460,13 +458,13 @@ function AudioVenueCard({
             options={["Yes", "No"]}
             value={data.isEbRequired ? "Yes" : "No"}
             onChange={(val) => updateField("isEbRequired", val === "Yes")}
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
           />
         </div>
         {data.isEbRequired && (
           <div>
             <CustomInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="No. of systems required"
               type="text"
               value={data.noOfSystems || ""}
@@ -486,7 +484,7 @@ function AudioVenueCard({
             options={["Yes", "No"]}
             value={data.ledWallRequired ? "Yes" : "No"}
             onChange={(val) => updateField("ledWallRequired", val === "Yes")}
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
           />
         </div>
         <div>
@@ -495,7 +493,7 @@ function AudioVenueCard({
             options={["Yes", "No"]}
             value={data.acRequired ? "Yes" : "No"}
             onChange={(val) => updateField("acRequired", val === "Yes")}
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
           />
         </div>
       </div>
@@ -515,7 +513,7 @@ function AudioVenueCard({
       {/* Special Requirements */}
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, If any
           </span>
           <textarea
@@ -523,7 +521,7 @@ function AudioVenueCard({
             onChange={(e) => updateField("specialRequirements", e.target.value)}
             rows={2}
             placeholder="Enter any special requirements..."
-            className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+            className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600"
           />
         </div>
       </div>
@@ -745,7 +743,7 @@ export default function AudioForm({
         />
 
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg font-bold">Audio & EB Details</h2>
+          <h2 className="text-slate-900 dark:text-white text-lg font-bold">Audio & EB Details</h2>
           <div className="flex items-center gap-4">
             {currentDayIndex > 0 && (
               <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -782,9 +780,9 @@ export default function AudioForm({
                       }));
                     }
                   }}
-                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
                 />
-                <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+                <span className="text-slate-700 dark:text-gray-300 text-sm font-medium">Same as Day 1</span>
               </label>
             )}
             {venueInfoLoading && (

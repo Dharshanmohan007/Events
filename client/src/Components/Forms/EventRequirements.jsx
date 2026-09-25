@@ -108,7 +108,7 @@ export default function EventRequirements({
         }`}
     >
       <div className="px-1 py-6 rounded-xl">
-        <h1 className="text-white text-lg font-bold mb-6 playfair">Event Requirements</h1>
+        <h1 className="text-slate-900 dark:text-white text-lg font-bold mb-6 playfair">Event Requirements</h1>
 
         <div className="grid grid-cols-2 gap-6 mb-6">
           {Object.keys(values)

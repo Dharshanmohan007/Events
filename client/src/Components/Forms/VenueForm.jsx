@@ -226,15 +226,15 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
             }`}
         >
-          <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm truncate"}>
+          <span className={selected.length ? "text-slate-900 dark:text-white text-sm truncate max-w-[85%]" : "text-slate-500 dark:text-gray-500 text-sm truncate"}>
             {displayText || "Select venues..."}
           </span>
           <svg
@@ -254,7 +254,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-[250%] max-w-4xl bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-2xl">
+          <div className="absolute top-full mt-1 w-[250%] max-w-4xl bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-2xl">
             {/* Search */}
             <div className="p-2 border-b border-[#3A3A5A]">
               <div className="relative">
@@ -492,19 +492,19 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
             }`}
         >
           <span
             className={
               selected.length
-                ? "text-white text-sm truncate max-w-[85%]"
-                : "text-gray-500 text-sm"
+                ? "text-slate-900 dark:text-white text-sm truncate max-w-[85%]"
+                : "text-slate-500 dark:text-gray-500 text-sm"
             }
           >
             {selected.length ? selected.join(" / ") : "Select requirements..."}
@@ -641,7 +641,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
   // ──────────────────────────────────────────────────────────────────────────────
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5 shadow-sm dark:shadow-none">
       <div className="flex items-center justify-between">
         <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
         <button
@@ -656,7 +656,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Number of Participants *"
             type="number"
             value={data.participants || ""}
@@ -676,7 +676,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Number of Seating Capacity Required *"
             type="number"
             value={data.seatingCapacity || ""}
@@ -735,7 +735,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
                 return (
                   <div key={f.key} className={isInLastRow ? spanClass : ""}>
                     <CustomInput
-                      labelBg="#1E1E35"
+                      labelClassName="bg-white dark:bg-[#1E1E35]"
                       label={f.label}
                       type="number"
                       value={data[f.field] || ""}
@@ -757,7 +757,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
 
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, if any
           </span>
           <textarea
@@ -765,8 +765,8 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
             onChange={update("specialReqs")}
             rows={3}
             placeholder="Enter any special requirements..."
-            className={`w-full bg-transparent border ${errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
-              } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${errors.specialReqs ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
+              } text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600`}
           />
         </div>
         <ErrorMsg msg={errors.specialReqs} />

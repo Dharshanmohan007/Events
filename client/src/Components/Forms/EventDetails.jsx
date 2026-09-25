@@ -104,7 +104,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             }`}
         >
     <div className='px-1 py-6 rounded-xl'>
-      <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
+      <h1 className='text-slate-900 dark:text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
       {/* Event Name */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>

@@ -13,51 +13,38 @@ export default function FormSubmitted({ onSubmitAnother }) {
 
   const handleSubmitAnother = () => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    // console.log("USER:", user);
-
-    const destination = getRouteForRole(
-      user.role,
-      user.department
-    );
-
-    // console.log("DESTINATION:", destination);
-
+    const destination = getRouteForRole(user.role, user.department);
     navigate(destination);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#16162A]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-100 dark:bg-[#16162A]">
 
-      {/*
-        Radial glow behind card.
-        radial-gradient() has no Tailwind equivalent — kept as a single inline style.
-      */}
+      {/* Subtle radial glow — dark mode only */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-                   w-[600px] h-[600px] rounded-full pointer-events-none"
-        // style={{
-        //   background:
-        //     "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
-        // }}
+                   w-[600px] h-[600px] rounded-full pointer-events-none hidden dark:block"
+        style={{
+          background: "radial-gradient(circle, rgba(124,58,237,0.10) 0%, transparent 70%)",
+        }}
       />
 
       {/* Card */}
       <div
         className={`
-          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px]w-full max-w-[480px]`}
+          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px]
+          w-full max-w-[480px]
+          bg-white dark:bg-[#1E1E35]
+          border border-slate-200 dark:border-[#2A2A45]
+          shadow-xl dark:shadow-none
+          transition-[opacity,transform] duration-500 ease-out
+          ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}
       >
 
-        {/*
-          Check icon circle.
-          The spring bounce uses cubic-bezier(0.34,1.56,0.64,1) which Tailwind
-          cannot express — kept as a single inline transition string.
-          Everything else (size, color, shadow, opacity, scale) is Tailwind.
-        */}
+        {/* Check icon */}
         <div
-          className={`
-            flex items-center justify-center
-            w-20 h-20 rounded-full bg-violet-600`}
+          className="flex items-center justify-center w-20 h-20 rounded-full bg-violet-600 shadow-lg shadow-violet-500/30"
           style={{
             transition:
               "opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s",
@@ -81,7 +68,7 @@ export default function FormSubmitted({ onSubmitAnother }) {
         <div className="text-center">
           <h1
             className={`
-              text-white text-[28px] font-extrabold mb-3 tracking-tight
+              text-slate-900 dark:text-white text-[28px] font-extrabold mb-3 tracking-tight
               transition-[opacity,transform] duration-500 ease-out delay-[250ms]
               ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
             `}
@@ -90,7 +77,7 @@ export default function FormSubmitted({ onSubmitAnother }) {
           </h1>
           <p
             className={`
-              text-white/50 text-sm leading-relaxed max-w-[340px] mx-auto
+              text-slate-500 dark:text-white/50 text-sm leading-relaxed max-w-[340px] mx-auto
               transition-[opacity,transform] duration-500 ease-out delay-[350ms]
               ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
             `}
@@ -107,6 +94,9 @@ export default function FormSubmitted({ onSubmitAnother }) {
             mt-2 px-8 py-3 rounded-[10px] border-0 cursor-pointer
             bg-violet-600 hover:bg-violet-700
             text-white text-[15px] font-semibold tracking-wide
+            transition-colors duration-200
+            transition-[opacity,transform] duration-500 ease-out delay-[450ms]
+            ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
           `}
         >
           Go to Dashboard

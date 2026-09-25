@@ -126,7 +126,7 @@ function RequirementsSelect({
   selected,
   onChange,
   error,
-  labelBg = "#1E1E35",
+  labelClassName = "bg-white dark:bg-[#1E1E35]",
   options = REQUIREMENTS_OPTIONS,
   placeholder = "Select requirements...",
 }) {
@@ -157,20 +157,19 @@ function RequirementsSelect({
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
         >
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
           }`}
         >
           <span
             className={`text-sm truncate max-w-[85%] ${
-              selected.length ? "text-white" : "text-gray-500"
+              selected.length ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-gray-500"
             }`}
           >
             {displayText || placeholder}
@@ -194,7 +193,7 @@ function RequirementsSelect({
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar shadow-xl">
             {options.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
@@ -203,8 +202,8 @@ function RequirementsSelect({
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                     isSelected
-                      ? "bg-purple-600/30 text-white"
-                      : "text-white hover:bg-purple-500/20"
+                      ? "bg-purple-600/30 text-slate-900 dark:text-white"
+                      : "text-slate-700 dark:text-white hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
@@ -261,7 +260,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
   const showMacCount   = laptopTypes.includes("Mac");
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5 shadow-sm dark:shadow-none">
       {/* ── Card header ── */}
       <div className="flex items-center justify-between">
         <h3 className="text-purple-400 text-base font-semibold">{venueName}</h3>
@@ -301,7 +300,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         </div>
         <div>
           <CustomSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Internet Facility *"
             value={data.internetFacility || ""}
             onChange={update("internetFacility")}
@@ -325,7 +324,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           {showWindowsCount && (
             <div>
               <CustomInput
-                labelBg="#1E1E35"
+                labelClassName="bg-white dark:bg-[#1E1E35]"
                 label="Windows Users Count"
                 type="number"
                 value={data.windowsCount || ""}
@@ -341,7 +340,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           {showMacCount && (
             <div>
               <CustomInput
-                labelBg="#1E1E35"
+                labelClassName="bg-white dark:bg-[#1E1E35]"
                 label="Mac Users Count"
                 type="number"
                 value={data.macCount || ""}
@@ -361,7 +360,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className={`grid gap-4 ${showProctoring ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Expected Internet Users *"
             type="number"
             value={data.expectedInternetUsers || ""}
@@ -385,7 +384,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         {showProctoring && (
           <div>
             <CustomInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Proctoring Users *"
               type="number"
               value={data.proctorUsers || ""}
@@ -409,7 +408,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       {/* <div className="grid grid-cols-1 gap-4">
         <div>
           <CustomSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Guest Wi-Fi Needed *"
             value={data.guestWifi || ""}
             onChange={(val) => {
@@ -434,7 +433,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         <div className={`grid gap-4 ${showTotalGuestCount ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           <div>
             <CustomSelect
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="If Guest Wi-Fi Users Exceed 5 *"
               value={data.guestWifiExceed5 || ""}
               onChange={(val) => {
@@ -452,7 +451,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           {showTotalGuestCount && (
             <div>
               <CustomInput
-                labelBg="#1E1E35"
+                labelClassName="bg-white dark:bg-[#1E1E35]"
                 label="Total Number of Guest Count *"
                 type="number"
                 value={data.totalGuestCount || ""}
@@ -479,7 +478,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Others (if applicable)"
             value={data.others || ""}
             onChange={updateInput("others")}
@@ -491,7 +490,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       {/* ── Row 7: Special Requirements ── */}
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, if any
           </span>
           <textarea
@@ -499,7 +498,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
             onChange={updateInput("specialRequirements")}
             rows={3}
             placeholder="Enter any special setup, equipment, or access needs..."
-            className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+            className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600"
           />
         </div>
       </div>
@@ -690,8 +689,8 @@ export default function IctsForm({
   if (dayCount === 0) {
     return (
       <div className="flex flex-col gap-6 pb-6">
-        <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-center">
-          <p className="text-gray-400 text-sm">
+        <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#1E1E35] p-6 text-center">
+          <p className="text-slate-600 dark:text-gray-400 text-sm">
             No event days found. Please go back and add event days first.
           </p>
         </div>
@@ -714,7 +713,7 @@ export default function IctsForm({
         />
 
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg font-bold">
+          <h2 className="text-slate-900 dark:text-white text-lg font-bold">
             ICTS Details
           </h2>
           {currentDayIndex > 0 && (
@@ -752,13 +751,13 @@ export default function IctsForm({
                     }));
                   }
                 }}
-                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+              <span className="text-slate-700 dark:text-gray-300 text-sm font-medium">Same as Day 1</span>
             </label>
           )}
         </div>
-        <h2 className="text-white text-lg ">
+        <h2 className="text-slate-800 dark:text-white text-lg ">
           If Guest Wifi needed, Kindly Contact <span className="text-[#9E25FD] font-bold">ICTS Admin</span>
         </h2>
         {/* API error banner */}
@@ -800,8 +799,8 @@ export default function IctsForm({
         )}
 
         {currentVenues.length === 0 ? (
-          <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-center">
-            <p className="text-gray-400 text-sm">
+          <div className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#1E1E35] p-6 text-center">
+            <p className="text-slate-600 dark:text-gray-400 text-sm">
               No venues were selected for Day {currentDayIndex + 1} in the Venue Form.
               You can still proceed — ICTS details are only required for days that have venues.
             </p>
@@ -831,3 +830,4 @@ export default function IctsForm({
     </>
   );
 }
+

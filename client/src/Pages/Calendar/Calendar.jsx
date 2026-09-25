@@ -66,10 +66,10 @@ export default function Calendar() {
 
   return (
     <>
-      <div className="max-h-[100vh] overflow-auto table-custom-scrollbar">
+      <div className={`max-h-[100vh] overflow-auto table-custom-scrollbar`}>
         {/* <FacultyDahsboardHeader /> */}
 
-        <div className="flex h-screen w-full bg-[#0b0f1a] text-slate-200">
+        <div className="flex h-screen w-full bg-white dark:bg-[#0b0f1a] text-slate-900 dark:text-slate-200">
           <Sidebar selectedDate={currentDate} onSelectDate={setCurrentDate} />
 
           <div className="flex flex-1 flex-col overflow-hidden">

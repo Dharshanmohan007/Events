@@ -306,7 +306,7 @@ export default function EventOrganizerDetails({
 
   return (
     <div className="w-full px-2 py-6 sm:px-1 rounded-xl">
-      <h1 className="text-white text-base sm:text-lg font-bold mb-6 playfair">
+      <h1 className="text-slate-900 dark:text-white text-base sm:text-lg font-bold mb-6 playfair">
         Event Organizer Details
       </h1>
       {/* <div
@@ -335,21 +335,21 @@ export default function EventOrganizerDetails({
       {/* File upload — shown only when doc === "Yes" */}
       {doc === "Yes" && (
         <div className="mb-7">
-          <label className="block mb-1 text-sm text-white">
+          <label className="block mb-1 text-sm text-slate-800 dark:text-white">
             Upload the previous Event Documentation
           </label>
           <div
             onClick={!file ? openFilePicker : undefined}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
-            className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${!file ? "cursor-pointer" : "cursor-default"}`}
+            className={`relative text-center p-4 text-sm w-full text-slate-800 dark:text-white rounded-lg flex flex-row items-center justify-center gap-3 ${!file ? "cursor-pointer" : "cursor-default"}`}
           >
             <svg className="absolute inset-0 w-full h-full pointer-events-none">
               <rect
                 x="1" y="1"
                 width="calc(100% - 2px)" height="calc(100% - 2px)"
                 rx="10" ry="10" fill="none"
-                stroke={(errors.file || fileSizeError) ? "#f87171" : "#3A3A5A"}
+                className={(errors.file || fileSizeError) ? "stroke-red-400" : "stroke-slate-300 dark:stroke-[#3A3A5A]"}
                 strokeWidth="2"
                 strokeDasharray="10 4"
               />
@@ -408,15 +408,15 @@ export default function EventOrganizerDetails({
       {doc === "No" && (
         <div className="mb-6">
           <div className="relative w-full">
-            <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+            <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
               If no enter the Reason
             </span>
             <input
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className={`p-5 text-sm w-full bg-transparent border ${
-                errors.reason ? "border-red-400" : "border-[#3A3A5A]"
-              } text-white rounded-lg focus:outline-none focus:border-purple-500 placeholder-gray-500`}
+                errors.reason ? "border-red-400" : "border-slate-300 dark:border-[#3A3A5A]"
+              } text-slate-900 dark:text-white rounded-lg focus:outline-none focus:border-purple-500 placeholder-slate-400 dark:placeholder-gray-500`}
               placeholder="Enter reason for no documentation"
             />
           </div>
@@ -497,7 +497,7 @@ export default function EventOrganizerDetails({
 
           {/* Principal Approval Form Upload */}
       <div className="mb-7 sm:col-span-2">
-        <label className="block mb-1 text-sm text-white">
+        <label className="block mb-1 text-sm text-slate-800 dark:text-white">
           Principal Approval Form *
         </label>
 
@@ -505,7 +505,7 @@ export default function EventOrganizerDetails({
           onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
           onDrop={handlePrincipalDrop}
           onDragOver={handleDragOver}
-          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+          className={`relative text-center p-4 text-sm w-full text-slate-800 dark:text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
             !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
           }`}
         >
@@ -518,10 +518,10 @@ export default function EventOrganizerDetails({
               rx="10"
               ry="10"
               fill="none"
-              stroke={
+              className={
                 errors.principalApprovalDocument || principalFileError
-                  ? "#f87171"
-                  : "#3A3A5A"
+                  ? "stroke-red-400"
+                  : "stroke-slate-300 dark:stroke-[#3A3A5A]"
               }
               strokeWidth="2"
               strokeDasharray="10 4"

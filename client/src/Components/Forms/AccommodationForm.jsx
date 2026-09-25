@@ -196,7 +196,7 @@ function DeleteConfirmModal({ onConfirm, onCancel }) {
         onClick={onCancel}
       />
       {/* Modal */}
-      <div className="relative bg-[#1f1f38] border border-[#3a3a5a] rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
+      <div className="relative bg-white dark:bg-[#1f1f38] border border-slate-200 dark:border-[#3a3a5a] rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <div className="flex flex-col items-center text-center gap-4">
           {/* Icon */}
           <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center">
@@ -214,7 +214,7 @@ function DeleteConfirmModal({ onConfirm, onCancel }) {
             <button
               type="button"
               onClick={onCancel}
-              className="flex-1 px-4 py-2.5 rounded-lg border border-[#3a3a5a] text-gray-300 text-sm font-medium hover:bg-[#2a2a4a] hover:text-white transition"
+              className="flex-1 px-4 py-2.5 rounded-lg border border-slate-200 dark:border-[#3a3a5a] text-gray-300 text-sm font-medium hover:bg-white dark:bg-[#2a2a4a] hover:text-white transition"
             >
               Cancel
             </button>
@@ -237,7 +237,7 @@ function AdminConfirmationModal({ room, onContacted, onRevoke }) {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" role="dialog" aria-modal="true">
       <div className="absolute inset-0 bg-black/70" />
-      <div className="relative z-10 bg-[#1f1f38] border border-yellow-500/50 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
+      <div className="relative z-10 bg-white dark:bg-[#1f1f38] border border-yellow-500/50 rounded-xl shadow-2xl p-6 w-full max-w-md mx-4">
         <div className="flex gap-3">
           <AlertTriangle className="text-yellow-400 shrink-0" />
           <div>
@@ -317,7 +317,7 @@ function PhoneIconFilled() {
 }
 
 // ─── Room Type MultiSelect — search, tick on right, violet bg selected, slash-joined display ─
-function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38", onOpen, loading = false }) {
+function RoomMultiSelect({ label, options, value = [], onChange, error, labelClassName = "bg-white dark:bg-[#1f1f38]", onOpen, loading = false }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const ref = useRef();
@@ -354,7 +354,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
       {/* Trigger */}
       <div
         className={`relative w-full h-10 px-3 rounded-lg bg-transparent border ${
-          error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
+          error ? "border-red-400" : open ? "border-purple-500" : "border-slate-200 dark:border-[#3a3a5a]"
         } text-white cursor-pointer flex items-center justify-between transition`}
         onClick={() => {
           const nextOpen = !open;
@@ -363,7 +363,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
         }}
       >
         <span
-          className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}
+          className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-slate-900 dark:text-white"}`}
           title={value.length > 0 ? value.map(getLabel).join(" / ") : undefined}
         >
           {displayText}
@@ -375,15 +375,15 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
       </div>
       <label
         className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
-        style={{ backgroundColor: labelBg }}
+
       >
         {label}
       </label>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-64 rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-y-auto table-custom-scrollbar">
+        <div className="absolute z-50 mt-1 w-full max-h-64 rounded-lg border border-slate-200 dark:border-[#3a3a5a] bg-white dark:bg-[#1f1f38] shadow-xl overflow-y-auto table-custom-scrollbar">
           {/* Search */}
-          <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-[#3a3a5a] bg-[#1f1f38]">
+          <div className="sticky top-0 z-10 flex items-center gap-2 px-3 py-1.5 border-b border-slate-200 dark:border-[#3a3a5a] bg-white dark:bg-[#1f1f38]">
             <Search size={13} className="text-gray-400 flex-shrink-0" />
             <input
               autoFocus
@@ -411,7 +411,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
                   className={`flex items-center justify-between px-4 py-1.5 cursor-pointer text-sm transition-colors ${
                     selected
                       ? "bg-purple-700/30 text-white"
-                      : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                      : "text-gray-300 hover:bg-white dark:bg-[#2a2a4a] hover:text-white"
                   }`}
                 >
                   <span className="flex min-w-0 flex-1 items-start gap-2">
@@ -440,7 +440,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelBg 
 }
 
 // ─── Dine MultiSelect — tick on RIGHT, violet bg for selected, NO checkbox ─────
-function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#1f1f38" }) {
+function MultiSelect({ label, options, value = [], onChange, error, labelClassName = "bg-white dark:bg-[#1f1f38]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -461,11 +461,11 @@ function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#
     <div className="relative w-full" ref={ref}>
       <div
         className={`relative w-full p-3 rounded-lg bg-transparent border ${
-          error ? "border-red-400" : open ? "border-purple-500" : "border-[#3a3a5a]"
+          error ? "border-red-400" : open ? "border-purple-500" : "border-slate-200 dark:border-[#3a3a5a]"
         } text-white cursor-pointer flex items-center justify-between transition`}
         onClick={() => setOpen((o) => !o)}
       >
-        <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-white"}`}>
+        <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-slate-900 dark:text-white"}`}>
           {value.length === 0 ? "Select..." : value.join(", ")}
         </span>
         <ChevronDown
@@ -475,13 +475,13 @@ function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#
       </div>
       <label
         className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
-        style={{ backgroundColor: labelBg }}
+
       >
         {label}
       </label>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#3a3a5a] bg-[#1f1f38] shadow-xl overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full rounded-lg border border-slate-200 dark:border-[#3a3a5a] bg-white dark:bg-[#1f1f38] shadow-xl overflow-hidden">
           {options.map((opt) => {
             const selected = value.includes(opt);
             return (
@@ -491,7 +491,7 @@ function MultiSelect({ label, options, value = [], onChange, error, labelBg = "#
                 className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
                   selected
                     ? "bg-purple-700/30 text-white"
-                    : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                    : "text-gray-300 hover:bg-white dark:bg-[#2a2a4a] hover:text-white"
                 }`}
               >
                 <span>{opt}</span>
@@ -598,7 +598,7 @@ function AccommodationBlock({
         />
       )}
 
-      <div className="bg-[#1f1f38] border border-[#3a3a5a] p-5 rounded-xl mb-4 relative">
+      <div className="bg-white dark:bg-[#1f1f38] border border-slate-200 dark:border-[#3a3a5a] p-5 rounded-xl mb-4 relative">
         {/* Block header */}
         <div className="flex items-center justify-end mb-5">
           {canRemove && (
@@ -661,7 +661,7 @@ function AccommodationBlock({
               return (
                 <div
                   key={g.guestId}
-                  className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
+                  className="flex justify-between items-center gap-4 bg-white dark:bg-[#2a2a4a] border border-slate-200 dark:border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
                   onClick={() => toggleGuest(g.guestId)}
                 >
                   <div className="flex items-center gap-3 min-w-0">
@@ -674,15 +674,15 @@ function AccommodationBlock({
                   <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
                     <span className="flex items-center gap-1.5">
                       <Building2 className="text-purple-500" gender={g.organization} />
-                      <span className="text-gray-300">{g.organization || "—"}</span>
+                      <span className="text-slate-600 dark:text-gray-300">{g.organization || "—"}</span>
                     </span>
                     <span className="flex items-center gap-1.5">
                       <GenderIcon gender={g.gender} />
-                      <span className="text-gray-300">{g.gender || "—"}</span>
+                      <span className="text-slate-600 dark:text-gray-300">{g.gender || "—"}</span>
                     </span>
                     <span className="flex items-center gap-1.5">
                       <PhoneIconFilled />
-                      <span className="text-gray-300">{g.mobile || "—"}</span>
+                      <span className="text-slate-600 dark:text-gray-300">{g.mobile || "—"}</span>
                     </span>
                   </div>
                 </div>
@@ -709,7 +709,7 @@ function AccommodationBlock({
               })
             }
             options={["Yes", "No"]}
-            labelBg="#1f1f38"
+            labelClassName="bg-white dark:bg-[#1f1f38]"
           />
           {errors.accommodationNeeded && (
             <p className="text-red-400 text-xs mt-1">{errors.accommodationNeeded}</p>
@@ -729,7 +729,7 @@ function AccommodationBlock({
               error={errors.roomSelections}
               onOpen={onRetryRooms}
               loading={roomsLoading}
-              labelBg="#1f1f38"
+              labelClassName="bg-white dark:bg-[#1f1f38]"
             />
           </div>
         )}
@@ -751,7 +751,7 @@ function AccommodationBlock({
               })
             }
             options={["Yes", "No"]}
-            labelBg="#1f1f38"
+            labelClassName="bg-white dark:bg-[#1f1f38]"
           />
           {errors.dine && (
             <p className="text-red-400 text-xs mt-1">{errors.dine}</p>
@@ -771,7 +771,7 @@ function AccommodationBlock({
                   }
                   onChange({ ...acc, dineTypes: types });
                 }}
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
               />
               {errors.dineTypes && (
                 <p className="text-red-400 text-xs mt-1">
@@ -792,7 +792,7 @@ function AccommodationBlock({
                     value={acc.hostelGuests}
                     onChange={(e) => onChange({ ...acc, hostelGuests: e.target.value })}
                     type="number"
-                    labelBg="#1f1f38"
+                    labelClassName="bg-white dark:bg-[#1f1f38]"
                     min={1}
                     max={selectedCount}
                   />
@@ -810,7 +810,7 @@ function AccommodationBlock({
                     value={acc.amenityGuests}
                     onChange={(e) => onChange({ ...acc, amenityGuests: e.target.value })}
                     type="number"
-                    labelBg="#1f1f38"
+                    labelClassName="bg-white dark:bg-[#1f1f38]"
                     min={1}
                     max={selectedCount}
                   />
@@ -827,14 +827,14 @@ function AccommodationBlock({
 
         {/* Special Requirements — always shown */}
         <div className="relative mt-2">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1f1f38] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1f1f38] z-10 pointer-events-none">
             Special Requirements, If any
           </span>
           <textarea
             value={acc.special}
             onChange={(e) => onChange({ ...acc, special: e.target.value })}
             rows={4}
-            className="w-full bg-transparent border border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
+            className="w-full bg-transparent border border-slate-200 dark:border-[#3a3a5a] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none"
           />
         </div>
       </div>
@@ -1064,3 +1064,4 @@ export default function AccommodationForm({
     </div>
   );
 }
+

@@ -24,7 +24,7 @@ export default function DayView({ currentDate, events, onSelectEvent }) {
 
   return (
     <div className="flex-1 overflow-auto px-8 pb-8 mt-4 table-custom-scrollbar">
-      <div className="sticky top-0 z-30 bg-[#0b0f1a] pb-4">
+      <div className="sticky top-0 z-30 bg-white dark:bg-[#0b0f1a] pb-4">
       <div className="text-center">
         <p className="text-xs font-medium text-slate-500">
           {currentDate
@@ -37,7 +37,7 @@ export default function DayView({ currentDate, events, onSelectEvent }) {
             "mx-auto mt-1 flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold",
             isToday(currentDate)
               ? "bg-violet-500 text-white"
-              : "text-slate-200",
+              : "text-slate-700 dark:text-slate-200",
           ].join(" ")}
         >
           {currentDate.getDate()}
@@ -58,11 +58,11 @@ export default function DayView({ currentDate, events, onSelectEvent }) {
           ))}
         </div>
 
-        <div className="relative border-l border-white/5">
+        <div className="relative border-l border-slate-200 dark:border-white/5">
           {hours.map((h) => (
             <div
               key={h.hour}
-              className="absolute left-0 right-0 border-t border-white/5"
+              className="absolute left-0 right-0 border-t border-slate-200 dark:border-white/5"
               style={{ top: topFor(h.hour * 60) }}
             />
           ))}

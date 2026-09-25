@@ -143,7 +143,7 @@ function buildPurchasePayload(dayData) {
 
 // ── MultiSelect ───────────────────────────────────────────────────────────────
 
-function MultiSelect({ label, options, selected, onChange, error, labelBg = "#16162A" }) {
+function MultiSelect({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-slate-50 dark:bg-[#16162A]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -162,18 +162,18 @@ function MultiSelect({ label, options, selected, onChange, error, labelBg = "#16
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
+  
         >
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         >
-          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-white" : "text-gray-500"}`}>
+          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
             {selected.length ? selected.join(" / ") : "Select..."}
           </span>
           <svg
@@ -186,7 +186,7 @@ function MultiSelect({ label, options, selected, onChange, error, labelBg = "#16
           </svg>
         </div>
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
             {options.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
@@ -216,7 +216,7 @@ function MultiSelect({ label, options, selected, onChange, error, labelBg = "#16
   );
 }
 
-function TrophyTypeSelect({ label, selected, onChange, error, labelBg = "#1E1E35" }) {
+function TrophyTypeSelect({ label, selected, onChange, error, labelClassName = "bg-white dark:bg-[#1E1E35]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -235,18 +235,18 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelBg = "#1E1E35
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
+  
         >
           {label}
         </span>
         <div
           onClick={() => setOpen(!open)}
           className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            open ? "border-purple-500" : error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         >
-          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-white" : "text-gray-500"}`}>
+          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
             {selected.length ? selected.join(" / ") : "Select..."}
           </span>
           <svg
@@ -259,7 +259,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelBg = "#1E1E35
           </svg>
         </div>
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-20 max-h-52 overflow-y-auto custom-scrollbar">
             {TROPHY_TYPE_OPTIONS.map((item, i) => {
               const isSelected = selected.includes(item);
               return (
@@ -291,7 +291,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelBg = "#1E1E35
 
 // ── Min-0 Number Input ────────────────────────────────────────────────────────
 
-function MinZeroInput({ label, value, onChange, error, labelBg = "#1E1E35" }) {
+function MinZeroInput({ label, value, onChange, error, labelClassName = "bg-white dark:bg-[#1E1E35]" }) {
   const handleChange = (e) => {
     const raw = e.target.value;
     if (raw === "") { onChange(""); return; }
@@ -310,8 +310,8 @@ function MinZeroInput({ label, value, onChange, error, labelBg = "#1E1E35" }) {
     <div className="w-full">
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
+  
         >
           {label}
         </span>
@@ -322,7 +322,7 @@ function MinZeroInput({ label, value, onChange, error, labelBg = "#1E1E35" }) {
           onChange={handleChange}
           onBlur={handleBlur}
           className={`w-full bg-transparent border rounded-lg p-4 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors duration-200 ${
-            error ? "border-red-400" : "border-[#3A3A5A]"
+            error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         />
       </div>
@@ -333,7 +333,7 @@ function MinZeroInput({ label, value, onChange, error, labelBg = "#1E1E35" }) {
 
 // ── Cash Prize Input with ₹ prefix ────────────────────────────────────────────
 
-function CashPrizeInput({ value, onChange, error, labelBg = "#1E1E35" }) {
+function CashPrizeInput({ value, onChange, error, labelClassName = "bg-white dark:bg-[#1E1E35]" }) {
   const [focused, setFocused] = useState(false);
   const showPrefix = focused || (value && value !== "");
 
@@ -341,14 +341,14 @@ function CashPrizeInput({ value, onChange, error, labelBg = "#1E1E35" }) {
     <div className="w-full">
       <div className="relative w-full">
         <span
-          className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-          style={{ backgroundColor: labelBg }}
+          className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
+  
         >
           Cash Prize Amount *
         </span>
         <div
           className={`w-full bg-transparent border rounded-lg flex items-center transition-colors duration-200 ${
-            focused ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            focused ? "border-purple-500" : error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         >
           {showPrefix && (
@@ -379,7 +379,7 @@ function CashPrizeInput({ value, onChange, error, labelBg = "#1E1E35" }) {
 
 // ── Voucher Worth Quantity Grid ───────────────────────────────────────────────
 
-function VoucherWorthQtyGrid({ selectedWorths, worthQty, onQtyChange, errors = {}, labelBg = "#1E1E35" }) {
+function VoucherWorthQtyGrid({ selectedWorths, worthQty, onQtyChange, errors = {}, labelClassName = "bg-white dark:bg-[#1E1E35]" }) {
   if (!selectedWorths || selectedWorths.length === 0) return null;
 
   // Layout: 1 item = full width, 2 items = 2 cols, 3+ = 2 per row
@@ -389,7 +389,7 @@ function VoucherWorthQtyGrid({ selectedWorths, worthQty, onQtyChange, errors = {
       return (
         <div className="col-span-2">
           <MinZeroInput
-            labelBg={labelBg}
+            labelClassName={labelClassName}
             label={`Voucher Quantity (${w}) *`}
             value={worthQty[w] || ""}
             onChange={(val) => onQtyChange(w, val)}
@@ -406,7 +406,7 @@ function VoucherWorthQtyGrid({ selectedWorths, worthQty, onQtyChange, errors = {
       return (
         <div key={w} className={fullWidth ? "col-span-2" : "col-span-1"}>
           <MinZeroInput
-            labelBg={labelBg}
+            labelClassName={labelClassName}
             label={`Voucher Quantity (${w}) *`}
             value={worthQty[w] || ""}
             onChange={(val) => onQtyChange(w, val)}
@@ -467,14 +467,14 @@ function StudentCard({ data, onChange, errors = {} }) {
   };
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <h3 className="text-purple-400 text-base font-semibold">Students</h3>
 
       {/* Gift Type + Registration Kit Needed — always side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <MultiSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Gift Type *"
             options={STUDENT_GIFT_TYPE_OPTIONS}
             selected={data.giftType || []}
@@ -490,7 +490,7 @@ function StudentCard({ data, onChange, errors = {} }) {
         </div>
         <div>
           <CustomSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Registration Kit Needed *"
             value={data.registrationKitNeeded || ""}
             onChange={(val) => onChange({ ...data, registrationKitNeeded: val, registrationKitQty: "" })}
@@ -522,7 +522,7 @@ function StudentCard({ data, onChange, errors = {} }) {
         <div className={`grid gap-4 ${trophyBothSelected ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {showBasic && (
             <MinZeroInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Basic Trophy Quantity *"
               value={data.basicTrophyQty || ""}
               onChange={(val) => onChange({ ...data, basicTrophyQty: val })}
@@ -531,7 +531,7 @@ function StudentCard({ data, onChange, errors = {} }) {
           )}
           {showElite && (
             <MinZeroInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Elite Trophy Quantity *"
               value={data.eliteTrophyQty || ""}
               onChange={(val) => onChange({ ...data, eliteTrophyQty: val })}
@@ -546,7 +546,7 @@ function StudentCard({ data, onChange, errors = {} }) {
         <div className={`grid gap-4 ${cashVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {hasCash && (
             <CashPrizeInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               value={data.cashPrizeAmount || ""}
               onChange={(val) => onChange({ ...data, cashPrizeAmount: val })}
               error={errors.cashPrizeAmount}
@@ -555,7 +555,7 @@ function StudentCard({ data, onChange, errors = {} }) {
           {hasVoucher && (
             <div>
               <MultiSelect
-                labelBg="#1E1E35"
+                labelClassName="bg-white dark:bg-[#1E1E35]"
                 label="Voucher Worth *"
                 options={VOUCHER_WORTH_OPTIONS}
                 selected={selectedWorths}
@@ -570,7 +570,7 @@ function StudentCard({ data, onChange, errors = {} }) {
       {/* Voucher Worth Quantity inputs */}
       {hasVoucher && selectedWorths.length > 0 && (
         <VoucherWorthQtyGrid
-          labelBg="#1E1E35"
+          labelClassName="bg-white dark:bg-[#1E1E35]"
           selectedWorths={selectedWorths}
           worthQty={worthQty}
           onQtyChange={handleWorthQtyChange}
@@ -581,7 +581,7 @@ function StudentCard({ data, onChange, errors = {} }) {
       {/* Registration Kit Qty — always full width single row */}
       {data.registrationKitNeeded === "Yes" && (
         <MinZeroInput
-          labelBg="#1E1E35"
+          labelClassName="bg-white dark:bg-[#1E1E35]"
           label="Registration Kit Quantity *"
           value={data.registrationKitQty || ""}
           onChange={(val) => onChange({ ...data, registrationKitQty: val })}
@@ -591,7 +591,7 @@ function StudentCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -599,7 +599,7 @@ function StudentCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
         />
       </div>
     </div>
@@ -634,14 +634,14 @@ function GuestCard({ data, onChange, errors = {} }) {
   };
 
   return (
-    <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
+    <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-5">
       <h3 className="text-purple-400 text-base font-semibold">Guest</h3>
 
       {/* Gift Type + Registration Kit Needed — always side by side */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <MultiSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Gift Type *"
             options={GUEST_GIFT_TYPE_OPTIONS}
             selected={data.giftType || []}
@@ -657,7 +657,7 @@ function GuestCard({ data, onChange, errors = {} }) {
         </div>
         <div>
           <CustomSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Registration Kit Needed *"
             value={data.registrationKitNeeded || ""}
             onChange={(val) => onChange({ ...data, registrationKitNeeded: val, registrationKitQty: "" })}
@@ -689,7 +689,7 @@ function GuestCard({ data, onChange, errors = {} }) {
         <div className={`grid gap-4 ${trophyBothSelected ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {showBasic && (
             <MinZeroInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Basic Trophy Quantity *"
               value={data.basicTrophyQty || ""}
               onChange={(val) => onChange({ ...data, basicTrophyQty: val })}
@@ -698,7 +698,7 @@ function GuestCard({ data, onChange, errors = {} }) {
           )}
           {showElite && (
             <MinZeroInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Elite Trophy Quantity *"
               value={data.eliteTrophyQty || ""}
               onChange={(val) => onChange({ ...data, eliteTrophyQty: val })}
@@ -713,7 +713,7 @@ function GuestCard({ data, onChange, errors = {} }) {
         <div className={`grid gap-4 ${giftsVoucherBoth ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
           {hasGifts && (
             <MinZeroInput
-              labelBg="#1E1E35"
+              labelClassName="bg-white dark:bg-[#1E1E35]"
               label="Gift Count *"
               value={data.giftsQty ?? data.glassCupQty ?? ""}
               onChange={(val) => onChange({ ...data, giftsQty: val, glassCupQty: val })}
@@ -723,7 +723,7 @@ function GuestCard({ data, onChange, errors = {} }) {
           {hasVoucher && (
             <div>
               <MultiSelect
-                labelBg="#1E1E35"
+                labelClassName="bg-white dark:bg-[#1E1E35]"
                 label="Voucher Worth *"
                 options={VOUCHER_WORTH_OPTIONS}
                 selected={selectedWorths}
@@ -738,7 +738,7 @@ function GuestCard({ data, onChange, errors = {} }) {
       {/* Voucher Worth Quantity inputs */}
       {hasVoucher && selectedWorths.length > 0 && (
         <VoucherWorthQtyGrid
-          labelBg="#1E1E35"
+          labelClassName="bg-white dark:bg-[#1E1E35]"
           selectedWorths={selectedWorths}
           worthQty={worthQty}
           onQtyChange={handleWorthQtyChange}
@@ -749,7 +749,7 @@ function GuestCard({ data, onChange, errors = {} }) {
       {/* Registration Kit Qty — always full width single row */}
       {data.registrationKitNeeded === "Yes" && (
         <MinZeroInput
-          labelBg="#1E1E35"
+          labelClassName="bg-white dark:bg-[#1E1E35]"
           label="Registration Kit Quantity *"
           value={data.registrationKitQty || ""}
           onChange={(val) => onChange({ ...data, registrationKitQty: val })}
@@ -759,7 +759,7 @@ function GuestCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -767,7 +767,7 @@ function GuestCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
         />
       </div>
     </div>
@@ -964,7 +964,7 @@ export default function Purchase({
   if (dayCount === 0) {
     return (
       <div className="flex flex-col gap-6 pb-6">
-        <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-center">
+        <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-6 text-center">
           <p className="text-gray-400 text-sm">
             No event days found. Please go back and add event days first.
           </p>
@@ -1031,7 +1031,7 @@ export default function Purchase({
           {showIdCard && (
             <MinZeroInput
               label="Id Card Hard Copy Quantity *"
-              labelBg="#16162A"
+              labelClassName="bg-white dark:bg-slate-50 dark:bg-[#16162A]"
               value={current.idCardQty || ""}
               onChange={(val) => updateCurrent({ idCardQty: val })}
               error={currentErrors.idCardQty}
@@ -1040,7 +1040,7 @@ export default function Purchase({
           {showCertificate && (
             <MinZeroInput
               label="Certificate Hard Copy Quantity *"
-              labelBg="#16162A"
+              labelClassName="bg-white dark:bg-slate-50 dark:bg-[#16162A]"
               value={current.certificateQty || ""}
               onChange={(val) => updateCurrent({ certificateQty: val })}
               error={currentErrors.certificateQty}
@@ -1083,3 +1083,5 @@ export default function Purchase({
     </div>
   );
 }
+
+

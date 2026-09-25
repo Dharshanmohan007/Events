@@ -248,7 +248,7 @@ function FloatingInput({
   type = "text",
   value,
   onChange,
-  bgClass = "bg-[#1e1e2f]",
+  bgClass = "bg-white dark:bg-[#1e1e2f]",
   onKeyDown,
 }) {
   return (
@@ -264,7 +264,7 @@ function FloatingInput({
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder=" "
-        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
+        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-slate-200 dark:border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
       />
     </div>
   );
@@ -277,7 +277,7 @@ function CustomSelectDropdown({
   onChange,
   options,
   placeholder = "Select",
-  bgClass = "bg-[#1e1e2f]",
+  bgClass = "bg-white dark:bg-[#1e1e2f]",
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -301,10 +301,10 @@ function CustomSelectDropdown({
         type="button"
         onClick={() => setOpen((p) => !p)}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors cursor-pointer ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
         }`}
       >
-        <span className={`text-sm ${value ? "text-white" : "text-gray-500"}`}>
+        <span className={`text-sm ${value ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
           {value || placeholder}
         </span>
         <ChevronDown
@@ -315,7 +315,7 @@ function CustomSelectDropdown({
         />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
           {options.map((opt) => {
             const isSelected = value === opt;
             return (
@@ -624,7 +624,7 @@ export default function ExternalTransportForm({
           <button
             type="button"
             onClick={addForm}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#9810FA] cursor-pointer border border-[#3A3A5A] text-white rounded-xl transition-colors font-medium text-sm hover:bg-[#850ee0]"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#9810FA] cursor-pointer border border-slate-200 dark:border-[#3A3A5A] text-white rounded-xl transition-colors font-medium text-sm hover:bg-[#850ee0]"
           >
             <Plus size={18} />
             Add
@@ -642,7 +642,7 @@ export default function ExternalTransportForm({
             <button
               type="button"
               onClick={() => setDeleteIndex(index)}
-              className="absolute top-4 right-4 z-10 text-gray-400 hover:text-red-400 transition-colors bg-[#1E1E2F] rounded-full p-1 border border-[#3A3A5A] cursor-pointer"
+              className="absolute top-4 right-4 z-10 text-gray-400 hover:text-red-400 transition-colors bg-white dark:bg-[#1E1E2F] rounded-full p-1 border border-slate-200 dark:border-[#3A3A5A] cursor-pointer"
               title="Remove Entry"
             >
               <Trash2 size={18} />
@@ -657,7 +657,7 @@ export default function ExternalTransportForm({
                   value={form.travelOption}
                   options={["Train", "Flight"]}
                   onChange={(val) => handleChange(index, "travelOption", val)}
-                  bgClass="bg-[#1e1e2f]"
+                  bgClass="bg-white dark:bg-[#1e1e2f]"
                 />
                 {getError(index, "travelOption") && (
                   <p className="text-red-400 text-xs mt-1">{getError(index, "travelOption")}</p>
@@ -678,7 +678,7 @@ export default function ExternalTransportForm({
                       onChange={(val) => handleChange(index, "travelDate", val)}
                       placeholder="Select Travel Date"
                       minDate={todayDateStr}
-                      className="w-full bg-transparent border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-white"
+                      className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-white"
                     />
                   </div>
                   {getError(index, "travelDate") && (
@@ -696,7 +696,7 @@ export default function ExternalTransportForm({
                       label="From *"
                       value={form.from}
                       onChange={(e) => handleChange(index, "from", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "from") && (
                       <p className="text-red-400 text-xs mt-1">{getError(index, "from")}</p>
@@ -707,7 +707,7 @@ export default function ExternalTransportForm({
                       label="To *"
                       value={form.to}
                       onChange={(e) => handleChange(index, "to", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "to") && (
                       <p className="text-red-400 text-xs mt-1">{getError(index, "to")}</p>
@@ -723,7 +723,7 @@ export default function ExternalTransportForm({
                           label="Train Number *"
                           value={form.trainNumber}
                           onChange={(e) => handleChange(index, "trainNumber", e.target.value)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "trainNumber") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -739,7 +739,7 @@ export default function ExternalTransportForm({
                           value={Array.isArray(form.classOrBerth) ? form.classOrBerth : []}
                           onChange={(val) => handleChange(index, "classOrBerth", val)}
                           options={TRAIN_CLASSES}
-                          labelBg="#1e1e2f"
+                          labelClassName="bg-white dark:bg-[#1e1e2f]"
                           placeholder="Select classes"
                         />
                         {getError(index, "classOrBerth") && (
@@ -757,7 +757,7 @@ export default function ExternalTransportForm({
                           label="Flight Number *"
                           value={form.flightNumber}
                           onChange={(e) => handleChange(index, "flightNumber", e.target.value)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "flightNumber") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -771,7 +771,7 @@ export default function ExternalTransportForm({
                           value={form.classOrBerth || "Economy"}
                           options={["Economy"]}
                           onChange={(val) => handleChange(index, "classOrBerth", val)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -789,7 +789,7 @@ export default function ExternalTransportForm({
                       label="No. of Passengers *"
                       value={form.totalPassengers}
                       onChange={(e) => handleChange(index, "totalPassengers", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "totalPassengers") && (
                       <p className="text-red-400 text-xs mt-1">
@@ -802,7 +802,7 @@ export default function ExternalTransportForm({
                       label="Special Requirements (Optional)"
                       value={form.specialRequirements === "None" ? "" : form.specialRequirements}
                       onChange={(e) => handleChange(index, "specialRequirements", e.target.value || "None")}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                   </div>
                 </div>
@@ -836,7 +836,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "name", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "name") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -851,7 +851,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "phone", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "phone") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -866,7 +866,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "email", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "email") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -881,7 +881,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "designation", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "designation") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -895,7 +895,7 @@ export default function ExternalTransportForm({
                               value={p.gender}
                               options={["Male", "Female"]}
                               onChange={(v) => handlePassengerChange(index, pIndex, "gender", v)}
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "gender") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -910,7 +910,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "age", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "age") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -925,7 +925,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "organization", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "organization") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -956,4 +956,5 @@ export default function ExternalTransportForm({
     </div>
   );
 }
+
 

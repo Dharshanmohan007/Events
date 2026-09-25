@@ -69,7 +69,7 @@ const DATE_PICKER_STYLES = `
 `;
 
 // ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
-function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f38" }) {
+function MultiSelect({ label, options, selected = [], onToggle, labelClassName = "bg-white dark:bg-[#1f1f38]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -87,20 +87,19 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
   return (
     <div className="relative w-full" ref={ref}>
       <span
-        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-        style={{ backgroundColor: labelBg }}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label}
       </span>
       <div
         onClick={() => setOpen((p) => !p)}
         className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
         }`}
       >
         <span
           className={`text-sm truncate ${
-            selected.length === 0 ? "text-gray-500" : "text-white"
+            selected.length === 0 ? "text-gray-500" : "text-slate-900 dark:text-white"
           }`}
         >
           {displayText}
@@ -124,7 +123,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
+        <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
           {options.map((opt, i) => {
             const isSelected = selected.includes(opt);
             return (
@@ -165,7 +164,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
 }
 
 // ─── Meal section ─────────────────────────────────────────────────────────────
-const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelBg = "#1f1f38", maxCount = 0 }) {
+const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelClassName = "bg-white dark:bg-[#1f1f38]", maxCount = 0 }) {
   const getSectionLabel = (sectionKey) => {
     switch (sectionKey) {
       case "participants": return "Participants";
@@ -177,7 +176,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
   };
 
   return (
-    <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
+    <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
       <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
       {maxCount > 0 && (
         <p className="text-gray-400 text-xs mb-3">
@@ -196,7 +195,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
               <div className={hideNonVeg ? "col-span-1 md:col-span-2" : ""}>
                 <CustomInput
                   label={`No. of veg In ${sectionLabel} Menu *`}
-                  labelBg={labelBg}
+                  labelClassName={labelClassName}
                   type="number"
                   value={data[sectionKey]?.vegCount ?? ""}
                   onChange={(e) => {
@@ -218,7 +217,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                 <div>
                   <CustomInput
                     label={`No. of Non-veg In ${sectionLabel} Menu *`}
-                    labelBg={labelBg}
+                    labelClassName={labelClassName}
                     type="number"
                     value={data[sectionKey]?.nonVegCount ?? ""}
                     onChange={(e) => {
@@ -255,7 +254,7 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
         onClick={onCancel}
       />
       {/* Modal */}
-      <div className="relative bg-[#1e1e38] border border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+      <div className="relative bg-[#1e1e38] border border-slate-200 dark:border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
         {/* Icon */}
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15 border border-red-500/30 mx-auto mb-4">
           <Trash2 size={22} className="text-red-400" />
@@ -270,7 +269,7 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
           >
             Cancel
           </button>
@@ -949,7 +948,7 @@ export default function FoodAndRefreshments({
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="relative bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
+          className="relative bg-white dark:bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
         >
           {/* ── Delete button: inside top-right corner of the card ── */}
           {index !== 0 && (
@@ -970,7 +969,7 @@ export default function FoodAndRefreshments({
             <div className="col-span-1 md:col-span-2 w-full flex flex-col sm:flex-row gap-4">
               {/* From Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
                   From Date *
                 </label>
                 <button
@@ -1002,7 +1001,7 @@ export default function FoodAndRefreshments({
               
               {/* To Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
                   To Date *
                 </label>
                 <button
@@ -1039,7 +1038,7 @@ export default function FoodAndRefreshments({
                 options={RESOURCE_OPTIONS}
                 selected={form.resourcePersonType}
                 onToggle={(opt) => handleMultiToggle(form.id, "resourcePersonType", opt)}
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
               />
               {getError(form.id, "resourcePersonType") && (
                 <p className="text-red-400 text-xs mt-1">
@@ -1052,7 +1051,7 @@ export default function FoodAndRefreshments({
             <div>
               <CustomInput
                 label="Total number of Resource Persons *"
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
                 value={form.resourcePersons}
                 onChange={(e) => handleChange(form.id, "resourcePersons", e.target.value)}
                 type="number"
@@ -1067,7 +1066,7 @@ export default function FoodAndRefreshments({
             <div>
               <CustomInput
                 label="Total number of Internal Accompanying Persons *"
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
                 value={form.internalCount}
                 onChange={(e) => handleChange(form.id, "internalCount", e.target.value)}
                 type="number"
@@ -1085,7 +1084,7 @@ export default function FoodAndRefreshments({
                 {(form.staffList || []).map((staff, staffIndex) => (
                   <div
                     key={staffIndex}
-                    className="bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
+                    className="bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
                   >
                     {/* Staff header row with title + delete button */}
                     <div className="flex items-center justify-between mb-4">
@@ -1105,7 +1104,7 @@ export default function FoodAndRefreshments({
                       <div>
                         <CustomInput
                           label={`Staff ${staffIndex + 1} Name *`}
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           value={staff.name}
                           onChange={(e) =>
                             handleStaffChange(form.id, staffIndex, "name", e.target.value)
@@ -1120,7 +1119,7 @@ export default function FoodAndRefreshments({
                       <div>
                         <CustomInput
                           label={`Staff ${staffIndex + 1} Mobile Number *`}
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           value={staff.mobile}
                           onChange={(e) =>
                             handleStaffChange(form.id, staffIndex, "mobile", e.target.value)
@@ -1146,7 +1145,7 @@ export default function FoodAndRefreshments({
                 options={FOOD_TYPE_OPTIONS}
                 selected={form.foodTypes}
                 onToggle={(opt) => handleMultiToggle(form.id, "foodTypes", opt)}
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
               />
               {getError(form.id, "foodTypes") && (
                 <p className="text-red-400 text-xs mt-1">{getError(form.id, "foodTypes")}</p>
@@ -1175,7 +1174,7 @@ export default function FoodAndRefreshments({
                   data={form[mealKey] || {}}
                   errors={mealErr}
                   onChange={(sectionKey, field, value) => handleMealChange(form.id, mealKey, sectionKey, field, value)}
-                  labelBg="#2a2a4a"
+                  labelClassName="bg-white dark:bg-[#2a2a4a]"
                   maxCount={maxCount}
                 />
               );
@@ -1185,7 +1184,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Morning Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
                 </div>
@@ -1203,7 +1202,7 @@ export default function FoodAndRefreshments({
                       <>
                         <CustomSelect
                           label="Venue *"
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           options={[
                             "Main block - Guest dinning (opp. to II floor auditorium)",
                             "AI & Mech Block: Cyber lab (opp. to Vista hall)"
@@ -1218,7 +1217,7 @@ export default function FoodAndRefreshments({
                   <div className="mb-4">
                     <CustomInput
                       label="Total Morning Refreshment Count (Timing: 10.45 AM to 11.15 AM) *"
-                      labelBg="#2a2a4a"
+                      labelClassName="bg-white dark:bg-[#2a2a4a]"
                       value={form.morningRefreshmentCount || ""}
                       onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
                       type="text"
@@ -1233,7 +1232,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Evening Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
                 </div>
@@ -1251,7 +1250,7 @@ export default function FoodAndRefreshments({
                       <>
                         <CustomSelect
                           label="Venue *"
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           options={[
                             "Main block - Guest dinning (opp. to II floor auditorium)",
                             "AI & Mech Block: Cyber lab (opp. to Vista hall)"
@@ -1266,7 +1265,7 @@ export default function FoodAndRefreshments({
                   <div className="mb-4">
                     <CustomInput
                       label="Total Evening Refreshment Count (Timing: 3.30 PM to 4 PM) *"
-                      labelBg="#2a2a4a"
+                      labelClassName="bg-white dark:bg-[#2a2a4a]"
                       value={form.eveningRefreshmentCount || ""}
                       onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
                       type="text"
@@ -1281,7 +1280,7 @@ export default function FoodAndRefreshments({
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white">
                   Special Requirements
                 </label>
                 <textarea
@@ -1300,3 +1299,4 @@ export default function FoodAndRefreshments({
     </div>
   );
 }
+

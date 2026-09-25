@@ -6,7 +6,7 @@ export default function CustomInput({
   value,
   onChange,
   className = "",
-  labelBg = "#16162A",
+  labelClassName = "bg-slate-50 dark:bg-[#16162A]",
   borderColor = "#3A3A5A",
   readOnly = false,
   placeholder = "",
@@ -32,8 +32,7 @@ export default function CustomInput({
   return (
     <div className="relative w-full">
       <span
-        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-        style={{ backgroundColor: labelBg }}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label}
       </span>
@@ -47,16 +46,18 @@ export default function CustomInput({
         readOnly={readOnly}
         {...(min !== undefined ? { min } : {})}
         {...(max !== undefined ? { max } : {})}
-        className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border placeholder-gray-500 ${
-          isDarkBg ? "text-gray-400 [color-scheme:dark]" : ""
+        className={`w-full bg-transparent text-slate-900 dark:text-white rounded-lg focus:outline-none p-3.5 text-sm border border-slate-300 dark:border-[#3A3A5A] placeholder-slate-400 dark:placeholder-gray-500 focus:border-purple-500 dark:focus:border-purple-500 ${
+          isDarkBg ? "dark:[color-scheme:dark]" : ""
         } ${disabled ? "opacity-40 cursor-not-allowed" : ""} ${className}`}
-        style={{
-          borderColor: borderColor,
-        }}
+        style={{}}
         onFocus={(e) => {
-          if (!disabled) e.target.style.borderColor = "#a855f7";
+          if (!disabled) {
+            e.target.classList.add("border-purple-500", "dark:border-purple-500");
+          }
         }}
-        onBlur={(e) => (e.target.style.borderColor = borderColor)}
+        onBlur={(e) => {
+          e.target.classList.remove("border-purple-500", "dark:border-purple-500");
+        }}
       />
     </div>
   );

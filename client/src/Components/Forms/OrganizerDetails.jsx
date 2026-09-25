@@ -43,14 +43,14 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
   };
 
   return (
-    <div className='rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-6'>
+    <div className='rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-6 shadow-sm dark:shadow-none'>
       <h2 className='text-purple-400 text-sm font-semibold tracking-wide'>
         {title}
       </h2>
       {!hideSearch && (
         <div className="relative mb-5">
 
-      <label className="block text-white text-sm mb-2">
+      <label className="block text-slate-800 dark:text-white text-sm mb-2">
           Search Faculty
       </label>
 
@@ -59,7 +59,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
           value={query}
           onChange={(e)=>setQuery(e.target.value)}
           placeholder="Search by Faculty Name or Employee ID"
-          className="w-full rounded-lg border border-[#3A3A5A] bg-transparent p-3 text-white outline-none"
+          className="w-full rounded-lg border border-slate-300 dark:border-[#3A3A5A] bg-transparent p-3 text-slate-900 dark:text-white outline-none focus:border-purple-500 transition-colors"
       />
 
       {
@@ -110,7 +110,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Name *"
             value={data.name || ""}
             onChange={handle("name")}
@@ -120,7 +120,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
         </div>
         <div>
           <CustomSelect
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Department"
             required
             value={data.department || ""}
@@ -133,7 +133,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Mobile Number *"
             type="tel"
             value={data.mobile || ""}
@@ -150,7 +150,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Designation *"
             value={data.designation || ""}
             onChange={handle("designation")}
@@ -160,7 +160,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="Emp Id *"
             value={data.empId || ""}
             onChange={handle("empId")}
@@ -170,7 +170,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
         </div>
         <div>
           <CustomInput
-            labelBg="#1E1E35"
+            labelClassName="bg-white dark:bg-[#1E1E35]"
             label="E-Mail *"
             type="email"
             value={data.empEmail || ""}

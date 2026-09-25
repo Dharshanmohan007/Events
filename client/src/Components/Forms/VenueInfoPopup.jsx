@@ -77,8 +77,7 @@ export default function VenueInfoPopup({ venueName, onClose }) {
     <div
       ref={overlayRef}
       onClick={handleOverlayClick}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
     >
       <div className="relative w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl">
         {/* Close button anchor */}
@@ -86,7 +85,7 @@ export default function VenueInfoPopup({ venueName, onClose }) {
           <button
             onClick={onClose}
             aria-label="Close venue details"
-            className="absolute top-12 right-11 w-7 h-7 rounded-full flex items-center justify-center bg-[#2C2C2E] text-gray-400 hover:text-white hover:bg-[#3A3A3C] transition-all z-10"
+            className="absolute top-12 right-11 w-7 h-7 rounded-full flex items-center justify-center bg-slate-200 dark:bg-[#2C2C2E] text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300 dark:hover:bg-[#3A3A3C] transition-all z-10"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -103,15 +102,12 @@ export default function VenueInfoPopup({ venueName, onClose }) {
         </div>
 
         {/* Content card */}
-        <div
-          className="mx-4 mb-4 rounded-2xl p-6 flex flex-col gap-5"
-          style={{ background: "#232325", border: "1px solid #3A3A3C" }}
-        >
+        <div className="mx-4 mb-4 rounded-2xl p-6 flex flex-col gap-5 bg-white dark:bg-[#232325] border border-slate-200 dark:border-[#3A3A3C] shadow-xl dark:shadow-none">
           {/* Loading */}
           {loading && (
             <div className="flex flex-col items-center justify-center py-16 gap-4">
-              <div className="w-10 h-10 rounded-full border-2 border-gray-500 border-t-transparent animate-spin" />
-              <p className="text-gray-400 text-sm">Loading venue details…</p>
+              <div className="w-10 h-10 rounded-full border-2 border-slate-400 dark:border-gray-500 border-t-transparent animate-spin" />
+              <p className="text-slate-500 dark:text-gray-400 text-sm">Loading venue details…</p>
             </div>
           )}
 
@@ -135,10 +131,10 @@ export default function VenueInfoPopup({ venueName, onClose }) {
 
           {/* Not found */}
           {!loading && !error && !venueDetail && (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-slate-400 dark:text-gray-500">
               <p>
                 No details found for{" "}
-                <strong className="text-gray-400">{venueName}</strong>
+                <strong className="text-slate-500 dark:text-gray-400">{venueName}</strong>
               </p>
             </div>
           )}
@@ -150,10 +146,10 @@ export default function VenueInfoPopup({ venueName, onClose }) {
               <>
                 {/* Header */}
                 <div>
-                  <h2 className="text-white text-3xl font-bold tracking-tight mb-1">
+                  <h2 className="text-slate-900 dark:text-white text-3xl font-bold tracking-tight mb-1">
                     {venueDetail.venue}
                   </h2>
-                  <div className="flex items-center gap-1.5 text-gray-400 text-sm">
+                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-gray-400 text-sm">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       className="w-3.5 h-3.5 flex-shrink-0"
@@ -181,19 +177,18 @@ export default function VenueInfoPopup({ venueName, onClose }) {
                   ].map(({ label, value }) => (
                     <div
                       key={label}
-                      className="rounded-xl p-4 flex flex-col gap-2"
-                      style={{ background: "#2C2C2E" }}
+                      className="rounded-xl p-4 flex flex-col gap-2 bg-slate-100 dark:bg-[#2C2C2E] border border-slate-200 dark:border-transparent"
                     >
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-gray-400">
                         {label}
                       </span>
                       {value > 0 ? (
-                        <span className="text-white text-2xl font-bold leading-none">
+                        <span className="text-slate-900 dark:text-white text-2xl font-bold leading-none">
                           {value}{" "}
                           <span className="text-lg font-semibold">Seats</span>
                         </span>
                       ) : (
-                        <span className="text-gray-500 text-lg font-semibold leading-none">
+                        <span className="text-slate-400 dark:text-gray-500 text-lg font-semibold leading-none">
                           N / A
                         </span>
                       )}
@@ -203,11 +198,8 @@ export default function VenueInfoPopup({ venueName, onClose }) {
 
                 {/* Audio equipment */}
                 {activeAudio.length > 0 && (
-                  <div
-                    className="rounded-xl overflow-x-auto"
-                    style={{ background: "#2C2C2E" }}
-                  >
-                    <div className="flex divide-x divide-[#3A3A3C] min-w-max w-full">
+                  <div className="rounded-xl overflow-x-auto bg-slate-100 dark:bg-[#2C2C2E] border border-slate-200 dark:border-transparent">
+                    <div className="flex divide-x divide-slate-200 dark:divide-[#3A3A3C] min-w-max w-full">
                       {activeAudio.map(({ key, label }) => {
                         const count = venueDetail.audio[key] ?? 0;
                         return (
@@ -215,16 +207,16 @@ export default function VenueInfoPopup({ venueName, onClose }) {
                             key={key}
                             className="flex-1 px-5 py-4 flex flex-col gap-2 min-w-[110px]"
                           >
-                            <span className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 leading-tight whitespace-nowrap">
+                            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 dark:text-gray-400 leading-tight whitespace-nowrap">
                               {label}
                             </span>
                             {count > 0 ? (
-                              <span className="text-white text-xl font-bold leading-none whitespace-nowrap">
+                              <span className="text-slate-900 dark:text-white text-xl font-bold leading-none whitespace-nowrap">
                                 {count}{" "}
                                 <span className="text-sm font-semibold">Available</span>
                               </span>
                             ) : (
-                              <span className="text-gray-500 text-base font-semibold leading-none">
+                              <span className="text-slate-400 dark:text-gray-500 text-base font-semibold leading-none">
                                 N / A
                               </span>
                             )}
@@ -237,13 +229,10 @@ export default function VenueInfoPopup({ venueName, onClose }) {
 
                 {/* Remarks */}
                 {venueDetail.remarks && (
-                  <div
-                    className="flex items-start gap-2.5 rounded-xl px-4 py-3"
-                    style={{ background: "#2C2C2E" }}
-                  >
+                  <div className="flex items-start gap-2.5 rounded-xl px-4 py-3 bg-slate-100 dark:bg-[#2C2C2E] border border-slate-200 dark:border-transparent">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5"
+                      className="w-4 h-4 text-slate-400 dark:text-gray-400 flex-shrink-0 mt-0.5"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -255,7 +244,7 @@ export default function VenueInfoPopup({ venueName, onClose }) {
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="text-gray-400 text-sm">{venueDetail.remarks}</p>
+                    <p className="text-slate-600 dark:text-gray-400 text-sm">{venueDetail.remarks}</p>
                   </div>
                 )}
               </>
