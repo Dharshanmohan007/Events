@@ -604,7 +604,7 @@ export default function IctsForm({
     const dayErrors = isEditMode ? {} : validateDay(currentDayIndex, venues, latestIctsData, showProctoring);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
-    if (hasErrors) return;
+    if (hasErrors) return false;
 
     setErrors((prev) => ({ ...prev, [currentDayIndex]: {} }));
 

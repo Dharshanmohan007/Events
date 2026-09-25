@@ -887,7 +887,7 @@ export default function Purchase({
     const dayErrors      = isEditMode ? {} : validateDay(currentDayData, maxParticipants);
     const hasErrors      = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
-    if (hasErrors) return;
+    if (hasErrors) return false;
 
     setCompletedDays((prev) =>
       prev.includes(currentDayIndex) ? prev : [...prev, currentDayIndex]

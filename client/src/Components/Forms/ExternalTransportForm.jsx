@@ -391,7 +391,7 @@ export default function ExternalTransportForm({
 
     if (hasErrors) {
       setErrors(errs);
-      return;
+      return false;
     }
     setErrors({});
 
@@ -956,3 +956,4 @@ export default function ExternalTransportForm({
     </div>
   );
 }
+
