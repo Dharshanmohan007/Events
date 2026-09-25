@@ -34,16 +34,6 @@ function validateVenueCard(card, options = []) {
     }
   }
 
-  if (!card.hallReqs || card.hallReqs.length === 0)
-    e.hallReqs = "Select at least one hall requirement";
-  if (card.hallReqs?.includes("Guest Chair") && (!card.guestChairs || parseInt(card.guestChairs) < 1))
-    e.guestChairs = "Number of guest chairs is required";
-  if (card.hallReqs?.includes("Water Bottles") && (!card.waterBottles || parseInt(card.waterBottles) < 1))
-    e.waterBottles = "Number of water bottles is required";
-  if (card.hallReqs?.includes("Dias Table") && (!card.diasTable || parseInt(card.diasTable) < 1))
-    e.diasTable = "Number of dias tables is required";
-  if (card.hallReqs?.includes("Audience Chair") && (!card.audienceChair || parseInt(card.audienceChair) < 1))
-    e.audienceChair = "Number of audience chairs is required";
   return e;
 }
 
@@ -713,7 +703,7 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
 
       <div>
         <HallRequirementsSelect
-          label="Hall Requirements *"
+          label="Hall Requirements"
           selected={data.hallReqs || []}
           onChange={(val) => onChange({ ...data, hallReqs: val })}
           error={errors.hallReqs}
@@ -723,10 +713,10 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
       {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) &&
         (() => {
           const activeFields = [
-            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair *",    field: "guestChairs",   error: errors.guestChairs },
-            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles *",  field: "waterBottles",  error: errors.waterBottles },
-            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table *",     field: "diasTable",     error: errors.diasTable },
-            showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair *", field: "audienceChair", error: errors.audienceChair },
+            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair",    field: "guestChairs",   error: errors.guestChairs },
+            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles",  field: "waterBottles",  error: errors.waterBottles },
+            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table",     field: "diasTable",     error: errors.diasTable },
+            showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair", field: "audienceChair", error: errors.audienceChair },
           ].filter(Boolean);
 
           const count       = activeFields.length;
@@ -885,6 +875,7 @@ export default function VenueForm({
   venueData: initialVenueData = [],
   onVenueDataChange,
   eventId,
+  isEditMode = false,
 }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
   const [completedDays, setCompletedDays]     = useState([]);
@@ -902,6 +893,9 @@ export default function VenueForm({
   const [venueAvailability, setVenueAvailability] = useState(null);
   const [checkingVenueAvailability, setCheckingVenueAvailability] = useState(false);
   const [bookedVenueNames, setBookedVenueNames] = useState([]);
+  const [permissionPopupOpen, setPermissionPopupOpen] = useState(false);
+  const [contactedAdmin, setContactedAdmin] = useState(false);
+  const [pendingPermissionVenues, setPendingPermissionVenues] = useState([]);
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
@@ -1054,72 +1048,167 @@ export default function VenueForm({
   };
 
   const handleVenueSelection = (selectedVenues) => {
-    const existingCards  = currentDay.venueCards || [];
-    // Auto-fill only applies when exactly ONE venue is selected.
-    const isSingleVenue  = selectedVenues.length === 1;
-    const totalParticipantsValue = currentDay.participants
-      ? String(currentDay.participants)
-      : "";
+  const existingSelectedVenues = currentDay.selectedVenues || [];
 
-    const updatedCards = selectedVenues.map((id) => {
-      const existing = existingCards.find((c) => c.venueId === id);
-      const venueObj = stateRef.current.venuesList.find((v) => v.id === id);
-      const name = venueObj ? venueObj.venue : "";
+  // ─────────────────────────────────────────────────────────────
+  // Find only the newly selected venues
+  // ─────────────────────────────────────────────────────────────
+  const newlySelectedVenueIds = selectedVenues.filter(
+    (id) => !existingSelectedVenues.includes(id)
+  );
 
-      if (existing) {
-        if (isSingleVenue) {
-          // Sole selected venue → keep it synced with the total, mark as auto-filled.
-          return {
-            ...existing,
-            participants: totalParticipantsValue,
-            seatingCapacity: totalParticipantsValue,
-            autoFilled: true,
-          };
-        }
-        // Multiple venues selected → if this card's values came from the
-        // earlier single-venue auto-fill, clear them so the user enters
-        // per-venue counts manually. Manually-entered values are preserved.
-        if (existing.autoFilled) {
-          return {
-            ...existing,
-            participants: "",
-            seatingCapacity: "",
-            autoFilled: false,
-          };
-        }
-        return existing;
+  // ─────────────────────────────────────────────────────────────
+  // Find newly selected venues that require permission
+  // Classroom / Lab / Department / Center
+  // ─────────────────────────────────────────────────────────────
+  const restrictedVenueIds = newlySelectedVenueIds.filter((id) => {
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    if (!venueObj?.category) return false;
+
+    const category = venueObj.category.toLowerCase().trim();
+
+    return (
+      category.includes("classroom") ||
+      category.includes("lab") ||
+      category.includes("department") ||
+      category.includes("center")
+    );
+  });
+
+  // ─────────────────────────────────────────────────────────────
+  // If restricted venue selected:
+  //
+  // DO NOT add it to selectedVenues.
+  // DO NOT create venue card.
+  // Show permission popup instead.
+  // ─────────────────────────────────────────────────────────────
+  if (restrictedVenueIds.length > 0) {
+    setPendingPermissionVenues(restrictedVenueIds);
+    setContactedAdmin(false);
+    setPermissionPopupOpen(true);
+
+    // Keep only venues that are already approved/selected.
+    // Restricted venues are NOT added yet.
+    const allowedVenueIds = selectedVenues.filter(
+      (id) => !restrictedVenueIds.includes(id)
+    );
+
+    applyVenueSelection(allowedVenueIds);
+
+    return;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Normal venue selection
+  // ─────────────────────────────────────────────────────────────
+  applyVenueSelection(selectedVenues);
+};
+
+
+// ─────────────────────────────────────────────────────────────
+// Actually apply the venue selection.
+//
+// This function is called only when:
+// 1. Venue does not require permission, OR
+// 2. User clicked "Contacted Admin" in the permission popup.
+//
+// This is the ONLY place where venueCards are created.
+// ─────────────────────────────────────────────────────────────
+const applyVenueSelection = (selectedVenues) => {
+  const existingCards = currentDay.venueCards || [];
+
+  // Auto-fill only applies when exactly ONE venue is selected.
+  const isSingleVenue = selectedVenues.length === 1;
+
+  const totalParticipantsValue = currentDay.participants
+    ? String(currentDay.participants)
+    : "";
+
+  const updatedCards = selectedVenues.map((id) => {
+    const existing = existingCards.find(
+      (c) => c.venueId === id
+    );
+
+    const venueObj = stateRef.current.venuesList.find(
+      (v) => v.id === id
+    );
+
+    const name = venueObj ? venueObj.venue : "";
+
+    if (existing) {
+      if (isSingleVenue) {
+        // Sole selected venue → keep it synced with total participants.
+        return {
+          ...existing,
+          participants: totalParticipantsValue,
+          seatingCapacity: totalParticipantsValue,
+          autoFilled: true,
+        };
       }
 
-      // New card
-      return {
-        venueId: id,
-        venueName: name,
-        participants: isSingleVenue ? totalParticipantsValue : "",
-        seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
-        hallReqs: [], guestChairs: "", waterBottles: "", diasTable: "",
-        audienceChair: "", specialReqs: "",
-        autoFilled: isSingleVenue,
-      };
-    });
+      // Multiple venues selected.
+      // Clear only automatically filled values.
+      if (existing.autoFilled) {
+        return {
+          ...existing,
+          participants: "",
+          seatingCapacity: "",
+          autoFilled: false,
+        };
+      }
 
-    setVenueData((prev) => {
-      const updated = [...prev];
-      updated[currentDayIndex] = {
-        ...updated[currentDayIndex],
-        selectedVenues,
-        venueCards: updatedCards,
-      };
-      return updated;
-    });
-    setErrors((prev) => {
-      const updatedErrors    = { ...prev };
-      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
-      delete currentDayErrors.selectedVenues;
-      updatedErrors[currentDayIndex] = currentDayErrors;
-      return updatedErrors;
-    });
-    checkVenueAvailability(selectedVenues);
-  };
+      return existing;
+    }
+
+    // New venue card is created ONLY here.
+    return {
+      venueId: id,
+      venueName: name,
+      participants: isSingleVenue ? totalParticipantsValue : "",
+      seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
+      hallReqs: [],
+      guestChairs: "",
+      waterBottles: "",
+      diasTable: "",
+      audienceChair: "",
+      specialReqs: "",
+      autoFilled: isSingleVenue,
+    };
+  });
+
+  setVenueData((prev) => {
+    const updated = [...prev];
+
+    updated[currentDayIndex] = {
+      ...updated[currentDayIndex],
+      selectedVenues,
+      venueCards: updatedCards,
+      sameAsDay1: false,
+    };
+
+    return updated;
+  });
+
+  setErrors((prev) => {
+    const updatedErrors = { ...prev };
+
+    const currentDayErrors = {
+      ...(updatedErrors[currentDayIndex] || {}),
+    };
+
+    delete currentDayErrors.selectedVenues;
+    delete currentDayErrors.venueCards;
+
+    updatedErrors[currentDayIndex] = currentDayErrors;
+
+    return updatedErrors;
+  });
+
+  checkVenueAvailability(selectedVenues);
+};
 
   const updateVenueCard = (cardIndex, updated) => {
     setVenueData((prev) => {
@@ -1138,7 +1227,7 @@ export default function VenueForm({
         ? { ...updated, autoFilled: false }
         : updated;
 
-      data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards };
+      data[currentDayIndex] = { ...data[currentDayIndex], venueCards: cards, sameAsDay1: false };
       return data;
     });
   };
@@ -1201,7 +1290,32 @@ export default function VenueForm({
 
       setVenueAvailability(data);
       if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
-        setBookedVenueNames(data.data.unavailable.map((u) => u.venueName));
+        const unavailableNames = data.data.unavailable.map((u) => u.venueName);
+        setBookedVenueNames(unavailableNames);
+
+        setVenueData((prev) => {
+          const updated = [...prev];
+          const currentDayData = updated[currentDayIndex];
+          const currentSelected = currentDayData.selectedVenues || [];
+          
+          const unavailableIds = unavailableNames.map(name => {
+             const venueObj = stateRef.current.venuesList.find(v => v.venue === name);
+             return venueObj ? venueObj.id : name;
+          });
+
+          const filteredVenues = currentSelected.filter(id => !unavailableIds.includes(id));
+          const filteredCards = (currentDayData.venueCards || []).filter(card => !unavailableIds.includes(card.venueId));
+
+          if (filteredVenues.length !== currentSelected.length) {
+            updated[currentDayIndex] = {
+              ...currentDayData,
+              selectedVenues: filteredVenues,
+              venueCards: filteredCards
+            };
+            return updated;
+          }
+          return prev;
+        });
       } else if (data?.status === "AVAILABLE") {
         setBookedVenueNames([]);
       }
@@ -1225,13 +1339,8 @@ export default function VenueForm({
       return false;
     }
 
-    if (venueAvailability?.status === "NOT_AVAILABLE") {
-      setApiError("Please choose another venue, this venue is already booked.");
-      return false;
-    }
-
     const dayData   = venueData[currentDayIndex];
-    const dayErrors = validateDay(dayData, currentVenuesList);
+    const dayErrors = isEditMode ? {} : validateDay(dayData, currentVenuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
     if (hasErrors) return false;
@@ -1317,6 +1426,118 @@ export default function VenueForm({
     <>
       {popupVenue && (
         <VenueInfoPopup venueName={popupVenue} onClose={handlePopupClose} />
+      )}
+
+      {permissionPopupOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-[#3A3A5A] bg-[#1E1E35] shadow-2xl">
+
+            {/* Header */}
+            <div className="flex items-start gap-3 px-6 pt-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-purple-600/20 border border-purple-500/40 flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-purple-400"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+              </div>
+
+              <div>
+                <h3 className="text-white text-lg font-semibold">
+                  Venue Permission Required
+                </h3>
+
+                <p className="text-gray-400 text-sm mt-1">
+                  Please make sure you have permission before using this venue.
+                </p>
+              </div>
+            </div>
+
+            {/* Message */}
+            <div className="px-6 py-5">
+
+              <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-4">
+                <p className="text-purple-200 text-sm leading-6">
+                  Kindly get permission from the respective department
+                  venue in-charge, classroom in-charge, or lab in-charge
+                  before using the selected venue.
+                </p>
+              </div>
+
+              {/* Contacted Admin */}
+              <label className="mt-5 flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={contactedAdmin}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+
+                    setContactedAdmin(checked);
+
+                    if (checked) {
+                      // ─────────────────────────────────────────────
+                      // User has confirmed permission.
+                      // Now actually add the pending venues.
+                      // ─────────────────────────────────────────────
+                      const currentSelected =
+                        stateRef.current.venueData?.[currentDayIndex]
+                          ?.selectedVenues || [];
+
+                      const finalSelectedVenues = [
+                        ...new Set([
+                          ...currentSelected,
+                          ...pendingPermissionVenues,
+                        ]),
+                      ];
+
+                      setPermissionPopupOpen(false);
+                      setPendingPermissionVenues([]);
+
+                      // NOW create the venue container.
+                      applyVenueSelection(finalSelectedVenues);
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                />
+
+                <span className="text-white text-sm font-medium">
+                  Contacted Admin
+                </span>
+              </label>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end px-6 pb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  // ─────────────────────────────────────────────
+                  // User did NOT get permission.
+                  //
+                  // Remove the pending venue completely.
+                  // No selected venue.
+                  // No venue container.
+                  // ─────────────────────────────────────────────
+                  setPermissionPopupOpen(false);
+                  setContactedAdmin(false);
+                  setPendingPermissionVenues([]);
+                }}
+                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
+              >
+                Remove this message
+              </button>
+            </div>
+
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col gap-6 pb-6">
@@ -1415,9 +1636,169 @@ export default function VenueForm({
             </div>
         )}
 
-        <h2 className="text-white text-lg font-bold">
-          Venue Details
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg font-bold">
+            Venue Details
+          </h2>
+          
+          {currentDayIndex > 0 && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={currentDay.sameAsDay1 || false}
+                onChange={async (e) => {
+                  const checked = e.target.checked;
+                  if (checked) {
+                    const day1 = venueData[0];
+                    const selectedVenues = day1.selectedVenues || [];
+
+                    if (selectedVenues.length === 0) {
+                      setVenueData((prev) => {
+                        const updated = [...prev];
+                        updated[currentDayIndex] = {
+                          ...updated[currentDayIndex],
+                          participants: day1.participants,
+                          selectedVenues: [],
+                          venueCards: [],
+                          sameAsDay1: true
+                        };
+                        return updated;
+                      });
+                      return;
+                    }
+
+                    setCheckingVenueAvailability(true);
+                    setApiError("");
+                    try {
+                      const currentEventDay = eventDays[currentDayIndex];
+                      const payload = {
+                        eventSchedule: [
+                          {
+                            dayIndex: currentDayIndex,
+                            eventDate: currentEventDay.date,
+                            startTime: currentEventDay.startTime,
+                            endTime: currentEventDay.endTime,
+                          },
+                        ],
+                        venues: selectedVenues.map((id) => {
+                          const venueObj = stateRef.current.venuesList.find(v => v.id === id);
+                          return {
+                            dayIndex: currentDayIndex,
+                            venueName: venueObj ? venueObj.venue : id,
+                          };
+                        }),
+                      };
+
+                      const response = await fetch(
+                        `${import.meta.env.VITE_API_BASE_URL}/api/events/check-venue-availability`,
+                        {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                          },
+                          body: JSON.stringify(payload),
+                        }
+                      );
+
+                      const data = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(data.message || "Unable to check venue availability.");
+                      }
+
+                      setVenueAvailability(data);
+
+                      if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
+                        const unavailableNames = data.data.unavailable.map((u) => u.venueName);
+                        setBookedVenueNames(unavailableNames);
+                        
+                        const availableVenues = selectedVenues.filter((id) => {
+                          const venueObj = stateRef.current.venuesList.find(v => v.id === id);
+                          return !unavailableNames.includes(venueObj ? venueObj.venue : id);
+                        });
+
+                        if (availableVenues.length === 0) {
+                          setApiError(`All selected venues from Day 1 are already booked for this day. (${unavailableNames.join(", ")})`);
+                          setVenueData((prev) => {
+                            const updated = [...prev];
+                            updated[currentDayIndex] = {
+                              ...updated[currentDayIndex],
+                              sameAsDay1: false
+                            };
+                            return updated;
+                          });
+                        } else {
+                          setApiError(`Some venues from Day 1 are already booked (${unavailableNames.join(", ")}). Only available venues were selected.`);
+                          const availableVenueCards = (day1.venueCards || []).filter((card) => {
+                            return availableVenues.includes(card.venueId);
+                          });
+                          setVenueData((prev) => {
+                            const updated = [...prev];
+                            updated[currentDayIndex] = {
+                              ...updated[currentDayIndex],
+                              participants: day1.participants,
+                              selectedVenues: availableVenues,
+                              venueCards: JSON.parse(JSON.stringify(availableVenueCards)),
+                              sameAsDay1: true
+                            };
+                            return updated;
+                          });
+                        }
+                      } else {
+                        setBookedVenueNames([]);
+                        setVenueData((prev) => {
+                          const updated = [...prev];
+                          updated[currentDayIndex] = {
+                            ...updated[currentDayIndex],
+                            participants: day1.participants,
+                            selectedVenues: [...selectedVenues],
+                            venueCards: JSON.parse(JSON.stringify(day1.venueCards || [])),
+                            sameAsDay1: true
+                          };
+                          return updated;
+                        });
+                      }
+                    } catch (err) {
+                      console.error(err);
+                      setApiError(err.message || "Failed to check venue availability.");
+                      setVenueData((prev) => {
+                        const updated = [...prev];
+                        updated[currentDayIndex] = {
+                          ...updated[currentDayIndex],
+                          sameAsDay1: false
+                        };
+                        return updated;
+                      });
+                    } finally {
+                      setCheckingVenueAvailability(false);
+                    }
+                  } else {
+                    setVenueData((prev) => {
+                      const updated = [...prev];
+                      updated[currentDayIndex] = {
+                        ...updated[currentDayIndex],
+                        participants: "",
+                        selectedVenues: [],
+                        venueCards: [],
+                        sameAsDay1: false
+                      };
+                      return updated;
+                    });
+                    setApiError("");
+                    setErrors((prev) => {
+                      const updated = { ...prev };
+                      delete updated[currentDayIndex];
+                      return updated;
+                    });
+                  }
+                }}
+                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+            </label>
+          )}
+        </div>
 
         {(apiError || Object.keys(currentErrors).length > 0) && (
           <div className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3 flex items-start gap-3">
@@ -1454,7 +1835,7 @@ export default function VenueForm({
 
             setVenueData((prev) => {
               const updated = [...prev];
-              const day = { ...updated[currentDayIndex], participants: newParticipants };
+              const day = { ...updated[currentDayIndex], participants: newParticipants, sameAsDay1: false };
 
               // Auto-fill only when exactly ONE venue is selected.
               if (day.selectedVenues && day.selectedVenues.length === 1) {

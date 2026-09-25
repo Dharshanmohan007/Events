@@ -12,6 +12,30 @@ function formatDate(dateStr) {
   return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function formatDateTime(dateStr) {
+  if (!dateStr) return "-";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return "-";
+  return d.toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true
+  });
+}
+
+// Returns a CSS color string based on the semantic meaning of a status
+function statusColor(s) {
+  if (!s || s === '-') return '#1e3a8a';  
+  const v = String(s).toLowerCase().trim();
+  if (v.includes('approved') || v.includes('completed') || v.includes('closed') ||
+      v.includes('acknowledged') || v.includes('accepted') || v.includes('sanctioned') ||
+      v === 'yes') return '#15803d';  // green
+  if (v.includes('rejected') || v.includes('cancelled') || v.includes('denied') ||
+      v.includes('declined')) return '#b91c1c'; // red
+  if (v.includes('pending') || v.includes('processing') || v.includes('review') ||
+      v.includes('submitted')) return '#b45309'; // amber
+  return '#1e3a8a'; // default blue
+}
+
 function buildEventTemplate(event = {}) {
   const {
     requestDetails = {},
@@ -48,18 +72,27 @@ function buildEventTemplate(event = {}) {
   const scheduleRows = (eventDetails?.eventSchedule || [])
     .map(
       (day, i) => {
-        const guestNames = (day?.guests || []).map(g => typeof g === 'object' ? (g?.name || g?.guestName || '') : g).filter(Boolean).join(", ");
+        const guestDetails = (day?.guests || []).map(g => {
+          if (typeof g !== 'object') return `<strong>${g}</strong>`;
+          const name = g?.name || g?.guestName || '';
+          const parts = [name ? `<strong>${name}</strong>` : ''];
+          if (g?.designation)  parts.push(g.designation);
+          if (g?.organization) parts.push(g.organization);
+          if (g?.mobile)       parts.push(g.mobile);
+          return parts.filter(Boolean).join(', ');
+        }).filter(Boolean).join('<br>');
         return `
       <tr>
         <td>Day ${i + 1}</td>
         <td>${formatDate(day?.eventDate)}</td>
         <td>${day?.startTime || '-'} - ${day?.endTime || '-'}</td>
         <td>${day?.totalGuests || '-'}</td>
-        <td>${guestNames || '-'}</td>
+        <td>${guestDetails || '-'}</td>
       </tr>`;
       }
     )
     .join("");
+
 
   const venueRows = (venueDetails?.venues || [])
     .map((v) => {
@@ -125,21 +158,60 @@ function buildEventTemplate(event = {}) {
     })
     .join("");
 
+  // Helper: describe one giftItem object from the purchase payload
+  const describeGiftItem = (gi) => {
+    if (!gi || !gi.giftType) return '';
+    if (gi.giftType === 'Trophy') {
+      const parts = (gi.trophy || []).map(t => `${t.trophyType} ×${t.quantity}`);
+      return parts.length ? `Trophy (${parts.join(', ')})` : 'Trophy';
+    }
+    if (gi.giftType === 'Cash Prize') return `Cash Prize ₹${gi.cashPrizeAmount || 0}`;
+    if (gi.giftType === 'Gifts') return `Gifts ×${gi.giftsQty || 0}`;
+    if (gi.giftType === 'Voucher') {
+      const vp = (gi.voucher || []).map(v => `${v.voucherWorth} ×${v.quantity}`);
+      return vp.length ? `Voucher (${vp.join(', ')})` : 'Voucher';
+    }
+    return gi.giftType;
+  };
+
   const purchaseRows = (event?.purchaseDetails?.purchases || [])
     .map((p) => {
-      const needed = (p.requirementNeeded || []).map(r => `${r.type} (H:${r.hardCount || 0}, S:${r.softCount || 0})`).join(", ");
-      let gifts = [];
-      if (p.students?.giftItems?.length) gifts.push(`Students: ${p.students.giftItems.length} gifts`);
-      if (p.guests?.giftItems?.length) gifts.push(`Guests: ${p.guests.giftItems.length} gifts`);
+      // requirementNeeded: array of objects {type, hardCount, softCount}
+      const needParts = (p.requirementNeeded || []).map(r =>
+        r.type ? `${r.type} ×${r.hardCount || 0}` : String(r)
+      );
+
+      // requiredFor: ["Students","Guest"] or ["Both"]
+      const requiredFor = (p.requiredFor || []).join(', ') || '-';
+
+      // Gift items — proper objects with full trophy/voucher breakdowns
+      const studentGifts = (p.students?.giftItems || []).map(describeGiftItem).filter(Boolean);
+      const guestGifts   = (p.guests?.giftItems   || []).map(describeGiftItem).filter(Boolean);
+      const regKit = [];
+      if (p.students?.registrationKitNeeded) regKit.push(`Students kit ×${p.students.registrationKitQty || 0}`);
+      if (p.guests?.registrationKitNeeded)   regKit.push(`Guests kit ×${p.guests.registrationKitQty || 0}`);
+
+      const giftParts = [];
+      if (studentGifts.length) giftParts.push(`Students: ${studentGifts.join(', ')}`);
+      if (guestGifts.length)   giftParts.push(`Guests: ${guestGifts.join(', ')}`);
+      if (regKit.length)       giftParts.push(regKit.join(', '));
+
+      // Staff — may be stored as accompanyingStaff array or staffNames string
+      const staffArr = p.accompanyingStaff || p.staffNames || [];
+      const staffStr = Array.isArray(staffArr)
+        ? staffArr.map(s => s.name || s).join(', ')
+        : String(staffArr);
+
       return `
       <tr>
         <td>Day ${(p.dayIndex || 0) + 1}</td>
-        <td>${(p.requiredFor || []).join(", ") || '-'}</td>
-        <td>${needed || '-'}</td>
-        <td>${gifts.join(", ") || '-'}</td>
+        <td>${requiredFor}</td>
+        <td>${needParts.join(', ') || '-'}</td>
+        <td>${giftParts.join(' | ') || '-'}</td>
+        <td>${staffStr || '-'}</td>
       </tr>`;
     })
-    .join("");
+    .join('');
 
   const accommRows = (event?.accommodationDetails?.accommodations || [])
     .map((a) => {
@@ -152,7 +224,7 @@ function buildEventTemplate(event = {}) {
         return true;
       });
       const guests = uniqueGuests.map(g =>
-        `${g.name}${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
+        `<strong>${g.name}</strong>${g.mobile ? ' (' + g.mobile + ')' : ''}${g.gender ? ' [' + g.gender + ']' : ''}`
       ).join('<br/>');
 
       const dineInCounts = (a.dineInCounts || []).map(d => `${d.type}: ${d.count}`).join(', ');
@@ -160,15 +232,19 @@ function buildEventTemplate(event = {}) {
       // Clean human-readable room selections — only show relevant fields
       const roomSel = (a.roomSelections || []);
       const roomHtml = roomSel.length
-        ? roomSel.map(rs =>
-            `Room ${rs.roomNumber || '-'} - ${rs.venue || '-'} (Occupants: ${rs.occupantCount ?? '-'})`
-          ).join('<br/>')
+        ? roomSel.map(rs => {
+            // rs.roomNumber already contains the full label (e.g. "Room 1"), don't prepend "Room"
+            const num = rs.roomNumber || rs.room || '-';
+            // rs.venue holds room type/category (e.g. "SUIT"), not the building venue
+            const type = rs.venue ? ` [${rs.venue}]` : '';
+            return `<strong>${num}</strong>${type} (Occupants: ${rs.occupantCount ?? '-'})`;
+          }).join('<br/>')
         : '-';
 
       const staff = (a.accompanyingStaff || []).map(s => s.name).join(', ');
       return `
       <tr>
-        <td>${formatDate(a.checkInDateTime)} → ${formatDate(a.checkOutDateTime)}</td>
+        <td>${formatDateTime(a.checkInDateTime)} → ${formatDateTime(a.checkOutDateTime)}</td>
         <td>${guests || '-'}</td>
         <td>${a.dineInRequired ? 'Yes' : 'No'}<br/><small>${dineInCounts || '-'}</small></td>
         <td>${roomHtml}</td>
@@ -205,59 +281,184 @@ function buildEventTemplate(event = {}) {
     )
     .join("");
 
-  // Meal types that have veg/nonveg breakdown per category
-  const MEAL_TYPES = ['Breakfast', 'Lunch', 'Dinner'];
-  // Types that have a flat refreshmentCount
+  // Meal/refreshment type constants
+  const MEAL_TYPES    = ['Breakfast', 'Lunch', 'Dinner'];
   const REFRESH_TYPES = ['Morning Refreshment', 'Evening Refreshment'];
 
-  const refreshmentBlocks = (refreshmentDetails?.refreshments || [])
-    .map((r) => {
-      const foodTypes = r?.foodTypes || [];
+  // ── Helper for Date and Venue extraction ──────────────────────────────────
+  const getDayInfo = (r, idx, eventDetails, venueDetails) => {
+    const dayIdx = r?.dayIndex ?? idx;
+    const scheduleDate = (eventDetails?.eventSchedule || [])[dayIdx]?.eventDate;
+    const dateToUse = r?.date || scheduleDate;
+    const formattedDate = dateToUse ? formatDate(dateToUse) : `Day ${dayIdx + 1}`;
+    
+    const allVenues = new Set();
+    
+    // 1. Add specific food venues (from morning/evening refreshments)
+    (r?.foodTypes || []).forEach(ft => {
+      (ft?.venueWiseDetails || []).forEach(v => {
+        if (v?.venueName) allVenues.add(v.venueName);
+        else if (v?.venue) allVenues.add(v.venue);
+      });
+    });
 
-      // Build one row per food type present
+    // 2. Fallback: If no specific food venues exist, use the event's main venue(s) for this day
+    if (allVenues.size === 0 && venueDetails && venueDetails.venues) {
+      venueDetails.venues
+        .filter(v => (v?.dayIndex || 0) === dayIdx)
+        .forEach(v => {
+          if (v?.venueName) allVenues.add(v.venueName);
+        });
+    }
+
+    // 3. Legacy fallback
+    if (allVenues.size === 0 && r?.venue) {
+      allVenues.add(r.venue);
+    }
+    
+    const venueStr = allVenues.size > 0 ? Array.from(allVenues).join(', ') : '-';
+    
+    return { formattedDate, venueStr, rawDate: dateToUse || `Day ${dayIdx + 1}` };
+  };
+
+  // ── Food section (Breakfast / Lunch / Dinner) ────────────────────────────
+  const foodBlocks = (refreshmentDetails?.refreshments || [])
+    .map((r, idx) => {
+      const foodTypes = (r?.foodTypes || []).filter(f => MEAL_TYPES.includes(f?.type));
+      if (foodTypes.length === 0) return '';
       const foodRows = foodTypes.map((f) => {
-        const isMeal = MEAL_TYPES.includes(f?.type);
-        const isRefresh = REFRESH_TYPES.includes(f?.type);
-        let detail = '-';
-        if (isMeal) {
-          const parts = [];
-          if (f.participants && (f.participants.vegCount || f.participants.nonVegCount))
-            parts.push(`Participants: ${f.participants.vegCount || 0}V / ${f.participants.nonVegCount || 0}NV`);
-          if (f.vipGuests && (f.vipGuests.vegCount || f.vipGuests.nonVegCount))
-            parts.push(`VIP: ${f.vipGuests.vegCount || 0}V / ${f.vipGuests.nonVegCount || 0}NV`);
-          if (f.trainer && (f.trainer.vegCount || f.trainer.nonVegCount))
-            parts.push(`Trainer: ${f.trainer.vegCount || 0}V / ${f.trainer.nonVegCount || 0}NV`);
-          detail = parts.join('<br/>') || '-';
-        } else if (isRefresh) {
-          detail = `Count: ${f.refreshmentCount || '-'}`;
-        } else if (f.participants) {
-          detail = `${f.participants.vegCount || 0}V / ${f.participants.nonVegCount || 0}NV`;
-        }
-        return `<tr><td>${f?.type || '-'}</td><td>${detail}</td></tr>`;
+        const pV  = f.participants?.vegCount    || 0;
+        const pNV = f.participants?.nonVegCount || 0;
+        const vV  = f.vipGuests?.vegCount       || 0;
+        const vNV = f.vipGuests?.nonVegCount    || 0;
+        const tV  = f.trainer?.vegCount         || 0;
+        const tNV = f.trainer?.nonVegCount      || 0;
+        return `<tr>
+          <td>${f?.type || '-'}</td>
+          <td>${pV}V / ${pNV}NV</td>
+          <td>${vV}V / ${vNV}NV</td>
+          <td>${tV}V / ${tNV}NV</td>
+        </tr>`;
       }).join('');
-
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-
+      const { formattedDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
       return `
-      <tr>
-        <td colspan="2">
-          <strong>${formatDate(r?.date)}</strong><br/>
-          Resource: ${(r?.resourcePersonType || []).join(', ') || '-'} — ${r?.numberOfResourcePersons || 0} person(s)${r?.numberOfInternalAccompanyingStaff ? ', Internal Staff: ' + r.numberOfInternalAccompanyingStaff : ''}${staff ? '<br/>Staff: ' + staff : ''}${r?.specialRequirements ? '<br/>Special: ' + r.specialRequirements : ''}
+      <tr style="background:#f7f7f7;">
+        <td colspan="5">
+          <strong>${formattedDate}</strong> — 
+          Venue: ${venueStr} | 
+          Resource: ${(r?.resourcePersonType || []).join(', ') || '-'} — ${r?.numberOfResourcePersons || 0} person(s)${r?.numberOfInternalAccompanyingStaff ? ', Internal Staff: '+r.numberOfInternalAccompanyingStaff : ''}${staff ? ' | Staff: '+staff : ''}${r?.specialRequirements ? ' | Special: '+r.specialRequirements : ''}
         </td>
       </tr>
-      <tr>
-        <td colspan="2">
-          <table style="width:100%;border-collapse:collapse;margin:4px 0;">
-            <thead><tr><th style="background:#eef2ff;color:#1e3a8a;padding:4px 6px;border:1px solid #ccc;">Food Type</th><th style="background:#eef2ff;color:#1e3a8a;padding:4px 6px;border:1px solid #ccc;">Details</th></tr></thead>
-            <tbody>${foodRows || '<tr><td colspan="2">-</td></tr>'}</tbody>
-          </table>
-        </td>
-      </tr>`;
-    })
-    .join("");
+      ${foodRows}`;
+    }).join('');
 
-  // Keep refreshmentRows variable pointing to same content for conditional section check
-  const refreshmentRows = refreshmentBlocks;
+  // ── Pivot Food table (Breakfast / Lunch / Dinner per date column) ──────────
+  const allRefreshments = refreshmentDetails?.refreshments || [];
+
+  // Collect distinct dates that have meal-type food entries
+  const foodDates = [];
+  allRefreshments.forEach((r, idx) => {
+    const hasMeals = (r?.foodTypes || []).some(f => MEAL_TYPES.includes(f?.type));
+    if (hasMeals) {
+      const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
+      if (!foodDates.find(fd => fd.raw === rawDate)) {
+        foodDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
+      }
+    }
+  });
+
+  // Build per-date summary (venue/resource) caption + pivot table rows
+  const buildFoodPivot = () => {
+    if (foodDates.length === 0) return '';
+
+    // Summary block above the table
+    const summaryLines = foodDates.map(fd => {
+      const r = fd.entry;
+      const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
+      return `<strong>${fd.label}</strong>: Venue: ${fd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+    }).join('<br/>');
+
+    // Header row: date groups, each split into V / NV
+    const dateHeaders = foodDates.map(fd =>
+      `<th colspan="2" style="background:#bfdbfe;color:#1e3a8a;text-align:center;">${fd.label}</th>`
+    ).join('');
+    const subHeaders = foodDates.map(() =>
+      `<th style="background:#bbf7d0;color:#166534;text-align:center;">V</th><th style="background:#bbf7d0;color:#166534;text-align:center;">NV</th>`
+    ).join('');
+
+    // One row per meal type
+    const mealRows = MEAL_TYPES.map(mealType => {
+      const cells = foodDates.map(fd => {
+        const ft = (fd.entry?.foodTypes || []).find(f => f?.type === mealType);
+        const v  = ft ? ((ft.participants?.vegCount||0) + (ft.vipGuests?.vegCount||0) + (ft.trainer?.vegCount||0)) : '-';
+        const nv = ft ? ((ft.participants?.nonVegCount||0) + (ft.vipGuests?.nonVegCount||0) + (ft.trainer?.nonVegCount||0)) : '-';
+        return `<td style="text-align:center;">${v}</td><td style="text-align:center;">${nv}</td>`;
+      }).join('');
+      return `<tr><td style="font-weight:600;">${mealType}</td>${cells}</tr>`;
+    }).join('');
+
+    return `
+      <p style="font-size:10px;margin:0 0 6px 0;line-height:1.6;">${summaryLines}</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
+        <thead>
+          <tr><th rowspan="2" style="background:#eef2ff;color:#1e3a8a;">Meal Type</th>${dateHeaders}</tr>
+          <tr>${subHeaders}</tr>
+        </thead>
+        <tbody>${mealRows}</tbody>
+      </table>`;
+  };
+
+  const foodPivot = buildFoodPivot();
+
+  // ── Pivot Refreshment table (Morning / Evening per date column) ───────────
+  const refreshDates = [];
+  allRefreshments.forEach((r, idx) => {
+    const hasRefresh = (r?.foodTypes || []).some(f => REFRESH_TYPES.includes(f?.type));
+    if (hasRefresh) {
+      const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
+      if (!refreshDates.find(rd => rd.raw === rawDate)) {
+        refreshDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
+      }
+    }
+  });
+
+  const buildRefreshPivot = () => {
+    if (refreshDates.length === 0) return '';
+
+    const summaryLines = refreshDates.map(rd => {
+      const r = rd.entry;
+      const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
+      return `<strong>${rd.label}</strong>: Venue: ${rd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+    }).join('<br/>');
+
+    const dateHeaders = refreshDates.map(rd =>
+      `<th style="background:#bfdbfe;color:#1e3a8a;text-align:center;">${rd.label}</th>`
+    ).join('');
+
+    // For refreshments the API has a single refreshmentCount (no VIP vs Normal split in real data)
+    // Render as one count column per date
+    const refreshTypeRows = REFRESH_TYPES.map(typeName => {
+      const shortName = typeName.replace(' Refreshment', '');
+      const cells = refreshDates.map(rd => {
+        const ft = (rd.entry?.foodTypes || []).find(f => f?.type === typeName);
+        const cnt = ft ? (ft.refreshmentCount ?? '-') : '-';
+        return `<td style="text-align:center;">${cnt}</td>`;
+      }).join('');
+      return `<tr><td style="font-weight:600;">${shortName}</td>${cells}</tr>`;
+    }).join('');
+
+    return `
+      <p style="font-size:10px;margin:0 0 6px 0;line-height:1.6;">${summaryLines}</p>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
+        <thead>
+          <tr><th style="background:#eef2ff;color:#1e3a8a;">Refreshment</th>${dateHeaders}</tr>
+        </thead>
+        <tbody>${refreshTypeRows}</tbody>
+      </table>`;
+  };
+
+  const refreshPivot = buildRefreshPivot();
     
   const venueSection = (reqFlags.venueRequired && venueRows) ? `
     <div class="section">
@@ -312,7 +513,7 @@ function buildEventTemplate(event = {}) {
       <h2>Purchase Requirements</h2>
       <table>
         <thead>
-          <tr><th>Day</th><th>Required For</th><th>Items Needed</th><th>Gifts/Kits</th></tr>
+          <tr><th>Day</th><th>Required For</th><th>Items Needed</th><th>Gifts/Kits</th><th>Staff</th></tr>
         </thead>
         <tbody>${purchaseRows}</tbody>
       </table>
@@ -355,13 +556,17 @@ function buildEventTemplate(event = {}) {
     </div>
   ` : '';
 
-  const refreshmentSection = (reqFlags.refreshmentRequired && refreshmentRows) ? `
+  const foodSection = (reqFlags.refreshmentRequired && foodPivot) ? `
+    <div class="section">
+      <h2>Food</h2>
+      ${foodPivot}
+    </div>
+  ` : '';
+
+  const refreshmentSection = (reqFlags.refreshmentRequired && refreshPivot) ? `
     <div class="section">
       <h2>Refreshments</h2>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:6px;">
-        <thead><tr><th colspan="2">Date / Summary &amp; Food Breakdown</th></tr></thead>
-        <tbody style="font-size:10.5px;">${refreshmentRows}</tbody>
-      </table>
+      ${refreshPivot}
     </div>
   ` : '';
   
@@ -391,6 +596,9 @@ function buildEventTemplate(event = {}) {
         font-size: 11px;
         line-height: 1.4;
         padding: 28px 36px;
+      }
+      .page-wrap {
+        display: block;
       }
       .top-status {
         font-size: 13px;
@@ -444,6 +652,7 @@ function buildEventTemplate(event = {}) {
       .section {
         margin-bottom: 18px;
         page-break-inside: avoid;
+        break-inside: avoid;
       }
       .section h2 {
         font-size: 13px;
@@ -477,12 +686,19 @@ function buildEventTemplate(event = {}) {
       }
       .meta-grid div span.label { color: #555; font-weight: 600; }
       
+      .signatures-wrapper {
+        margin-top: 30px;
+        page-break-inside: avoid;
+        break-inside: avoid;
+        page-break-before: auto;
+        break-before: auto;
+        display: inline-block;
+        width: 100%;
+      }
       .signatures {
-        margin-top: 50px;
         display: flex;
         justify-content: space-between;
         align-items: flex-end;
-        page-break-inside: avoid;
       }
       .signature-block {
         text-align: center;
@@ -512,9 +728,10 @@ function buildEventTemplate(event = {}) {
     </style>
   </head>
   <body>
+  <div class="page-wrap">
 
-    <div class="top-status">
-      Status: ${event?.status || event?.eventStatus || '-'}
+    <div class="top-status" style="color:${statusColor(event?.status || event?.eventStatus)}">
+      STATUS: ${event?.status || event?.eventStatus || '-'}
     </div>
 
     <div class="header">
@@ -528,7 +745,7 @@ function buildEventTemplate(event = {}) {
       <div class="iqac">
         IQAC No: ${iqacNumber}<br/>
         Event Type: ${eventDetails?.eventType || event?.eventType || '-'}<br/>
-        Department: ${organizerDetails?.organizingDepartment || event?.organizingDepartment || '-'}
+        Department: <strong style="font-size:14px;">${organizerDetails?.organizingDepartment || event?.organizingDepartment || '-'}</strong>
       </div>
     </div>
 
@@ -556,7 +773,7 @@ function buildEventTemplate(event = {}) {
       <h2>Day-wise Schedule</h2>
       <table>
         <thead>
-          <tr><th>Day</th><th>Date</th><th>Time</th><th>Guests</th><th>Guest Names</th></tr>
+          <tr><th>Day</th><th>Date</th><th>Time</th><th>Guests</th><th>Guest Details</th></tr>
         </thead>
         <tbody>${scheduleRows}</tbody>
       </table>
@@ -570,28 +787,32 @@ function buildEventTemplate(event = {}) {
     ${transportSection}
     ${extTransportSection}
     ${accommSection}
+    ${foodSection}
     ${refreshmentSection}
 
-    <div class="signatures">
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">Event Organizer</div>
+    <div class="signatures-wrapper">
+      <div class="signatures">
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">Event Organizer</div>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">HoD / Section Head</div>
+        </div>
+        <div class="signature-block">
+          <div class="signature-line"></div>
+          <div class="signature-label">IQAC Team</div>
+        </div>
       </div>
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">HoD / Section Head</div>
-      </div>
-      <div class="signature-block">
-        <div class="signature-line"></div>
-        <div class="signature-label">IQAC Team</div>
+
+      <div class="footer">
+        <div>Submitted on: ${formatDate(event?.createdAt || event?.updatedAt)}</div>
+        <div>Generated on: ${new Date().toLocaleString("en-IN")}</div>
       </div>
     </div>
 
-    <div class="footer">
-      <div>Submitted on: ${formatDate(event?.createdAt || event?.updatedAt)}</div>
-      <div>Generated on: ${new Date().toLocaleString("en-IN")}</div>
-    </div>
-
+  </div>
   </body>
   </html>
   `;

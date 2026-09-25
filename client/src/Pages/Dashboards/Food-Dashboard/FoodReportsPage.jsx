@@ -32,7 +32,7 @@ const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'ackno
 
 const Status = ({ status }) => {
     const label = status || 'Pending'
-    const isPositive = POSITIVE_STATUSES.includes(String(label).toLowerCase())
+    const isPositive = POSITIVE_STATUSES.some(p => String(label).toLowerCase().includes(p))
 
     return (
         <span className={`inline-flex items-center gap-2 font-semibold ${isPositive ? 'text-[#34D399]' : 'text-[#F87171]'}`}>

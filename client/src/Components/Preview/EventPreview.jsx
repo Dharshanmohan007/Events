@@ -78,7 +78,7 @@ import {
                 Event Date
                 </div>
 
-                <p className="mt-2 font-semibold">{formatDate(firstDay.date)}</p>
+                <p className="mt-2 font-semibold">{(firstDay.date)}</p>
             </div>
 
             <div className="border-r border-[#8e93a6] pr-4">

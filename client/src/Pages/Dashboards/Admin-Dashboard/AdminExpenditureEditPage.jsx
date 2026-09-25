@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import axios from "axios";
+import { useAuth } from "../../../Components/AuthContext";
 import IncomeSourceForm from "../Faculty-Dashboard/IncomeSourceForm";
 import ExpenditureDetailsForm from "../Faculty-Dashboard/ExpenditureDetailsForm";
 import OtherDetailsForm from "../Faculty-Dashboard/OtherDetailsForm";
@@ -61,20 +62,23 @@ const validateIncome = (incomeData) => {
 
   if (
     institutionalAmount.amount ||
-    institutionalAmount.selectRequired ||
     institutionalAmount.details
   ) {
     if (!institutionalAmount.amount)
       errors.push("Institutional Amount: Amount is required");
-    if (!institutionalAmount.selectRequired)
-      errors.push("Institutional Amount: Select Required is required");
     if (!institutionalAmount.details)
       errors.push("Institutional Amount: Details is required");
   }
 
-  if (departmentFund.amount || departmentFund.details) {
+  if (
+    departmentFund.amount ||
+    departmentFund.selectRequired ||
+    departmentFund.details
+  ) {
     if (!departmentFund.amount)
       errors.push("Department Fund: Amount is required");
+    if (!departmentFund.selectRequired)
+      errors.push("Department Fund: Select Required is required");
     if (!departmentFund.details)
       errors.push("Department Fund: Details is required");
   }
@@ -118,8 +122,8 @@ const validateExpenditure = (expenditureData) => {
     if (bills.length > 0) {
       hasAny = true;
       bills.forEach((bill, idx) => {
-        if (!bill.expenseName)
-          errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
+        // if (!bill.expenseName)
+        //   errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
         if (!bill.billNo)
           errors.push(`${cat} bill ${idx + 1}: Bill No is required`);
         if (!bill.billDate)
@@ -145,8 +149,16 @@ const validateExpenditure = (expenditureData) => {
 };
 
 const AdminExpenditureEditPage = () => {
+  const { isAdminSecretary } = useAuth();
   const { eventId } = useParams();
   const navigate = useNavigate();
+
+  // Redirect admin secretary away from edit page
+  useEffect(() => {
+    if (isAdminSecretary) {
+      navigate(-1);
+    }
+  }, [isAdminSecretary, navigate]);
   const token = localStorage.getItem("token");
 
   const [step, setStep] = useState("documentUpload");

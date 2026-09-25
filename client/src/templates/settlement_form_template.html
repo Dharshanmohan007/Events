@@ -4,29 +4,30 @@
 <meta charset="UTF-8">
 <title>Settlement Form</title>
 <style>
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: "Times New Roman", Times, serif;
-    font-size: 12px;
-    line-height: 1.15;
+    font-size: 13px;
+    line-height: 1.2;
     color: #000;
     background: #e9e9e9;
-    margin: 0;
-    padding: 14px 16px;
+    padding: 0;
   }
-  .page-wrap { width: 100%; max-width: 756px; margin: 0 auto; }
+  .page-wrap { width: 100%; max-width: 920px; margin: 0 auto; }
 
   .corner-code {
-    text-align: right;
-    font-size: 11px;
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    font-size: 12px;
     font-weight: bold;
-    padding: 0 4px 4px 0;
   }
 
   .sheet {
-    border: 2px solid #000;
+    position: relative;
+    border: 1px solid #000;
     background: #fff;
-    padding: 6px 8px 8px 8px;
+    padding: 2px 4px;
   }
 
   /* ---------- BRAND HEADER ---------- */
@@ -34,123 +35,148 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 4px 0 6px 0;
+    padding: 2px 0 3px 0;
   }
   .brand .brand-logo {
-    height: 54px;
+    height: 42px;
     width: auto;
-    /* This is the real Sri Eshwar College of Engineering letterhead,
-       extracted from Settlement_form_26-27.pdf. Swap the src if the
-       institution issues an updated logo file. */
   }
 
   .title-bar {
-    border-top: 1.5px solid #000;
-    border-bottom: 1.5px solid #000;
+    border-top: 1px solid #000;
+    border-bottom: 1px solid #000;
     text-align: center;
     font-weight: bold;
-    font-size: 13px;
-    padding: 3px 0;
+    font-size: 14px;
+    padding: 5px 0 8px 0;
     margin-bottom: 0;
+    line-height: 1.4;
   }
 
   /* ---------- TOP INFO GRID ---------- */
-  table.info-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.info-table { width: 100%; border-collapse: collapse; }
   table.info-table td {
-    border: 1px solid #000;
-    border-top: none;
-    padding: 4px 6px;
-    font-size: 11px;
-    vertical-align: top;
+    border: 1px solid #444;
+    padding: 2px 4px 7px 4px;
+    font-size: 13px;
+    line-height: 1.4;
+    vertical-align: top !important;
+    text-align: left;
     word-wrap: break-word;
     overflow-wrap: break-word;
   }
   table.info-table td b { font-weight: bold; }
-  .full-row td { border-left: 1px solid #000; }
-  .tall-row td { height: 30px; vertical-align: top; padding-top: 4px; }
+  .tall-row td { vertical-align: top; }
 
-  /* ---------- SECTION HEADINGS INSIDE TABLE FLOW ---------- */
+  /* ---------- SECTION HEADINGS ---------- */
   .section-label-row td, th.section-label-row {
+    background: #f0f0f0;
     font-weight: bold;
     background: #fff;
-    border-top: none;
-    padding: 3px 6px;
+    padding: 5px 4px 7px 4px;
+    font-size: 13px;
+    vertical-align: middle;
   }
 
-  /* Small consistent gap placed before a new, fully-bordered section */
   .section-gap { margin-top: 0; }
 
   /* ---------- DATA TABLES ---------- */
-  table.data { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.data { width: 100%; border-collapse: collapse; }
   table.data th, table.data td {
-    border: 1px solid #000;
-    padding: 4px 6px;
-    font-size: 11px;
+    border: 1px solid #444;
+    padding: 5px 4px 7px 4px;
+    font-size: 13px;
+    line-height: 1.4;
     text-align: left;
-    vertical-align: top;
+    vertical-align: middle;
   }
-  table.data th { text-align: center; font-weight: bold; }
+  table.data th { text-align: center; font-weight: bold; background: #fff; }
   table.data td.num { text-align: center; white-space: nowrap; }
-  table.data td.amt { text-align: right; }
-  table.data td.details { text-align: center; font-size: 9.5px; }
-  table.data td.details.bold { font-weight: bold; font-size: 11px; }
+  table.data td.amt { text-align: right; vertical-align: top !important; position: relative; }
+  table.data td.details { text-align: center; font-size: 12px; }
+  table.data td.details.bold { font-weight: bold; font-size: 13px; }
   table.data tr.total-row td { font-weight: bold; }
   table.data tr.total-row td.label-span { text-align: right; }
-  table.data td.blankrow { height: 22px; }
-  #expenditureTable { border-bottom: 1px solid #000; }
+  table.data td.blankrow { height: 10px; }
 
   .cat-tag { font-weight: bold; vertical-align: middle; text-align: left; }
-  .item-desc { }
 
   /* ---------- REMARKS + TOTALS SIDE BY SIDE ---------- */
-  table.remarks-block { width: 100%; border-collapse: separate; border-spacing: 0; }
-  table.remarks-block td {
-    border: 1px solid #000;
-    border-top: none;
-    font-size: 11px;
+  table.remarks-block { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.remarks-block > tbody > tr > td {
+    border: 1px solid #444;
+    font-size: 13px;
+    vertical-align: middle;
+    line-height: 1.4;
+  }
+  .remarks-cell {
+    width: 55%;
+    text-align: left;
+    font-weight: bold;
+    padding: 0;
     vertical-align: top;
   }
-  .remarks-cell { width: 65%; text-align: center; font-weight: bold; padding-top: 16px; }
-  .totals-cell { width: 35%; padding: 0; }
-  .totals-cell table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  .totals-cell td { border: none; border-bottom: 1px solid #000; padding: 4px 6px; font-size: 10.5px; }
+  .outcomes-cell {
+    width: 100%;
+    text-align: left;
+    font-weight: bold;
+    font-size: 15px;
+    padding: 6px 6px;
+    height: 70px;
+    vertical-align: top;
+  }
+  .totals-cell { width: 45%; padding: 0; vertical-align: top; }
+  .totals-cell table { width: 100%; border-collapse: collapse; height: 100%; }
+  .totals-cell td {
+    border: none;
+    border-bottom: 1px solid #444;
+    padding: 5px 4px 7px 4px;
+    font-size: 13px;
+    line-height: 1.4;
+    vertical-align: middle;
+  }
   .totals-cell tr:last-child td { border-bottom: none; }
-  .totals-cell td.tlabel { font-weight: bold; width: 60%; }
-  .totals-cell td.tval { width: 40%; }
+  .totals-cell td.tlabel { font-weight: bold; width: 70%; }
+  .totals-cell td.tval { width: 30%; }
 
   /* ---------- DECLARATION ---------- */
   .declaration {
-    font-size: 10.5px;
+    font-size: 13px;
     font-style: italic;
-    border: 1px solid #000;
+    border: 1px solid #444;
     border-top: none;
-    padding: 4px 6px;
+    padding: 5px 4px 7px 4px;
+    line-height: 1.4;
+    vertical-align: middle;
   }
 
   /* ---------- SIGNATURE BLOCK ---------- */
-  table.sign { width: 100%; border-collapse: separate; border-spacing: 0; }
+  table.sign { width: 100%; border-collapse: collapse; }
   table.sign td {
-    border: 1px solid #000;
+    border: 1px solid #444;
     border-top: none;
-    font-size: 9.5px;
+    font-size: 13px;
     font-weight: bold;
     text-align: center;
-    padding: 10px 4px 6px 4px;
+    padding: 24px 2px 8px 2px;
     width: 16.66%;
+    line-height: 1.2;
   }
 
   @media print {
-    body { background: #fff; padding: 0; }
-    .page-wrap { width: 100%; }
+    body { background: #fff; padding: 0; margin: 0; }
+    .page-wrap { width: 100%; max-width: 100%; }
+    .sheet { page-break-inside: avoid; }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   }
+  @page { size: A4; margin: 6mm 8mm; }
 </style>
 </head>
 <body>
 <div class="page-wrap">
 
-  <div class="corner-code" id="cornerCode">IQAC/2026/001/c</div>
-
   <div class="sheet">
+    <div class="corner-code" id="cornerCode">IQAC/2026/001/c</div>
 
     <!-- ================= BRAND HEADER ================= -->
     <div class="brand">
@@ -161,52 +187,63 @@
     <!-- ================= TOP INFO GRID ================= -->
     <table class="info-table">
       <tr class="tall-row">
-        <td style="width:65%;"><b>Name of the Event:</b><br><span id="eventName"></span></td>
-        <td style="width:35%;"><b>Submission Date:</b><br><span id="submissionDate"></span></td>
+        <td style="width:65%;" valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Name of the Event:</b><br><span id="eventName"></span></div></td>
+        <td style="width:35%;" valign="top" align="left"><div style="display: block; width: 100%; height: 100%;">
+          <b>Submission Date:</b> <span id="submissionDate"></span><br>
+          <b>Event Date(s):</b> <span id="eventDate"></span>
+        </div></td>
       </tr>
       <tr class="tall-row">
-        <td><b>Guest Name(s), if any:</b><br><span id="guestNames"></span></td>
-        <td><b>IQAC Number:</b><br><span id="iqacNumber"></span></td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Guest Name(s):</b><br><span id="guestNames"></span></div></td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>IQAC Number:</b><br><span id="iqacNumber"></span></div></td>
       </tr>
       <tr>
-        <td><b>Name of the faculty:</b><br><span id="facultyName"></span></td>
-        <td><b>Accounts Dept. Header 1:</b></td>
+        <td style="line-height: 1.6;" valign="top" align="left"><div style="display: block; width: 100%; height: 100%;">
+          <b>Events Organizer Details:</b><br>
+          <span id="facultyName"></span>, <span id="empId"></span>, <span id="designation"></span>, <span id="department"></span>
+        </div></td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Accounts Dept. Header 1:</b><br>&nbsp;</div></td>
       </tr>
       <tr>
-        <td><b>Emp ID:</b> <span id="empId"></span> &nbsp;&nbsp;<b>Designation:</b> <span id="designation"></span></td>
-        <td><b>Accounts Dept. Header 2:</b></td>
+        <td valign="top" align="left" style="padding: 0;">
+          <div style="display: block; width: 100%; height: 100%;">
+            <table style="width: 100%; height: 100%; border: none; border-collapse: collapse; margin: 0; padding: 0;">
+              <tr>
+                <td style="border: none; padding: 2px 4px 7px 4px; vertical-align: top; width: 50%;">
+                  <b>Advance Amount (A):</b> <span id="advanceAmount"></span><br>
+                  <b>Date of Advance Taken:</b> <span id="dateOfAdvance"></span>
+                </td>
+                <td style="border: none; padding: 2px 4px 7px 4px; vertical-align: top; width: 50%;">
+                  <b>Purpose of Advance Taken:</b><br>
+                  <span id="purposeOfAdvance"></span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Accounts Dept. Header 2:</b><br>&nbsp;</div></td>
       </tr>
       <tr>
-        <td><b>Department/Centre:</b> <span id="department"></span></td>
-        <td><b>Accounts Dept. Header 3:</b></td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Ledger:</b><br>&nbsp;</div></td>
+        <td valign="top" align="left"><div style="display: block; width: 100%; height: 100%;"><b>Accounts Dept. Header 3:</b><br>&nbsp;</div></td>
       </tr>
-      <tr>
-        <td><b>Advance Amount (A):</b> <span id="advanceAmount"></span></td>
-        <td><b>Ledger:</b></td>
-      </tr>
-      <tr class="full-row">
-        <td colspan="2"><b>Date of Advance Taken (if any):</b> <span id="dateOfAdvance"></span></td>
-      </tr>
-      <tr class="full-row">
-        <td colspan="2"><b>Purpose of Advance Taken (if any):</b> <span id="purposeOfAdvance"></span></td>
-      </tr>
+
     </table>
 
     <!-- ================= A) INCOME SOURCE ================= -->
-    <table class="data" style="margin-top:4px;" id="incomeTable">
+    <table class="data" style="margin-top:2px;" id="incomeTable">
       <thead>
         <tr>
-          <th style="width:6%; border-top:none;">S No</th>
-          <th style="width:20%; border-top:none;">Income Resource</th>
-          <th style="width:54%; border-top:none;">Details, Requirements (Nos.) and Calculation</th>
-          <th style="width:20%; border-top:none;">Amount</th>
+          <th style="width:26%;">Income Resource</th>
+          <th style="width:54%;">Details</th>
+          <th style="width:20%;">Amount</th>
         </tr>
       </thead>
       <tbody id="incomeBody"><!-- injected --></tbody>
       <tfoot>
         <tr class="total-row">
-          <td colspan="3" class="label-span">Total Fund</td>
-          <td class="amt" id="totalFund">&nbsp;</td>
+          <td colspan="2" class="label-span">Total Fund</td>
+          <td class="amt" valign="top" align="right"><div id="totalFund" style="display: block; position: absolute; top: 2px; right: 4px;">&nbsp;</div></td>
         </tr>
       </tfoot>
     </table>
@@ -215,62 +252,53 @@
     <table class="data" style="margin-top:0;" id="expenditureTable">
       <thead>
         <tr>
-          <th colspan="6" class="section-label-row" style="text-align:left; border-top:1px solid #000;">(B) Expenditure Details</th>
+          <th colspan="5" class="section-label-row" style="text-align:left;">(B) Expenditure Details</th>
         </tr>
         <tr>
-          <th style="width:14%;">Type of Expense</th>
-          <th style="width:22%;">Name of Expense</th>
-          <th style="width:14%;">Bill No</th>
-          <th style="width:14%;">Bill Date</th>
-          <th style="width:18%;">Guest Name</th>
-          <th style="width:18%;">Bill Amount</th>
+          <th style="width:18%;">Type of Expense</th>
+          <th style="width:28%;">Vendor / Guest Name</th>
+          <th style="width:16%;">Bill No</th>
+          <th style="width:16%;">Bill Date</th>
+          <th style="width:22%;">Bill Amount</th>
         </tr>
       </thead>
       <tbody id="expenditureBody"><!-- injected --></tbody>
     </table>
 
-    <!-- ================= MEMBERS DETAILS ================= -->
-    <table class="data" style="margin-top:0;" id="genderTable">
-      <thead>
-        <tr>
-          <th colspan="4" class="section-label-row" style="text-align:left; border-top:1px solid #000;">Members Details</th>
-        </tr>
-        <tr>
-          <th style="width:25%;">Gender</th>
-          <th style="width:25%;">Within State</th>
-          <th style="width:25%;">Without State</th>
-          <th style="width:25%;">Total</th>
-        </tr>
-      </thead>
-      <tbody id="genderBody"><!-- injected --></tbody>
-    </table>
-
-    <!-- ================= SDG GOALS ================= -->
-    <table class="data" style="margin-top:0;" id="sdgTable">
-      <thead>
-        <tr>
-          <th colspan="2" class="section-label-row" style="text-align:left; border-top:1px solid #000;">SDG Goals</th>
-        </tr>
-        <tr>
-          <th style="width:35%;">SDG Goal</th>
-          <th style="width:65%;">Details</th>
-        </tr>
-      </thead>
-      <tbody id="sdgBody"><!-- injected --></tbody>
+    <!-- ================= OUTCOMES (manual write-in space) ================= -->
+    <table class="remarks-block" style="margin-top:0;" id="sdgTable">
+      <tbody>
+      <tr>
+        <td class="outcomes-cell" id="outcomesCell">
+          Outcomes
+        </td>
+      </tr>
+      </tbody>
     </table>
 
     <!-- ================= REMARKS + TOTALS (side by side) ================= -->
+    <div id="footer-block">
     <table class="remarks-block section-gap">
+      <tbody>
       <tr>
-        <td class="remarks-cell" rowspan="1">Remarks If Any</td>
-        <td class="totals-cell">
-          <table>
-            <tr><td class="tlabel">Total Amount (B):</td><td class="tval" id="totalAmount">&nbsp;</td></tr>
-            <tr><td class="tlabel">Advance Taken under Section (A):</td><td class="tval" id="advanceTaken">&nbsp;</td></tr>
-            <tr><td class="tlabel">Net Claim (B-A) in Rs.:</td><td class="tval" id="netClaim">&nbsp;</td></tr>
-          </table>
+        <td rowspan="2" class="remarks-cell" id="remarksCell" style="padding: 6px;">
+          Remarks<br><span id="remarksText" style="font-weight:normal;"></span>
         </td>
+        <td style="width: 31.5%; font-weight: bold; padding: 5px 4px 7px 4px;">Total Amount (B):</td>
+        <td style="width: 13.5%; font-weight: bold; padding: 5px 4px 7px 4px; text-align: right; vertical-align: top !important; position: relative;" valign="top" align="right"><div id="totalAmount" style="display: block; position: absolute; top: 2px; right: 4px;">&nbsp;</div></td>
       </tr>
+      <tr>
+        <td style="font-weight: bold; padding: 5px 4px 7px 4px;">Advance Taken under Section (A):</td>
+        <td style="font-weight: bold; padding: 5px 4px 7px 4px; text-align: right; vertical-align: top !important; position: relative;" valign="top" align="right"><div id="advanceTaken" style="display: block; position: absolute; top: 2px; right: 4px;">&nbsp;</div></td>
+      </tr>
+      <tr>
+        <td style="width: 55%; text-align: left; vertical-align: bottom; font-weight: bold; padding: 6px;">
+          Verified by Overall Event Incharge:
+        </td>
+        <td style="font-weight: bold; padding: 5px 4px 7px 4px;">Net Claim (B-A) in Rs.:</td>
+        <td style="font-weight: bold; padding: 5px 4px 7px 4px; text-align: right; vertical-align: top !important; position: relative;" valign="top" align="right"><div id="netClaim" style="display: block; position: absolute; top: 2px; right: 4px;">&nbsp;</div></td>
+      </tr>
+      </tbody>
     </table>
 
     <div class="declaration">
@@ -288,6 +316,7 @@
         <td>Verified By Accounts</td>
       </tr>
     </table>
+    </div>
 
   </div>
 </div>
@@ -365,13 +394,14 @@ function normalizeIncomeLabel(label) {
 function renderIncome() {
   const body = document.getElementById("incomeBody");
   body.innerHTML = "";
-  INCOME_ROWS.forEach((row, idx) => {
+  INCOME_ROWS.forEach((row) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td class="num">${idx + 1}</td>
       <td>${normalizeIncomeLabel(row.label)}</td>
-      <td class="details${row.detailsBold ? " bold" : ""}">${row.details || "&nbsp;"}</td>
-      <td class="amt">${row.amount || "&nbsp;"}</td>`;
+      <td class="details${row.detailsBold ? " bold" : ""}">${
+        row.details || "&nbsp;"
+      }</td>
+      <td class="amt" valign="top" align="right"><div style="display: block; position: absolute; top: 2px; right: 4px;">${row.amount || "&nbsp;"}</div></td>`;
     body.appendChild(tr);
   });
 }
@@ -383,11 +413,10 @@ function renderExpenditure() {
   const activeCats = EXPENDITURE_CATEGORIES.filter(c => c.items && c.items.length);
 
   if (activeCats.length === 0) {
-    // No data yet -- render blank rows matching the 6-column layout
+    // No data -- render blank rows matching the 5-column layout
     for (let i = 1; i <= BLANK_ROW_COUNT; i++) {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td class="blankrow">&nbsp;</td>
         <td class="blankrow">&nbsp;</td>
         <td class="blankrow">&nbsp;</td>
         <td class="blankrow">&nbsp;</td>
@@ -408,11 +437,10 @@ function renderExpenditure() {
         cells += `<td class="cat-tag" rowspan="${cat.items.length}">${cat.category}</td>`;
       }
       cells += `
-        <td>${item.expense || ""}</td>
+        <td>${item.guest || item.expense || ""}</td>
         <td>${item.billNo || ""}</td>
         <td>${item.billDate || ""}</td>
-        <td>${item.guest || ""}</td>
-        <td class="amt">${item.amount ?? ""}</td>`;
+        <td class="amt" valign="top" align="right"><div style="display: block; position: absolute; top: 2px; right: 4px;">${item.amount ?? ""}</div></td>`;
       tr.innerHTML = cells;
       body.appendChild(tr);
     });
@@ -423,7 +451,7 @@ function renderExpenditure() {
 
 /* Gender-wise participant count. Fill maleWithin/maleWithout/femaleWithin/
    femaleWithout from the website's endpoints -- row and column totals are
-   calculated automatically. */
+   calculated automatically testing. */
 const GENDER_DATA = {
   maleWithin: "",
   maleWithout: "",
@@ -475,23 +503,11 @@ function renderGender() {
     </tr>`;
 }
 
-function renderSDG() {
-  const body = document.getElementById("sdgBody");
-  body.innerHTML = `
-    <tr>
-      <td>Primary SDG Goal</td>
-      <td>${SDG_DATA.primary || "&nbsp;"}</td>
-    </tr>
-    <tr>
-      <td>Secondary SDG Goal</td>
-      <td>${SDG_DATA.secondary || "&nbsp;"}</td>
-    </tr>`;
-}
 
 renderIncome();
 renderExpenditure();
 renderGender();
-renderSDG();
+
 </script>
 </body>
 </html>

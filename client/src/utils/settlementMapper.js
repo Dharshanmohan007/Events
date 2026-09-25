@@ -118,12 +118,18 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
   });
 
   // ── Build income rows ──────────────────────────────────────────────────
-  const incomeRows = (expData.income || []).map((inc) => ({
-    label: escapeHtml(inc.type || "Other"),
-    details: escapeHtml(inc.details || ""),
-    detailsBold: false,
-    amount: formatAmount(inc.amount),
-  }));
+  const institutionalTypes = ["Institutional Amount", "Institutional Fund"];
+  const deptName = organizerDetails.organizingDepartment || organizer.department || "";
+
+  const incomeRows = (expData.income || []).map((inc) => {
+    const isInstitutional = institutionalTypes.includes(inc.type);
+    return {
+      label: inc.type || "Other",
+      details: isInstitutional ? deptName : (inc.details || ""),
+      detailsBold: false,
+      amount: formatAmount(inc.amount),
+    };
+  });
 
   // ── Participant breakdown ──────────────────────────────────────────────
   const participants = expData.participants || {};
@@ -152,20 +158,39 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
   const submissionDate =
     closingDocRes?.data?.createdAt || expData.createdAt || "";
 
+  const eventDatesArr = (eventDetails.eventSchedule || [])
+    .map((s) => formatDate(s.eventDate))
+    .filter(Boolean);
+  
+  let eventDatesStr = "";
+  if (eventDatesArr.length === 1) {
+    eventDatesStr = eventDatesArr[0];
+  } else if (eventDatesArr.length > 1) {
+    eventDatesStr = `${eventDatesArr[0]} to ${eventDatesArr[eventDatesArr.length - 1]}`;
+  }
+
+  const rawIqac = eventObj.iqacNumber || "";
+  let formattedIqac = rawIqac;
+  const iqacParts = rawIqac.split("/");
+  if (iqacParts.length >= 2) {
+    formattedIqac = `${iqacParts[0]}/${iqacParts[1]}/`;
+  }
+
   return {
     // ── Top section ──────────────────────────────────────────────────────
-    cornerCode: escapeHtml(eventObj.iqacNumber || ""),
-    eventName: escapeHtml(basicDetails.eventName || eventDetails.eventName || ""),
+    cornerCode: rawIqac,
+    eventName: basicDetails.eventName || eventDetails.eventName || "",
     submissionDate: formatDate(submissionDate),
+    eventDate: eventDatesStr,
     guestNames: guestNames || "",
-    iqacNumber: escapeHtml(eventObj.iqacNumber || ""),
-    facultyName: escapeHtml(organizer.name || ""),
-    empId: escapeHtml(organizer.empId || ""),
-    designation: escapeHtml(organizer.designation || ""),
-    department: escapeHtml(organizerDetails.organizingDepartment || organizer.department || ""),
+    iqacNumber: formattedIqac,
+    facultyName: organizer.name || "",
+    empId: organizer.empId || "",
+    designation: organizer.designation || "",
+    department: organizerDetails.organizingDepartment || organizer.department || "",
     advanceAmount: formatAmount(advanceTaken),
     dateOfAdvance: formatDate(basicDetails.dateOfAdvanceTaken),
-    purposeOfAdvance: escapeHtml(basicDetails.purposeOfAdvanceTaken || organizerDetails.purposeOfAdvance || ""),
+    purposeOfAdvance: basicDetails.purposeOfAdvanceTaken || organizerDetails.purposeOfAdvance || "",
 
     // ── Sections ─────────────────────────────────────────────────────────
     incomeRows,

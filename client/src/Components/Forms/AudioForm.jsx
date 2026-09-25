@@ -80,12 +80,13 @@ function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
   eventDays.forEach((_day, dayIndex) => {
     const venueNames = venueData[dayIndex]?.selectedVenues || [];
     venueNames.forEach((venueName) => {
-      const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
-      if (!hasEquipment) return;
-
       const s = audioData[dayIndex]?.[venueName] || defaultVenueSection();
 
-      if (!s.audioRequired || s.audioRequired.length === 0) return;
+      const hasAudio = s.audioRequired && s.audioRequired.length > 0;
+      const hasOthers = s.others && s.others.trim().length > 0;
+      const hasSpecial = s.specialRequirements && s.specialRequirements.trim().length > 0;
+
+      if (!hasAudio && !hasOthers && !hasSpecial) return;
 
       const audioItems = (s.audioRequired || []).map((key) => ({
         type: AUDIO_KEY_META.find(m => m.key === key)?.label || key,
@@ -464,9 +465,10 @@ export default function AudioForm({
   nextStep,
   prevStep,
   registerChildNavigation,
-  audioData: initialAudioData,
+  audioData: initialAudioData = {},
   onAudioDataChange,
   eventId,
+  isEditMode = false,
   errors: propErrors = {},
   eventDays = [],
   venueData = [],
@@ -551,6 +553,7 @@ export default function AudioForm({
       [currentDayIndex]: {
         ...(prev[currentDayIndex] || {}),
         [venueName]: updated,
+        sameAsDay1: false
       },
     }));
     setErrors((prev) => {
@@ -572,7 +575,7 @@ export default function AudioForm({
     if (venueInfoLoading) {
       setErrors({});
     } else {
-      const dayErrors = validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
+      const dayErrors = isEditMode ? {} : validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
       const hasErrors = Object.keys(dayErrors).length > 0;
       setErrors(hasErrors ? dayErrors : {});
       if (hasErrors) return;
@@ -673,12 +676,54 @@ export default function AudioForm({
 
         <div className="flex items-center justify-between">
           <h2 className="text-white text-lg font-bold">Audio Details</h2>
-          {venueInfoLoading && (
-            <div className="flex items-center gap-2 text-gray-500 text-xs">
-              <div className="w-3.5 h-3.5 rounded-full border border-gray-500 border-t-transparent animate-spin" />
-              Loading venue data…
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            {currentDayIndex > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={audioData[currentDayIndex]?.sameAsDay1 || false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      const day1Data = audioData[0] || {};
+                      const day1Venues = Object.keys(day1Data).filter(k => k !== 'sameAsDay1');
+                      const defaultCard = day1Venues.length > 0 ? day1Data[day1Venues[0]] : defaultVenueSection();
+                      
+                      const currentVenuesList = venueData[currentDayIndex]?.selectedVenues || [];
+                      const newDayData = { sameAsDay1: true };
+                      
+                      currentVenuesList.forEach((vName, idx) => {
+                        let sourceCard = day1Data[vName];
+                        if (!sourceCard && day1Venues[idx]) sourceCard = day1Data[day1Venues[idx]];
+                        if (!sourceCard) sourceCard = defaultCard;
+                        newDayData[vName] = JSON.parse(JSON.stringify(sourceCard || {}));
+                      });
+                      
+                      setAudioData(prev => ({
+                        ...prev,
+                        [currentDayIndex]: newDayData
+                      }));
+                    } else {
+                      setAudioData(prev => ({
+                        ...prev,
+                        [currentDayIndex]: {
+                          sameAsDay1: false
+                        }
+                      }));
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                />
+                <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+              </label>
+            )}
+            {venueInfoLoading && (
+              <div className="flex items-center gap-2 text-gray-500 text-xs">
+                <div className="w-3.5 h-3.5 rounded-full border border-gray-500 border-t-transparent animate-spin" />
+                Loading venue data…
+              </div>
+            )}
+          </div>
         </div>
 
         {apiError && (

@@ -1,37 +1,39 @@
-import { Check, ChevronRight, Pencil, Trash, X } from 'lucide-react'
-import React, { useEffect, useState } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import EventRequisitionDetailsPanel from './EventRequisitionDetailsPanel'
-import EventDetailsSidePanel from './EventDetailsSidePanel'
-import VenueDetailsPanel from './VenueDetailsPanel'
-import IctcsDetailsPanel from './IctcsDetailsPanel'
-import AudioDetailsPanel from './AudioDetailsPanel'
-import TransportationDetailsPanel from './TransportationDetailsPanel'
-import FoodRefreshmentDetailsPanel from './FoodRefreshmentDetailsPanel'
-import AccommodationDetailsPanel from './AccommodationDetailsPanel'
-import PurchaseDetailsPanel from './PurchaseDetailsPanel'
-import MediaDetailsPanel from './MediaDetailsPanel'
-import RejectionReasonPopup from './RejectionReasonPopup'
-import DeleteConfirmationPopup from './DeleteConfirmationPopup'
-import ExternalTransportPreview from '../../../Components/Preview/ExternalTransportPreview'
-import { jwtDecode } from 'jwt-decode'
+import { Check, ChevronRight, Clock, Pencil, Trash, X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import EventRequisitionDetailsPanel from "./EventRequisitionDetailsPanel";
+import EventDetailsSidePanel from "./EventDetailsSidePanel";
+import VenueDetailsPanel from "./VenueDetailsPanel";
+import IctcsDetailsPanel from "./IctcsDetailsPanel";
+import AudioDetailsPanel from "./AudioDetailsPanel";
+import TransportationDetailsPanel from "./TransportationDetailsPanel";
+import FoodRefreshmentDetailsPanel from "./FoodRefreshmentDetailsPanel";
+import AccommodationDetailsPanel from "./AccommodationDetailsPanel";
+import PurchaseDetailsPanel from "./PurchaseDetailsPanel";
+import MediaDetailsPanel from "./MediaDetailsPanel";
+import RejectionReasonPopup from "./RejectionReasonPopup";
+import DeleteConfirmationPopup from "./DeleteConfirmationPopup";
+import ExternalTransportPreview from "../../../Components/Preview/ExternalTransportPreview";
+import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../../Components/AuthContext";
+import ApprovalHistoryCanvas from "../../../Components/ApprovalHistoryCanvas";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const DEPARTMENT_TAB_MAP = {
-  venue: { name: 'Venue Details', color: '#F20768' },
-  icts: { name: 'ICTCS Details', color: '#48E0CF' },
-  audio: { name: 'Audio Details', color: '#8B3DFF' },
-  transport: { name: 'Transportation Details', color: '#8B3DFF' },
-  externalTransport: { name: 'External Transport Details', color: '#8B3DFF' },
-  refreshment: { name: 'Food Details', color: '#48E0CF' },
-  accommodation: { name: 'Accommodation Details', color: '#48E0CF' },
-  purchase: { name: 'Purchase Details', color: '#F20768' },
-  media: { name: 'Media Details', color: '#F20768' },
-  poster: { name: 'Media Details', color: '#F20768' },
-  video: { name: 'Media Details', color: '#F20768' },
-}
+  venue: { name: "Venue Details", color: "#F20768" },
+  icts: { name: "ICTCS Details", color: "#48E0CF" },
+  audio: { name: "Audio Details", color: "#8B3DFF" },
+  transport: { name: "Transportation Details", color: "#8B3DFF" },
+  externalTransport: { name: "External Transport Details", color: "#8B3DFF" },
+  refreshment: { name: "Food Details", color: "#48E0CF" },
+  accommodation: { name: "Accommodation Details", color: "#48E0CF" },
+  purchase: { name: "Purchase Details", color: "#F20768" },
+  media: { name: "Media Details", color: "#F20768" },
+  poster: { name: "Media Details", color: "#F20768" },
+  video: { name: "Media Details", color: "#F20768" },
+};
 
 const getStatusClassName = (status) => {
   if (!status || status === "-") return "bg-[#0e5149]/55 text-[#20D18C]";
@@ -51,6 +53,9 @@ const getStatusClassName = (status) => {
 const EventDetailsPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { isAdminSecretary } = useAuth();
+
+  const [showAppprovalCanvas, setShowApprovalCanvas] = useState(false);
 
   // ── Tabs state ──────────────────────────────────────────────────────
   const [detailTabs, setDetailTabs] = useState([]);
@@ -112,6 +117,7 @@ const EventDetailsPage = () => {
 
   // ── Delete confirmation state ─────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   // ── Fetch requisition details (extracted for reuse) ────────────────
@@ -195,13 +201,18 @@ const EventDetailsPage = () => {
       const fetches = tabs
         .filter((tab) => moduleMap[tab.name])
         .map((tab) =>
-          fetch(`${API_BASE_URL}/api/events/${eventId}?module=${moduleMap[tab.name]}`, { headers })
+          fetch(
+            `${API_BASE_URL}/api/events/${eventId}?module=${moduleMap[tab.name]}`,
+            { headers },
+          )
             .then((res) => res.json())
             .then((payload) => ({
               tabName: tab.name,
-              status: payload.data?.[`${moduleMap[tab.name]}Details`]?.status?.status || null,
+              status:
+                payload.data?.[`${moduleMap[tab.name]}Details`]?.status
+                  ?.status || null,
             }))
-            .catch(() => ({ tabName: tab.name, status: null }))
+            .catch(() => ({ tabName: tab.name, status: null })),
         );
 
       const results = await Promise.all(fetches);
@@ -210,7 +221,7 @@ const EventDetailsPage = () => {
         prevTabs.map((tab) => {
           const result = results.find((r) => r.tabName === tab.name);
           return result?.status ? { ...tab, status: result.status } : tab;
-        })
+        }),
       );
     } catch (err) {
       console.error("Failed to fetch module statuses:", err);
@@ -669,18 +680,38 @@ const EventDetailsPage = () => {
 
   // ── Delete event handler ──────────────────────────────────────────
   const handleDeleteEvent = async () => {
+    if (!deleteReason.trim()) {
+      toast.error("Please enter a reason for deleting the event");
+      return;
+    }
+
     setDeleting(true);
+
     try {
       const token = localStorage.getItem("token");
+
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          remarks: deleteReason.trim(),
+        }),
       });
+
       const responseData = await res.json().catch(() => ({}));
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(responseData.message || "Failed to delete event");
+      }
+
       toast.success("Event deleted successfully");
+
       setShowDeleteConfirm(false);
+      setDeleteReason("");
+
       // Go back to the previous page after deletion
       navigate(-1);
     } catch (err) {
@@ -703,6 +734,14 @@ const EventDetailsPage = () => {
       window.location.reload();
     }
   };
+
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
 
   // ── Render active panel based on tab ────────────────────────────────
   const renderActivePanel = () => {
@@ -798,17 +837,19 @@ const EventDetailsPage = () => {
       );
     }
 
-    if (activeTab === 'External Transport Details') {
+    if (activeTab === "External Transport Details") {
       const extTransports =
         data?.externalTransportDetails?.externalTransports ||
-        (Array.isArray(data?.externalTransportDetails) ? data.externalTransportDetails : []) ||
+        (Array.isArray(data?.externalTransportDetails)
+          ? data.externalTransportDetails
+          : []) ||
         data?.externalTransports ||
-        []
+        [];
       return (
         <div className="bg-[#1F1F35] border border-[#2D2D4D] rounded-2xl p-6">
           <ExternalTransportPreview data={extTransports} />
         </div>
-      )
+      );
     }
 
     if (activeTab === "Food Details") {
@@ -936,7 +977,7 @@ const EventDetailsPage = () => {
               )}
             </div>
 
-            {role.toLowerCase() == "hod" ? (
+            {role.toLowerCase() == "hod" || isAdminSecretary ? (
               ""
             ) : (
               <>
@@ -944,7 +985,8 @@ const EventDetailsPage = () => {
                   <Link
                     to={
                       activeTab === "Transportation Details" &&
-                      (transportDetails?.transports?.[0]?._id || transportDetails?.transports?.[0]?.id)
+                      (transportDetails?.transports?.[0]?._id ||
+                        transportDetails?.transports?.[0]?.id)
                         ? `/transports/edit/${transportDetails.transports[0]._id || transportDetails.transports[0].id}`
                         : `/forms/edit/${eventId}`
                     }
@@ -974,8 +1016,14 @@ const EventDetailsPage = () => {
               <Check size={16} className="text-white" />
               Closed
             </div>
-          ) : data?.adminApproval == false ? (
-            <div className="btn-container flex items-center gap-2">
+          ) : data?.adminApproval == false &&
+            data?.status.toLowerCase() !== "deleted" &&
+            !isAdminSecretary ? (
+            <div className="btn-container flex items-center gap-3">
+               <h1 className="text-amber-400">
+                Submitted at :{" "}
+                <span>{convertToIST(data?.timeline?.submittedAt)}</span>{" "}
+              </h1>
               <button
                 onClick={handleApprove}
                 disabled={actionLoading !== null}
@@ -996,10 +1044,22 @@ const EventDetailsPage = () => {
                 </span>{" "}
                 {actionLoading === "reject" ? "Processing..." : "Reject"}
               </button>
+             
             </div>
           ) : (
             ""
           )}
+
+          {/* approval history button  */}
+          {/* <button
+            onClick={() => setShowApprovalCanvas(true)}
+            className="text-white flex items-center gap-1 bg-linear-to-r from-amber-800 via-amber-600 to-amber-300 hover:bg-linear-to-l hover:from-amber-800  hover:via-amber-600 hover:to-amber-300  px-3 py-1 rounded-md cursor-pointer"
+          >
+            <span>
+              <Clock size={16} />
+            </span>{" "}
+            Timeline
+          </button> */}
         </header>
 
         {/* Status summary bar */}
@@ -1093,12 +1153,23 @@ const EventDetailsPage = () => {
       {showDeleteConfirm && (
         <DeleteConfirmationPopup
           title="Delete Event"
-          message="Are you sure you want to delete this event? This action cannot be undone."
+          message="Please provide a reason before deleting this event. This action cannot be undone."
+          reason={deleteReason}
+          onReasonChange={setDeleteReason}
           deleting={deleting}
-          onCancel={() => setShowDeleteConfirm(false)}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setDeleteReason("");
+          }}
           onDelete={handleDeleteEvent}
         />
       )}
+      {/* {showAppprovalCanvas && (
+        <ApprovalHistoryCanvas
+          timeLineData={data.timeline}
+          setShowApprovalCanvas={setShowApprovalCanvas}
+        />
+      )} */}
     </>
   );
 };

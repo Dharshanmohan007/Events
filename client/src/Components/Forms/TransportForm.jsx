@@ -20,11 +20,16 @@ function flattenGuests(eventDays = []) {
   const result = [];
   eventDays.forEach((day, dayIdx) => {
     (day.guests || []).forEach((g, gIdx) => {
-      const guestId = `day${dayIdx}_g${gIdx}_${(g.name || "")
-        .replace(/\s+/g, "")
-        .toLowerCase()}`;
-      if (!seen.has(guestId)) {
-        seen.add(guestId);
+      // Deduplicate by actual guest identity (name + mobile) so that
+      // "Same as Day 1" copies don't appear as separate entries.
+      const normalizedName = (g.name || "").replace(/\s+/g, "").toLowerCase();
+      const normalizedMobile = (g.mobile || "").toString().trim();
+      const identityKey = `${normalizedName}_${normalizedMobile}`;
+
+      if (!seen.has(identityKey)) {
+        seen.add(identityKey);
+        // Keep the original day-based guestId for selection tracking
+        const guestId = `day${dayIdx}_g${gIdx}_${normalizedName}`;
         result.push({ ...g, guestId });
       }
     });
@@ -756,10 +761,11 @@ export default function TransportForm({
   transportData: initialTransportData,
   onTransportDataChange,
   eventId,
-  eventDays: eventDaysProp,
+  eventDays = [],
+  isEditMode = false,
   errors: propErrors = {},
 }) {
-  const allGuests = flattenGuests(eventDaysProp || []);
+  const allGuests = flattenGuests(eventDays || []);
   const [forms, setForms] = useState(() => {
     if (initialTransportData && initialTransportData.length > 0)
       return initialTransportData.map(sanitiseForm);
@@ -789,23 +795,14 @@ export default function TransportForm({
     if (onChangeRef.current) onChangeRef.current(forms);
   }, [forms]);
   function formatLocalDateTime(date) {
-    const pad = (n) => String(n).padStart(2, "0");
+  if (!date) return "";
 
-    return (
-      date.getFullYear() +
-      "-" +
-      pad(date.getMonth() + 1) +
-      "-" +
-      pad(date.getDate()) +
-      "T" +
-      pad(date.getHours()) +
-      ":" +
-      pad(date.getMinutes()) +
-      ":" +
-      pad(date.getSeconds()) +
-      ".000Z"
-    );
-  }
+  const parsedDate = date instanceof Date ? date : new Date(date);
+
+  if (Number.isNaN(parsedDate.getTime())) return "";
+
+  return parsedDate.toISOString();
+}
   const getResolvedVehicleInventory = useCallback(() => {
     return vehicleInventory;
   }, [vehicleInventory]);
@@ -1039,7 +1036,7 @@ export default function TransportForm({
 
   const handleNext = useCallback(async () => {
     const latest = formsRef.current;
-    const errs = validateTransport(latest);
+    const errs = isEditMode ? {} : validateTransport(latest);
     const hasErrors = !Array.isArray(errs)
       ? Object.keys(errs).length > 0
       : errs.some((e) => Object.keys(e).length > 0);
@@ -1059,10 +1056,9 @@ export default function TransportForm({
               form.selectedGuestIds.includes(g.guestId)
             );
             return {
-              pickupDateTime: form.pickupDate
-                ? form.pickupDate.toISOString()
-                : "",
-              dropDateTime: form.dropDate ? form.dropDate.toISOString() : "",
+              pickupDateTime: formatLocalDateTime(form.pickupDate),
+              dropDateTime: formatLocalDateTime(form.dropDate),
+
               pickupLocation: form.pickupLocation || "",
               checkpoints: (form.checkpoints || [])
                 .filter((cp) => cp.name?.trim())

@@ -351,6 +351,7 @@ export default function ExternalTransportForm({
   errors: propErrors = {},
   onDataChange,
   eventId,
+  isEditMode = false,
 }) {
   const initialData = externalTransportData || initialValues;
   const [forms, setForms] = useState(() => {
@@ -383,7 +384,7 @@ export default function ExternalTransportForm({
   }, [forms]);
 
   const handleNext = useCallback(async () => {
-    const errs = validateExternalTransport(formsRef.current);
+    const errs = isEditMode ? {} : validateExternalTransport(formsRef.current);
     const hasErrors = Array.isArray(errs)
       ? errs.some((e) => Object.keys(e).length > 0)
       : Object.keys(errs).length > 0;

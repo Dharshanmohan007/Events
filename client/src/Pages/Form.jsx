@@ -62,10 +62,12 @@ const emptyMediaDay = () => ({
 
 const emptyFoodDay = () => ({
   id: crypto.randomUUID(),
-  date: null, resourcePersonType: [], resourcePersons: "",
+  fromDate: null, toDate: null, resourcePersonType: [], resourcePersons: "",
   internalCount: "", staffName: "", mobileNumber: "",
   foodTypes: [], specialRequirements: "",
   morningRefreshmentCount: "", eveningRefreshmentCount: "",
+  morningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
+  eveningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
   morningRefreshmentVenues: [], eveningRefreshmentVenues: [],
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
   lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
@@ -195,6 +197,9 @@ let decodedToken = jwtDecode(token);
       isBudgetApproved: eventRequisition.budget === "Yes",
       financeRequired: eventRequisition.finance === "Yes",
       estimatedBudget: Number(eventRequisition.estimatedBudget) || 0,
+      fundingSource: (eventRequisition.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(eventRequisition.advanceAmount) || 0,
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
@@ -732,7 +737,8 @@ const validateFoodData = (foodData) => {
   if (!Array.isArray(foodData) || foodData.length === 0) return { food: "Enter food details" };
   const errors = foodData.map((form) => {
     const err = {};
-    if (!form.date) err.date = "Date is required";
+    if (!form.fromDate) err.fromDate = "From Date is required";
+    if (!form.toDate) err.toDate = "To Date is required";
     if (!form.resourcePersonType || form.resourcePersonType.length === 0) err.resourcePersonType = "Resource type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
     if (!form.internalCount?.trim()) err.internalCount = "Internal accompanying count is required";
@@ -779,7 +785,7 @@ const formatAccommodationDateTime = (date) => {
   if (!date) return "";
   const value = new Date(date);
   const pad = (part) => String(part).padStart(2, "0");
-  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000Z`;
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}:00.000+05:30`;
 };
 
 const buildAccommodationPayload = (accommodationState, eventDays) => {
@@ -864,7 +870,9 @@ const formatExternalTransportPayload = (externalTransportData) => {
 
 const buildRefreshmentPayload = (foodData = []) => ({
   refreshments: (Array.isArray(foodData) ? foodData : []).map((form) => ({
-    date: form.date ? new Date(form.date).toISOString() : "",
+    date: form.fromDate ? new Date(form.fromDate).toISOString() : "",
+    fromDate: form.fromDate ? new Date(form.fromDate).toISOString() : "",
+    toDate: form.toDate ? new Date(form.toDate).toISOString() : "",
     resourcePersonType: form.resourcePersonType || [],
     numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
     numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
@@ -955,6 +963,9 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
       isBudgetApproved: formData.event.budget === "Yes",
       financeRequired: formData.event.finance === "Yes",
       estimatedBudget: Number(formData.event.estimatedBudget) || 0,
+      fundingSource: (formData.event.fundingSource || [])
+        .filter((source) => source?.type || source?.amount)
+        .map((source) => ({ type: source.type || "", amount: Number(source.amount) || 0 })),
       advanceAmount: Number(formData.event.advanceAmount) || 0,
       purposeOfAdvance: formData.event.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(formData.event.advanceToBeReceivedWithin) || 0,
@@ -1047,6 +1058,12 @@ function hydrateEventData(apiData) {
     budget: od.isBudgetApproved ? "Yes" : "No",
     finance: od.financeRequired ? "Yes" : "No",
     estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
+    fundingSource: Array.isArray(od.fundingSource)
+      ? od.fundingSource.map((source) => ({
+          type: source.type || "",
+          amount: source.amount != null ? String(source.amount) : "",
+        }))
+      : [],
     advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
     advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
@@ -1083,7 +1100,11 @@ function hydrateEventData(apiData) {
   const selectedRequirements = [];
   const requirementsObj = {};
   Object.entries(REQUIREMENT_KEY_MAP).forEach(([backendKey, frontendKey]) => {
-    if (reqd[backendKey]) {
+    let isRequired = reqd[backendKey];
+    if (backendKey === "refreshmentRequired") {
+      isRequired = isRequired || reqd.foodRequired;
+    }
+    if (isRequired) {
       selectedRequirements.push(frontendKey);
       requirementsObj[frontendKey] = "Yes";
     } else {
@@ -1123,6 +1144,24 @@ function hydrateEventData(apiData) {
     };
   });
 
+  if (venue.length > 1) {
+    const day1str = JSON.stringify({
+      participants: venue[0].participants,
+      selectedVenues: venue[0].selectedVenues,
+      venueCards: venue[0].venueCards
+    });
+    for (let i = 1; i < venue.length; i++) {
+      const currStr = JSON.stringify({
+        participants: venue[i].participants,
+        selectedVenues: venue[i].selectedVenues,
+        venueCards: venue[i].venueCards
+      });
+      if (currStr === day1str && venue[0].selectedVenues.length > 0) {
+        venue[i].sameAsDay1 = true;
+      }
+    }
+  }
+
   // 4. ICTS — group by dayIndex + venueName
   const ictsBackend = apiData.ictsDetails?.ictses || [];
   const icts = {};
@@ -1150,6 +1189,18 @@ function hydrateEventData(apiData) {
     });
     icts[dayKey][item.venueName] = card;
   });
+
+  if (icts["0"]) {
+    const day1str = JSON.stringify(icts["0"]);
+    for (let i = 1; i < numDays; i++) {
+      const dayKey = String(i);
+      if (icts[dayKey] && Object.keys(icts[dayKey]).length > 0) {
+        if (JSON.stringify(icts[dayKey]) === day1str) {
+          icts[dayKey].sameAsDay1 = true;
+        }
+      }
+    }
+  }
 
   // 5. Audio — the API stores a flat list; AudioForm reads day -> venue -> data.
   const audio = {};
@@ -1186,6 +1237,18 @@ function hydrateEventData(apiData) {
       },
     };
   });
+
+  if (audio["0"]) {
+    const day1str = JSON.stringify(audio["0"]);
+    for (let i = 1; i < numDays; i++) {
+      const dayKey = String(i);
+      if (audio[dayKey] && Object.keys(audio[dayKey]).length > 0) {
+        if (JSON.stringify(audio[dayKey]) === day1str) {
+          audio[dayKey].sameAsDay1 = true;
+        }
+      }
+    }
+  }
 
   // 6. Transport — unwrap the API container and restore date-picker values.
   const transportItems = apiData.transportDetails?.transports || apiData.transportDetails || [];
@@ -1244,7 +1307,15 @@ function hydrateEventData(apiData) {
     : [emptyExternalTransport()];
 
   // 7. Food & Refreshments — unwrap refreshmentDetails and map backend names.
-  const foodItems = apiData.refreshmentDetails?.refreshments || apiData.foodDetails?.refreshments || apiData.foodDetails || [];
+  let foodItems = apiData.refreshmentDetails?.refreshments 
+    || (Array.isArray(apiData.refreshmentDetails) ? apiData.refreshmentDetails : null)
+    || apiData.foodDetails?.refreshments 
+    || (Array.isArray(apiData.foodDetails) ? apiData.foodDetails : null)
+    || rd.refreshmentDetails?.refreshments
+    || (Array.isArray(rd.refreshmentDetails) ? rd.refreshmentDetails : null)
+    || rd.foodDetails?.refreshments
+    || (Array.isArray(rd.foodDetails) ? rd.foodDetails : null)
+    || [];
   const countValue = (group, aliases = []) => {
     const value = group?.vegCount ?? group?.veg ?? group?.vegetarian ?? group?.vegParticipants
       ?? group?.vegetarianCount ?? group?.veg?.count ?? group?.vegetarian?.count ?? group?.[aliases[0]];
@@ -1276,7 +1347,8 @@ function hydrateEventData(apiData) {
   const foodandrefreshments = Array.isArray(foodItems) && foodItems.length > 0
     ? foodItems.map((item) => ({
         ...emptyFoodDay(),
-        date: asDate(item.date),
+        fromDate: asDate(item.fromDate || item.date),
+        toDate: asDate(item.toDate || item.date),
         resourcePersons: String(item.resourcePersons ?? item.numberOfResourcePersons ?? ""),
         internalCount: String(item.internalCount ?? item.numberOfInternalAccompanyingStaff ?? ""),
         staffList: item.staffList || item.accompanyingStaff || [],
@@ -1287,6 +1359,8 @@ function hydrateEventData(apiData) {
         dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
         morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
         eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
+        morningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
+        eveningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
         morningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
         eveningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
         specialRequirements: item.specialRequirements || "",
@@ -1482,6 +1556,7 @@ export default function Form() {
     event: {
       doc: "", finance: "", budget: "", department: "", file: null, principalApprovalDocument: null,
       reason: "", numOrganizers: "", organizers: [],
+      fundingSource: [],
       eventData: {}, eventDays: [], requirements: [],
     },
     venue: [], icts: {}, audio: defaultAudio,
@@ -1940,7 +2015,7 @@ export default function Form() {
     },
     foodandrefreshments: {
       foodData: formData.foodandrefreshments,
-      venues: formData.venue,
+      venues: requirementKeys.includes("venue") ? formData.venue : [],
       onFoodDataChange: handleFoodDataChange,
       eventId, errors: formErrors.foodandrefreshments || {},
     },
@@ -2039,6 +2114,7 @@ export default function Form() {
             setEventDays={(days) => updateFormSection("event", { ...formData.event, eventDays: days })}
             eventId={eventId}
             setEventId={setEventId}
+            isEditMode={isEditMode}
             {...(sectionProps[currentStepKey] || {})}
             onSave={sectionProps[currentStepKey]?.onSave}
           />

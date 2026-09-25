@@ -43,8 +43,8 @@ export const apiIncomeToFormData = (incomeArray = []) => {
   const formData = {
     registrationFees: { amount: "", details: "" },
     scholarship: { amount: "", details: "" },
-    institutionalAmount: { selectRequired: "", amount: "", details: "" },
-    departmentFund: { details: "", amount: "" },
+    institutionalAmount: { amount: "", details: "" },
+    departmentFund: { selectRequired: "", details: "", amount: "" },
     others: { amount: "", details: "" },
   };
 
@@ -54,8 +54,8 @@ export const apiIncomeToFormData = (incomeArray = []) => {
 
     formData[key].amount = item.amount != null ? String(item.amount) : "";
     formData[key].details = item.details || "";
-    // Map selectRequired for institutionalAmount if present
-    if (key === 'institutionalAmount' && item.selectRequired) {
+    // Map selectRequired for institutionalAmount or departmentFund if present
+    if (item.selectRequired && (key === 'institutionalAmount' || key === 'departmentFund')) {
       formData[key].selectRequired = item.selectRequired;
     }
   });

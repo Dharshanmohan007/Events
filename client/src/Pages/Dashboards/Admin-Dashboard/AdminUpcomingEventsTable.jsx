@@ -343,7 +343,7 @@ const AdminUpcomingEventsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap">
                         {console.log("admin individual status  : ", row)}
                         {/* <StatusBadge status={row.status} /> */}
-                        <StatusBadge status={row.status} />
+                        <StatusBadge status={row.superAdminStatus} />
                       </td>
                       <td className="px-6 py-4">
                         {/* <Link
