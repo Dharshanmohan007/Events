@@ -4,7 +4,7 @@ import CustomSelect from "../CustomSelect";
 const LABEL_MAP = {
   venue: "Venue",
   icts: "ICTS",
-  audio: "Audio",
+  audio: "Audio & EB",
   transport: "Transport",
   externalTransport: "External Transport",
   foodandrefreshments: "Food & Refreshments",

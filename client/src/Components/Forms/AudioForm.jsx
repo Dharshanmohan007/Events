@@ -745,7 +745,7 @@ export default function AudioForm({
         />
 
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg font-bold">Audio Details</h2>
+          <h2 className="text-white text-lg font-bold">Audio & EB Details</h2>
           <div className="flex items-center gap-4">
             {currentDayIndex > 0 && (
               <label className="flex items-center gap-2 cursor-pointer select-none">

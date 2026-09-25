@@ -1617,7 +1617,7 @@ export default function Form() {
   const requirementMap = {
     venue: { label: "Venue Details", component: VenueForm },
     icts: { label: "ICTS Details", component: ICTSForm },
-    audio: { label: "Audio Details", component: AudioForm },
+    audio: { label: "Audio & EB Details", component: AudioForm },
     transport: { label: "Transport Details", component: TransportForm },
     externalTransport: { label: "External Transport Details", component: ExternalTransportForm },
     foodandrefreshments: { label: "Food and Refreshments Details", component: FoodAndRefreshments },
