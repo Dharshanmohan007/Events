@@ -311,7 +311,53 @@ import {
                     </>
                 )}
             </div>
-        </div>
+            </div>
+
+        {/* ==========================================================
+                                INTERNAL STUDENTS BREAKDOWN
+            ========================================================== */}
+        {eventData.internalStudentsBreakdown && eventData.internalStudentsBreakdown.length > 0 && (
+          <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+            <h3 className="font-semibold text-lg mb-5">Internal Students Breakdown</h3>
+            <div className="space-y-6">
+              {eventData.internalStudentsBreakdown.map((yearData, i) => {
+                let yearTotal = 0;
+                yearData.departments.forEach(d => d.sections.forEach(s => yearTotal += Number(s.count) || 0));
+                
+                return (
+                  <div key={i} className="border border-[#343C59] rounded-lg overflow-hidden">
+                    <div className="flex justify-between items-center bg-[#161B2D] px-4 py-3 text-purple-400 font-semibold text-sm border-b border-[#343C59]">
+                      <span>Year {yearData.year}</span>
+                      <span className="text-gray-300">Total: {yearTotal}</span>
+                    </div>
+                    
+                    <div className="bg-[#1E1E35]">
+                      <div className="grid grid-cols-3 p-3 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#343C59]">
+                        <div>Department</div>
+                        <div>Section</div>
+                        <div className="text-right">Count</div>
+                      </div>
+                      
+                      <div className="divide-y divide-[#343C59]">
+                        {yearData.departments.map((deptData, j) => (
+                          <React.Fragment key={j}>
+                            {deptData.sections.map((sectionData, k) => (
+                              <div key={`${j}-${k}`} className="grid grid-cols-3 p-3 text-sm text-gray-200 items-center">
+                                <div className="font-medium text-white">{deptData.department}</div>
+                                <div>{sectionData.section}</div>
+                                <div className="text-right font-medium">{sectionData.count}</div>
+                              </div>
+                            ))}
+                          </React.Fragment>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* ==========================================================
                                 EVENT SHEDULE & GUEST DETIAILS

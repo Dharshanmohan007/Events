@@ -86,6 +86,12 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
     if (venueEntry.others?.trim()) {
       rows.push({ label: "Others", value: venueEntry.others });
     }
+    rows.push({ label: "EB Required", value: venueEntry.isEbRequired ? "Yes" : "No" });
+    if (venueEntry.isEbRequired && venueEntry.noOfSystems) {
+      rows.push({ label: "No. of Systems", value: venueEntry.noOfSystems });
+    }
+    rows.push({ label: "LED Wall Required", value: venueEntry.ledWallRequired ? "Yes" : "No" });
+    rows.push({ label: "A/C Required", value: venueEntry.acRequired ? "Yes" : "No" });
     return rows;
   }, [venueEntry]);
 
