@@ -965,7 +965,7 @@ export default function AccommodationForm({
 
     const allErrors = isEditMode ? latest.map(() => ({})) : latest.map((acc) => validateAccommodation(acc));
     setBlockErrors(allErrors);
-    if (allErrors.some((e) => Object.keys(e).length > 0)) return;
+    if (allErrors.some((e) => Object.keys(e).length > 0)) return false;
 
     setIsLoading(true);
     setApiError("");

@@ -857,7 +857,7 @@ export default function FoodAndRefreshments({
     if (hasErrors) {
       console.warn("Food form validation failed:", errs);
       setErrors(errs);
-      return;
+      return false;
     }
     setErrors({});
     setIsLoading(true);

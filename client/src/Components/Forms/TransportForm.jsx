@@ -1042,7 +1042,7 @@ export default function TransportForm({
       : errs.some((e) => Object.keys(e).length > 0);
     if (hasErrors) {
       setErrors(errs);
-      return;
+      return false;
     }
     setErrors({});
     setIsLoading(true);
@@ -1530,3 +1530,4 @@ export default function TransportForm({
     </div>
   );
 }
+

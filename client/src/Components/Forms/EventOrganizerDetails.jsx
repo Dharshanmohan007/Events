@@ -851,6 +851,7 @@ export default function EventOrganizerDetails({
                 "INNOVATION",
                 "COE",
                 "HR",
+                "Library"
               ]}
             placeholder="Select an option"
           />

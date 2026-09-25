@@ -2169,7 +2169,7 @@ export default function Form() {
                 disabled={!eventId || isLoading || childNav.isLoading || childNav.isNextDisabled}
                 className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
+                {isLoading || childNav.isLoading ? "Saving..." : "Save and next for preview"}
               </button>
             ) : (
               <button

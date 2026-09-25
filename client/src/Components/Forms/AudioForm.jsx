@@ -648,7 +648,7 @@ export default function AudioForm({
       const dayErrors = isEditMode ? {} : validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
       const hasErrors = Object.keys(dayErrors).length > 0;
       setErrors(hasErrors ? dayErrors : {});
-      if (hasErrors) return;
+      if (hasErrors) return false;
     }
 
     setCompletedDays((prev) =>
