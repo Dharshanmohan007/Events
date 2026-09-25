@@ -205,8 +205,7 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
       onClick={onCancel}
     >
       <div
-        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl"
-        style={{ backgroundColor: "#1f1f3a", border: "1px solid #3A3A5A" }}
+        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl bg-white dark:bg-[#1f1f3a] border border-slate-300 dark:border-[#3A3A5A]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
@@ -214,18 +213,17 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
             <AlertTriangle size={22} className="text-red-400" />
           </div>
         </div>
-        <h3 className="text-center text-white font-semibold text-base mb-2">
+        <h3 className="text-center text-slate-900 dark:text-white font-semibold text-base mb-2">
           Confirm Delete
         </h3>
-        <p className="text-center text-gray-400 text-sm mb-6 leading-relaxed">
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
           {message}
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer"
-            style={{ backgroundColor: "#2a2a4a", border: "1px solid #3A3A5A" }}
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer bg-slate-100 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3A3A5A]"
           >
             Cancel
           </button>
@@ -254,7 +252,7 @@ function FloatingInput({
   return (
     <div className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
@@ -264,7 +262,7 @@ function FloatingInput({
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder=" "
-        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-slate-200 dark:border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
+        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-slate-200 dark:border-[#3A3A5A] text-slate-900 dark:text-white text-sm outline-none focus:border-purple-500 transition-colors"
       />
     </div>
   );
@@ -293,7 +291,7 @@ function CustomSelectDropdown({
   return (
     <div ref={ref} className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
@@ -326,7 +324,7 @@ function CustomSelectDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white hover:bg-purple-600/20 transition-colors text-left cursor-pointer"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-900 dark:text-white hover:bg-purple-600/20 transition-colors text-left cursor-pointer"
               >
                 <span>{opt}</span>
                 {isSelected && <Check size={14} className="text-purple-400" />}
@@ -616,7 +614,7 @@ export default function ExternalTransportForm({
       )}
 
       <div className="header-container">
-        <h1 className="text-white text-3xl font-bold">External Transport Details</h1>
+        <h1 className="text-slate-900 dark:text-white text-3xl font-bold">External Transport Details</h1>
 
       </div>
       {!disabled && (
@@ -635,8 +633,7 @@ export default function ExternalTransportForm({
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="rounded-2xl mb-8 relative"
-          style={{ backgroundColor: "#1e1e2f", border: "1px solid #3A3A5A" }}
+          className="rounded-2xl mb-8 relative bg-white dark:bg-[#1e1e2f] border border-slate-300 dark:border-[#3A3A5A]"
         >
           {index > 0 && (
             <button
@@ -667,8 +664,7 @@ export default function ExternalTransportForm({
               {(form.travelOption === "Train" || form.travelOption === "Flight") && (
                 <div className="relative">
                   <div
-                    className="absolute -top-2 left-3 z-10 px-1 text-xs text-white"
-                    style={{ backgroundColor: "#1e1e2f" }}
+                    className="absolute -top-2 left-3 z-10 px-1 text-xs text-slate-800 dark:text-white bg-white dark:bg-[#1e1e2f]"
                   >
                     Travel Date *
                   </div>
@@ -809,24 +805,16 @@ export default function ExternalTransportForm({
 
                 {Number(form.totalPassengers) > 0 && Number(form.totalPassengers) <= 10 && (
                   <div
-                    className="mt-6 rounded-xl p-5"
-                    style={{
-                      backgroundColor: "#2a2a4a",
-                      border: "1px solid #3A3A5A",
-                    }}
+                    className="mt-6 rounded-xl p-5 bg-slate-50 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3A3A5A]"
                   >
-                    <h4 className="text-white font-medium mb-4">Passenger Details</h4>
+                    <h4 className="text-slate-900 dark:text-white font-medium mb-4">Passenger Details</h4>
                     <div className="space-y-4">
                       {form.passengers.slice(0, Number(form.totalPassengers)).map((p, pIndex) => (
                         <div
                           key={p.id}
-                          className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg"
-                          style={{
-                            backgroundColor: "#1e1e2f",
-                            border: "1px solid #3A3A5A",
-                          }}
+                          className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg bg-white dark:bg-[#1e1e2f] border border-slate-300 dark:border-[#3A3A5A]"
                         >
-                          <h5 className="text-sm font-medium text-white md:col-span-2">
+                          <h5 className="text-sm font-medium text-slate-900 dark:text-white md:col-span-2">
                             Passenger {pIndex + 1}
                           </h5>
                           <div>

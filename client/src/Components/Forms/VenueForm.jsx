@@ -256,7 +256,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
         {open && (
           <div className="absolute top-full mt-1 w-[250%] max-w-4xl bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-2xl">
             {/* Search */}
-            <div className="p-2 border-b border-[#3A3A5A]">
+            <div className="p-2 border-b border-slate-300 dark:border-[#3A3A5A]">
               <div className="relative">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -276,7 +276,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                   onChange={(e) => setSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   placeholder="Search venues..."
-                  className="w-full bg-[#2A2A3F] border border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-100 dark:bg-[#2A2A3F] border border-slate-300 dark:border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
                 />
                 {search && (
                   <button
@@ -333,8 +333,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                         key={opt.id}
                         onClick={() => toggle(opt.id)}
                         className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center justify-between ${isSelected
-                            ? "bg-purple-600/30 text-white"
-                            : "text-white hover:bg-purple-500/20"
+                            ? "bg-purple-600/30 text-slate-900 dark:text-white"
+                            : "text-slate-900 dark:text-white hover:bg-purple-500/20"
                           }`}
                       >
                         <div className="flex flex-col">
@@ -357,7 +357,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             ) : (
               <div className="flex max-h-64 h-64 overflow-hidden">
                 {/* Categories */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px]">
+                <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-slate-300 dark:border-[#3A3A5A] p-2 space-y-1 min-w-[150px]">
                   {categories.map((cat) => (
                     <div
                       key={cat}
@@ -366,7 +366,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                         setHoveredBlock(null);
                         setHoveredFloor(null);
                       }}
-                      className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredCategory === cat ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                      className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredCategory === cat ? "bg-purple-500/20 text-purple-700 dark:text-purple-300" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2A2A3F]"
                         }`}
                     >
                       <span>{cat}</span>
@@ -377,7 +377,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
 
                 {/* Blocks */}
                 {hoveredCategory && (
-                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-[#1a1a2b]">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-slate-300 dark:border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-slate-50 dark:bg-[#1a1a2b]">
                     {blocks.map((block) => (
                       <div
                         key={block}
@@ -385,7 +385,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                           setHoveredBlock(block);
                           setHoveredFloor(null);
                         }}
-                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredBlock === block ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredBlock === block ? "bg-purple-500/20 text-purple-700 dark:text-purple-300" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2A2A3F]"
                           }`}
                       >
                         <span>{block}</span>
@@ -397,12 +397,12 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
 
                 {/* Floors */}
                 {hoveredBlock && (
-                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-[#161626]">
+                  <div className="flex-1 overflow-y-auto custom-scrollbar border-r border-slate-300 dark:border-[#3A3A5A] p-2 space-y-1 min-w-[150px] bg-slate-100 dark:bg-[#161626]">
                     {floors.map((floor) => (
                       <div
                         key={floor}
                         onMouseEnter={() => setHoveredFloor(floor)}
-                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredFloor === floor ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredFloor === floor ? "bg-purple-500/20 text-purple-700 dark:text-purple-300" : "text-slate-700 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-[#2A2A3F]"
                           }`}
                       >
                         <span>{floor}</span>
@@ -414,7 +414,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
 
                 {/* Venues */}
                 {hoveredFloor && (
-                  <div className="flex-[1.5] overflow-y-auto custom-scrollbar p-2 space-y-1 min-w-[200px] bg-[#121221]">
+                  <div className="flex-[1.5] overflow-y-auto custom-scrollbar p-2 space-y-1 min-w-[200px] bg-slate-200 dark:bg-[#121221]">
                     {venues.map((opt) => {
                       const isSelected = selected.includes(opt.id);
                       return (
@@ -422,8 +422,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                           key={opt.id}
                           onClick={() => toggle(opt.id)}
                           className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center justify-between transition-colors ${isSelected
-                              ? "bg-purple-600/30 text-white"
-                              : "text-gray-300 hover:bg-purple-500/20"
+                              ? "bg-purple-600/30 text-slate-900 dark:text-white"
+                              : "text-slate-700 dark:text-gray-300 hover:bg-purple-500/20"
                             }`}
                         >
                           <div className="flex items-center gap-2">
@@ -1469,7 +1469,7 @@ export default function VenueForm({
 
       {permissionPopupOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-          <div className="w-full max-w-lg rounded-2xl border border-[#3A3A5A] bg-[#1E1E35] shadow-2xl">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] shadow-2xl">
 
             {/* Header */}
             <div className="flex items-start gap-3 px-6 pt-6">
@@ -1490,11 +1490,11 @@ export default function VenueForm({
               </div>
 
               <div>
-                <h3 className="text-white text-lg font-semibold">
+                <h3 className="text-slate-900 dark:text-white text-lg font-semibold">
                   Venue Permission Required
                 </h3>
 
-                <p className="text-gray-400 text-sm mt-1">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
                   Please make sure you have permission before using this venue.
                 </p>
               </div>
@@ -1519,10 +1519,10 @@ export default function VenueForm({
                   onChange={(e) => {
                     setContactedAdmin(e.target.checked);
                   }}
-                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                  className="w-4 h-4 rounded border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
                 />
 
-                <span className="text-white text-sm font-medium">
+                <span className="text-slate-900 dark:text-white text-sm font-medium">
                   Contacted Admin
                 </span>
               </label>
@@ -1530,7 +1530,7 @@ export default function VenueForm({
               {contactedAdmin && (
                 <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-gray-300">Department</label>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-300">Department</label>
                     <input
                       type="text"
                       value={adminDetails.department}
@@ -1538,13 +1538,13 @@ export default function VenueForm({
                         setAdminDetails(prev => ({ ...prev, department: e.target.value }));
                         if (adminErrors.department) setAdminErrors(prev => ({ ...prev, department: "" }));
                       }}
-                      className={`w-full bg-[#16162A] border ${adminErrors.department ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      className={`w-full bg-slate-50 dark:bg-[#16162A] border ${adminErrors.department ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} rounded-lg p-3 text-slate-900 dark:text-white text-sm focus:border-purple-500 focus:outline-none`}
                       placeholder="e.g. CSE"
                     />
                     {adminErrors.department && <p className="text-red-400 text-xs">{adminErrors.department}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-gray-300">Department Head Name</label>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-300">Department Head Name</label>
                     <input
                       type="text"
                       value={adminDetails.departmentHeadName}
@@ -1552,13 +1552,13 @@ export default function VenueForm({
                         setAdminDetails(prev => ({ ...prev, departmentHeadName: e.target.value }));
                         if (adminErrors.departmentHeadName) setAdminErrors(prev => ({ ...prev, departmentHeadName: "" }));
                       }}
-                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadName ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      className={`w-full bg-slate-50 dark:bg-[#16162A] border ${adminErrors.departmentHeadName ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} rounded-lg p-3 text-slate-900 dark:text-white text-sm focus:border-purple-500 focus:outline-none`}
                       placeholder="e.g. Dr. Raj Kumar"
                     />
                     {adminErrors.departmentHeadName && <p className="text-red-400 text-xs">{adminErrors.departmentHeadName}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-gray-300">Head Designation</label>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-300">Head Designation</label>
                     <input
                       type="text"
                       value={adminDetails.departmentHeadDesignation}
@@ -1566,13 +1566,13 @@ export default function VenueForm({
                         setAdminDetails(prev => ({ ...prev, departmentHeadDesignation: e.target.value }));
                         if (adminErrors.departmentHeadDesignation) setAdminErrors(prev => ({ ...prev, departmentHeadDesignation: "" }));
                       }}
-                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadDesignation ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      className={`w-full bg-slate-50 dark:bg-[#16162A] border ${adminErrors.departmentHeadDesignation ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} rounded-lg p-3 text-slate-900 dark:text-white text-sm focus:border-purple-500 focus:outline-none`}
                       placeholder="e.g. Head of Department"
                     />
                     {adminErrors.departmentHeadDesignation && <p className="text-red-400 text-xs">{adminErrors.departmentHeadDesignation}</p>}
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-gray-300">Head Mobile No</label>
+                    <label className="text-sm font-medium text-gray-500 dark:text-gray-300">Head Mobile No</label>
                     <input
                       type="text"
                       maxLength={10}
@@ -1582,7 +1582,7 @@ export default function VenueForm({
                         setAdminDetails(prev => ({ ...prev, departmentHeadMobile: val }));
                         if (adminErrors.departmentHeadMobile) setAdminErrors(prev => ({ ...prev, departmentHeadMobile: "" }));
                       }}
-                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadMobile ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      className={`w-full bg-slate-50 dark:bg-[#16162A] border ${adminErrors.departmentHeadMobile ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} rounded-lg p-3 text-slate-900 dark:text-white text-sm focus:border-purple-500 focus:outline-none`}
                       placeholder="10 digit number"
                     />
                     {adminErrors.departmentHeadMobile && <p className="text-red-400 text-xs">{adminErrors.departmentHeadMobile}</p>}
@@ -1975,10 +1975,10 @@ export default function VenueForm({
           {/* Venue Required dropdown — shows loading/error states inline */}
           {venuesLoading ? (
             <div className="relative w-full">
-              <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
                 Venue Required *
               </span>
-              <div className="w-full border border-[#3A3A5A] rounded-lg p-4 flex items-center gap-2 text-gray-500 text-sm">
+              <div className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg p-4 flex items-center gap-2 text-gray-500 text-sm">
                 <svg
                   className="w-4 h-4 animate-spin text-purple-400 flex-shrink-0"
                   xmlns="http://www.w3.org/2000/svg"
@@ -1993,10 +1993,10 @@ export default function VenueForm({
             </div>
           ) : venuesFetchError ? (
             <div className="relative w-full">
-              <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
                 Venue Required *
               </span>
-              <div className="w-full border border-red-500/40 rounded-lg p-4 flex items-center gap-2 text-red-400 text-sm">
+              <div className="w-full bg-transparent border border-red-500/40 rounded-lg p-4 flex items-center gap-2 text-red-400 text-sm">
                 <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
                   <line x1="12" y1="8" x2="12" y2="12" />
@@ -2023,13 +2023,13 @@ export default function VenueForm({
 
           <div>
             <div className="relative">
-              <span className="absolute left-3 -top-[9px] text-xs text-white bg-[#16162A] px-1 z-10">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white bg-slate-50 dark:bg-[#16162A] px-1 z-10 pointer-events-none">
                 Others
               </span>
               <input
                 value={currentDay.othersText}
                 onChange={(e) => updateCurrentDay({ othersText: e.target.value })}
-                className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500"
+                className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 placeholder-slate-400 dark:placeholder-gray-600"
               />
             </div>
           </div>

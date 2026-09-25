@@ -636,11 +636,11 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
 
       <div>
         <div className="relative w-full">
-          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
+          <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
             Special Requirements, If any
           </span>
           <textarea value={data.specialReq || ""} onChange={updateInput("specialReq")} rows={3} placeholder="notes"
-            className="w-full bg-transparent border border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600" />
+            className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600" />
         </div>
       </div>
     </div>

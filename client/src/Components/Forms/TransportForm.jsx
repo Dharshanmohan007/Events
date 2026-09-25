@@ -238,8 +238,7 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
       onClick={onCancel}
     >
       <div
-        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl"
-        style={{ backgroundColor: "#1f1f3a", border: "1px solid #3A3A5A" }}
+        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl bg-white dark:bg-[#1f1f3a] border border-slate-300 dark:border-[#3A3A5A]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
@@ -247,18 +246,17 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
             <AlertTriangle size={22} className="text-red-400" />
           </div>
         </div>
-        <h3 className="text-center text-white font-semibold text-base mb-2">
+        <h3 className="text-center text-slate-900 dark:text-white font-semibold text-base mb-2">
           Confirm Delete
         </h3>
-        <p className="text-center text-gray-400 text-sm mb-6 leading-relaxed">
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
           {message}
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors"
-            style={{ backgroundColor: "#2a2a4a", border: "1px solid #3A3A5A" }}
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors bg-slate-100 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3A3A5A]"
           >
             Cancel
           </button>
@@ -281,13 +279,13 @@ function FloatingInput({
   type = "text",
   value,
   onChange,
-  bgClass = "bg-[#1f1f3a]",
+  bgClass = "bg-white dark:bg-[#1f1f3a]",
   onKeyDown,
 }) {
   return (
     <div className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
@@ -297,7 +295,7 @@ function FloatingInput({
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder=" "
-        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
+        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-slate-200 dark:border-[#3A3A5A] text-slate-900 dark:text-white text-sm outline-none focus:border-purple-500 transition-colors"
       />
     </div>
   );
@@ -310,7 +308,7 @@ function CustomSelectDropdown({
   onChange,
   options,
   placeholder = "Select",
-  bgClass = "bg-[#1f1f3a]",
+  bgClass = "bg-white dark:bg-[#1f1f3a]",
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -326,7 +324,7 @@ function CustomSelectDropdown({
   return (
     <div ref={ref} className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
@@ -334,10 +332,10 @@ function CustomSelectDropdown({
         type="button"
         onClick={() => setOpen((p) => !p)}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
         }`}
       >
-        <span className={`text-sm ${value ? "text-white" : "text-gray-500"}`}>
+        <span className={`text-sm ${value ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
           {value || placeholder}
         </span>
         <ChevronDown
@@ -348,7 +346,7 @@ function CustomSelectDropdown({
         />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden">
           {options.map((opt) => {
             const isSelected = value === opt;
             return (
@@ -359,7 +357,7 @@ function CustomSelectDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white hover:bg-purple-600/20 transition-colors text-left"
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-900 dark:text-white hover:bg-purple-600/20 transition-colors text-left"
               >
                 <span>{opt}</span>
                 {isSelected && <Check size={14} className="text-purple-400" />}
@@ -410,7 +408,7 @@ function VehicleMultiSelect({
   return (
     <div ref={ref} className="relative w-full">
       {/* Floating label */}
-      <span className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none bg-[#1f1f3a]">
+      <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none bg-white dark:bg-[#1f1f3a]">
         {label}
       </span>
 
@@ -421,12 +419,12 @@ function VehicleMultiSelect({
           setOpen(!open);
         }}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
         }`}
       >
         <span
           className={`text-sm truncate ${
-            !displayText ? "text-gray-500" : "text-white"
+            !displayText ? "text-gray-500" : "text-slate-900 dark:text-white"
           }`}
         >
           {displayText || "Select vehicle types"}
@@ -441,13 +439,11 @@ function VehicleMultiSelect({
 
       {open && (
         <div
-          className="absolute z-50 mt-1 w-full rounded-lg shadow-xl overflow-hidden"
-          style={{ backgroundColor: "#1E1E2F", border: "1px solid #3A3A5A" }}
+          className="absolute z-50 mt-1 w-full rounded-lg shadow-xl overflow-hidden bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A]"
         >
           {/* Search bar — same as venue dropdown */}
           <div
-            className="flex items-center gap-2 px-3 py-2 mx-2 my-2 rounded-md"
-            style={{ backgroundColor: "#2a2a4a", border: "1px solid #3A3A5A" }}
+            className="flex items-center gap-2 px-3 py-2 mx-2 my-2 rounded-md bg-slate-50 dark:bg-[#2a2a4a] border border-slate-200 dark:border-[#3A3A5A]"
           >
             <Search size={14} className="text-gray-400 flex-shrink-0" />
             <input
@@ -483,8 +479,8 @@ function VehicleMultiSelect({
                     onClick={() => onToggle(vehicle.vehicleType)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors text-left ${
                       isSelected
-                        ? "bg-purple-600/40 text-white"
-                        : "text-white hover:bg-white/5"
+                        ? "bg-purple-600/40 text-slate-900 dark:text-white"
+                        : "text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                   >
                     {/* Vehicle name */}
@@ -1172,8 +1168,8 @@ export default function TransportForm({
       </div>
 
       {forms.map((form, formIndex) => {
-        const CARD_BG = "bg-[#1f1f3a]";
-        const STAFF_BG = "bg-[#282846]";
+        const CARD_BG = "bg-white dark:bg-[#1f1f3a]";
+        const STAFF_BG = "bg-slate-50 dark:bg-[#282846]";
         let resolvedInventory = getResolvedVehicleInventory();
 
         const passengerCount = parseInt(form.totalPassengers);
@@ -1186,10 +1182,10 @@ export default function TransportForm({
         return (
           <div
             key={formIndex}
-            className="relative bg-[#1f1f3a] rounded-xl w-full mb-6 overflow-hidden"
+            className="relative bg-white dark:bg-[#1f1f3a] border border-slate-300 dark:border-transparent rounded-xl w-full mb-6 overflow-hidden"
           >
             {formIndex !== 0 && (
-              <div className="flex items-center justify-end px-6 pt-5 pb-3 border-b border-[#2e2e50]">
+              <div className="flex items-center justify-end px-6 pt-5 pb-3 border-b border-slate-200 dark:border-[#2e2e50]">
                 <button
                   onClick={() => requestRemoveTransport(formIndex)}
                   className="flex items-center justify-center w-8 h-8 rounded-lg text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 transition-colors"
@@ -1307,10 +1303,10 @@ export default function TransportForm({
 
               {/* Row 2: Pickup Location */}
               <div className="mb-4">
-                <label className="text-sm text-gray-300 block mb-1">
+                <label className="text-sm text-slate-700 dark:text-gray-300 block mb-1">
                   Pickup Location *
                 </label>
-                <div className="flex items-center bg-[#2a2a4a] px-4 py-2 rounded-lg border border-gray-600">
+                <div className="flex items-center bg-slate-100 dark:bg-[#2a2a4a] px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-600">
                   <MapPin
                     size={18}
                     className="text-gray-400 mr-2 flex-shrink-0"
@@ -1322,7 +1318,7 @@ export default function TransportForm({
                     onChange={(e) =>
                       handleChange(formIndex, "pickupLocation", e.target.value)
                     }
-                    className="bg-transparent outline-none text-gray-300 w-full"
+                    className="bg-transparent outline-none text-slate-900 dark:text-gray-300 w-full"
                   />
                 </div>
                 {getError(formIndex, "pickupLocation") && (
@@ -1344,10 +1340,10 @@ export default function TransportForm({
 
               {/* Row 4: Drop Location */}
               <div className="mb-6">
-                <label className="text-sm text-gray-300 block mb-1">
+                <label className="text-sm text-slate-700 dark:text-gray-300 block mb-1">
                   Drop Location *
                 </label>
-                <div className="flex items-center bg-[#2a2a4a] px-4 py-2 rounded-lg border border-gray-600">
+                <div className="flex items-center bg-slate-100 dark:bg-[#2a2a4a] px-4 py-2 rounded-lg border border-slate-300 dark:border-gray-600">
                   <MapPin
                     size={18}
                     className="text-gray-400 mr-2 flex-shrink-0"
@@ -1359,7 +1355,7 @@ export default function TransportForm({
                     onChange={(e) =>
                       handleChange(formIndex, "dropLocation", e.target.value)
                     }
-                    className="bg-transparent outline-none text-gray-300 w-full"
+                    className="bg-transparent outline-none text-slate-900 dark:text-gray-300 w-full"
                   />
                 </div>
                 {getError(formIndex, "dropLocation") && (
@@ -1515,11 +1511,11 @@ export default function TransportForm({
                       e.target.value,
                     )
                   }
-                  className="w-full p-4 rounded-lg border border-gray-700 text-gray-300 focus:outline-none focus:border-purple-500 transition-all duration-200 bg-transparent"
+                  className="w-full p-4 rounded-lg border border-slate-300 dark:border-gray-700 text-slate-900 dark:text-gray-300 focus:outline-none focus:border-purple-500 transition-all duration-200 bg-transparent"
                   rows={4}
                   placeholder=" "
                 />
-                <label className="absolute -top-2 left-3 text-xs text-white bg-[#1f1f3a] px-1">
+                <label className="absolute -top-2 left-3 text-xs text-slate-800 dark:text-white bg-white dark:bg-[#1f1f3a] px-1">
                   Special Requirements, If any
                 </label>
               </div>

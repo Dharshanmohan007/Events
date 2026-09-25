@@ -241,11 +241,11 @@ function AdminConfirmationModal({ room, onContacted, onRevoke }) {
         <div className="flex gap-3">
           <AlertTriangle className="text-yellow-400 shrink-0" />
           <div>
-            <h3 className="text-white font-semibold">Admin confirmation required</h3>
-            <p className="text-gray-300 text-sm mt-2">{room.adminMessage}</p>
+            <h3 className="text-slate-900 dark:text-white font-semibold">Admin confirmation required</h3>
+            <p className="text-gray-500 dark:text-gray-300 text-sm mt-2">{room.adminMessage}</p>
           </div>
         </div>
-        <label className="flex items-center gap-3 text-white text-sm mt-5 cursor-pointer">
+        <label className="flex items-center gap-3 text-slate-900 dark:text-white text-sm mt-5 cursor-pointer">
           <input type="checkbox" checked={contacted} onChange={(event) => {
             setContacted(event.target.checked);
             if (event.target.checked) onContacted();

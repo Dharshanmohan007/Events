@@ -254,22 +254,22 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
         onClick={onCancel}
       />
       {/* Modal */}
-      <div className="relative bg-[#1e1e38] border border-slate-200 dark:border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+      <div className="relative bg-white dark:bg-[#1e1e38] border border-slate-200 dark:border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
         {/* Icon */}
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15 border border-red-500/30 mx-auto mb-4">
           <Trash2 size={22} className="text-red-400" />
         </div>
-        <h3 className="text-white font-semibold text-center text-lg mb-2">
+        <h3 className="text-slate-900 dark:text-white font-semibold text-center text-lg mb-2">
           Delete Entry
         </h3>
-        <p className="text-gray-400 text-sm text-center mb-6">
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
           Are you sure you want to delete this entry? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#3a3a5a] text-gray-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-[#5a5a8a] text-sm font-medium transition-colors"
           >
             Cancel
           </button>
@@ -969,7 +969,7 @@ export default function FoodAndRefreshments({
             <div className="col-span-1 md:col-span-2 w-full flex flex-col sm:flex-row gap-4">
               {/* From Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white pointer-events-none">
                   From Date *
                 </label>
                 <button
@@ -990,7 +990,7 @@ export default function FoodAndRefreshments({
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
                   popperProps={{ strategy: "fixed" }}
-                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
                   calendarClassName="food-dark-cal"
                 />
@@ -1001,7 +1001,7 @@ export default function FoodAndRefreshments({
               
               {/* To Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white pointer-events-none">
                   To Date *
                 </label>
                 <button
@@ -1022,7 +1022,7 @@ export default function FoodAndRefreshments({
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
                   popperProps={{ strategy: "fixed" }}
-                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
                   calendarClassName="food-dark-cal"
                 />
@@ -1184,7 +1184,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Morning Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
                 </div>
@@ -1192,9 +1192,9 @@ export default function FoodAndRefreshments({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="mb-4">
                     {autoVenues.length > 0 ? (
-                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
-                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
-                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                      <div className="bg-slate-50 dark:bg-[#1e1e38] p-4 rounded-xl border border-slate-300 dark:border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-slate-900 dark:text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-700 dark:text-purple-300">
                           {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
                         </ul>
                       </div>
@@ -1232,7 +1232,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Evening Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
                 </div>
@@ -1240,9 +1240,9 @@ export default function FoodAndRefreshments({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="mb-4">
                     {autoVenues.length > 0 ? (
-                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
-                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
-                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                      <div className="bg-slate-50 dark:bg-[#1e1e38] p-4 rounded-xl border border-slate-300 dark:border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-slate-900 dark:text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-700 dark:text-purple-300">
                           {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
                         </ul>
                       </div>
@@ -1280,7 +1280,7 @@ export default function FoodAndRefreshments({
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
-                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-white">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white">
                   Special Requirements
                 </label>
                 <textarea
@@ -1289,7 +1289,7 @@ export default function FoodAndRefreshments({
                   onChange={(e) =>
                     handleChange(form.id, "specialRequirements", e.target.value)
                   }
-                  className="w-full rounded-xl bg-transparent border border-[#3d3d68] px-4 py-4 text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
+                  className="w-full rounded-xl bg-transparent border border-slate-300 dark:border-[#3d3d68] px-4 py-4 text-slate-900 dark:text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
                 />
               </div>
             </div>

@@ -194,7 +194,7 @@ function MultiSelect({ label, options, selected, onChange, error, labelClassName
                   key={i}
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-purple-600/30 text-purple-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/10 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
@@ -267,7 +267,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelClassName = "
                   key={i}
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-white" : "text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-purple-600/30 text-purple-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/10 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
