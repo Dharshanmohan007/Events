@@ -86,6 +86,12 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
     if (venueEntry.others?.trim()) {
       rows.push({ label: "Others", value: venueEntry.others });
     }
+    rows.push({ label: "EB Required", value: venueEntry.isEbRequired ? "Yes" : "No" });
+    if (venueEntry.isEbRequired && venueEntry.noOfSystems) {
+      rows.push({ label: "No. of Systems", value: venueEntry.noOfSystems });
+    }
+    rows.push({ label: "LED Wall Required", value: venueEntry.ledWallRequired ? "Yes" : "No" });
+    rows.push({ label: "A/C Required", value: venueEntry.acRequired ? "Yes" : "No" });
     return rows;
   }, [venueEntry]);
 
@@ -94,7 +100,7 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
   if (dayCount === 0) {
     return (
       <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-center">
-        <p className="text-gray-400 text-sm">No audio details were submitted for this event.</p>
+        <p className="text-gray-400 text-sm">No audio & EB details were submitted for this event.</p>
       </div>
     );
   }
@@ -151,7 +157,7 @@ export default function AudioPreview({ audio = {}, eventDays = [], venueData = [
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-purple-400 text-lg font-bold playfair">
-                Audio Details{venuesForDay.length > 1 ? ` — ${selectedVenue}` : ""}
+                Audio & EB Details{venuesForDay.length > 1 ? ` — ${selectedVenue}` : ""}
               </h2>
               <p className="text-gray-500 text-sm mt-1 max-w-2xl">
                 Audio equipment and special requirements submitted for{" "}

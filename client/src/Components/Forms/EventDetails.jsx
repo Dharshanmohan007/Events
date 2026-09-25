@@ -3,6 +3,7 @@ import CustomSelect, { SDG_GOALS } from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
+import InternalStudentBreakdown from './InternalStudentBreakdown';
 
 export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
   const daysData = eventData.eventDays || [];
@@ -280,6 +281,14 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           {errors.audience && <p className="text-red-400 text-xs mt-1">{errors.audience}</p>}
         </div>
       </div>
+
+      {audienceValue.includes("Internal Students") && (
+        <InternalStudentBreakdown
+          eventData={eventData}
+          setEventData={setEventData}
+          errors={errors}
+        />
+      )}
 
       {/* Day Cards */}
       {daysData.map((day, i) => {

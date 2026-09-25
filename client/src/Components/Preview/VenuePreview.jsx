@@ -127,6 +127,17 @@ const HALL_REQ_LABELS = {
                 </p>
             </div>
         )}
+        {(card.isDepartmentHeadContacted || card.isContactedDepartment) && (
+            <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+                <SectionHeading>Department Head Details</SectionHeading>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6">
+                    <VenueInfo label="Department" value={card.department} />
+                    <VenueInfo label="Department Head Name" value={card.departmentHeadName} isLast />
+                    <VenueInfo label="Head Designation" value={card.departmentHeadDesignation} />
+                    <VenueInfo label="Head Mobile No" value={card.departmentHeadMobile} isLast />
+                </div>
+            </div>
+        )}
         </div>
     );
     }

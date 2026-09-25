@@ -22,7 +22,7 @@ export default function EventPreviewPage({
     const requirementMap = {
         venue: "Venue Details",
         icts: "ICTS Details",
-        audio: "Audio Details",
+        audio: "Audio & EB Details",
         transport: "Transport Details",
         externalTransport: "External Transport",
         foodandrefreshments: "Food & Refreshments",

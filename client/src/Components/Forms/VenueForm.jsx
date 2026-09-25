@@ -60,7 +60,7 @@ function validateDay(dayData, options = []) {
     e.participants = "Total number of participants is required";
   if (!dayData.selectedVenues || dayData.selectedVenues.length === 0)
     e.selectedVenues = "Please select at least one venue";
-  
+
   const totalParticipants = parseInt(dayData.participants) || 0;
 
   const tooManyVenuesError = getTooManyVenuesError(
@@ -112,12 +112,15 @@ function buildVenuePayload(venueData) {
         hallRequirements.push({ type: "Audience Chair", quantity: parseInt(card.audienceChair) });
 
       venues.push({
-        dayIndex,
-        venueName: card.venueName || "",
+        dayIndex, venueName: card.venueName || "",
         numberOfParticipants: parseInt(card.participants) || 0,
         seatingCapacity: parseInt(card.seatingCapacity) || 0,
-        hallRequirements,
-        specialRequirements: card.specialReqs || "",
+        hallRequirements, specialRequirements: card.specialReqs || "",
+        isContactedDepartment: Boolean(card.isDepartmentHeadContacted),
+        department: card.department || "",
+        departmentHeadName: card.departmentHeadName || "",
+        departmentHeadDesignation: card.departmentHeadDesignation || "",
+        departmentHeadMobile: card.departmentHeadMobile || ""
       });
     });
   });
@@ -128,10 +131,10 @@ function buildVenuePayload(venueData) {
 // ─── Multi-venue dropdown ─────────────────────────────────────────────────────
 
 function MultiVenueSelect({ label, options, selected, onChange, error, totalParticipants, bookedVenues = [] }) {
-  const [open, setOpen]               = useState(false);
-  const [search, setSearch]           = useState("");
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const [capacityError, setCapacityError] = useState("");
-  const ref       = useRef(null);
+  const ref = useRef(null);
   const searchRef = useRef(null);
 
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -212,11 +215,11 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
   const venues = hoveredFloor ? options.filter(o => o.category === hoveredCategory && o.block === hoveredBlock && o.floor === hoveredFloor) : [];
 
   const q = search.toLowerCase().trim();
-  const searchResults = q ? options.filter(o => 
-    o.venue.toLowerCase().includes(q) || 
-    o.category.toLowerCase().includes(q) || 
-    o.block.toLowerCase().includes(q) || 
-    o.floor.toLowerCase().includes(q) || 
+  const searchResults = q ? options.filter(o =>
+    o.venue.toLowerCase().includes(q) ||
+    o.category.toLowerCase().includes(q) ||
+    o.block.toLowerCase().includes(q) ||
+    o.floor.toLowerCase().includes(q) ||
     (o.capacity === 0 ? "open" : String(o.capacity).toLowerCase()).includes(q)
   ) : [];
 
@@ -228,9 +231,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
-          }`}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            }`}
         >
           <span className={selected.length ? "text-white text-sm truncate max-w-[85%]" : "text-gray-500 text-sm truncate"}>
             {displayText || "Select venues..."}
@@ -300,21 +302,21 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
             {/* Capacity error */}
             {(capacityError || tooManyVenuesError) && selected.length > 0 && (
               <div className="mx-2 mt-2 flex items-start gap-2 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
-                  <svg
-                      className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                  >
-                      <circle cx="12" cy="12" r="10" />
-                      <line x1="12" y1="8" x2="12" y2="12" />
-                      <line x1="12" y1="16" x2="12.01" y2="16" />
-                  </svg>
+                <svg
+                  className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
 
-                  <p className="text-red-400 text-xs">
-                      {tooManyVenuesError || capacityError}
-                  </p>
+                <p className="text-red-400 text-xs">
+                  {tooManyVenuesError || capacityError}
+                </p>
               </div>
             )}
 
@@ -330,11 +332,10 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                       <div
                         key={opt.id}
                         onClick={() => toggle(opt.id)}
-                        className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center justify-between ${
-                          isSelected
+                        className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center justify-between ${isSelected
                             ? "bg-purple-600/30 text-white"
                             : "text-white hover:bg-purple-500/20"
-                        }`}
+                          }`}
                       >
                         <div className="flex flex-col">
                           <span className="font-medium text-sm">{opt.venue}</span>
@@ -365,9 +366,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                         setHoveredBlock(null);
                         setHoveredFloor(null);
                       }}
-                      className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
-                        hoveredCategory === cat ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
-                      }`}
+                      className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredCategory === cat ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                        }`}
                     >
                       <span>{cat}</span>
                       <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -385,9 +385,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                           setHoveredBlock(block);
                           setHoveredFloor(null);
                         }}
-                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
-                          hoveredBlock === block ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
-                        }`}
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredBlock === block ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                          }`}
                       >
                         <span>{block}</span>
                         <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -403,9 +402,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                       <div
                         key={floor}
                         onMouseEnter={() => setHoveredFloor(floor)}
-                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${
-                          hoveredFloor === floor ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
-                        }`}
+                        className={`px-3 py-2 rounded-md cursor-pointer text-sm flex justify-between items-center transition-colors ${hoveredFloor === floor ? "bg-purple-500/20 text-purple-300" : "text-gray-300 hover:bg-[#2A2A3F]"
+                          }`}
                       >
                         <span>{floor}</span>
                         <svg className="w-4 h-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
@@ -423,11 +421,10 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                         <div
                           key={opt.id}
                           onClick={() => toggle(opt.id)}
-                          className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center justify-between transition-colors ${
-                            isSelected
+                          className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center justify-between transition-colors ${isSelected
                               ? "bg-purple-600/30 text-white"
                               : "text-gray-300 hover:bg-purple-500/20"
-                          }`}
+                            }`}
                         >
                           <div className="flex items-center gap-2">
                             {isSelected ? (
@@ -459,9 +456,9 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
 // ─── Hall Requirements dropdown ───────────────────────────────────────────────
 
 function HallRequirementsSelect({ label, selected, onChange, error }) {
-  const [open, setOpen]     = useState(false);
+  const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const ref       = useRef(null);
+  const ref = useRef(null);
   const searchRef = useRef(null);
 
   useEffect(() => {
@@ -484,10 +481,10 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
     );
 
   const filteredItems = (() => {
-    const q             = search.toLowerCase().trim();
+    const q = search.toLowerCase().trim();
     const selectedItems = HALL_REQUIREMENTS.filter((r) => selected.includes(r));
-    const unselected    = HALL_REQUIREMENTS.filter((r) => !selected.includes(r));
-    const combined      = [...selectedItems, ...unselected];
+    const unselected = HALL_REQUIREMENTS.filter((r) => !selected.includes(r));
+    const combined = [...selectedItems, ...unselected];
     if (!q) return combined;
     return combined.filter((r) => r.toLowerCase().includes(q));
   })();
@@ -500,9 +497,8 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
         </span>
         <div
           onClick={() => setOpen(!open)}
-          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-            open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
-          }`}
+          className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${open ? "border-purple-500" : error ? "border-red-400" : "border-[#3A3A5A]"
+            }`}
         >
           <span
             className={
@@ -583,11 +579,10 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
                     <div
                       key={i}
                       onClick={() => toggle(item)}
-                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                        isSelected
+                      className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${isSelected
                           ? "bg-purple-600/30 text-white"
                           : "text-white hover:bg-purple-500/20"
-                      }`}
+                        }`}
                     >
                       <span>{item}</span>
                       {isSelected && (
@@ -620,19 +615,19 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
 // ─── Venue Detail Card ────────────────────────────────────────────────────────
 
 function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange, errors = {}, onInfoClick }) {
-  const showGuestChair    = data.hallReqs?.includes("Guest Chair");
-  const showWaterBottles  = data.hallReqs?.includes("Water Bottles");
-  const showDiasTable     = data.hallReqs?.includes("Dias Table");
+  const showGuestChair = data.hallReqs?.includes("Guest Chair");
+  const showWaterBottles = data.hallReqs?.includes("Water Bottles");
+  const showDiasTable = data.hallReqs?.includes("Dias Table");
   const showAudienceChair = data.hallReqs?.includes("Audience Chair");
 
   const update = (field) => (e) => onChange({ ...data, [field]: e.target.value });
 
   // ── Capacity validation: look up this venue's max capacity from API venues list ──
-  const venueObj      = venuesList.find((v) => v.id === venueId);
+  const venueObj = venuesList.find((v) => v.id === venueId);
   const venueCapacity = venueObj?.capacity || 0; // 0 means open/no fixed limit
 
-  const enteredParticipants  = parseInt(data.participants) || 0;
-  const enteredSeating       = parseInt(data.seatingCapacity) || 0;
+  const enteredParticipants = parseInt(data.participants) || 0;
+  const enteredSeating = parseInt(data.seatingCapacity) || 0;
 
   const participantCapError =
     venueCapacity > 0 && enteredParticipants > venueCapacity
@@ -713,24 +708,24 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
       {(showGuestChair || showWaterBottles || showDiasTable || showAudienceChair) &&
         (() => {
           const activeFields = [
-            showGuestChair    && { key: "guestChairs",   label: "No. of Guest Chair",    field: "guestChairs",   error: errors.guestChairs },
-            showWaterBottles  && { key: "waterBottles",  label: "No. of Water Bottles",  field: "waterBottles",  error: errors.waterBottles },
-            showDiasTable     && { key: "diasTable",     label: "No. of Dias Table",     field: "diasTable",     error: errors.diasTable },
+            showGuestChair && { key: "guestChairs", label: "No. of Guest Chair", field: "guestChairs", error: errors.guestChairs },
+            showWaterBottles && { key: "waterBottles", label: "No. of Water Bottles", field: "waterBottles", error: errors.waterBottles },
+            showDiasTable && { key: "diasTable", label: "No. of Dias Table", field: "diasTable", error: errors.diasTable },
             showAudienceChair && { key: "audienceChair", label: "No. of Audience Chair", field: "audienceChair", error: errors.audienceChair },
           ].filter(Boolean);
 
-          const count       = activeFields.length;
-          const colsPerRow  = Math.min(count, 4);
-          const gridClass   =
+          const count = activeFields.length;
+          const colsPerRow = Math.min(count, 4);
+          const gridClass =
             colsPerRow === 1 ? "grid grid-cols-1 gap-4" :
-            colsPerRow === 2 ? "grid grid-cols-2 gap-4" :
-            colsPerRow === 3 ? "grid grid-cols-3 gap-4" :
-                               "grid grid-cols-4 gap-4";
-          const remainder   = count % 4;
-          const spanClass   =
+              colsPerRow === 2 ? "grid grid-cols-2 gap-4" :
+                colsPerRow === 3 ? "grid grid-cols-3 gap-4" :
+                  "grid grid-cols-4 gap-4";
+          const remainder = count % 4;
+          const spanClass =
             remainder === 1 ? "col-span-4" :
-            remainder === 2 ? "col-span-2" :
-            remainder === 3 ? "col-span-1" : "";
+              remainder === 2 ? "col-span-2" :
+                remainder === 3 ? "col-span-1" : "";
 
           return (
             <div className={gridClass}>
@@ -763,16 +758,15 @@ function VenueDetailCard({ venueName, venueId, venuesList, index, data, onChange
       <div>
         <div className="relative w-full">
           <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#1E1E35] z-10 pointer-events-none">
-            Special Requirements, if any 
+            Special Requirements, if any
           </span>
           <textarea
             value={data.specialReqs || ""}
             onChange={update("specialReqs")}
             rows={3}
             placeholder="Enter any special requirements..."
-            className={`w-full bg-transparent border ${
-              errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
-            } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
+            className={`w-full bg-transparent border ${errors.specialReqs ? "border-red-400" : "border-[#3A3A5A]"
+              } text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600`}
           />
         </div>
         <ErrorMsg msg={errors.specialReqs} />
@@ -791,19 +785,18 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
       <div className="flex items-center justify-center">
         {days.map((day, index) => {
           const isCompleted = completedDays.includes(index);
-          const isCurrent   = index === currentDayIndex;
+          const isCurrent = index === currentDayIndex;
 
           return (
             <React.Fragment key={index}>
               <div className="flex flex-col items-center min-w-[140px]">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${
-                    isCompleted
+                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${isCompleted
                       ? "bg-purple-600 border-purple-600 text-white"
                       : isCurrent
                         ? "border-purple-500 text-purple-400"
                         : "border-gray-600 text-gray-500"
-                  }`}
+                    }`}
                 >
                   {isCompleted ? (
                     <svg
@@ -823,25 +816,23 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
                 {day.date && (
                   <div className="mt-2 text-center">
                     <p
-                      className={`text-xs font-semibold ${
-                        isCompleted
+                      className={`text-xs font-semibold ${isCompleted
                           ? "text-purple-400"
                           : isCurrent
                             ? "text-purple-300"
                             : "text-gray-400"
-                      }`}
+                        }`}
                     >
                       {day.date}
                     </p>
                     {day.startTime && day.endTime && (
                       <p
-                        className={`text-xs ${
-                          isCompleted
+                        className={`text-xs ${isCompleted
                             ? "text-purple-400"
                             : isCurrent
                               ? "text-purple-300"
                               : "text-gray-500"
-                        }`}
+                          }`}
                       >
                         ({day.startTime} - {day.endTime})
                       </p>
@@ -851,9 +842,8 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
               </div>
               {index < days.length - 1 && (
                 <div
-                  className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${
-                    isCompleted ? "bg-purple-500" : "bg-gray-600"
-                  }`}
+                  className={`h-[2px] flex-1 mx-2 transition-all duration-300 ${isCompleted ? "bg-purple-500" : "bg-gray-600"
+                    }`}
                   style={{ minWidth: "60px" }}
                 />
               )}
@@ -878,14 +868,14 @@ export default function VenueForm({
   isEditMode = false,
 }) {
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
-  const [completedDays, setCompletedDays]     = useState([]);
-  const [errors, setErrors]                   = useState({});
-  const [isLoading, setIsLoading]             = useState(false);
-  const [apiError, setApiError]               = useState("");
+  const [completedDays, setCompletedDays] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   // ── API-loaded venues state ──
-  const [venuesList, setVenuesList]         = useState([]);
-  const [venuesLoading, setVenuesLoading]   = useState(true);
+  const [venuesList, setVenuesList] = useState([]);
+  const [venuesLoading, setVenuesLoading] = useState(true);
   const [venuesFetchError, setVenuesFetchError] = useState("");
 
   // Popup state
@@ -896,16 +886,23 @@ export default function VenueForm({
   const [permissionPopupOpen, setPermissionPopupOpen] = useState(false);
   const [contactedAdmin, setContactedAdmin] = useState(false);
   const [pendingPermissionVenues, setPendingPermissionVenues] = useState([]);
+  const [adminDetails, setAdminDetails] = useState({
+    department: "",
+    departmentHeadName: "",
+    departmentHeadDesignation: "",
+    departmentHeadMobile: ""
+  });
+  const [adminErrors, setAdminErrors] = useState({});
 
   const [venueData, setVenueData] = useState(() =>
     initialVenueData.length > 0
       ? initialVenueData
       : eventDays.map(() => ({
-          participants: "",
-          selectedVenues: [],
-          othersText: "",
-          venueCards: [],
-        }))
+        participants: "",
+        selectedVenues: [],
+        othersText: "",
+        venueCards: [],
+      }))
   );
 
   // ── Fetch venues from API on mount ──
@@ -934,6 +931,7 @@ export default function VenueForm({
           remarks: v.remarks || "",
           audio: v.audio,
           seating: v.seating,
+          contactDepartmentHead: v.contactDepartmentHead,
         }));
         setVenuesList(normalized);
       } catch (err) {
@@ -1018,7 +1016,7 @@ export default function VenueForm({
     }
     setVenueData((prev) => {
       const nextDays = eventDays.length;
-      const updated  = prev.slice(0, nextDays);
+      const updated = prev.slice(0, nextDays);
       while (updated.length < nextDays) {
         updated.push({ participants: "", selectedVenues: [], othersText: "", venueCards: [] });
       }
@@ -1026,10 +1024,10 @@ export default function VenueForm({
     });
   }, [eventDays.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const currentDay    = venueData[currentDayIndex] || {
+  const currentDay = venueData[currentDayIndex] || {
     participants: "", selectedVenues: [], othersText: "", venueCards: [],
   };
-  const currentErrors   = errors[currentDayIndex] || {};
+  const currentErrors = errors[currentDayIndex] || {};
   const participantCount = parseInt(currentDay?.participants) || 0;
 
   const updateCurrentDay = (newData) => {
@@ -1039,8 +1037,8 @@ export default function VenueForm({
       return updated;
     });
     setErrors((prev) => {
-      const updatedErrors      = { ...prev };
-      const currentDayErrors   = { ...(updatedErrors[currentDayIndex] || {}) };
+      const updatedErrors = { ...prev };
+      const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
       Object.keys(newData).forEach((field) => { delete currentDayErrors[field]; });
       updatedErrors[currentDayIndex] = currentDayErrors;
       return updatedErrors;
@@ -1048,171 +1046,212 @@ export default function VenueForm({
   };
 
   const handleVenueSelection = (selectedVenues) => {
-  const existingSelectedVenues = currentDay.selectedVenues || [];
+    const existingSelectedVenues = currentDay.selectedVenues || [];
 
-  // ─────────────────────────────────────────────────────────────
-  // Find only the newly selected venues
-  // ─────────────────────────────────────────────────────────────
-  const newlySelectedVenueIds = selectedVenues.filter(
-    (id) => !existingSelectedVenues.includes(id)
-  );
-
-  // ─────────────────────────────────────────────────────────────
-  // Find newly selected venues that require permission
-  // Classroom / Lab / Department / Center
-  // ─────────────────────────────────────────────────────────────
-  const restrictedVenueIds = newlySelectedVenueIds.filter((id) => {
-    const venueObj = stateRef.current.venuesList.find(
-      (v) => v.id === id
+    // ─────────────────────────────────────────────────────────────
+    // Find only the newly selected venues
+    // ─────────────────────────────────────────────────────────────
+    const newlySelectedVenueIds = selectedVenues.filter(
+      (id) => !existingSelectedVenues.includes(id)
     );
 
-    if (!venueObj?.category) return false;
+    // ─────────────────────────────────────────────────────────────
+    // Find newly selected venues that require permission
+    // Classroom / Lab / Department / Center
+    // ─────────────────────────────────────────────────────────────
+    const restrictedVenueIds = newlySelectedVenueIds.filter((id) => {
+      const venueObj = stateRef.current.venuesList.find(
+        (v) => v.id === id
+      );
 
-    const category = venueObj.category.toLowerCase().trim();
+      const rawContact = venueObj?.contactDepartmentHead;
+      return (
+        rawContact === true ||
+        String(rawContact).toLowerCase() === "true" ||
+        String(rawContact).toLowerCase() === "yes" ||
+        rawContact === 1
+      );
+    });
 
-    return (
-      category.includes("classroom") ||
-      category.includes("lab") ||
-      category.includes("department") ||
-      category.includes("center")
-    );
-  });
+    // ─────────────────────────────────────────────────────────────
+    // If restricted venue selected:
+    //
+    // DO NOT add it to selectedVenues.
+    // DO NOT create venue card.
+    // Show permission popup instead.
+    // ─────────────────────────────────────────────────────────────
+    if (restrictedVenueIds.length > 0) {
+      setPendingPermissionVenues(restrictedVenueIds);
+      setContactedAdmin(false);
+      setPermissionPopupOpen(true);
 
-  // ─────────────────────────────────────────────────────────────
-  // If restricted venue selected:
-  //
-  // DO NOT add it to selectedVenues.
-  // DO NOT create venue card.
-  // Show permission popup instead.
-  // ─────────────────────────────────────────────────────────────
-  if (restrictedVenueIds.length > 0) {
-    setPendingPermissionVenues(restrictedVenueIds);
-    setContactedAdmin(false);
-    setPermissionPopupOpen(true);
+      // Keep only venues that are already approved/selected.
+      // Restricted venues are NOT added yet.
+      const allowedVenueIds = selectedVenues.filter(
+        (id) => !restrictedVenueIds.includes(id)
+      );
 
-    // Keep only venues that are already approved/selected.
-    // Restricted venues are NOT added yet.
-    const allowedVenueIds = selectedVenues.filter(
-      (id) => !restrictedVenueIds.includes(id)
-    );
+      applyVenueSelection(allowedVenueIds);
 
-    applyVenueSelection(allowedVenueIds);
-
-    return;
-  }
-
-  // ─────────────────────────────────────────────────────────────
-  // Normal venue selection
-  // ─────────────────────────────────────────────────────────────
-  applyVenueSelection(selectedVenues);
-};
-
-
-// ─────────────────────────────────────────────────────────────
-// Actually apply the venue selection.
-//
-// This function is called only when:
-// 1. Venue does not require permission, OR
-// 2. User clicked "Contacted Admin" in the permission popup.
-//
-// This is the ONLY place where venueCards are created.
-// ─────────────────────────────────────────────────────────────
-const applyVenueSelection = (selectedVenues) => {
-  const existingCards = currentDay.venueCards || [];
-
-  // Auto-fill only applies when exactly ONE venue is selected.
-  const isSingleVenue = selectedVenues.length === 1;
-
-  const totalParticipantsValue = currentDay.participants
-    ? String(currentDay.participants)
-    : "";
-
-  const updatedCards = selectedVenues.map((id) => {
-    const existing = existingCards.find(
-      (c) => c.venueId === id
-    );
-
-    const venueObj = stateRef.current.venuesList.find(
-      (v) => v.id === id
-    );
-
-    const name = venueObj ? venueObj.venue : "";
-
-    if (existing) {
-      if (isSingleVenue) {
-        // Sole selected venue → keep it synced with total participants.
-        return {
-          ...existing,
-          participants: totalParticipantsValue,
-          seatingCapacity: totalParticipantsValue,
-          autoFilled: true,
-        };
-      }
-
-      // Multiple venues selected.
-      // Clear only automatically filled values.
-      if (existing.autoFilled) {
-        return {
-          ...existing,
-          participants: "",
-          seatingCapacity: "",
-          autoFilled: false,
-        };
-      }
-
-      return existing;
+      return;
     }
 
-    // New venue card is created ONLY here.
-    return {
-      venueId: id,
-      venueName: name,
-      participants: isSingleVenue ? totalParticipantsValue : "",
-      seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
-      hallReqs: [],
-      guestChairs: "",
-      waterBottles: "",
-      diasTable: "",
-      audienceChair: "",
-      specialReqs: "",
-      autoFilled: isSingleVenue,
-    };
-  });
+    // ─────────────────────────────────────────────────────────────
+    // Normal venue selection
+    // ─────────────────────────────────────────────────────────────
+    applyVenueSelection(selectedVenues);
+  };
 
-  setVenueData((prev) => {
-    const updated = [...prev];
 
-    updated[currentDayIndex] = {
-      ...updated[currentDayIndex],
-      selectedVenues,
-      venueCards: updatedCards,
-      sameAsDay1: false,
-    };
+  // ─────────────────────────────────────────────────────────────
+  // Actually apply the venue selection.
+  //
+  // This function is called only when:
+  // 1. Venue does not require permission, OR
+  // 2. User clicked "Contacted Admin" in the permission popup.
+  //
+  // This is the ONLY place where venueCards are created.
+  // ─────────────────────────────────────────────────────────────
+  const applyVenueSelection = (selectedVenues, adminDetailsObj = null) => {
+    const existingCards = currentDay.venueCards || [];
 
-    return updated;
-  });
+    // Auto-fill only applies when exactly ONE venue is selected.
+    const isSingleVenue = selectedVenues.length === 1;
 
-  setErrors((prev) => {
-    const updatedErrors = { ...prev };
+    const totalParticipantsValue = currentDay.participants
+      ? String(currentDay.participants)
+      : "";
 
-    const currentDayErrors = {
-      ...(updatedErrors[currentDayIndex] || {}),
-    };
+    const updatedCards = selectedVenues.map((id) => {
+      const existing = existingCards.find(
+        (c) => c.venueId === id
+      );
 
-    delete currentDayErrors.selectedVenues;
-    delete currentDayErrors.venueCards;
+      const venueObj = stateRef.current.venuesList.find(
+        (v) => v.id === id
+      );
 
-    updatedErrors[currentDayIndex] = currentDayErrors;
+      const name = venueObj ? venueObj.venue : "";
 
-    return updatedErrors;
-  });
+      // Determine if this venue needs admin details (very loose check for safety)
+      const rawContact = venueObj?.contactDepartmentHead;
+      const needsAdmin =
+        rawContact === true ||
+        String(rawContact).toLowerCase() === "true" ||
+        String(rawContact).toLowerCase() === "yes" ||
+        rawContact === 1;
 
-  checkVenueAvailability(selectedVenues);
-};
+            if (existing) {
+        if (isSingleVenue) {
+          // Sole selected venue → keep it synced with total participants.
+          return {
+            ...existing,
+            participants: totalParticipantsValue,
+            seatingCapacity: totalParticipantsValue,
+            autoFilled: true,
+            ...(adminDetailsObj ? {
+              isDepartmentHeadContacted: true,
+              department: adminDetailsObj.department,
+              departmentHeadName: adminDetailsObj.departmentHeadName,
+              departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+              departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+            } : {})
+          };
+        }
+
+        // Multiple venues selected.
+        // Clear only automatically filled values.
+        if (existing.autoFilled) {
+          return {
+            ...existing,
+            participants: "",
+            seatingCapacity: "",
+            autoFilled: false,
+            ...(adminDetailsObj ? {
+              isDepartmentHeadContacted: true,
+              department: adminDetailsObj.department,
+              departmentHeadName: adminDetailsObj.departmentHeadName,
+              departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+              departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+            } : {})
+          };
+        }
+
+        return {
+          ...existing,
+          ...(adminDetailsObj ? {
+            isDepartmentHeadContacted: true,
+            department: adminDetailsObj.department,
+            departmentHeadName: adminDetailsObj.departmentHeadName,
+            departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+            departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+          } : {})
+        };
+      }
+
+      // New venue card is created ONLY here.
+      return {
+        venueId: id,
+        venueName: name,
+        participants: isSingleVenue ? totalParticipantsValue : "",
+        seatingCapacity: isSingleVenue ? totalParticipantsValue : "",
+        hallReqs: [],
+        guestChairs: "",
+        waterBottles: "",
+        diasTable: "",
+        audienceChair: "",
+        specialReqs: "",
+        autoFilled: isSingleVenue,
+        ...(adminDetailsObj ? {
+          isDepartmentHeadContacted: true,
+          department: adminDetailsObj.department,
+          departmentHeadName: adminDetailsObj.departmentHeadName,
+          departmentHeadDesignation: adminDetailsObj.departmentHeadDesignation,
+          departmentHeadMobile: adminDetailsObj.departmentHeadMobile,
+        } : {
+          isDepartmentHeadContacted: false,
+          department: "",
+          departmentHeadName: "",
+          departmentHeadDesignation: "",
+          departmentHeadMobile: "",
+        })
+      };
+    });
+
+    setVenueData((prev) => {
+      const updated = [...prev];
+
+      updated[currentDayIndex] = {
+        ...updated[currentDayIndex],
+        selectedVenues,
+        venueCards: updatedCards,
+        sameAsDay1: false,
+      };
+
+      return updated;
+    });
+
+    setErrors((prev) => {
+      const updatedErrors = { ...prev };
+
+      const currentDayErrors = {
+        ...(updatedErrors[currentDayIndex] || {}),
+      };
+
+      delete currentDayErrors.selectedVenues;
+      delete currentDayErrors.venueCards;
+
+      updatedErrors[currentDayIndex] = currentDayErrors;
+
+      return updatedErrors;
+    });
+
+    checkVenueAvailability(selectedVenues);
+  };
 
   const updateVenueCard = (cardIndex, updated) => {
     setVenueData((prev) => {
-      const data  = [...prev];
+      const data = [...prev];
       const cards = [...(data[currentDayIndex].venueCards || [])];
       const prevCard = cards[cardIndex] || {};
 
@@ -1297,10 +1336,10 @@ const applyVenueSelection = (selectedVenues) => {
           const updated = [...prev];
           const currentDayData = updated[currentDayIndex];
           const currentSelected = currentDayData.selectedVenues || [];
-          
+
           const unavailableIds = unavailableNames.map(name => {
-             const venueObj = stateRef.current.venuesList.find(v => v.venue === name);
-             return venueObj ? venueObj.id : name;
+            const venueObj = stateRef.current.venuesList.find(v => v.venue === name);
+            return venueObj ? venueObj.id : name;
           });
 
           const filteredVenues = currentSelected.filter(id => !unavailableIds.includes(id));
@@ -1339,7 +1378,7 @@ const applyVenueSelection = (selectedVenues) => {
       return false;
     }
 
-    const dayData   = venueData[currentDayIndex];
+    const dayData = venueData[currentDayIndex];
     const dayErrors = isEditMode ? {} : validateDay(dayData, currentVenuesList);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
@@ -1355,8 +1394,8 @@ const applyVenueSelection = (selectedVenues) => {
       setIsLoading(true);
       setApiError("");
       try {
-        const payload  = buildVenuePayload(venueData);
-        const id       = eventId || "";
+        const payload = buildVenuePayload(venueData);
+        const id = eventId || "";
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${id}`, {
           method: "PUT",
           headers: {
@@ -1394,9 +1433,9 @@ const applyVenueSelection = (selectedVenues) => {
   const isOnLastDay = currentDayIndex === Math.max(eventDays.length - 1, 0);
   const nextDayLabel = isOnLastDay ? "Save & Next" : `Day ${currentDayIndex + 2} →`;
 
-  const isNextDisabled = 
-    checkingVenueAvailability || 
-    venueAvailability?.status === "NOT_AVAILABLE" || 
+  const isNextDisabled =
+    checkingVenueAvailability ||
+    venueAvailability?.status === "NOT_AVAILABLE" ||
     Object.keys(errors[currentDayIndex] || {}).length > 0;
 
   useEffect(() => {
@@ -1419,7 +1458,7 @@ const applyVenueSelection = (selectedVenues) => {
     .filter(Boolean)
     .filter((v) => !bookedVenueNames.includes(v.venue));
 
-  const handleInfoClick  = useCallback((venueName) => setPopupVenue(venueName), []);
+  const handleInfoClick = useCallback((venueName) => setPopupVenue(venueName), []);
   const handlePopupClose = useCallback(() => setPopupVenue(null), []);
 
   return (
@@ -1478,32 +1517,7 @@ const applyVenueSelection = (selectedVenues) => {
                   type="checkbox"
                   checked={contactedAdmin}
                   onChange={(e) => {
-                    const checked = e.target.checked;
-
-                    setContactedAdmin(checked);
-
-                    if (checked) {
-                      // ─────────────────────────────────────────────
-                      // User has confirmed permission.
-                      // Now actually add the pending venues.
-                      // ─────────────────────────────────────────────
-                      const currentSelected =
-                        stateRef.current.venueData?.[currentDayIndex]
-                          ?.selectedVenues || [];
-
-                      const finalSelectedVenues = [
-                        ...new Set([
-                          ...currentSelected,
-                          ...pendingPermissionVenues,
-                        ]),
-                      ];
-
-                      setPermissionPopupOpen(false);
-                      setPendingPermissionVenues([]);
-
-                      // NOW create the venue container.
-                      applyVenueSelection(finalSelectedVenues);
-                    }
+                    setContactedAdmin(e.target.checked);
                   }}
                   className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
                 />
@@ -1512,28 +1526,120 @@ const applyVenueSelection = (selectedVenues) => {
                   Contacted Admin
                 </span>
               </label>
+
+              {contactedAdmin && (
+                <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Department</label>
+                    <input
+                      type="text"
+                      value={adminDetails.department}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, department: e.target.value }));
+                        if (adminErrors.department) setAdminErrors(prev => ({ ...prev, department: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.department ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. CSE"
+                    />
+                    {adminErrors.department && <p className="text-red-400 text-xs">{adminErrors.department}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Department Head Name</label>
+                    <input
+                      type="text"
+                      value={adminDetails.departmentHeadName}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, departmentHeadName: e.target.value }));
+                        if (adminErrors.departmentHeadName) setAdminErrors(prev => ({ ...prev, departmentHeadName: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadName ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. Dr. Raj Kumar"
+                    />
+                    {adminErrors.departmentHeadName && <p className="text-red-400 text-xs">{adminErrors.departmentHeadName}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Head Designation</label>
+                    <input
+                      type="text"
+                      value={adminDetails.departmentHeadDesignation}
+                      onChange={(e) => {
+                        setAdminDetails(prev => ({ ...prev, departmentHeadDesignation: e.target.value }));
+                        if (adminErrors.departmentHeadDesignation) setAdminErrors(prev => ({ ...prev, departmentHeadDesignation: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadDesignation ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="e.g. Head of Department"
+                    />
+                    {adminErrors.departmentHeadDesignation && <p className="text-red-400 text-xs">{adminErrors.departmentHeadDesignation}</p>}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-sm font-medium text-gray-300">Head Mobile No</label>
+                    <input
+                      type="text"
+                      maxLength={10}
+                      value={adminDetails.departmentHeadMobile}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setAdminDetails(prev => ({ ...prev, departmentHeadMobile: val }));
+                        if (adminErrors.departmentHeadMobile) setAdminErrors(prev => ({ ...prev, departmentHeadMobile: "" }));
+                      }}
+                      className={`w-full bg-[#16162A] border ${adminErrors.departmentHeadMobile ? 'border-red-500' : 'border-[#3A3A5A]'} rounded-lg p-3 text-white text-sm focus:border-purple-500 focus:outline-none`}
+                      placeholder="10 digit number"
+                    />
+                    {adminErrors.departmentHeadMobile && <p className="text-red-400 text-xs">{adminErrors.departmentHeadMobile}</p>}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end px-6 pb-6">
+            <div className="flex items-center justify-between px-6 pb-6 mt-2">
               <button
                 type="button"
                 onClick={() => {
-                  // ─────────────────────────────────────────────
-                  // User did NOT get permission.
-                  //
-                  // Remove the pending venue completely.
-                  // No selected venue.
-                  // No venue container.
-                  // ─────────────────────────────────────────────
                   setPermissionPopupOpen(false);
                   setContactedAdmin(false);
                   setPendingPermissionVenues([]);
+                  setAdminDetails({ department: "", departmentHeadName: "", departmentHeadDesignation: "", departmentHeadMobile: "" });
+                  setAdminErrors({});
                 }}
                 className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
               >
-                Remove this message
+                Cancel
               </button>
+
+              {contactedAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const errors = {};
+                    if (!adminDetails.department.trim()) errors.department = "Required";
+                    if (!adminDetails.departmentHeadName.trim()) errors.departmentHeadName = "Required";
+                    if (!adminDetails.departmentHeadDesignation.trim()) errors.departmentHeadDesignation = "Required";
+                    if (!adminDetails.departmentHeadMobile.trim()) {
+                      errors.departmentHeadMobile = "Required";
+                    } else if (adminDetails.departmentHeadMobile.trim().length !== 10) {
+                      errors.departmentHeadMobile = "Invalid";
+                    }
+
+                    if (Object.keys(errors).length > 0) {
+                      setAdminErrors(errors);
+                      return;
+                    }
+
+                    const currentSelected = stateRef.current.venueData?.[currentDayIndex]?.selectedVenues || [];
+                    const finalSelectedVenues = [...new Set([...currentSelected, ...pendingPermissionVenues])];
+
+                    setPermissionPopupOpen(false);
+                    setPendingPermissionVenues([]);
+                    setContactedAdmin(false);
+
+                    applyVenueSelection(finalSelectedVenues, adminDetails);
+                  }}
+                  className="px-5 py-2.5 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors shadow-[0_0_15px_rgba(147,51,234,0.3)]"
+                >
+                  Continue venue booking
+                </button>
+              )}
             </div>
 
           </div>
@@ -1634,13 +1740,13 @@ const applyVenueSelection = (selectedVenues) => {
                 ))}
               </div>
             </div>
-        )}
+          )}
 
         <div className="flex items-center justify-between">
           <h2 className="text-white text-lg font-bold">
             Venue Details
           </h2>
-          
+
           {currentDayIndex > 0 && (
             <label className="flex items-center gap-2 cursor-pointer select-none">
               <input
@@ -1712,7 +1818,7 @@ const applyVenueSelection = (selectedVenues) => {
                       if (data?.status === "NOT_AVAILABLE" && data.data?.unavailable) {
                         const unavailableNames = data.data.unavailable.map((u) => u.venueName);
                         setBookedVenueNames(unavailableNames);
-                        
+
                         const availableVenues = selectedVenues.filter((id) => {
                           const venueObj = stateRef.current.venuesList.find(v => v.id === id);
                           return !unavailableNames.includes(venueObj ? venueObj.venue : id);
@@ -1817,9 +1923,9 @@ const applyVenueSelection = (selectedVenues) => {
               {apiError && <p>{apiError}</p>}
               {Object.keys(currentErrors).length > 0 && (
                 <div>
-                  {currentErrors.participants   && <p>• {currentErrors.participants}</p>}
+                  {currentErrors.participants && <p>• {currentErrors.participants}</p>}
                   {currentErrors.selectedVenues && <p>• {currentErrors.selectedVenues}</p>}
-                  {currentErrors.venueCards     && <p>• Please fill in all required fields for each venue</p>}
+                  {currentErrors.venueCards && <p>• Please fill in all required fields for each venue</p>}
                 </div>
               )}
             </div>
@@ -1856,7 +1962,7 @@ const applyVenueSelection = (selectedVenues) => {
             });
 
             setErrors((prev) => {
-              const updatedErrors    = { ...prev };
+              const updatedErrors = { ...prev };
               const currentDayErrors = { ...(updatedErrors[currentDayIndex] || {}) };
               delete currentDayErrors.participants;
               updatedErrors[currentDayIndex] = currentDayErrors;

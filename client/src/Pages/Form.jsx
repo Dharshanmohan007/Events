@@ -70,8 +70,8 @@ const emptyFoodDay = () => ({
   eveningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
   morningRefreshmentVenues: [], eveningRefreshmentVenues: [],
   breakfast: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-  lunch:     { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
-  dinner:    { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+  lunch: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
+  dinner: { vegParticipants: "", vegGuest: "", nonVegParticipants: "", nonVegGuest: "" },
 });
 
 const emptyExternalTransport = () => ({
@@ -180,15 +180,15 @@ const validateEventRequisition = (data) => {
 };
 
 const buildEventRequisitionPayload = ({ eventRequisition, user, existingOrganizerId }) => {
-let token = localStorage.getItem("token");
-let decodedToken = jwtDecode(token);
+  let token = localStorage.getItem("token");
+  let decodedToken = jwtDecode(token);
 
   // console.log("user log :",user);
-  
+
   const fd = new FormData();
   const organizerId = decodedToken?.facultyId || existingOrganizerId || decodedToken?.id || decodedToken?._id || user?._id;
   fd.append("organizerId", organizerId);
-    const isFileLike = eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob;
+  const isFileLike = eventRequisition.principalApprovalDocument instanceof File || eventRequisition.principalApprovalDocument instanceof Blob;
 
   const requestDetails = {
     organizerDetails: {
@@ -226,16 +226,30 @@ let decodedToken = jwtDecode(token);
       professionalSociety: Array.isArray(eventRequisition.eventData.society)
         ? eventRequisition.eventData.society
         : eventRequisition.eventData.society
-        ? [eventRequisition.eventData.society]
-        : [],
+          ? [eventRequisition.eventData.society]
+          : [],
       professionalSocietyOther: eventRequisition.eventData.societyOther || "",
       logosInPoster: Array.isArray(eventRequisition.eventData.logos)
         ? eventRequisition.eventData.logos
         : eventRequisition.eventData.logos
-        ? [eventRequisition.eventData.logos]
-        : [],
+          ? [eventRequisition.eventData.logos]
+          : [],
       logosOther: eventRequisition.eventData.logosOther || "",
-      targetAudience: eventRequisition.eventData.audience || "",
+      targetAudience: Array.isArray(eventRequisition.eventData.audience)
+        ? eventRequisition.eventData.audience
+        : eventRequisition.eventData.audience
+          ? [eventRequisition.eventData.audience]
+          : [],
+      internalStudentsBreakdown: (eventRequisition.eventData.internalStudentsBreakdown || []).map(y => ({
+        year: y.year,
+        departments: (y.departments || []).map(d => ({
+          department: d.department,
+          sections: (d.sections || []).map(s => ({
+            section: s.section,
+            count: s.count
+          }))
+        }))
+      })),
       numberOfDays: eventRequisition.eventDays.length,
       eventSchedule: (eventRequisition.eventDays || []).map((day) => ({
         eventDate: day.date ? new Date(day.date).toISOString() : "",
@@ -270,7 +284,7 @@ let decodedToken = jwtDecode(token);
   if (eventRequisition.doc === "Yes" && eventRequisition.file) {
     fd.append("previousEventDocumentation", eventRequisition.file);
   }
-    if (isFileLike) {
+  if (isFileLike) {
     fd.append("principalApprovalDocument", eventRequisition.principalApprovalDocument);
   }
   return fd;
@@ -314,10 +328,18 @@ const buildVenuePayload = (venueData) => {
         numberOfParticipants: parseInt(card.participants) || 0,
         seatingCapacity: parseInt(card.seatingCapacity) || 0,
         hallRequirements, specialRequirements: card.specialReqs || "",
+        isContactedDepartment: Boolean(card.isContactedDepartment || card.isDepartmentHeadContacted),
+        department: card.department || "",
+        departmentHeadName: card.departmentHeadName || "",
+        departmentHeadDesignation: card.departmentHeadDesignation || "",
+        departmentHeadMobile: card.departmentHeadMobile || ""
       });
     });
   });
-  return { venues };
+  return {
+    totalParticipants: parseInt(venueData[0]?.participants) || 0,
+    venues
+  };
 };
 
 function getIctsDepartmentFromStorage() {
@@ -393,23 +415,23 @@ const buildIctsPayload = (ictsData, venueData) => {
           type === "Windows"
             ? parseInt(card.windowsCount) || 0
             : type === "Mac"
-            ? parseInt(card.macCount) || 0
-            : 0,
+              ? parseInt(card.macCount) || 0
+              : 0,
       }));
 
       ictses.push({
         dayIndex,
         venueName,
         laptopSpec,
-        internetFacility:      card.internetFacility || "",
+        internetFacility: card.internetFacility || "",
         expectedInternetUsers: parseInt(card.expectedInternetUsers) || 0,
-        proctoringUsers:       parseInt(card.proctorUsers) || 0,
-        guestWifiNeeded:       card.guestWifi === "Yes",
-        guestWifiExceed5:      card.guestWifiExceed5 === "Yes",
-        totalGuestCount:       parseInt(card.totalGuestCount) || 0,
-        requirements:          card.requirements || [],
-        otherRequirements:     card.others || "",
-        specialRequirements:   card.specialRequirements || "",
+        proctoringUsers: parseInt(card.proctorUsers) || 0,
+        guestWifiNeeded: card.guestWifi === "Yes",
+        guestWifiExceed5: card.guestWifiExceed5 === "Yes",
+        totalGuestCount: parseInt(card.totalGuestCount) || 0,
+        requirements: card.requirements || [],
+        otherRequirements: card.others || "",
+        specialRequirements: card.specialRequirements || "",
       });
     });
   });
@@ -535,7 +557,7 @@ const buildPurchasePayload = (purchaseData) => {
 
     const requiredFor = [];
     if (day.selectedPersons === "Students" || day.selectedPersons === "Both") requiredFor.push("Students");
-    if (day.selectedPersons === "Guest"    || day.selectedPersons === "Both") requiredFor.push("Guest");
+    if (day.selectedPersons === "Guest" || day.selectedPersons === "Both") requiredFor.push("Guest");
 
     return {
       dayIndex,
@@ -655,10 +677,10 @@ const buildMediaPayload = (mediaData) => {
   const mediaRequirements = mediaData.map((day, dayIndex) => {
     const typeOfMedia = [];
     if (day.designType === "Poster" || day.designType === "Both") typeOfMedia.push("poster");
-    if (day.designType === "Video"  || day.designType === "Both") typeOfMedia.push("video");
+    if (day.designType === "Video" || day.designType === "Both") typeOfMedia.push("video");
 
     const sizes = [];
-    const flexVal  = day.poster?.sizeForFlex?.trim();
+    const flexVal = day.poster?.sizeForFlex?.trim();
     const glassVal = day.poster?.sizeForGlass?.trim();
     if (day.poster?.displayNeeded?.includes("Flex") && flexVal) {
       sizes.push({ type: "Flex", value: flexVal });
@@ -676,26 +698,26 @@ const buildMediaPayload = (mediaData) => {
       dayIndex,
       typeOfMedia,
       poster: {
-        posterContent:             day.poster?.contentPoster || day.poster?.posterContent || "",
-        referencePosterFiles:      extractNonFileMeta(day.poster?.referencePoster, day.poster?.referencePosterFiles ?? day.referencePosterFiles),
-        certificateContent:        day.poster?.contentCertificate || day.poster?.certificateContent || "",
+        posterContent: day.poster?.contentPoster || day.poster?.posterContent || "",
+        referencePosterFiles: extractNonFileMeta(day.poster?.referencePoster, day.poster?.referencePosterFiles ?? day.referencePosterFiles),
+        certificateContent: day.poster?.contentCertificate || day.poster?.certificateContent || "",
         referenceCertificateFiles: extractNonFileMeta(day.poster?.referenceCertificate, day.poster?.referenceCertificateFiles ?? day.referenceCertificateFiles),
-        trophyContent:             day.poster?.contentTrophy || day.poster?.trophyContent || "",
-        displayNeeded:             day.poster?.displayNeeded || [],
+        trophyContent: day.poster?.contentTrophy || day.poster?.trophyContent || "",
+        displayNeeded: day.poster?.displayNeeded || [],
         sizes,
-        deliveryDate:        toIsoDate(day.poster?.deliveryDate),
-        priority:            day.poster?.priority    || "",
+        deliveryDate: toIsoDate(day.poster?.deliveryDate),
+        priority: day.poster?.priority || "",
         specialRequirements: day.poster?.specialReq || day.poster?.specialRequirements || "",
       },
       video: {
-        videoContent:        day.video?.contentVideo || day.video?.videoContent || "",
-        preEventVideos:      getArrayValue(day.video?.preEvent, day.video?.preEventVideos),
-        eventCoverage:       day.video?.eventCoverage || [],
-        postEventVideos:     getArrayValue(day.video?.postEvent, day.video?.postEventVideos),
-        specialVideos:       day.video?.specialVideos || [],
-        referenceFiles:      extractNonFileMeta(day.video?.referenceVideo, day.video?.referenceFiles ?? day.referenceFiles),
-        deliveryDate:        toIsoDate(day.video?.deliveryDate),
-        priority:            day.video?.priority   || "",
+        videoContent: day.video?.contentVideo || day.video?.videoContent || "",
+        preEventVideos: getArrayValue(day.video?.preEvent, day.video?.preEventVideos),
+        eventCoverage: day.video?.eventCoverage || [],
+        postEventVideos: getArrayValue(day.video?.postEvent, day.video?.postEventVideos),
+        specialVideos: day.video?.specialVideos || [],
+        referenceFiles: extractNonFileMeta(day.video?.referenceVideo, day.video?.referenceFiles ?? day.referenceFiles),
+        deliveryDate: toIsoDate(day.video?.deliveryDate),
+        priority: day.video?.priority || "",
         specialRequirements: day.video?.specialReq || day.video?.specialRequirements || "",
       },
     };
@@ -714,7 +736,7 @@ const validateTransportData = (transportData) => {
     if (!form.pickupLocation?.trim()) err.pickupLocation = "Pickup location is required";
     if (!form.dropLocation?.trim()) err.dropLocation = "Drop location is required";
     if (!form.vistaTransport || form.vistaTransport.length === 0) err.vistaTransport = "Transport type is required";
-    
+
     if (form.vistaTransport && form.vistaTransport.length > 0) {
       form.vistaTransport.forEach(type => {
         if (type.toLowerCase().includes("car")) {
@@ -832,12 +854,12 @@ const formatExternalTransportPayload = (externalTransportData) => {
   return externalTransportData.map((item) => {
     const classOrBerthStr = Array.isArray(item.classOrBerth)
       ? item.classOrBerth
-          .map((c) => {
-            const m = String(c).match(/\(([^)]+)\)/);
-            return m ? m[1] : String(c).trim();
-          })
-          .filter(Boolean)
-          .join(", ")
+        .map((c) => {
+          const m = String(c).match(/\(([^)]+)\)/);
+          return m ? m[1] : String(c).trim();
+        })
+        .filter(Boolean)
+        .join(", ")
       : (item.classOrBerth || (item.travelOption === "Flight" ? "Economy" : ""));
 
     const trainNumber = item.travelOption === "Train" ? (item.trainNumber || "") : "";
@@ -922,39 +944,39 @@ const buildRefreshmentPayload = (foodData = []) => ({
 
 const buildPayloadForSection = (sectionKey, data, eventDays = [], formData = {}) => {
   switch (sectionKey) {
-    case "venue":               return { venueDetails: buildVenuePayload(data) };
-    case "icts":                return { ictsDetails: buildIctsPayload(data, formData.venue) };
-    case "purchase":            return { purchaseDetails: buildPurchasePayload(data) };
-    case "media":               return buildMediaPayload(data);
-    case "audio":               return { audioDetails: data };
-    case "transport":           return { transportDetails: data };
-    case "externalTransport":   return { externalTransportDetails: { externalTransports: formatExternalTransportPayload(data) } };
+    case "venue": return { venueDetails: buildVenuePayload(data) };
+    case "icts": return { ictsDetails: buildIctsPayload(data, formData.venue) };
+    case "purchase": return { purchaseDetails: buildPurchasePayload(data) };
+    case "media": return buildMediaPayload(data);
+    case "audio": return { audioDetails: data };
+    case "transport": return { transportDetails: data };
+    case "externalTransport": return { externalTransportDetails: { externalTransports: formatExternalTransportPayload(data) } };
     case "foodandrefreshments": return { refreshmentDetails: buildRefreshmentPayload(data) };
-    case "accommodation":       return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
-    default:                    return {};
+    case "accommodation": return { accommodationDetails: buildAccommodationPayload(data, eventDays) };
+    default: return {};
   }
 };
 
 const validateSection = (sectionKey, data, extras = {}) => {
   switch (sectionKey) {
-    case "event":               return validateEventRequisition(data);
-    case "venue":               return validateVenueData(data);
-    case "icts":                return validateIctsData(data, extras.venueData || []);
-    case "purchase":            return validatePurchaseData(data);
-    case "media":               return validateMediaData(data);
-    case "audio":               return validateAudioData(data);
-    case "transport":           return validateTransportData(data);
-    case "externalTransport":   return validateExternalTransport(data);
+    case "event": return validateEventRequisition(data);
+    case "venue": return validateVenueData(data);
+    case "icts": return validateIctsData(data, extras.venueData || []);
+    case "purchase": return validatePurchaseData(data);
+    case "media": return validateMediaData(data);
+    case "audio": return validateAudioData(data);
+    case "transport": return validateTransportData(data);
+    case "externalTransport": return validateExternalTransport(data);
     case "foodandrefreshments": return validateFoodData(data);
-    case "accommodation":       return validateAccommodationData(data);
-    default:                    return {};
+    case "accommodation": return validateAccommodationData(data);
+    default: return {};
   }
 };
 
 const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
-  const media    = buildMediaPayload(formData.media);
-  const venue    = buildVenuePayload(formData.venue);
-  const icts     = buildIctsPayload(formData.icts, formData.venue);
+  const media = buildMediaPayload(formData.media);
+  const venue = buildVenuePayload(formData.venue);
+  const icts = buildIctsPayload(formData.icts, formData.venue);
   const purchase = buildPurchasePayload(formData.purchase);
   return {
     organizerDetails: {
@@ -978,16 +1000,16 @@ const buildFullSubmitPayload = (formData, selectedRequirements, user) => {
         email: o.empEmail || "", empId: o.empId || "", facultyId: user?._id ?? "",
       })),
     },
-    venueDetails:        venue,
-    ictsDetails:         icts,
-    purchaseDetails:     purchase,
+    venueDetails: venue,
+    ictsDetails: icts,
+    purchaseDetails: purchase,
     ...media,
-    audioDetails:        formData.audio,
-    transportDetails:    formData.transport,
+    audioDetails: formData.audio,
+    transportDetails: formData.transport,
     externalTransportDetails: {
       externalTransports: formatExternalTransportPayload(formData.externalTransport),
     },
-    refreshmentDetails:  buildRefreshmentPayload(formData.foodandrefreshments),
+    refreshmentDetails: buildRefreshmentPayload(formData.foodandrefreshments),
     accommodationDetails: buildAccommodationPayload(formData.accommodation, formData.event.eventDays),
   };
 };
@@ -1043,7 +1065,7 @@ function hydrateEventData(apiData) {
       gender: g.gender || "",
     })),
   }));
-    // Helper: return the first defined/non-empty value among several possible
+  // Helper: return the first defined/non-empty value among several possible
   // backend key spellings, coerced to a string (or "" if none match).
   const firstValue = (...candidates) => {
     for (const c of candidates) {
@@ -1060,9 +1082,9 @@ function hydrateEventData(apiData) {
     estimatedBudget: od.estimatedBudget != null ? String(od.estimatedBudget) : "",
     fundingSource: Array.isArray(od.fundingSource)
       ? od.fundingSource.map((source) => ({
-          type: source.type || "",
-          amount: source.amount != null ? String(source.amount) : "",
-        }))
+        type: source.type || "",
+        amount: source.amount != null ? String(source.amount) : "",
+      }))
       : [],
     advanceAmount: od.advanceAmount != null ? String(od.advanceAmount) : "",
     purposeOfAdvance: od.purposeOfAdvance || "",
@@ -1089,6 +1111,7 @@ function hydrateEventData(apiData) {
       logos: ed.logosInPoster || [],
       logosOther: ed.logosOther || "",
       audience: ed.targetAudience || "",
+      internalStudentsBreakdown: ed.internalStudentsBreakdown || [],
       iic: ed.involvedIIC ? "Yes" : ed.iic ? "Yes" : "No",
       eventDays,
     },
@@ -1132,6 +1155,12 @@ function hydrateEventData(apiData) {
           seatingCapacity: v.seatingCapacity ? String(v.seatingCapacity) : "",
           hallReqs: (v.hallRequirements || []).map((h) => h.type),
           specialReqs: v.specialRequirements || "",
+          isContactedDepartment: Boolean(v.isContactedDepartment) || Boolean(v.department),
+          isDepartmentHeadContacted: Boolean(v.isContactedDepartment) || Boolean(v.department),
+          department: v.department || "",
+          departmentHeadName: v.departmentHeadName || "",
+          departmentHeadDesignation: v.departmentHeadDesignation || "",
+          departmentHeadMobile: v.departmentHeadMobile || ""
         };
         (v.hallRequirements || []).forEach((h) => {
           if (h.type === "Guest Chair") card.guestChairs = String(h.quantity);
@@ -1217,8 +1246,8 @@ function hydrateEventData(apiData) {
     const audioRequired = item.audioRequirements?.length
       ? item.audioRequirements.map((requirement) => audioKeyByLabel[requirement] || requirement)
       : (item.audioItems || []).map((audioItem) => ({
-          ...audioKeyByLabel,
-        }[audioItem.type] || audioItem.type));
+        ...audioKeyByLabel,
+      }[audioItem.type] || audioItem.type));
     const quantities = Object.entries(item.quantities || {}).reduce((result, [key, value]) => ({
       ...result,
       [audioKeyByLabel[key] || key]: String(value ?? ""),
@@ -1234,6 +1263,10 @@ function hydrateEventData(apiData) {
         quantities,
         others: item.otherRequirements || "",
         specialRequirements: item.specialRequirements || "",
+        isEbRequired: item.isEbRequired || false,
+        noOfSystems: item.noOfSystems || "",
+        ledWallRequired: item.ledWallRequired || false,
+        acRequired: item.acRequired || false,
       },
     };
   });
@@ -1254,25 +1287,25 @@ function hydrateEventData(apiData) {
   const transportItems = apiData.transportDetails?.transports || apiData.transportDetails || [];
   const transport = Array.isArray(transportItems) && transportItems.length > 0
     ? transportItems.map((item) => ({
-        ...defaultTransport(),
-        pickupLocation: item.pickupLocation || "",
-        dropLocation: item.dropLocation || "",
-        selectedGuestIds: resolveTransportGuestIds(item.guests || [], flattenGuestsForAccommodation(eventDays)),
-        totalPassengers: item.totalPassengers ?? "",
-        vistaTransport: (item.vehicles || []).map((vehicle) => vehicle.type),
-        vehicleCounts: (item.vehicles || []).reduce((counts, vehicle) => ({
-          ...counts,
-          [vehicle.type]: String(vehicle.count ?? ""),
-        }), {}),
-        staffCount: String((item.accompanyingStaff || []).length),
-        staffMembers: item.accompanyingStaff || [],
-        checkpoints: (item.checkpoints || []).map((checkpoint) => ({
-          name: checkpoint.name || checkpoint.location || "",
-        })),
-        specialRequirements: item.specialRequirements || "",
-        pickupDate: asDate(item.pickupDate || item.pickupDateTime),
-        dropDate: asDate(item.dropDate || item.dropDateTime),
-      }))
+      ...defaultTransport(),
+      pickupLocation: item.pickupLocation || "",
+      dropLocation: item.dropLocation || "",
+      selectedGuestIds: resolveTransportGuestIds(item.guests || [], flattenGuestsForAccommodation(eventDays)),
+      totalPassengers: item.totalPassengers ?? "",
+      vistaTransport: (item.vehicles || []).map((vehicle) => vehicle.type),
+      vehicleCounts: (item.vehicles || []).reduce((counts, vehicle) => ({
+        ...counts,
+        [vehicle.type]: String(vehicle.count ?? ""),
+      }), {}),
+      staffCount: String((item.accompanyingStaff || []).length),
+      staffMembers: item.accompanyingStaff || [],
+      checkpoints: (item.checkpoints || []).map((checkpoint) => ({
+        name: checkpoint.name || checkpoint.location || "",
+      })),
+      specialRequirements: item.specialRequirements || "",
+      pickupDate: asDate(item.pickupDate || item.pickupDateTime),
+      dropDate: asDate(item.dropDate || item.dropDateTime),
+    }))
     : [defaultTransport()];
 
   // 6b. External Transport
@@ -1283,33 +1316,33 @@ function hydrateEventData(apiData) {
     [];
   const externalTransport = externalTransportBackend.length > 0
     ? externalTransportBackend.map(item => ({
+      id: crypto.randomUUID(),
+      travelOption: item.travelOption || "",
+      travelDate: asDateOnly(item.travelDate),
+      from: item.from || "",
+      to: item.to || "",
+      totalPassengers: String(item.totalPassengers || ""),
+      classOrBerth: item.classOrBerth || (item.travelOption === "Train" ? [] : ""),
+      trainNumber: item.trainNumber || "",
+      flightNumber: item.flightNumber || "",
+      specialRequirements: item.specialRequirements || "None",
+      passengers: (item.passengers || []).map(p => ({
         id: crypto.randomUUID(),
-        travelOption: item.travelOption || "",
-        travelDate: asDateOnly(item.travelDate),
-        from: item.from || "",
-        to: item.to || "",
-        totalPassengers: String(item.totalPassengers || ""),
-        classOrBerth: item.classOrBerth || (item.travelOption === "Train" ? [] : ""),
-        trainNumber: item.trainNumber || "",
-        flightNumber: item.flightNumber || "",
-        specialRequirements: item.specialRequirements || "None",
-        passengers: (item.passengers || []).map(p => ({
-          id: crypto.randomUUID(),
-          name: p.name || "",
-          phone: p.phone || "",
-          email: p.email || "",
-          age: String(p.age || ""),
-          gender: p.gender || "",
-          designation: p.designation || "",
-          organization: p.organization || ""
-        }))
+        name: p.name || "",
+        phone: p.phone || "",
+        email: p.email || "",
+        age: String(p.age || ""),
+        gender: p.gender || "",
+        designation: p.designation || "",
+        organization: p.organization || ""
       }))
+    }))
     : [emptyExternalTransport()];
 
   // 7. Food & Refreshments — unwrap refreshmentDetails and map backend names.
-  let foodItems = apiData.refreshmentDetails?.refreshments 
+  let foodItems = apiData.refreshmentDetails?.refreshments
     || (Array.isArray(apiData.refreshmentDetails) ? apiData.refreshmentDetails : null)
-    || apiData.foodDetails?.refreshments 
+    || apiData.foodDetails?.refreshments
     || (Array.isArray(apiData.foodDetails) ? apiData.foodDetails : null)
     || rd.refreshmentDetails?.refreshments
     || (Array.isArray(rd.refreshmentDetails) ? rd.refreshmentDetails : null)
@@ -1328,7 +1361,7 @@ function hydrateEventData(apiData) {
   };
   const hydrateMeal = (meal = {}) => ({
     participants: {
-      vegCount: countValue(meal.participants, ["vegParticipants"] ) || String(meal.vegParticipants ?? ""),
+      vegCount: countValue(meal.participants, ["vegParticipants"]) || String(meal.vegParticipants ?? ""),
       nonVegCount: nonVegCountValue(meal.participants, ["nonVegParticipants"]) || String(meal.nonVegParticipants ?? ""),
     },
     vipGuests: {
@@ -1346,25 +1379,25 @@ function hydrateEventData(apiData) {
   });
   const foodandrefreshments = Array.isArray(foodItems) && foodItems.length > 0
     ? foodItems.map((item) => ({
-        ...emptyFoodDay(),
-        fromDate: asDate(item.fromDate || item.date),
-        toDate: asDate(item.toDate || item.date),
-        resourcePersons: String(item.resourcePersons ?? item.numberOfResourcePersons ?? ""),
-        internalCount: String(item.internalCount ?? item.numberOfInternalAccompanyingStaff ?? ""),
-        staffList: item.staffList || item.accompanyingStaff || [],
-        resourcePersonType: item.resourcePersonType || [],
-        foodTypes: (item.foodTypes || []).map((food) => food.type),
-        breakfast: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Breakfast")),
-        lunch: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Lunch")),
-        dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
-        morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
-        eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
-        morningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
-        eveningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
-        morningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
-        eveningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
-        specialRequirements: item.specialRequirements || "",
-      }))
+      ...emptyFoodDay(),
+      fromDate: asDate(item.fromDate || item.date),
+      toDate: asDate(item.toDate || item.date),
+      resourcePersons: String(item.resourcePersons ?? item.numberOfResourcePersons ?? ""),
+      internalCount: String(item.internalCount ?? item.numberOfInternalAccompanyingStaff ?? ""),
+      staffList: item.staffList || item.accompanyingStaff || [],
+      resourcePersonType: item.resourcePersonType || [],
+      foodTypes: (item.foodTypes || []).map((food) => food.type),
+      breakfast: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Breakfast")),
+      lunch: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Lunch")),
+      dinner: hydrateMeal((item.foodTypes || []).find((food) => food.type === "Dinner")),
+      morningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.refreshmentCount ?? ""),
+      eveningRefreshmentCount: String((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.refreshmentCount ?? ""),
+      morningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
+      eveningRefreshmentVenue: (item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails?.[0]?.venueName || "Main block - Guest dinning (opp. to II floor auditorium)",
+      morningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Morning Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
+      eveningRefreshmentVenues: ((item.foodTypes || []).find((food) => food.type === "Evening Refreshment")?.venueWiseDetails || []).map(v => ({ venue: v.venueName || "", count: String(v.count ?? "") })),
+      specialRequirements: item.specialRequirements || "",
+    }))
     : [emptyFoodDay()];
 
   // 8. Accommodation — reverse from payload shape
@@ -1447,67 +1480,67 @@ function hydrateEventData(apiData) {
   const purchaseBackend = apiData.purchaseDetails?.purchases || [];
   const purchase = purchaseBackend.length > 0
     ? purchaseBackend.map((p) => {
-        const requirementNeeded = (p.requirementNeeded || []).map((r) => r.type);
-        const idCardEntry = (p.requirementNeeded || []).find((r) => r.type === "Id Card");
-        const certEntry = (p.requirementNeeded || []).find((r) => r.type === "Certificate");
-        let selectedPersons = "";
-        if (p.requiredFor?.includes("Students") && p.requiredFor?.includes("Guest")) selectedPersons = "Both";
-        else if (p.requiredFor?.includes("Students")) selectedPersons = "Students";
-        else if (p.requiredFor?.includes("Guest")) selectedPersons = "Guest";
+      const requirementNeeded = (p.requirementNeeded || []).map((r) => r.type);
+      const idCardEntry = (p.requirementNeeded || []).find((r) => r.type === "Id Card");
+      const certEntry = (p.requirementNeeded || []).find((r) => r.type === "Certificate");
+      let selectedPersons = "";
+      if (p.requiredFor?.includes("Students") && p.requiredFor?.includes("Guest")) selectedPersons = "Both";
+      else if (p.requiredFor?.includes("Students")) selectedPersons = "Students";
+      else if (p.requiredFor?.includes("Guest")) selectedPersons = "Guest";
 
-        const studentData = reverseGiftItems(p.students?.giftItems);
-        studentData.registrationKitNeeded = p.students?.registrationKitNeeded ? "Yes" : "No";
-        studentData.registrationKitQty = p.students?.registrationKitQty ? String(p.students.registrationKitQty) : "";
-        studentData.specialRequirements = p.students?.specialRequirements || "";
+      const studentData = reverseGiftItems(p.students?.giftItems);
+      studentData.registrationKitNeeded = p.students?.registrationKitNeeded ? "Yes" : "No";
+      studentData.registrationKitQty = p.students?.registrationKitQty ? String(p.students.registrationKitQty) : "";
+      studentData.specialRequirements = p.students?.specialRequirements || "";
 
-        const guestData = reverseGiftItems(p.guests?.giftItems);
-        guestData.registrationKitNeeded = p.guests?.registrationKitNeeded ? "Yes" : "No";
-        guestData.registrationKitQty = p.guests?.registrationKitQty ? String(p.guests.registrationKitQty) : "";
-        guestData.specialRequirements = p.guests?.specialRequirements || "";
+      const guestData = reverseGiftItems(p.guests?.giftItems);
+      guestData.registrationKitNeeded = p.guests?.registrationKitNeeded ? "Yes" : "No";
+      guestData.registrationKitQty = p.guests?.registrationKitQty ? String(p.guests.registrationKitQty) : "";
+      guestData.specialRequirements = p.guests?.specialRequirements || "";
 
-        return { requirementNeeded, idCardQty: idCardEntry ? String(idCardEntry.hardCount) : "", certificateQty: certEntry ? String(certEntry.hardCount) : "", selectedPersons, studentData, guestData };
-      })
+      return { requirementNeeded, idCardQty: idCardEntry ? String(idCardEntry.hardCount) : "", certificateQty: certEntry ? String(certEntry.hardCount) : "", selectedPersons, studentData, guestData };
+    })
     : [emptyPurchaseDay()];
 
   // 10. Media — reverse poster/video per day
   const mediaBackend = apiData.mediaRequirementDetails?.mediaRequirements || [];
   const media = mediaBackend.length > 0
     ? mediaBackend.map((m) => {
-        let designType = "";
-        if (m.typeOfMedia?.includes("poster") && m.typeOfMedia?.includes("video")) designType = "Both";
-        else if (m.typeOfMedia?.includes("poster")) designType = "Poster";
-        else if (m.typeOfMedia?.includes("video")) designType = "Video";
-        return {
-          designType,
-          poster: {
-            contentPoster: m.poster?.posterContent || "",
-            referencePoster: null,
-            referencePosterFiles: m.poster?.referencePosterFiles || [],
-            contentCertificate: m.poster?.certificateContent || "",
-            referenceCertificate: null,
-            referenceCertificateFiles: m.poster?.referenceCertificateFiles || [],
-            contentTrophy: m.poster?.trophyContent || "",
-            displayNeeded: m.poster?.displayNeeded || [],
-            sizeForFlex: (m.poster?.sizes || []).find((s) => s.type === "Flex")?.value || "",
-            sizeForGlass: (m.poster?.sizes || []).find((s) => s.type === "Glass Sticker")?.value || "",
-            deliveryDate: asDateOnly(m.poster?.deliveryDate),
-            priority: m.poster?.priority || "",
-            specialReq: m.poster?.specialRequirements || "",
-          },
-          video: {
-            contentVideo: m.video?.videoContent || "",
-            preEvent: m.video?.preEventVideos || [],
-            eventCoverage: m.video?.eventCoverage || [],
-            postEvent: m.video?.postEventVideos || [],
-            specialVideos: m.video?.specialVideos || [],
-            referenceVideo: null,
-            referenceFiles: m.video?.referenceFiles || [],
-            deliveryDate: asDateOnly(m.video?.deliveryDate),
-            priority: m.video?.priority || "",
-            specialReq: m.video?.specialRequirements || "",
-          },
-        };
-      })
+      let designType = "";
+      if (m.typeOfMedia?.includes("poster") && m.typeOfMedia?.includes("video")) designType = "Both";
+      else if (m.typeOfMedia?.includes("poster")) designType = "Poster";
+      else if (m.typeOfMedia?.includes("video")) designType = "Video";
+      return {
+        designType,
+        poster: {
+          contentPoster: m.poster?.posterContent || "",
+          referencePoster: null,
+          referencePosterFiles: m.poster?.referencePosterFiles || [],
+          contentCertificate: m.poster?.certificateContent || "",
+          referenceCertificate: null,
+          referenceCertificateFiles: m.poster?.referenceCertificateFiles || [],
+          contentTrophy: m.poster?.trophyContent || "",
+          displayNeeded: m.poster?.displayNeeded || [],
+          sizeForFlex: (m.poster?.sizes || []).find((s) => s.type === "Flex")?.value || "",
+          sizeForGlass: (m.poster?.sizes || []).find((s) => s.type === "Glass Sticker")?.value || "",
+          deliveryDate: asDateOnly(m.poster?.deliveryDate),
+          priority: m.poster?.priority || "",
+          specialReq: m.poster?.specialRequirements || "",
+        },
+        video: {
+          contentVideo: m.video?.videoContent || "",
+          preEvent: m.video?.preEventVideos || [],
+          eventCoverage: m.video?.eventCoverage || [],
+          postEvent: m.video?.postEventVideos || [],
+          specialVideos: m.video?.specialVideos || [],
+          referenceVideo: null,
+          referenceFiles: m.video?.referenceFiles || [],
+          deliveryDate: asDateOnly(m.video?.deliveryDate),
+          priority: m.video?.priority || "",
+          specialReq: m.video?.specialRequirements || "",
+        },
+      };
+    })
     : [emptyMediaDay()];
 
   return {
@@ -1587,21 +1620,21 @@ export default function Form() {
 
   const baseSteps = [{ key: "event", label: "Event Requisition Details", component: EventRequistionDetails }];
   const requirementMap = {
-    venue:               { label: "Venue Details",                 component: VenueForm },
-    icts:                { label: "ICTS Details",                  component: ICTSForm },
-    audio:               { label: "Audio Details",                 component: AudioForm },
-    transport:           { label: "Transport Details",             component: TransportForm },
-    externalTransport:   { label: "External Transport Details",    component: ExternalTransportForm },
+    venue: { label: "Venue Details", component: VenueForm },
+    icts: { label: "ICTS Details", component: ICTSForm },
+    audio: { label: "Audio & EB Details", component: AudioForm },
+    transport: { label: "Transport Details", component: TransportForm },
+    externalTransport: { label: "External Transport Details", component: ExternalTransportForm },
     foodandrefreshments: { label: "Food and Refreshments Details", component: FoodAndRefreshments },
-    accommodation:       { label: "Accommodation Details",         component: AccommodationForm },
-    purchase:            { label: "Purchase Details",              component: Purchase },
-    media:               { label: "Media Requirement Details",     component: MediaForm },
+    accommodation: { label: "Accommodation Details", component: AccommodationForm },
+    purchase: { label: "Purchase Details", component: Purchase },
+    media: { label: "Media Requirement Details", component: MediaForm },
   };
   const requirementKeys = Array.isArray(selectedRequirements)
     ? selectedRequirements
     : Object.entries(selectedRequirements || {})
-        .filter(([, value]) => value === "Yes")
-        .map(([key]) => key);
+      .filter(([, value]) => value === "Yes")
+      .map(([key]) => key);
 
   const dynamicSteps = requirementKeys.map((key) => ({
     key,
@@ -1609,21 +1642,21 @@ export default function Form() {
   }));
   const steps = [...baseSteps, ...dynamicSteps];
   const CurrentComponent = steps[currentStep]?.component;
-  const currentStepKey   = steps[currentStep]?.key;
+  const currentStepKey = steps[currentStep]?.key;
 
   // Stable refs
-  const stepsRef       = useRef(steps);
+  const stepsRef = useRef(steps);
   const currentStepRef = useRef(currentStep);
-  const formDataRef    = useRef(formData);
-  const eventIdRef     = useRef(eventId);
+  const formDataRef = useRef(formData);
+  const eventIdRef = useRef(eventId);
 
-  useEffect(() => { stepsRef.current       = steps;       }, [steps]);
+  useEffect(() => { stepsRef.current = steps; }, [steps]);
   useEffect(() => { currentStepRef.current = currentStep; }, [currentStep]);
-  useEffect(() => { formDataRef.current    = formData;    }, [formData]);
-  useEffect(() => { eventIdRef.current     = eventId;     }, [eventId]);
+  useEffect(() => { formDataRef.current = formData; }, [formData]);
+  useEffect(() => { eventIdRef.current = eventId; }, [eventId]);
 
   const advanceStep = useCallback(() => {
-    const step  = currentStepRef.current;
+    const step = currentStepRef.current;
     const total = stepsRef.current.length;
     setCompletedSteps((prev) => prev.includes(step) ? prev : [...prev, step]);
     if (step < total - 1) setCurrentStep((prev) => prev + 1);
@@ -1672,9 +1705,9 @@ export default function Form() {
     const dayCount = formData.event.eventDays.length;
     setFormData((prev) => ({
       ...prev,
-      venue:               ensureLength(prev.venue,               dayCount, emptyVenueDay),
-      purchase:            ensureLength(prev.purchase,            dayCount, emptyPurchaseDay),
-      media:               ensureLength(prev.media,               dayCount, emptyMediaDay),
+      venue: ensureLength(prev.venue, dayCount, emptyVenueDay),
+      purchase: ensureLength(prev.purchase, dayCount, emptyPurchaseDay),
+      media: ensureLength(prev.media, dayCount, emptyMediaDay),
       foodandrefreshments: ensureAtLeastLength(prev.foodandrefreshments, dayCount, emptyFoodDay),
     }));
   }, [formData.event.eventDays.length]);
@@ -1683,15 +1716,15 @@ export default function Form() {
     setFormData((prev) => ({ ...prev, [sectionKey]: value }));
   }, []);
 
-  const handleVenueDataChange         = useCallback((v) => updateFormSection("venue",               v), [updateFormSection]);
-  const handleIctsDataChange          = useCallback((v) => updateFormSection("icts",                v), [updateFormSection]);
-  const handleAudioDataChange         = useCallback((v) => updateFormSection("audio",               v), [updateFormSection]);
-  const handleTransportDataChange     = useCallback((v) => updateFormSection("transport",           v), [updateFormSection]);
+  const handleVenueDataChange = useCallback((v) => updateFormSection("venue", v), [updateFormSection]);
+  const handleIctsDataChange = useCallback((v) => updateFormSection("icts", v), [updateFormSection]);
+  const handleAudioDataChange = useCallback((v) => updateFormSection("audio", v), [updateFormSection]);
+  const handleTransportDataChange = useCallback((v) => updateFormSection("transport", v), [updateFormSection]);
   const handleExternalTransportDataChange = useCallback((v) => updateFormSection("externalTransport", v), [updateFormSection]);
-  const handleFoodDataChange          = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
-  const handleAccommodationDataChange = useCallback((v) => updateFormSection("accommodation",       v), [updateFormSection]);
-  const handlePurchaseDataChange      = useCallback((v) => updateFormSection("purchase",            v), [updateFormSection]);
-  const handleMediaDataChange         = useCallback((v) => updateFormSection("media",               v), [updateFormSection]);
+  const handleFoodDataChange = useCallback((v) => updateFormSection("foodandrefreshments", v), [updateFormSection]);
+  const handleAccommodationDataChange = useCallback((v) => updateFormSection("accommodation", v), [updateFormSection]);
+  const handlePurchaseDataChange = useCallback((v) => updateFormSection("purchase", v), [updateFormSection]);
+  const handleMediaDataChange = useCallback((v) => updateFormSection("media", v), [updateFormSection]);
 
   // ── saveSection ───────────────────────────────────────────────────────────
   // Media section: accepts either a FormData (from MediaForm with files) or
@@ -1720,8 +1753,8 @@ export default function Form() {
       let response;
       if (sectionKey === "event") {
         const payload = buildEventRequisitionPayload({ eventRequisition: sectionValueOrFormData, user, existingOrganizerId: originalOrganizerId });
-        const method  = eventId ? "PUT" : "POST";
-        const url     = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
+        const method = eventId ? "PUT" : "POST";
+        const url = eventId ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` : `${import.meta.env.VITE_API_BASE_URL}/api/events`;
         response = await fetch(url, {
           method,
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1752,7 +1785,7 @@ export default function Form() {
         if (!response.ok) throw new Error(`Server error ${response.status}. Check your backend logs.`);
       }
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
-            if (sectionKey === "event") {
+      if (sectionKey === "event") {
         setEventId(data.data?._id || eventId);
         const savedDoc = data.data?.requestDetails?.organizerDetails?.principalApprovalDocument;
         if (savedDoc) {
@@ -1862,11 +1895,11 @@ export default function Form() {
         selectedRequirements,
         user
       );
-      const url = isEditMode 
-        ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}` 
+      const url = isEditMode
+        ? `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`
         : `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/submit`;
       const method = isEditMode ? "PUT" : "PATCH";
-      
+
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -1875,23 +1908,23 @@ export default function Form() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || `Server error: ${response.status}`);
       if (
-          formDataRef.current.event.finance === "Yes" &&
-          formDataRef.current.event.advanceAmount &&
-          formDataRef.current.event.purposeOfAdvance
+        formDataRef.current.event.finance === "Yes" &&
+        formDataRef.current.event.advanceAmount &&
+        formDataRef.current.event.purposeOfAdvance
       ) {
-          const organizer =
-            data.data.requestDetails.organizerDetails.organizers?.[0];
+        const organizer =
+          data.data.requestDetails.organizerDetails.organizers?.[0];
 
-          let facultyDetails = {};
-          if (data.data.organizerId) {
-            facultyDetails = await getFacultyById(data.data.organizerId);
-          }
+        let facultyDetails = {};
+        if (data.data.organizerId) {
+          facultyDetails = await getFacultyById(data.data.organizerId);
+        }
 
-          await generateAdvanceReceiptPdf({
-            formData: formDataRef.current.event,
-            employee: facultyDetails,
-            submitResponse: data.data,
-          });
+        await generateAdvanceReceiptPdf({
+          formData: formDataRef.current.event,
+          employee: facultyDetails,
+          submitResponse: data.data,
+        });
       }
       setSubmitSuccess(true);
     } catch (error) {
@@ -1904,12 +1937,12 @@ export default function Form() {
   // ── registerChildNavigation ───────────────────────────────────────────────
   const registerChildNavigation = useCallback((nav = {}) => {
     setChildNav({
-      next:           nav.next           || null,
-      prev:           nav.prev           || null,
-      isLoading:      nav.isLoading      || false,
+      next: nav.next || null,
+      prev: nav.prev || null,
+      isLoading: nav.isLoading || false,
       isNextDisabled: nav.isNextDisabled || false,
-      isOnLastDay:    nav.isOnLastDay    !== undefined ? nav.isOnLastDay  : true,
-      nextDayLabel:   nav.nextDayLabel   || "Save & Next",
+      isOnLastDay: nav.isOnLastDay !== undefined ? nav.isOnLastDay : true,
+      nextDayLabel: nav.nextDayLabel || "Save & Next",
     });
   }, []);
 
@@ -1920,11 +1953,11 @@ export default function Form() {
       await childNav.next();
       return;
     }
-    const sectionKey   = currentStepKey;
+    const sectionKey = currentStepKey;
     if (!sectionKey) return;
     const sectionValue = formData[sectionKey];
-    const extras       = { venueData: formData.venue };
-    const ok           = await saveSection(sectionKey, sectionValue, extras);
+    const extras = { venueData: formData.venue };
+    const ok = await saveSection(sectionKey, sectionValue, extras);
     if (ok) advanceStep();
   };
 
@@ -1934,14 +1967,14 @@ export default function Form() {
       if (ok !== false) setShowPreview(true);
       return;
     }
-    const sectionKey   = currentStepKey;
+    const sectionKey = currentStepKey;
     if (!sectionKey) {
       setShowPreview(true);
       return;
     }
     const sectionValue = formData[sectionKey];
-    const extras       = { venueData: formData.venue };
-    const ok           = await saveSection(sectionKey, sectionValue, extras);
+    const extras = { venueData: formData.venue };
+    const ok = await saveSection(sectionKey, sectionValue, extras);
     if (ok) setShowPreview(true);
   };
 
@@ -1953,7 +1986,7 @@ export default function Form() {
 
   // ── Button logic ──────────────────────────────────────────────────────────
   const isLastParentStep = currentStep === steps.length - 1;
-  const showSubmit       = isLastParentStep && childNav.isOnLastDay;
+  const showSubmit = isLastParentStep && childNav.isOnLastDay;
 
   const forwardLabel = () => {
     if (isLoading || childNav.isLoading) return "Saving...";
@@ -2137,21 +2170,21 @@ export default function Form() {
             ─────────────────────────────────────────────────────────────── */}
             {showSubmit ? (
               <button
-                  onClick={handlePreview}
-                  disabled={!eventId || isLoading || childNav.isLoading || childNav.isNextDisabled}
-                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handlePreview}
+                disabled={!eventId || isLoading || childNav.isLoading || childNav.isNextDisabled}
+                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                  {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
+                {isLoading || childNav.isLoading ? "Saving..." : "Preview"}
               </button>
-          ) : (
+            ) : (
               <button
-                  onClick={handleSaveAndContinue}
-                  disabled={isLoading || childNav.isLoading || childNav.isNextDisabled}
-                  className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
+                onClick={handleSaveAndContinue}
+                disabled={isLoading || childNav.isLoading || childNav.isNextDisabled}
+                className="rounded-lg bg-purple-600 px-6 py-2 text-white hover:bg-purple-700 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                  {forwardLabel()}
+                {forwardLabel()}
               </button>
-          )}
+            )}
           </div>
         </div>
       </div>
