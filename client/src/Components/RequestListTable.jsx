@@ -87,20 +87,32 @@ const getEmployeeDisplayName = (employee) =>
 
 const normalizeIndividualRequest = (request) => {
   const emp = request.data?.employee;
+  const headApproval =
+    request.headApproval || request.data?.headApproval || null;
+  // employee may be a populated object (transport submissions) or a string id
+  const employeeObj =
+    typeof request.employee === "object" && request.employee
+      ? request.employee
+      : null;
   return {
-    id: request.id,
+    id: request.id || request._id,
     employee: safeString(
-      request.employee ||
+      (typeof request.employee === "string" ? request.employee : "") ||
+        getEmployeeDisplayName(employeeObj) ||
         getEmployeeDisplayName(request.employeeDetail) ||
         getEmployeeDisplayName(emp),
     ),
-    employeeEmail: safeString(request.employeeEmail || emp?.email),
-    formType: safeString(request.formType),
+    employeeEmail: safeString(
+      request.employeeEmail || employeeObj?.email || emp?.email,
+    ),
+    formType: safeString(request.formType || request.module),
     createdAt: request.createdAt ? formatDate(request.createdAt) : "-",
     dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
     status: safeString(
       typeof request.status === "string" ? request.status : "Pending",
     ),
+    // Head's workflow state — Pending / Acknowledged / Completed
+    headApprovalStatus: safeString(headApproval?.status, ""),
   };
 };
 
@@ -351,7 +363,11 @@ const IndividualRequestTable = ({
             <td className="px-6 py-4 whitespace-nowrap">
               <StatusBadge
                 acknowledgeMode={acknowledgeMode}
-                status={row.status}
+                status={
+                  acknowledgeMode
+                    ? row.headApprovalStatus || row.status
+                    : row.status
+                }
               />
             </td>
             <td className="px-6 py-4">
@@ -472,7 +488,11 @@ const RequestListTable = ({
       eventTypeFilter === "all" ||
       row.eventType === eventTypeFilter;
     const displayedStatus = acknowledgeMode
-      ? row.acknowledgeStatus || row.approvedStatus || row.status || ""
+      ? row.acknowledgeStatus ||
+        row.headApprovalStatus ||
+        row.approvedStatus ||
+        row.status ||
+        ""
       : row.approvedStatus || "";
     const matchesApproval =
       approvalFilter === "all" ||

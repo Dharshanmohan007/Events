@@ -225,7 +225,26 @@ const getStatusColor = (status = "") => {
   };
 };
 
-const renderCellValue = (event, header, detailViewPath) => {
+// Same palette as the request list: completed → violet-700,
+// acknowledged → green-700, pending → red-600
+const getHeadApprovalStatusColor = (status = "") => {
+  const s = String(status).toLowerCase();
+  if (s.includes("completed")) {
+    return { text: "text-violet-700", dot: "bg-violet-700" };
+  }
+  if (s.includes("acknowledged") || s.includes("approved")) {
+    return { text: "text-green-700", dot: "bg-green-700" };
+  }
+  if (s.includes("pending") || s.includes("reject") || s.includes("cancel")) {
+    return { text: "text-red-600", dot: "bg-red-600" };
+  }
+  if (s.includes("submitted")) {
+    return { text: "text-yellow-400", dot: "bg-yellow-400" };
+  }
+  return { text: "text-white", dot: "bg-white" };
+};
+
+const renderCellValue = (event, header, detailViewPath, acknowledgeMode) => {
   switch (header) {
     case "Event Name":
       return <span className="font-medium">{event.eventName}</span>;
@@ -310,7 +329,9 @@ const renderCellValue = (event, header, detailViewPath) => {
         event.overallStatus ||
         "-";
 
-      const colors = getStatusColor(status);
+      const colors = acknowledgeMode
+        ? getHeadApprovalStatusColor(status)
+        : getStatusColor(status);
 
       return (
         <span className={`inline-flex items-center gap-2 ${colors.text}`}>
@@ -352,8 +373,7 @@ const UpcomingEventsTable = ({
 }) => {
   const [activeTab, setActiveTab] = useState("events");
 
-  console.log("individual trabsport data : ", individualEvents);
-
+  const acknowledgeMode = module === "transport";
   const config = HEADERS_CONFIG[module] || HEADERS_CONFIG.default;
   const hasTabs = MODULES_WITH_TABS.includes(module);
   const currentHeaders =
@@ -437,6 +457,7 @@ const UpcomingEventsTable = ({
                       activeTab === "individual"
                         ? individualDetailViewPath
                         : detailViewPath,
+                      acknowledgeMode,
                     )}
                   </td>
                 ))}
