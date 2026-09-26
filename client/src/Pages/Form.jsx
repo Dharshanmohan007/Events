@@ -204,6 +204,7 @@ const buildEventRequisitionPayload = ({ eventRequisition, user, existingOrganize
       purposeOfAdvance: eventRequisition.purposeOfAdvance || "",
       advanceToBeReceviedWithin: Number(eventRequisition.advanceToBeReceivedWithin) || 0,
       ExpectedEventOutcome: eventRequisition.expectedEventOutcome || "",
+      aboutProgram: eventRequisition.aboutProgram || "",
       organizingDepartment: eventRequisition.department,
       organizerCount: parseInt(eventRequisition.numOrganizers) || 0,
       organizers: (eventRequisition.organizers || []).map((o) => ({
@@ -1090,6 +1091,7 @@ function hydrateEventData(apiData) {
     purposeOfAdvance: od.purposeOfAdvance || "",
     advanceToBeReceivedWithin: od.advanceToBeReceviedWithin != null ? String(od.advanceToBeReceviedWithin) : "",
     expectedEventOutcome: od.ExpectedEventOutcome || "",
+    aboutProgram: od.aboutProgram || "",
     department: od.organizingDepartment || "",
     file: od.previousEventDocumentationDetails || od.previousEventDocumentationFile || null,
     principalApprovalDocument: od.principalApprovalDocument || apiData.principalApprovalDocument || apiData.principalApprovalDocument || null,

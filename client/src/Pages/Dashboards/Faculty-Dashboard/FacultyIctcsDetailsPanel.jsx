@@ -5,6 +5,7 @@ import { FacultySectionCard } from './FacultyDetailsPanelShared'
 import EventHeaderData from '../../Dashboards/EventHeaderData'
 import Modal from '../../../Components/Modal'
 import ictsFacultyData from '../../../data/ictsFacultyData'
+import { jwtDecode } from "jwt-decode"
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5005'
 
@@ -42,6 +43,20 @@ const IctsVenueDetails = ({ icts, dayIndex, allocationId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const allocatedStaff = selectedStaff || normalizeStaff(getAllocatedStaff(icts))
   const normalizedSearchTerm = searchTerm.trim().toLowerCase()
+
+  let isAuthorized = false;
+  try {
+    const token = localStorage.getItem('token');
+    if (token) {
+      const decoded = jwtDecode(token);
+      if (decoded?.role?.toLowerCase() === 'head' && decoded?.department?.toLowerCase() === 'icts') {
+        isAuthorized = true;
+      }
+    }
+  } catch (error) {
+    console.error("Failed to decode token", error);
+  }
+
   const filteredFaculty = useMemo(() => {
     if (!normalizedSearchTerm) return []
     const matchingFaculty = ictsFacultyData.filter((faculty) => (
@@ -120,63 +135,66 @@ const IctsVenueDetails = ({ icts, dayIndex, allocationId }) => {
         </div>
         
         <div className="flex items-center gap-3">
-          
-          <button type="button" onClick={openModal} className="rounded-md border border-[#59647d] px-3 py-2 text-sm text-white transition hover:border-[#8F5BFF] hover:text-[#D0BCFF]">
-            {allocatedStaff ? 'Edit Allocated Staff' : 'Allocate Staff'}
-          </button>
+          {isAuthorized && (
+            <button type="button" onClick={openModal} className="rounded-md border border-[#59647d] px-3 py-2 text-sm text-white transition hover:border-[#8F5BFF] hover:text-[#D0BCFF]">
+              {allocatedStaff ? 'Edit Allocated Staff' : 'Allocate Staff'}
+            </button>
+          )}
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Allocate Staff">
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="relative">
-            <label htmlFor={`staff-search-${dayIndex}-${icts.venueName}`} className="mb-2 block text-sm text-[#CBC3D7]">Search faculty</label>
-            <div className="flex items-center rounded-md border border-[#39445d] bg-[#10182a] px-3 focus-within:border-[#8F5BFF]">
-              <Search size={16} className="text-[#CBC3D7]/70" />
-              <input
-                id={`staff-search-${dayIndex}-${icts.venueName}`}
-                value={searchTerm}
-                onChange={(event) => { setSearchTerm(event.target.value); setSelectedStaff(null) }}
-                placeholder="Search by name, email, or staff ID"
-                className="w-full bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-[#CBC3D7]/45"
-              />
-              {searchTerm && <button type="button" onClick={() => { setSearchTerm(''); setSelectedStaff(null) }} aria-label="Clear search"><X size={16} className="text-[#CBC3D7]/70" /></button>}
-            </div>
-            {normalizedSearchTerm && <div className="mt-1 max-h-48 overflow-auto rounded-md border border-[#39445d] bg-[#182237]">
-              {filteredFaculty.length ? filteredFaculty.map((faculty) => (
-                <button
-                  type="button"
-                  key={faculty['STAFF ID']}
-                  onClick={() => { setSelectedStaff(normalizeStaff(faculty)); setSearchTerm(faculty.NAME) }}
-                  className="block w-full border-b border-[#39445d]/60 px-3 py-2 text-left last:border-b-0 hover:bg-[#263452]"
-                >
-                  <span className="block text-sm text-white">{faculty.NAME}</span>
-                  <span className="block text-xs text-[#CBC3D7]/70">{faculty['MAIL ID']} | {faculty['STAFF ID']}</span>
-                </button>
-              )) : <p className="px-3 py-3 text-sm text-[#CBC3D7]/70">No faculty found.</p>}
-            </div>}
-          </div>
-
-          <div className="rounded-md border border-[#39445d] bg-[#10182a] p-4">
-            <p className="mb-3 text-xs uppercase tracking-wide text-[#CBC3D7]/60">Chosen faculty</p>
-            {selectedStaff ? (
-              <div className="space-y-1 text-sm text-[#E6E2F0]">
-                <p className="font-medium text-white">{selectedStaff.name}</p>
-                <p>{selectedStaff.email}</p>
-                <p>{selectedStaff.phone}</p>
-                <p>{selectedStaff.designation} | {selectedStaff.empId}</p>
+      {isAuthorized && (
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Allocate Staff">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="relative">
+              <label htmlFor={`staff-search-${dayIndex}-${icts.venueName}`} className="mb-2 block text-sm text-[#CBC3D7]">Search faculty</label>
+              <div className="flex items-center rounded-md border border-[#39445d] bg-[#10182a] px-3 focus-within:border-[#8F5BFF]">
+                <Search size={16} className="text-[#CBC3D7]/70" />
+                <input
+                  id={`staff-search-${dayIndex}-${icts.venueName}`}
+                  value={searchTerm}
+                  onChange={(event) => { setSearchTerm(event.target.value); setSelectedStaff(null) }}
+                  placeholder="Search by name, email, or staff ID"
+                  className="w-full bg-transparent px-2 py-3 text-sm text-white outline-none placeholder:text-[#CBC3D7]/45"
+                />
+                {searchTerm && <button type="button" onClick={() => { setSearchTerm(''); setSelectedStaff(null) }} aria-label="Clear search"><X size={16} className="text-[#CBC3D7]/70" /></button>}
               </div>
-            ) : <p className="text-sm text-[#CBC3D7]/70">Choose a faculty member from the search results.</p>}
-          </div>
+              {normalizedSearchTerm && <div className="mt-1 max-h-48 overflow-auto rounded-md border border-[#39445d] bg-[#182237]">
+                {filteredFaculty.length ? filteredFaculty.map((faculty) => (
+                  <button
+                    type="button"
+                    key={faculty['STAFF ID']}
+                    onClick={() => { setSelectedStaff(normalizeStaff(faculty)); setSearchTerm(faculty.NAME) }}
+                    className="block w-full border-b border-[#39445d]/60 px-3 py-2 text-left last:border-b-0 hover:bg-[#263452]"
+                  >
+                    <span className="block text-sm text-white">{faculty.NAME}</span>
+                    <span className="block text-xs text-[#CBC3D7]/70">{faculty['MAIL ID']} | {faculty['STAFF ID']}</span>
+                  </button>
+                )) : <p className="px-3 py-3 text-sm text-[#CBC3D7]/70">No faculty found.</p>}
+              </div>}
+            </div>
 
-          <div className="flex justify-end gap-3">
-            <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-md border border-[#59647d] px-4 py-2 text-sm text-[#E6E2F0]">Cancel</button>
-            <button type="submit" disabled={!selectedStaff || isSubmitting} className="rounded-md bg-[#8F5BFF] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">
-              {isSubmitting ? 'Submitting...' : allocatedStaff ? 'Update' : 'Submit'}
-            </button>
-          </div>
-        </form>
-      </Modal>
+            <div className="rounded-md border border-[#39445d] bg-[#10182a] p-4">
+              <p className="mb-3 text-xs uppercase tracking-wide text-[#CBC3D7]/60">Chosen faculty</p>
+              {selectedStaff ? (
+                <div className="space-y-1 text-sm text-[#E6E2F0]">
+                  <p className="font-medium text-white">{selectedStaff.name}</p>
+                  <p>{selectedStaff.email}</p>
+                  <p>{selectedStaff.phone}</p>
+                  <p>{selectedStaff.designation} | {selectedStaff.empId}</p>
+                </div>
+              ) : <p className="text-sm text-[#CBC3D7]/70">Choose a faculty member from the search results.</p>}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button type="button" onClick={() => setIsModalOpen(false)} className="rounded-md border border-[#59647d] px-4 py-2 text-sm text-[#E6E2F0]">Cancel</button>
+              <button type="submit" disabled={!selectedStaff || isSubmitting} className="rounded-md bg-[#8F5BFF] px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50">
+                {isSubmitting ? 'Submitting...' : allocatedStaff ? 'Update' : 'Submit'}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_0.75fr_1.2fr]">
         <FacultySectionCard title="Basic Requirement" className={tallRequirementClass}>

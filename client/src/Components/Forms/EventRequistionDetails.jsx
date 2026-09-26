@@ -107,6 +107,8 @@ function validateOrganizerSection(state) {
   if (orgErrors.some((oe) => Object.keys(oe).length > 0))
     e.organizers = orgErrors;
 
+  if (!state.aboutProgram?.trim()) e.aboutProgram = "About the program is required";
+
   return e;
 }
 
@@ -224,6 +226,9 @@ export default function EventRequisitionDetails({
   const [expectedEventOutcome, setExpectedEventOutcome] = useState(
     initialEventRequisition.expectedEventOutcome || ""
   );
+  const [aboutProgram, setAboutProgram] = useState(
+    initialEventRequisition.aboutProgram || ""
+  );
 
   const [eventData, setEventData] = useState(initialEventRequisition.eventData || {});
   const [eventDaysLocal, setEventDaysLocal] = useState(initialEventRequisition.eventDays || []);
@@ -251,12 +256,12 @@ export default function EventRequisitionDetails({
     if (!setEventRequisition) return;
     const next = {
       doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, principalApprovalDocument, file, reason,
-      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome,
+      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome, aboutProgram,
       eventDays: eventDaysLocal, requirements,
     };
     const comparable = JSON.stringify({
       doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, budget, department, reason,
-      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome,
+      numOrganizers, organizers, fundingSource, eventData, expectedEventOutcome, aboutProgram,
       eventDays: eventDaysLocal, requirements,
       principalApprovalDocument: principalApprovalDocument
         ? {
@@ -271,7 +276,7 @@ export default function EventRequisitionDetails({
       lastSynced.current = comparable;
       setEventRequisition(next);
     }
-  }, [doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, fundingSource, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, expectedEventOutcome, eventDaysLocal, requirements, setEventRequisition]);
+  }, [doc, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, fundingSource, budget, department, file, principalApprovalDocument, reason, numOrganizers, organizers, eventData, expectedEventOutcome, aboutProgram, eventDaysLocal, requirements, setEventRequisition]);
 
   const syncEventDays = (days) => {
     setEventDaysLocal(days);
@@ -292,7 +297,7 @@ export default function EventRequisitionDetails({
     const currentRequirements = selectedReqs ?? requirements;
 
     const oErr = isEditMode ? {} : validateOrganizerSection({
-      principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, department, numOrganizers, organizers,
+      principalApprovalDocument, doc, file, reason, budget, finance, advanceAmount, purposeOfAdvance, advanceToBeReceivedWithin, estimatedBudget, department, numOrganizers, organizers, aboutProgram,
     });
     const eErr = isEditMode ? {} : validateEventDetails(eventData, eventDaysLocal);
     const rErr = isEditMode ? {} : validateRequirements(currentRequirements);
@@ -349,6 +354,8 @@ export default function EventRequisitionDetails({
         setAdvanceToBeReceivedWithin={setAdvanceToBeReceivedWithin}
         expectedEventOutcome={expectedEventOutcome}
         setExpectedEventOutcome={setExpectedEventOutcome}
+        aboutProgram={aboutProgram}
+        setAboutProgram={setAboutProgram}
         estimatedBudget={estimatedBudget}
         setEstimatedBudget={setEstimatedBudget}
         budget={budget} setBudget={setBudget}

@@ -23,6 +23,7 @@ import {
         principalApprovalDocument,
         advanceToBeReceivedWithin,
         expectedEventOutcome,
+        aboutProgram,
         estimatedBudget,
         budget,
         department,
@@ -279,8 +280,13 @@ import {
                     className="border-b border-[#363D57] pb-3"
                 />
                 <PreviewRow
-                    title="Expected Outcome"
+                    title="Event Outcome"
                     value={expectedEventOutcome}
+                    className="border-b border-[#363D57] pb-3"
+                />
+                <PreviewRow
+                    title="About the Program"
+                    value={aboutProgram}
                     className="border-b border-[#363D57] pb-3"
                 />
                 <PreviewRow
