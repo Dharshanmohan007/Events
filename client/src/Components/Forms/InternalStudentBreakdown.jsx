@@ -12,11 +12,12 @@ const SECTION_OPTIONS = [
   "AI&ML-A", "AI&ML-B",
   "CSE-A", "CSE-B", "CSE-C", "CSE-D",
   "Mech", "CCE", "CYS", "CSBS",
-  "ECE-A", "ECE-B", "ECE-C/VLSI", "EEE"
+  "ECE-A", "ECE-B", "ECE-C/VLSI", "EEE", "IT",
+  "VLSI", "S&H"
 ];
 
 const getDisplaySectionName = (dept, section) => {
-  if (["CCE", "CYS", "CSBS", "EEE"].includes(dept)) return dept;
+  if (["CCE", "CYS", "CSBS", "EEE", "IT", "VLSI", "S&H"].includes(dept)) return dept;
   if (dept === "MECH") return "Mech";
   if (dept === "ECE" && section === "C/VLSI") return "ECE-C/VLSI";
   if (dept === "AIDS") return `AI&DS-${section}`;
@@ -34,6 +35,7 @@ const guessDept = (secStr) => {
   if (secStr === "CYS") return "CYS";
   if (secStr === "CSBS") return "CSBS";
   if (secStr === "EEE") return "EEE";
+  if (secStr === "IT") return "IT";
   if (secStr.includes("VLSI")) return "VLSI";
   return "S&H";
 };
