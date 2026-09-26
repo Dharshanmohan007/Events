@@ -29,6 +29,8 @@ export default function EventOrganizerDetails({
   setAdvanceToBeReceivedWithin,
   expectedEventOutcome,
   setExpectedEventOutcome,
+  aboutProgram,
+  setAboutProgram,
   estimatedBudget,
   setEstimatedBudget,
   budget,
@@ -800,7 +802,7 @@ export default function EventOrganizerDetails({
       {/* Expected Event Outcome */}
       <div className="mb-6">
         <CustomInput
-          label="Expected Outcome"
+          label="Event Outcome"
           value={expectedEventOutcome}
           onChange={(e) => setExpectedEventOutcome(e.target.value)}
           placeholder="Enter the outcome of the event"
@@ -809,6 +811,26 @@ export default function EventOrganizerDetails({
           <p className="text-red-400 text-xs mt-1">
             {errors.expectedEventOutcome}
           </p>
+        )}
+      </div>
+
+      {/* About the program */}
+      <div className="mb-6">
+        <div className="relative w-full">
+          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+            About the program *
+          </span>
+          <textarea
+            value={aboutProgram}
+            onChange={(e) => setAboutProgram(e.target.value)}
+            className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border placeholder-gray-500 min-h-[100px] resize-y ${
+              errors.aboutProgram ? "border-red-400" : "border-[#3A3A5A]"
+            } focus:border-purple-500`}
+            placeholder="Enter about the program"
+          />
+        </div>
+        {errors.aboutProgram && (
+          <p className="text-red-400 text-xs mt-1">{errors.aboutProgram}</p>
         )}
       </div>
 
