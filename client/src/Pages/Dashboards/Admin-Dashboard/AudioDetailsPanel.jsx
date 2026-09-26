@@ -19,7 +19,7 @@ const KeyValueList = ({ items }) => (
     {items.map(([label, value]) => (
       <div key={label} className="flex items-center justify-between border-b border-[#30384d]/60 py-3 text-sm last:border-b-0">
         <span className="text-[#CBC3D7]/75">{label}</span>
-        <span className="font-medium text-[#E6E2F0]">{value}</span>
+        <span className={`font-medium ${value === 'Yes' ? 'text-emerald-400' : value === 'No' ? 'text-rose-400' : 'text-[#E6E2F0]'}`}>{value}</span>
       </div>
     ))}
   </div>
@@ -49,7 +49,13 @@ const AudioDetailsPanel = ({ audioDetails, eventSchedule = [] }) => {
           <h3 className="text-lg font-medium text-[#8F5BFF]">{displayValue(audio.venueName)}</h3>
           <div className="mt-5 grid grid-cols-2 gap-5">
             <RequirementCard title="Object Requirement">
-              <KeyValueList items={(audio.audioItems || []).map((item) => [item.type || 'Requirement', displayValue(item.quantity)])} />
+              <KeyValueList items={[
+                ...(audio.audioItems || []).map((item) => [item.type || 'Requirement', displayValue(item.quantity)]),
+                ['EB Required', audio.isEbRequired == null ? '-' : audio.isEbRequired ? 'Yes' : 'No'],
+                ['No. of Systems', displayValue(audio.noOfSystems)],
+                ['LED Wall Required', audio.ledWallRequired == null ? '-' : audio.ledWallRequired ? 'Yes' : 'No'],
+                ['AC Required', audio.acRequired == null ? '-' : audio.acRequired ? 'Yes' : 'No'],
+              ]} />
             </RequirementCard>
 
             <RequirementCard title="Special Requirement">
