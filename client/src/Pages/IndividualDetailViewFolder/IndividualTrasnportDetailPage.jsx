@@ -15,8 +15,10 @@ import {
   Building2,
   VenusAndMars,
   Pencil,
+  Trash,
 } from "lucide-react";
 import Modal from "../../Components/Modal";
+import DeleteConfirmationPopup from "../Dashboards/Admin-Dashboard/DeleteConfirmationPopup";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
@@ -37,6 +39,10 @@ const IndividualTrasnportDetailPage = ({ data }) => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
+
+  // ─── State for delete confirmation ─────────────────────────────────
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // ─── Helper: get authorization headers ──────────────────────────────
   const getAuthHeaders = () => {
@@ -155,6 +161,30 @@ const IndividualTrasnportDetailPage = ({ data }) => {
     }
   }
 
+  // ─── Delete submission handler ──────────────────────────────────────
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/api/individual-submissions/${eventId}`,
+        {
+          method: "DELETE",
+          headers: getAuthHeaders(),
+        },
+      );
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok)
+        throw new Error(result.message || "Failed to delete submission");
+      toast.success("Submission deleted successfully");
+      setShowDeleteConfirm(false);
+      navigate(-1);
+    } catch (err) {
+      toast.error(err.message || "Failed to delete submission");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   // ─── Empty handler for faculty (to be implemented later) ────────────
   async function handleFacultyClose() {
     navigate(`/dashboard-faculty/TransportIndividualDocumentUpload/${eventId}`);
@@ -186,20 +216,28 @@ const IndividualTrasnportDetailPage = ({ data }) => {
     });
   };
 
-const time = (dateTime) => {
-  if (!dateTime) return "-";
+  const time = (dateTime) => {
+    if (!dateTime) return "-";
 
-  const timeValue = dateTime.split("T")[1].split(".")[0];
-  const [hours, minutes] = timeValue.split(":");
+    const timeValue = dateTime.split("T")[1].split(".")[0];
+    const [hours, minutes] = timeValue.split(":");
 
-  const hour = Number(hours);
-  const period = hour >= 12 ? "PM" : "AM";
-  const formattedHour = hour % 12 || 12;
+    const hour = Number(hours);
+    const period = hour >= 12 ? "PM" : "AM";
+    const formattedHour = hour % 12 || 12;
 
-  return `${String(formattedHour).padStart(2, "0")}:${minutes} ${period}`;
-};
+    return `${String(formattedHour).padStart(2, "0")}:${minutes} ${period}`;
+  };
 
   const car = data?.data?.vehicles?.find((item) => item.type == "Car");
+
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
 
   // ─── JSX ────────────────────────────────────────────────────────────
   return (
@@ -220,6 +258,11 @@ const time = (dateTime) => {
             role.toLowerCase() == "super admin 2") && (
             <>
               <div className="flex items-center gap-2">
+                <h1 className="text-amber-400">
+                  Submitted at :{" "}
+                  {convertToIST(data?.approvalHistory[0]?.actionDate)}
+                </h1>
+                <ChevronRight size={16} />
                 <button
                   className={`px-3 py-2 rounded-full text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
                 >
@@ -232,6 +275,14 @@ const time = (dateTime) => {
                 >
                   <Pencil className="text-green-600" size={14} />
                 </Link>
+
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="bg-green-100/20 rounded-lg flex items-center justify-center w-8 h-8 cursor-pointer hover:bg-red-500/20"
+                  title="Delete submission"
+                >
+                  <Trash className="text-red-500" size={14} />
+                </button>
               </div>
             </>
           )}
@@ -690,6 +741,16 @@ const time = (dateTime) => {
           </button>
         </div>
       </Modal>
+      {/* ═══ DELETE CONFIRMATION POPUP ═══════════════════════════════════ */}
+      {showDeleteConfirm && (
+        <DeleteConfirmationPopup
+          title="Delete Submission"
+          message="Are you sure you want to delete this individual submission? This action cannot be undone."
+          deleting={deleting}
+          onCancel={() => setShowDeleteConfirm(false)}
+          onDelete={handleDelete}
+        />
+      )}
     </main>
   );
 };

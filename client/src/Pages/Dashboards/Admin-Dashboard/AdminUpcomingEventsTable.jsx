@@ -10,7 +10,7 @@ const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
-
+ 
   const date = new Date(dateValue);
   if (Number.isNaN(date.getTime())) return dateValue;
 
@@ -33,7 +33,11 @@ const normalizeEvent = (event) => ({
     : [event.eventVenue || event.venue].filter(Boolean),
   department: event.organizingDepartment || event.department,
   status: event.overallStatus || event.acknowledgeStatus,
-  approvedStatus: event.adminApproval ? "Approved" : "Pending",
+  approvedStatus: /deleted|rejected/i.test(String(event.overallStatus || ""))
+    ? event.overallStatus
+    : event.adminApproval
+      ? "Approved"
+      : "Pending",
 });
 
 const normalizeIndividualRequest = (request) => ({
@@ -49,7 +53,7 @@ const normalizeIndividualRequest = (request) => ({
 const getStatusColor = (status = "") => {
   const normalizedStatus = String(status).toLowerCase();
 
-  if (normalizedStatus.includes("rejected"))
+  if (normalizedStatus.includes("rejected") || normalizedStatus.includes("deleted"))
     return { text: "text-red-400", dot: "bg-red-400" };
   if (normalizedStatus.includes("acknowledged"))
     return { text: "text-emerald-400", dot: "bg-emerald-400" };
@@ -343,7 +347,7 @@ const AdminUpcomingEventsTable = ({
                       <td className="px-6 py-4 whitespace-nowrap">
                         {console.log("admin individual status  : ", row)}
                         {/* <StatusBadge status={row.status} /> */}
-                        <StatusBadge status={row.status} />
+                        <StatusBadge status={row.superAdminStatus} />
                       </td>
                       <td className="px-6 py-4">
                         {/* <Link

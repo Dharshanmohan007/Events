@@ -6,6 +6,7 @@ import {
   updateEventType,
   deleteEventType,
 } from "../../../services/events/eventTypesService";
+import { useAuth } from "../../../Components/AuthContext";
 
 export default function AddEventType({
   isOpen,
@@ -24,6 +25,7 @@ export default function AddEventType({
   const [searchQuery, setSearchQuery] = useState('');
   
   const [deleteModalId, setDeleteModalId] = useState(null);
+  const { isAdmin, isAdminSecretary } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -279,7 +281,7 @@ export default function AddEventType({
                     >
                       <Check size={18} />
                     </button>
-                  ) : (
+                  ) : (isAdmin && !isAdminSecretary) && (
                     <>
                       <button 
                         onClick={() => {

@@ -4,6 +4,7 @@ import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 import FacultyFormPopup from './FacultyFormPopup'
 import FacultyManagementTable from './FacultyManagementTable'
 import FacultyViewOffCanvas from './FacultyViewOffCanvas'
+import { useAuth } from '../../../Components/AuthContext'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
@@ -26,6 +27,7 @@ const normalizeFaculty = (faculty) => ({
 })
 
 const FacultyManagementPage = () => {
+    const { isAdminSecretary } = useAuth()
     const [faculties, setFaculties] = useState([])
     const [popupMode, setPopupMode] = useState(null)
     const [editingFaculty, setEditingFaculty] = useState(null)
@@ -172,7 +174,7 @@ const FacultyManagementPage = () => {
                         <p className='text-[#FFFFFF80] text-sm'>View and manage faculty members.</p>
                     </div>
 
-                    <button
+                    {!isAdminSecretary && (<button
                         type="button"
                         onClick={handleAddClick}
                         className='flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]'
@@ -180,6 +182,7 @@ const FacultyManagementPage = () => {
                         <Plus size={17} />
                         Add Faculty
                     </button>
+                    )}
                 </div>
 
                 <FacultyManagementTable
@@ -187,6 +190,7 @@ const FacultyManagementPage = () => {
                     onEdit={handleEditClick}
                     onDelete={setDeletingFaculty}
                     onView={(faculty) => setViewingFacultyId(faculty._id)}
+                    readOnly={isAdminSecretary}
                 />
             </main>
 

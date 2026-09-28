@@ -566,6 +566,7 @@ const FacultyEventsDetailViewPage = () => {
         <FacultyAudioDetailsPanel
           audioDetails={audioDetails}
           eventSchedule={requestDetails?.eventDetails?.eventSchedule}
+          allocationId={eventId}
         />
       )
     }

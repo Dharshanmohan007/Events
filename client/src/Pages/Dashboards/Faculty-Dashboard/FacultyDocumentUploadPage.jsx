@@ -104,21 +104,24 @@ const validateIncome = (incomeData) => {
   // Institutional Amount
   if (
     institutionalAmount.amount ||
-    institutionalAmount.selectRequired ||
     institutionalAmount.details
   ) {
     if (!institutionalAmount.amount)
       errors.push("Institutional Amount: Amount is required");
-    if (!institutionalAmount.selectRequired)
-      errors.push("Institutional Amount: Select Required is required");
     if (!institutionalAmount.details)
       errors.push("Institutional Amount: Details is required");
   }
 
   // Department Fund
-  if (departmentFund.amount || departmentFund.details) {
+  if (
+    departmentFund.amount ||
+    departmentFund.selectRequired ||
+    departmentFund.details
+  ) {
     if (!departmentFund.amount)
       errors.push("Department Fund: Amount is required");
+    if (!departmentFund.selectRequired)
+      errors.push("Department Fund: Select Required is required");
     if (!departmentFund.details)
       errors.push("Department Fund: Details is required");
   }
@@ -164,8 +167,8 @@ const validateExpenditure = (expenditureData) => {
     if (bills.length > 0) {
       hasAny = true;
       bills.forEach((bill, idx) => {
-        if (!bill.expenseName)
-          errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
+        // if (!bill.expenseName)
+        //   errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
         if (!bill.billNo)
           errors.push(`${cat} bill ${idx + 1}: Bill No is required`);
         if (!bill.billDate)

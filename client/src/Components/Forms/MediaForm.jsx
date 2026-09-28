@@ -725,6 +725,7 @@ export default function MediaForm({
   onSave,
   errors: externalErrors = {},
   purchaseData = [],
+  isEditMode = false,
 }) {
   const dayCount = eventDays.length;
 
@@ -847,10 +848,10 @@ export default function MediaForm({
 
     const isLast = idx === total - 1;
 
-    const dayErrors = validateDay(latestData[idx] ?? emptyDayData(), true);
+    const dayErrors = isEditMode ? {} : validateDay(latestData[idx] ?? emptyDayData(), true);
     if (Object.keys(dayErrors).length > 0) {
       setErrors((prev) => ({ ...prev, [idx]: dayErrors }));
-      return;
+      return false;
     }
 
     setCompletedDays((prev) => prev.includes(idx) ? prev : [...prev, idx]);

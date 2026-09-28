@@ -42,6 +42,7 @@ const FoodEventsDetailViewPage = () => {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           },
         );
+
         const payload = await res.json();
         if (!res.ok)
           throw new Error(payload.message || "Failed to fetch food details");
@@ -49,6 +50,7 @@ const FoodEventsDetailViewPage = () => {
         const eventData = payload.data || payload;
         if (!eventData.refreshmentDetails)
           throw new Error("Food details are not available");
+        console.log("head food data : ", eventData);
 
         setRefreshmentDetails(eventData.refreshmentDetails);
         setEventData(eventData);

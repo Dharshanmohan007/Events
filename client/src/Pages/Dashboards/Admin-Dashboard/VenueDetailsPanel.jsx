@@ -48,6 +48,31 @@ const VenueBlock = ({ venue }) => (
         ['Number of Participants', venue.numberOfParticipants],
         ['Number of Seating Capacity Required', venue.seatingCapacity],
       ]} />
+      {venue.isContactedDepartment === true && (
+        <section className="rounded-lg border border-[#374155] bg-[#232A3B] p-5">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-base font-semibold text-[#E6E2F0]">
+              <FileText size={17} /> Department Contact
+            </div>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+              Contacted Department: Yes
+            </span>
+          </div>
+          <div className="grid gap-x-8 sm:grid-cols-2">
+            {[
+              ['Department', venue.department],
+              ['Department Head', venue.departmentHeadName],
+              ['Designation', venue.departmentHeadDesignation],
+              ['Mobile Number', venue.departmentHeadMobile],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-4 border-b border-[#30384d]/60 py-3 text-sm last:border-b-0">
+                <span className="text-[#CBC3D7]/75">{label}</span>
+                <span className="text-right font-medium text-[#E6E2F0]">{displayValue(value)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
       <HallRequirements requirements={venue.hallRequirements} />
       {venue.specialRequirements ? (
         <section className="rounded-lg border border-[#374155] bg-[#232A3B] p-5">

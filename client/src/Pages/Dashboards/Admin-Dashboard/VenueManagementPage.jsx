@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 import VenueCard from './VenueCard'
 import VenuFormPopup from './VenuFormPopup'
+import { useAuth } from '../../../Components/AuthContext'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
@@ -92,6 +93,7 @@ const SelectFilter = ({ value, onChange, options, label }) => {
 }
 
 const VenueManagementPage = () => {
+  const { isAdminSecretary } = useAuth()
   const [venues, setVenues] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [floorFilter, setFloorFilter] = useState('all')
@@ -249,10 +251,11 @@ const VenueManagementPage = () => {
             <p className='text-[#FFFFFF80] text-sm'>View, manage, and organize all venue details, availability, and booking information easily.</p>
           </div>
 
-          <button onClick={handleAddClick} className='flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]'>
+          {!isAdminSecretary && (<button onClick={handleAddClick} className='flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]'>
             <Plus size={17} />
             Add Venue
           </button>
+          )}
         </div>
 
         {/* card filters  */}
@@ -301,6 +304,7 @@ const VenueManagementPage = () => {
           venues={filteredVenues}
           onEdit={handleEditClick}
           onDelete={setDeletingVenue}
+          readOnly={isAdminSecretary}
         />
 
       </main>

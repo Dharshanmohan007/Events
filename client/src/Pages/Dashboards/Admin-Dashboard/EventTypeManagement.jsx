@@ -4,8 +4,10 @@ import { Plus } from "lucide-react";
 import AddEventType from "./AddEventType";
 import AddEventDocument from "./AddEventDocument";
 import ViewEventDocumentMapping from "./ViewEventDocumentMapping";
+import { useAuth } from "../../../Components/AuthContext";
 
 export default function EventTypeManagement() {
+  const { isAdminSecretary } = useAuth();
   const [isAddEventTypeOpen, setIsAddEventTypeOpen] =
     useState(false);
 
@@ -34,7 +36,7 @@ export default function EventTypeManagement() {
           </p>
         </div>
 
-        <div className="flex flex-row items-center gap-4">
+        {!isAdminSecretary && (<div className="flex flex-row items-center gap-4">
           {/* ADD EVENT TYPE */}
           <button
             onClick={() => setIsAddEventTypeOpen(true)}
@@ -84,7 +86,7 @@ export default function EventTypeManagement() {
             <Plus size={17} />
             Event Document
           </button>
-        </div>
+        </div>)}
       </div>
 
       {/* VIEW EVENT DOCUMENT MAPPING */}

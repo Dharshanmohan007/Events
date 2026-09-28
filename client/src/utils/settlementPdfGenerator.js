@@ -53,8 +53,6 @@ async function fetchTemplateHtml() {
   return res.text();
 }
 
-
-console.log("")
 /**
  * Sanitize a string for use as a PDF filename.
  * Keeps alphanumeric, spaces, hyphens, and underscores only.
@@ -326,7 +324,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
           0,
           0,
           imgWidthPx,
-          sliceHeight
+          sliceHeight 
         );
 
         pdf.addImage(

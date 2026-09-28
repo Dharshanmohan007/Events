@@ -289,29 +289,38 @@ export default function FoodPreview({ foodData = [] }) {
         {/* Information Cards */}
 
         <TwoColumnCard
-          leftLabel="Date"
-          leftValue={formatDate(day.date)}
+          leftLabel="From Date"
+          leftValue={formatDate(day.fromDate)}
           leftIcon={Calendar}
-          rightLabel="Type of Resource Person"
-          rightValue={(day.resourcePersonType || []).join(" / ")}
-          rightIcon={Users}
+          rightLabel="To Date"
+          rightValue={formatDate(day.toDate)}
+          rightIcon={Calendar}
         />
 
         <TwoColumnCard
-          leftLabel="Total number of Resource Person"
-          leftValue={
+          leftLabel="Type of Resource Person"
+          leftValue={(day.resourcePersonType || []).join(" / ")}
+          leftIcon={Users}
+          rightLabel="Total number of Resource Person"
+          rightValue={
             day.resourcePersons
               ? `${day.resourcePersons} Members`
               : "0 Members"
           }
-          leftIcon={Users}
-          rightLabel="Total number of Internal Accompanying Person"
-          rightValue={
+          rightIcon={Users}
+        />
+
+        <TwoColumnCard
+          leftLabel="Total number of Internal Accompanying Person"
+          leftValue={
             day.internalCount
               ? `${day.internalCount} Members`
               : "0 Members"
           }
-          rightIcon={Users}
+          leftIcon={Users}
+          rightLabel="-"
+          rightValue="-"
+          rightIcon={null}
         />
 
         <TwoColumnCard

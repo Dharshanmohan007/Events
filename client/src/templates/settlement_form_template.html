@@ -70,6 +70,7 @@
 
   /* ---------- SECTION HEADINGS ---------- */
   .section-label-row td, th.section-label-row {
+    background: #f0f0f0;
     font-weight: bold;
     background: #fff;
     padding: 5px 4px 7px 4px;
@@ -276,6 +277,7 @@
     </table>
 
     <!-- ================= REMARKS + TOTALS (side by side) ================= -->
+    <div id="footer-block">
     <table class="remarks-block section-gap">
       <tbody>
       <tr>
@@ -314,6 +316,7 @@
         <td>Verified By Accounts</td>
       </tr>
     </table>
+    </div>
 
   </div>
 </div>
@@ -448,7 +451,7 @@ function renderExpenditure() {
 
 /* Gender-wise participant count. Fill maleWithin/maleWithout/femaleWithin/
    femaleWithout from the website's endpoints -- row and column totals are
-   calculated automatically. */
+   calculated automatically testing. */
 const GENDER_DATA = {
   maleWithin: "",
   maleWithout: "",

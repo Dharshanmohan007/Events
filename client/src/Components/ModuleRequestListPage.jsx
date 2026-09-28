@@ -76,6 +76,7 @@ const ModuleRequestListPage = ({
           detailViewPath={detailViewPath}
           individualDetailViewPath={individualDetailViewPath}
           showIndividualTab={showIndividualTab}
+          module={module}
         />
       </main>
     </>

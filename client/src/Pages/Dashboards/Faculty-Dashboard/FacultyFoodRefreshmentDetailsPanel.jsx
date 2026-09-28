@@ -213,6 +213,7 @@ const FacultyFoodRefreshmentDetailsPanel = ({
   eventData,
   eventSchedule = [],
 }) => {
+  
   const [activeDay, setActiveDay] = useState(0);
   const refreshments = refreshmentDetails?.refreshments || [];
   if (!refreshmentDetails)

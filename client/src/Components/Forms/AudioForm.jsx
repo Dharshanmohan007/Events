@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import CustomInput from "../CustomInput";
+import CustomSelect from "../CustomSelect";
 import { DayTimeline } from "./VenueForm";
 import VenueInfoPopup from "./VenueInfoPopup";
 
@@ -20,6 +21,10 @@ function defaultVenueSection() {
     quantities: {},
     others: "",
     specialRequirements: "",
+    isEbRequired: false,
+    noOfSystems: "",
+    ledWallRequired: false,
+    acRequired: false,
   };
 }
 
@@ -64,6 +69,17 @@ function validateDay(dayVenues, dayData, venueInfoMap) {
       }
     });
 
+    if (s.isEbRequired) {
+      if (!s.noOfSystems || String(s.noOfSystems).trim() === "") {
+        ve.noOfSystems = "Number of systems is required";
+      } else {
+        const sysCount = parseInt(s.noOfSystems);
+        if (isNaN(sysCount) || sysCount < 1 || sysCount > 2000) {
+          ve.noOfSystems = "Up to 2000 systems can use";
+        }
+      }
+    }
+
     if (Object.keys(ve).length > 0) errors[venueName] = ve;
   });
   return errors;
@@ -80,12 +96,16 @@ function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
   eventDays.forEach((_day, dayIndex) => {
     const venueNames = venueData[dayIndex]?.selectedVenues || [];
     venueNames.forEach((venueName) => {
-      const hasEquipment = getAvailableAudioForVenue(venueName, venueInfoMap).length > 0;
-      if (!hasEquipment) return;
-
       const s = audioData[dayIndex]?.[venueName] || defaultVenueSection();
 
-      if (!s.audioRequired || s.audioRequired.length === 0) return;
+      const hasAudio = s.audioRequired && s.audioRequired.length > 0;
+      const hasOthers = s.others && s.others.trim().length > 0;
+      const hasSpecial = s.specialRequirements && s.specialRequirements.trim().length > 0;
+      const hasEb = s.isEbRequired;
+      const hasLed = s.ledWallRequired;
+      const hasAc = s.acRequired;
+
+      if (!hasAudio && !hasOthers && !hasSpecial && !hasEb && !hasLed && !hasAc) return;
 
       const audioItems = (s.audioRequired || []).map((key) => ({
         type: AUDIO_KEY_META.find(m => m.key === key)?.label || key,
@@ -95,6 +115,10 @@ function buildAudioPayload(audioData, eventDays, venueData, venueInfoMap) {
       audios.push({
         dayIndex,
         venueName,
+        isEbRequired: !!s.isEbRequired,
+        noOfSystems: s.isEbRequired ? parseInt(s.noOfSystems) || 0 : 0,
+        ledWallRequired: !!s.ledWallRequired,
+        acRequired: !!s.acRequired,
         audioItems,
         audioRequirements: s.audioRequired || [],
         quantities: s.quantities || {},
@@ -429,6 +453,53 @@ function AudioVenueCard({
         </div>
       </div>
 
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${data.isEbRequired ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-4 mt-4 mb-4`}>
+        <div>
+          <CustomSelect
+            label="EB Required"
+            options={["Yes", "No"]}
+            value={data.isEbRequired ? "Yes" : "No"}
+            onChange={(val) => updateField("isEbRequired", val === "Yes")}
+            labelBg="#1E1E35"
+          />
+        </div>
+        {data.isEbRequired && (
+          <div>
+            <CustomInput
+              labelBg="#1E1E35"
+              label="No. of systems required"
+              type="text"
+              value={data.noOfSystems || ""}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, "");
+                updateField("noOfSystems", val);
+              }}
+            />
+            {errors?.noOfSystems && (
+              <p className="text-red-400 text-xs mt-1">{errors.noOfSystems}</p>
+            )}
+          </div>
+        )}
+        <div>
+          <CustomSelect
+            label="LED Wall Required"
+            options={["Yes", "No"]}
+            value={data.ledWallRequired ? "Yes" : "No"}
+            onChange={(val) => updateField("ledWallRequired", val === "Yes")}
+            labelBg="#1E1E35"
+          />
+        </div>
+        <div>
+          <CustomSelect
+            label="A/C Required"
+            options={["Yes", "No"]}
+            value={data.acRequired ? "Yes" : "No"}
+            onChange={(val) => updateField("acRequired", val === "Yes")}
+            labelBg="#1E1E35"
+          />
+        </div>
+      </div>
+
       {/* Dynamic quantity inputs — smart odd/even grid */}
       {!hasNoEquipment && (data.audioRequired || []).length > 0 && (
         <EquipmentQuantityInputs
@@ -464,9 +535,10 @@ export default function AudioForm({
   nextStep,
   prevStep,
   registerChildNavigation,
-  audioData: initialAudioData,
+  audioData: initialAudioData = {},
   onAudioDataChange,
   eventId,
+  isEditMode = false,
   errors: propErrors = {},
   eventDays = [],
   venueData = [],
@@ -551,6 +623,7 @@ export default function AudioForm({
       [currentDayIndex]: {
         ...(prev[currentDayIndex] || {}),
         [venueName]: updated,
+        sameAsDay1: false
       },
     }));
     setErrors((prev) => {
@@ -572,10 +645,10 @@ export default function AudioForm({
     if (venueInfoLoading) {
       setErrors({});
     } else {
-      const dayErrors = validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
+      const dayErrors = isEditMode ? {} : validateDay(venues, latestAudioData[currentDayIndex], venueInfoMap);
       const hasErrors = Object.keys(dayErrors).length > 0;
       setErrors(hasErrors ? dayErrors : {});
-      if (hasErrors) return;
+      if (hasErrors) return false;
     }
 
     setCompletedDays((prev) =>
@@ -672,13 +745,55 @@ export default function AudioForm({
         />
 
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg font-bold">Audio Details</h2>
-          {venueInfoLoading && (
-            <div className="flex items-center gap-2 text-gray-500 text-xs">
-              <div className="w-3.5 h-3.5 rounded-full border border-gray-500 border-t-transparent animate-spin" />
-              Loading venue data…
-            </div>
-          )}
+          <h2 className="text-white text-lg font-bold">Audio & EB Details</h2>
+          <div className="flex items-center gap-4">
+            {currentDayIndex > 0 && (
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={audioData[currentDayIndex]?.sameAsDay1 || false}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    if (checked) {
+                      const day1Data = audioData[0] || {};
+                      const day1Venues = Object.keys(day1Data).filter(k => k !== 'sameAsDay1');
+                      const defaultCard = day1Venues.length > 0 ? day1Data[day1Venues[0]] : defaultVenueSection();
+                      
+                      const currentVenuesList = venueData[currentDayIndex]?.selectedVenues || [];
+                      const newDayData = { sameAsDay1: true };
+                      
+                      currentVenuesList.forEach((vName, idx) => {
+                        let sourceCard = day1Data[vName];
+                        if (!sourceCard && day1Venues[idx]) sourceCard = day1Data[day1Venues[idx]];
+                        if (!sourceCard) sourceCard = defaultCard;
+                        newDayData[vName] = JSON.parse(JSON.stringify(sourceCard || {}));
+                      });
+                      
+                      setAudioData(prev => ({
+                        ...prev,
+                        [currentDayIndex]: newDayData
+                      }));
+                    } else {
+                      setAudioData(prev => ({
+                        ...prev,
+                        [currentDayIndex]: {
+                          sameAsDay1: false
+                        }
+                      }));
+                    }
+                  }}
+                  className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                />
+                <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+              </label>
+            )}
+            {venueInfoLoading && (
+              <div className="flex items-center gap-2 text-gray-500 text-xs">
+                <div className="w-3.5 h-3.5 rounded-full border border-gray-500 border-t-transparent animate-spin" />
+                Loading venue data…
+              </div>
+            )}
+          </div>
         </div>
 
         {apiError && (

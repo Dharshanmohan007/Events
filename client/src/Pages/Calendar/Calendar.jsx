@@ -5,6 +5,7 @@ import WeekView from "../../Components/Calendar/WeekView.jsx";
 import MonthView from "../../Components/Calendar/MonthView.jsx";
 import DayView from "../../Components/Calendar/DayView.jsx";
 import AllVenuesView from "../../Components/Calendar/AllVenuesView.jsx";
+import AllRoomsView from "../../Components/Calendar/AllRoomsView.jsx";
 import { fetchEvents, fetchVenues } from "../../api/calendarApi.js";
 import { addDays, addMonths } from "../../utils/dateUtils.js";
 import DashboardHeader from "../Dashboards/ICTC-Dashboard/DashboardHeader.jsx";
@@ -29,9 +30,9 @@ export default function Calendar() {
       .catch(() => setError("Couldn't load venues"));
   }, []);
 
-  // reload events whenever venue / view / date changes (skip for allVenues)
+  // reload events whenever venue / view / date changes (skip for allVenues and allRooms)
   useEffect(() => {
-    if (!venue || view === "allVenues") return;
+    if (!venue || view === "allVenues" || view === "allRooms") return;
     setLoading(true);
     setError(null);
     fetchEvents({ venue, view, date: currentDate })
@@ -119,6 +120,12 @@ export default function Calendar() {
                 )}
                 {view === "allVenues" && (
                   <AllVenuesView
+                    currentDate={currentDate}
+                    onSelectEvent={handleSelectEvent}
+                  />
+                )}
+                {view === "allRooms" && (
+                  <AllRoomsView
                     currentDate={currentDate}
                     onSelectEvent={handleSelectEvent}
                   />

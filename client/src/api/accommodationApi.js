@@ -22,6 +22,7 @@ export async function fetchAvailableRooms(startDateTime, endDateTime, eventId) {
     roomNumber: room.roomNumber || room.name || room.identifier || "",
     venue: room.venue || room.venueName || "",
     occupantCount: room.occupantCount ?? room.capacity ?? room.maxOccupants ?? 0,
+    available: room.available,
     requiresAdminConfirmation: room.requiresAdminConfirmation === true,
     adminMessage: room.message || "This room was occupied immediately before the requested time. Please contact the admin team to confirm room availability.",
   }));

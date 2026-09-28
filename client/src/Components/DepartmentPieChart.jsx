@@ -8,7 +8,7 @@ const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
                 {title}
             </h2>
 
-            <div className="mt-5 h-[260px] w-full">
+            <div className="mt-5 h-[260px] w-full ">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                         <Pie
@@ -31,7 +31,7 @@ const DepartmentPieChart = ({ data, title = "Events By Department" }) => {
                 </ResponsiveContainer>
             </div>
 
-            <div className="mt-2 flex items-center justify-center gap-6">
+            <div className="mt-2 flex items-center justify-center gap-6 ">
                 {data.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                         <span
