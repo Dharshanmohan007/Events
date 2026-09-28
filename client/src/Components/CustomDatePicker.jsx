@@ -149,7 +149,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                         : "border-[#283247] text-[#FFFFFF80] hover:border-[#8B3DFF]"
                     } bg-[#1b2435] ${className}`}
             >
-                <Calendar size={13} className="text-[#FFFFFF80]" />
+                <Calendar size={13} className="text-[#0c000080] dark:text-[#1c5be4]" />
                 <span className="min-w-[70px] text-left">{value ? formatDisplayDate(value) : placeholder}</span>
                 {value && (
                     <span

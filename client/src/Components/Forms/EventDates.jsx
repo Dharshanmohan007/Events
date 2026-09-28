@@ -446,7 +446,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
           {Array.from({ length: guestCount }, (_, i) => (
             <div
               key={i}
-              className='rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#2E3645] p-4 sm:p-6'
+              className='rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#2E3645] p-4 sm:p-6'
             >
               <GuestFields
                 guestIndex={i + 1}

@@ -948,7 +948,7 @@ export default function FoodAndRefreshments({
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="relative bg-white dark:bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
+          className="relative bg-white dark:bg-[#1f1f38] border border-slate-200 dark:border-[#3A3A5A] rounded-2xl mb-6 overflow-visible"
         >
           {/* ── Delete button: inside top-right corner of the card ── */}
           {index !== 0 && (

@@ -3,6 +3,7 @@ import Logo from "../assets/logo.svg";
 import logolight from "../assets/clglight.svg";
 import SidebarDesign from "../assets/SidebarDesign.svg";
 import SidebarDesign1 from "../assets/SidebarDesign1.svg";
+import ThemeToggle from "../Components/Calendar/ThemeToggle"
 
 export default function EventsSidebar({
   steps = [],
@@ -18,6 +19,7 @@ export default function EventsSidebar({
       <div className="dark:hidden">
         <img src={logolight} alt="Logo" className="mb-8 w-40 z-10" />
       </div>
+      <ThemeToggle/>
 
       {/* Steps */}
       <div className="flex flex-col gap-1 z-10">

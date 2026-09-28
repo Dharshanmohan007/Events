@@ -269,9 +269,9 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
           <button
             onClick={() => onInfoClick(venueName)}
             title="View venue details"
-            className="w-6 h-6 rounded-full flex items-center justify-center bg-purple-600/20 border border-purple-500/40 text-purple-300 hover:bg-purple-500/40 hover:text-white transition-all"
+            className="w-6 h-6 rounded-full flex items-center justify-center bg-purple-600 dark:bg-purple-600/20 border border-purple-500/40 text-white dark:text-purple-300 hover:bg-purple-500/40 hover:text-white transition-all"
           >
-            <Info size={14} />
+            <Info size={16} />
           </button>
           {/* Index badge */}
           {/* <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-xs text-white font-bold">

@@ -396,7 +396,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="overflow-x-auto rounded-lg border border-[#3A3A5A]">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#3A3A5A]">
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-200 dark:bg-[#1E1E35] border-b border-slate-300 dark:border-[#3A3A5A]">
@@ -406,7 +406,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                       <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm w-20">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-300 dark:divide-[#3A3A5A] bg-transparent">
+                  <tbody className="divide-y divide-slate-300 dark:divide-[#3A3A5A] bg-white dark:bg-transparent">
                     {yearGroup.departments.map((deptGroup, dIdx) =>
                       deptGroup.sections.map((sec, sIdx) => (
                         <tr key={`${yearGroup.year}-${deptGroup.department}-${sec.section}`} className="hover:bg-slate-100 dark:hover:bg-[#1E1E35]/50 transition-colors">

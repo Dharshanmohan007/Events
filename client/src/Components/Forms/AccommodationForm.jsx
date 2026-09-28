@@ -669,7 +669,7 @@ function AccommodationBlock({
                       checked={checked}
                       onChange={() => toggleGuest(g.guestId)}
                     />
-                    <span className="text-sm text-white truncate">{g.name}</span>
+                    <span className="text-sm text-black dark:text-white truncate">{g.name}</span>
                   </div>
                   <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
                     <span className="flex items-center gap-1.5">

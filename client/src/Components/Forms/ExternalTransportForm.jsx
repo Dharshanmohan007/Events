@@ -674,7 +674,7 @@ export default function ExternalTransportForm({
                       onChange={(val) => handleChange(index, "travelDate", val)}
                       placeholder="Select Travel Date"
                       minDate={todayDateStr}
-                      className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-white"
+                      className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-gray-500 dark:text-white"
                     />
                   </div>
                   {getError(index, "travelDate") && (
