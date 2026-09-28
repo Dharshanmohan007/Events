@@ -184,6 +184,14 @@ document.addEventListener("DOMContentLoaded", function() {
     var remarksHtml = (remarksData && remarksData.toUpperCase() !== "NA") ? '<div style="font-size:10px; margin-top:4px;">' + remarksData + '</div>' : '';
     remarksCell.innerHTML = '<div style="font-weight:bold; font-size:11px;">Remarks</div>' + remarksHtml;
   }
+
+  // ── Populate outcomes cell ───────────────────────────────────────────
+  var outcomesCell = document.getElementById("outcomesCell");
+  var aboutProgram = ${JSON.stringify(data.aboutProgram || "")};
+  if (outcomesCell) {
+    var outcomesHtml = (aboutProgram && aboutProgram.toUpperCase() !== "NA") ? '<div style="font-size:14px; margin-top:4px;">' + aboutProgram + '</div>' : '';
+    outcomesCell.innerHTML = '<div style="font-weight:bold; font-size:15px;">Outcomes</div>' + outcomesHtml;
+  }
 });
 </script>`;
 
@@ -221,154 +229,123 @@ export async function generateSettlementPdf(eventId, token, mapper) {
   const iframe = document.createElement("iframe");
   iframe.style.cssText =
     `position:fixed;left:-9999px;top:-9999px;width:${PDF_USABLE_WIDTH_PX}px;border:none;visibility:hidden;`;
+
+  const iframeLoaded = new Promise((resolve, reject) => {
+    iframe.onload = resolve;
+    iframe.onerror = reject;
+  });
+
+  iframe.srcdoc = populatedHtml;
   document.body.appendChild(iframe);
 
-  // Write the full HTML document into the iframe
-  iframe.contentDocument.open();
-  iframe.contentDocument.write(populatedHtml);
-  iframe.contentDocument.close();
+  try {
+    await iframeLoaded;
 
-  // Wait for the iframe's inline scripts to execute (DOM rendering)
-  await new Promise((resolve) => {
-    if (iframe.contentDocument.readyState === "complete") {
-      resolve();
-    } else {
-      iframe.contentWindow.addEventListener("load", resolve);
+    // Allow a small extra delay for CSS/fonts to settle
+    await new Promise((r) => setTimeout(r, 300));
+
+    // ── Step 6: Capture with html2canvas ───────────────────────────────────
+    const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
+    if (!sourceEl) {
+      throw new Error(`Could not find .page-wrap element in rendered template. Diagnostics: HTML string length ${populatedHtml.length}, iframe body length ${iframe.contentDocument?.body?.innerHTML?.length || 0}`);
     }
-  });
 
-  // Allow a small extra delay for CSS/fonts to settle
-  await new Promise((r) => setTimeout(r, 300));
+    const canvas = await html2canvas(sourceEl, {
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+      // Ensure the full content is captured (not just the viewport)
+      width: sourceEl.scrollWidth,
+      windowWidth: sourceEl.scrollWidth,
+      windowHeight: sourceEl.scrollHeight,
+    });
 
-  // ── Prevent Footer from Splitting Across Pages (and split .sheet) ──────
-  const footerBlock = iframe.contentDocument.getElementById("footer-block");
-  if (footerBlock) {
-    const PDF_WIDTH_MM = 200; // 210 - 10 (margins)
-    const PDF_HEIGHT_MM = 287; // 297 - 10 (margins)
-    const PAGE_HEIGHT_PX = (PDF_HEIGHT_MM / PDF_WIDTH_MM) * PDF_USABLE_WIDTH_PX;
+    // ── Step 7: Convert canvas to multi-page PDF ───────────────────────────
+    const imgWidthPx = canvas.width;
+    const imgHeightPx = canvas.height;
 
-    const rect = footerBlock.getBoundingClientRect();
-    const pageOfTop = Math.floor(rect.top / PAGE_HEIGHT_PX);
-    const pageOfBottom = Math.floor(rect.bottom / PAGE_HEIGHT_PX);
+    // A4 dimensions in mm
+    const pdfWidthMm = 210;
+    const pdfMarginMm = 5;
+    const usableWidthMm = pdfWidthMm - 2 * pdfMarginMm;
 
-    if (pageOfTop !== pageOfBottom) {
-      // The footer crosses a page boundary!
-      const sheet = footerBlock.closest('.sheet');
-      
-      // Create a new sheet for the second page
-      const newSheet = iframe.contentDocument.createElement('div');
-      newSheet.className = 'sheet';
-      
-      // Move the footer block to the new sheet
-      newSheet.appendChild(footerBlock);
-      sheet.parentNode.insertBefore(newSheet, sheet.nextSibling);
+    // Calculate the rendered height in mm (maintain aspect ratio)
+    const imgRatio = imgHeightPx / imgWidthPx;
+    const imgHeightMm = usableWidthMm * imgRatio;
 
-      // Push the new sheet down so it starts exactly on the next page
-      const newRect = newSheet.getBoundingClientRect();
-      const pushAmount = ((pageOfTop + 1) * PAGE_HEIGHT_PX) - newRect.top;
-      newSheet.style.marginTop = pushAmount + 10 + "px";
-    }
-  }
+    // Page height available for content
+    const pdfPageHeightMm = 297;
+    const usablePageHeightMm = pdfPageHeightMm - 2 * pdfMarginMm;
 
-  // ── Step 6: Capture with html2canvas ───────────────────────────────────
-  const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
-  if (!sourceEl) {
-    document.body.removeChild(iframe);
-    throw new Error("Could not find .page-wrap element in rendered template");
-  }
+    // Create the PDF document
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
 
-  const canvas = await html2canvas(sourceEl, {
-    scale: 3,
-    useCORS: true,
-    logging: false,
-    backgroundColor: "#ffffff",
-    // Ensure the full content is captured (not just the viewport)
-    width: sourceEl.scrollWidth,
-    windowWidth: sourceEl.scrollWidth,
-    windowHeight: sourceEl.scrollHeight,
-  });
-
-  // ── Step 7: Convert canvas to multi-page PDF ───────────────────────────
-  const imgWidthPx = canvas.width;
-  const imgHeightPx = canvas.height;
-
-  // A4 dimensions in mm
-  const pdfWidthMm = 210;
-  const pdfMarginMm = 5;
-  const usableWidthMm = pdfWidthMm - 2 * pdfMarginMm;
-
-  // Calculate the rendered height in mm (maintain aspect ratio)
-  const imgRatio = imgHeightPx / imgWidthPx;
-  const imgHeightMm = usableWidthMm * imgRatio;
-
-  // Page height available for content
-  const pdfPageHeightMm = 297;
-  const usablePageHeightMm = pdfPageHeightMm - 2 * pdfMarginMm;
-
-  // Create the PDF document
-  const pdf = new jsPDF({
-    orientation: "portrait",
-    unit: "mm",
-    format: "a4",
-  });
-
-  if (imgHeightMm <= usablePageHeightMm) {
-    // ── Single page ────────────────────────────────────────────────────
-    pdf.addImage(
-      canvas.toDataURL("image/png"),
-      "PNG",
-      pdfMarginMm,
-      pdfMarginMm,
-      usableWidthMm,
-      imgHeightMm
-    );
-  } else {
-    // ── Multi-page: slice the canvas into page-sized chunks ─────────────
-    const totalPages = Math.ceil(imgHeightMm / usablePageHeightMm);
-    const sliceHeightPx = Math.floor(
-      (usablePageHeightMm / imgHeightMm) * imgHeightPx
-    );
-
-    for (let page = 0; page < totalPages; page++) {
-      if (page > 0) pdf.addPage();
-
-      const yOffsetPx = page * sliceHeightPx;
-      const sliceHeight = Math.min(sliceHeightPx, imgHeightPx - yOffsetPx);
-      const sliceHeightMm =
-        (sliceHeight / imgHeightPx) * imgHeightMm;
-
-      // Create a temporary canvas for this page slice
-      const sliceCanvas = document.createElement("canvas");
-      sliceCanvas.width = imgWidthPx;
-      sliceCanvas.height = sliceHeight;
-      const ctx = sliceCanvas.getContext("2d");
-      ctx.drawImage(
-        canvas,
-        0,
-        yOffsetPx,
-        imgWidthPx,
-        sliceHeight,
-        0,
-        0,
-        imgWidthPx,
-        sliceHeight
-      );
-
+    if (imgHeightMm <= usablePageHeightMm) {
+      // ── Single page ────────────────────────────────────────────────────
       pdf.addImage(
-        sliceCanvas.toDataURL("image/png"),
+        canvas.toDataURL("image/png"),
         "PNG",
         pdfMarginMm,
         pdfMarginMm,
         usableWidthMm,
-        sliceHeightMm
+        imgHeightMm
       );
+    } else {
+      // ── Multi-page: slice the canvas into page-sized chunks ─────────────
+      const totalPages = Math.ceil(imgHeightMm / usablePageHeightMm);
+      const sliceHeightPx = Math.floor(
+        (usablePageHeightMm / imgHeightMm) * imgHeightPx
+      );
+
+      for (let page = 0; page < totalPages; page++) {
+        if (page > 0) pdf.addPage();
+
+        const yOffsetPx = page * sliceHeightPx;
+        const sliceHeight = Math.min(sliceHeightPx, imgHeightPx - yOffsetPx);
+        const sliceHeightMm =
+          (sliceHeight / imgHeightPx) * imgHeightMm;
+
+        // Create a temporary canvas for this page slice
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = imgWidthPx;
+        sliceCanvas.height = sliceHeight;
+        const ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(
+          canvas,
+          0,
+          yOffsetPx,
+          imgWidthPx,
+          sliceHeight,
+          0,
+          0,
+          imgWidthPx,
+          sliceHeight 
+        );
+
+        pdf.addImage(
+          sliceCanvas.toDataURL("image/png"),
+          "PNG",
+          pdfMarginMm,
+          pdfMarginMm,
+          usableWidthMm,
+          sliceHeightMm
+        );
+      }
+    }
+
+    // ── Step 8: Download the PDF ───────────────────────────────────────────
+    const filename = `Event-Settlement-${sanitizeFilename(data.eventNameRaw)}.pdf`;
+    pdf.save(filename);
+
+  } finally {
+    // ── Cleanup ────────────────────────────────────────────────────────────
+    if (document.body.contains(iframe)) {
+      document.body.removeChild(iframe);
     }
   }
-
-  // ── Step 8: Download the PDF ───────────────────────────────────────────
-  const filename = `Event-Settlement-${sanitizeFilename(data.eventNameRaw)}.pdf`;
-  pdf.save(filename);
-
-  // ── Cleanup ────────────────────────────────────────────────────────────
-  document.body.removeChild(iframe);
 }

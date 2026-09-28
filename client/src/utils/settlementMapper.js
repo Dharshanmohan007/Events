@@ -209,8 +209,9 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
     advanceTaken,
     netClaim,
 
-    // ── Remarks ──────────────────────────────────────────────────────────
+    // ── Remarks & Outcomes ───────────────────────────────────────────────
     remarks: escapeHtml(expData.expenditure?.remarks || ""),
+    aboutProgram: escapeHtml(expData.aboutProgram || ""),
 
     // ── Metadata ─────────────────────────────────────────────────────────
     eventNameRaw: basicDetails.eventName || eventDetails.eventName || "Event",
