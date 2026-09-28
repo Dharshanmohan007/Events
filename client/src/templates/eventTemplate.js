@@ -9,7 +9,9 @@ import clgLogo from '../assets/clg-logo2.webp';
 function formatDate(dateStr) {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  if (isNaN(d.getTime())) return "-";
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${d.getDate()}/${d.getMonth() + 1}/${yy}`;
 }
 
 function formatDateTime(dateStr) {
@@ -56,7 +58,24 @@ function buildEventTemplate(event = {}) {
       if (displayName && displayName.includes('undefined')) {
         displayName = null;
       }
-      const safeName = displayName || o?.fullName || '-';
+      let combinedName = null;
+      if (o?.firstName && o?.lastName) {
+        combinedName = `${o.firstName} ${o.lastName}`;
+      } else if (o?.firstName) {
+        combinedName = o.firstName;
+      }
+      
+      let safeName = o?.fullName || combinedName || displayName || '-';
+      
+      // If the name is a single word and email is like firstname.i@sece.ac.in, append the initial
+      if (safeName && !safeName.includes(' ') && o?.email) {
+        const match = o.email.match(/^([a-z]+)\.([a-z]+)@/i);
+        if (match && match[1].toLowerCase() === safeName.toLowerCase()) {
+           safeName = `${safeName} ${match[2].toUpperCase()}`;
+        }
+      }
+      
+      // (Removed the forced Dr. prefix block as requested)
       
       return `
       <tr>
@@ -233,11 +252,10 @@ function buildEventTemplate(event = {}) {
       const roomSel = (a.roomSelections || []);
       const roomHtml = roomSel.length
         ? roomSel.map(rs => {
-            // rs.roomNumber already contains the full label (e.g. "Room 1"), don't prepend "Room"
-            const num = rs.roomNumber || rs.room || '-';
-            // rs.venue holds room type/category (e.g. "SUIT"), not the building venue
-            const type = rs.venue ? ` [${rs.venue}]` : '';
-            return `<strong>${num}</strong>${type} (Occupants: ${rs.occupantCount ?? '-'})`;
+            const num = rs.roomNumber || rs.room || '';
+            const type = rs.venue || '';
+            const combined = `${type} ${num}`.trim();
+            return `<strong>${combined || '-'}</strong>`;
           }).join('<br/>')
         : '-';
 

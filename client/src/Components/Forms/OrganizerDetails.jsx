@@ -30,7 +30,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
   const selectFaculty = (faculty) => {
     onChange({
       ...data,
-      name: faculty.name,
+      name: (faculty.firstName ? `${faculty.salutation ? faculty.salutation + ' ' : ''}${faculty.firstName} ${faculty.lastName || ''}`.trim() : faculty.name),
       department: faculty.department,
       mobile: faculty.phone != null ? String(faculty.phone) : "",   // ← force string
       designation: faculty.designation,
