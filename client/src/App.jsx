@@ -9,7 +9,7 @@ import AUDIODashboard from "./Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard";
 import AudioEventsDetailViewPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsDetailViewPage";
 import AudioReportsPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioReportsPage";
 import Login from "./Pages/Login.jsx";
-import Login1 from "./Pages/Login1.jsx";
+// import Login1 from "./Pages/Login1.jsx";
 import Events from "./Pages/Dashboards/ICTC-Dashboard/Events";
 import Reports from "./Pages/Dashboards/ICTC-Dashboard/Reports";
 import IctcEventDetailsPage from "./Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage";
@@ -138,14 +138,14 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/access-cronical"
         element={
           <PublicRoute>
             <Login1 />
           </PublicRoute>
         }
-      />
+      /> */}
       <Route path="/forget-password" element={<ForgetPassword />} />
 
       {/* ── Protected routes (just need to be logged in) ── */}
