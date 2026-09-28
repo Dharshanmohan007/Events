@@ -219,7 +219,7 @@ export function buildMediaFormData(mediaData) {
 
 // ── Multi-select dropdown ─────────────────────────────────────────────────────
 
-function MultiSelectDropdown({ label, options, selected, onChange, error, labelClassName = "bg-slate-50 dark:bg-[#1E1E35]" }) {
+function MultiSelectDropdown({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-[#1E1E35]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 

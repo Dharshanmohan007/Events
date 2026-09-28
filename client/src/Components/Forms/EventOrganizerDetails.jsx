@@ -408,7 +408,7 @@ export default function EventOrganizerDetails({
       {doc === "No" && (
         <div className="mb-6">
           <div className="relative w-full">
-            <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
+            <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#16162A] z-10 pointer-events-none">
               If no enter the Reason
             </span>
             <input

@@ -2117,7 +2117,7 @@ export default function Form() {
   if (!CurrentComponent) return null;
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-[#16162A] overflow-hidden">
+    <div className="flex h-screen bg-[#ffffff] dark:bg-[#16162A] overflow-hidden">
       <div className="hidden md:block w-[325px] flex-shrink-0">
         <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps} />
       </div>
@@ -2125,8 +2125,8 @@ export default function Form() {
         <div className="px-4 sm:px-6 pt-4 pb-3 border-b border-slate-200 dark:border-[#2A2A45]">
           <h1 className="text-slate-900 dark:text-white text-xl font-bold playfair">{steps[currentStep]?.label}</h1>
           <div className="flex flex-row  gap-5 ">
-            <div className="w-full h-1.5 bg-gray-300 dark:bg-gray-700 rounded mt-3">
-              <div className="h-full bg-purple-500 rounded transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="w-full h-1.5 bg-[#853ff9]/20 dark:bg-gray-700 rounded mt-3">
+              <div className="h-full bg-[#853ff9] rounded transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
             <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 text-right">{progress}%</p>
           </div>

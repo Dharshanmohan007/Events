@@ -2,6 +2,7 @@ import React from "react";
 import Logo from "../assets/logo.svg";
 import logolight from "../assets/clglight.svg";
 import SidebarDesign from "../assets/SidebarDesign.svg";
+import SidebarDesign1 from "../assets/SidebarDesign1.svg";
 
 export default function EventsSidebar({
   steps = [],
@@ -9,7 +10,7 @@ export default function EventsSidebar({
   completedSteps = [],
 }) {
   return (
-    <div className="h-full bg-white dark:bg-[#292946] border-r border-slate-200 dark:border-transparent p-6 flex flex-col relative overflow-hidden">
+    <div className="h-full bg-[#f4f4f4] dark:bg-[#292946] border-r border-slate-200 dark:border-transparent p-6 flex flex-col relative overflow-hidden">
       {/* Logo */}
       <div className="hidden dark:block">
         <img src={Logo} alt="Logo" className="mb-8 w-40 z-10" />
@@ -17,8 +18,6 @@ export default function EventsSidebar({
       <div className="dark:hidden">
         <img src={logolight} alt="Logo" className="mb-8 w-40 z-10" />
       </div>
-
-      
 
       {/* Steps */}
       <div className="flex flex-col gap-1 z-10">
@@ -68,11 +67,21 @@ export default function EventsSidebar({
         ))}
       </div>
 
-      <img
-        src={SidebarDesign}
-        alt="Sidebar Design"
-        className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
-      />
+      <div className="hidden dark:block">
+        <img
+          src={SidebarDesign}
+          alt="Sidebar Design"
+          className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
+        />
+      </div>
+
+      <div className="dark:hidden block">
+        <img
+          src={SidebarDesign1}
+          alt="Sidebar Design"
+          className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
+        />
+      </div>
     </div>
   );
 }

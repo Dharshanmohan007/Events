@@ -2,7 +2,7 @@ import React, { useMemo, useState, useRef, useEffect } from "react";
 
 export default function TimePickerInput({
   label,
-  labelClassName = "bg-slate-50 dark:bg-[#16162A]",
+  labelClassName = "bg-white dark:bg-[#16162A]",
   value,
   onChange,
   className = "",

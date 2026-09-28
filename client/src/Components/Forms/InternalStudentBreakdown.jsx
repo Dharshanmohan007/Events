@@ -311,7 +311,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
               <div className="col-span-1">
                 <CustomSelect
-                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Year *"
                   value={group.year}
                   onChange={(val) => {
@@ -326,7 +326,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Departments *"
                   multi
                   searchable
@@ -350,7 +350,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Sections *"
                   multi
                   searchable

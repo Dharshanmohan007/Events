@@ -226,7 +226,7 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
   return (
     <div className="w-full" ref={ref}>
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#16162A] z-10 pointer-events-none">
           {label}
         </span>
         <div
@@ -1975,7 +1975,7 @@ export default function VenueForm({
           {/* Venue Required dropdown — shows loading/error states inline */}
           {venuesLoading ? (
             <div className="relative w-full">
-              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#16162A] z-10 pointer-events-none">
                 Venue Required *
               </span>
               <div className="w-full bg-transparent border border-slate-300 dark:border-[#3A3A5A] rounded-lg p-4 flex items-center gap-2 text-gray-500 text-sm">
@@ -1993,7 +1993,7 @@ export default function VenueForm({
             </div>
           ) : venuesFetchError ? (
             <div className="relative w-full">
-              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-slate-50 dark:bg-[#16162A] z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#16162A] z-10 pointer-events-none">
                 Venue Required *
               </span>
               <div className="w-full bg-transparent border border-red-500/40 rounded-lg p-4 flex items-center gap-2 text-red-400 text-sm">
@@ -2023,7 +2023,7 @@ export default function VenueForm({
 
           <div>
             <div className="relative">
-              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white bg-slate-50 dark:bg-[#16162A] px-1 z-10 pointer-events-none">
+              <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white bg-white dark:bg-[#16162A] px-1 z-10 pointer-events-none">
                 Others
               </span>
               <input

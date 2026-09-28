@@ -6,7 +6,7 @@ export default function CustomInput({
   value,
   onChange,
   className = "",
-  labelClassName = "bg-slate-50 dark:bg-[#16162A]",
+  labelClassName = "bg-white dark:bg-[#16162A]",
   borderColor = "#3A3A5A",
   readOnly = false,
   placeholder = "",

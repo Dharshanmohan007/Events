@@ -14,7 +14,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
     <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
       <div>
         <CustomInput
-          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+          labelClassName="bg-white dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Name *`}
           value={data.name || ""}
           onChange={(e) => {
@@ -30,7 +30,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomInput
-          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+          labelClassName="bg-white dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Designation *`}
           value={data.designation || ""}
           onChange={(e) => onChange({ ...data, designation: e.target.value })}
@@ -41,7 +41,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomInput
-          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+          labelClassName="bg-white dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Organization *`}
           value={data.organization || ""}
           onChange={(e) => onChange({ ...data, organization: e.target.value })}
@@ -55,7 +55,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
     <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
       <div>
         <CustomInput
-          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+          labelClassName="bg-white dark:bg-[#2E3645]"
           label={`Day ${dayIndex} · Guest ${guestIndex} – Mobile Number *`}
           type="tel"
           value={data.mobile || ""}
@@ -71,7 +71,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
       </div>
       <div>
         <CustomSelect
-          labelClassName="bg-slate-50 dark:bg-[#2E3645]"
+          labelClassName="bg-white dark:bg-[#2E3645]"
           options={["Male", "Female", "Other"]}
           label={`Day ${dayIndex} · Guest ${guestIndex} – Gender *`}
           value={data.gender || ""}
