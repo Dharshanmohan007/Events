@@ -5,6 +5,7 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { API_BASE } from "./apiConfig.js";
+import settlementTemplateRaw from "../templates/settlement_form_template.html?raw";
 
 /**
  * Fetch both settlement endpoints in parallel.
@@ -38,19 +39,9 @@ export async function fetchSettlementData(eventId, token) {
  * Returns the full HTML string of src/templates/settlement_form_template.html.
  */
 async function fetchTemplateHtml() {
-  // Vite serves files under /src when using ?raw or via the dev server.
-  // During build, the file is available at its source path relative to the project root.
-  // We use a relative URL that works in both dev and production builds.
-  const templateUrl = new URL(
-    "../templates/settlement_form_template.html",
-    import.meta.url
-  ).href + "?t=" + new Date().getTime();
-
-  const res = await fetch(templateUrl);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch settlement template: ${res.status}`);
-  }
-  return res.text();
+  // Use Vite's ?raw import to bundle the template directly into the JS.
+  // This prevents 404 errors and proxy fallbacks in the production build.
+  return settlementTemplateRaw;
 }
 
 /**
