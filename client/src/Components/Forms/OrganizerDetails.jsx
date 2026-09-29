@@ -66,14 +66,14 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
           showDropdown &&
           facultyList.length > 0 &&
           (
-              <div className="absolute left-0 right-0 top-full mt-1 bg-[#252541] rounded-lg border border-[#3A3A5A] max-h-64 overflow-y-auto z-50">
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-[#252541] rounded-lg border border-slate-200 dark:border-[#3A3A5A] max-h-64 overflow-y-auto z-50 shadow-xl custom-scrollbar">
 
                   {
                       facultyList.map((faculty)=>(
                           <div
                               key={faculty.facultyId}
                               onClick={()=>selectFaculty(faculty)}
-                              className="flex items-center gap-3 p-3 hover:bg-[#34345f] cursor-pointer"
+                              className="flex items-center gap-3 p-3 hover:bg-purple-50 dark:hover:bg-[#34345f] cursor-pointer transition-colors"
                           >
 
                               <img
@@ -86,11 +86,11 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
 
                               <div>
 
-                                  <p className="text-white">
+                                  <p className="text-slate-900 dark:text-white font-medium">
                                       {faculty.name}
                                   </p>
 
-                                  <p className="text-gray-400 text-sm">
+                                  <p className="text-slate-500 dark:text-gray-400 text-sm">
                                       {faculty.empId}
                                   </p>
 

@@ -144,14 +144,15 @@ const FoodAndRefreshment = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6">
-      <h1 className="text-white text-3xl"></h1>
+    <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-900 dark:text-black p-6 transition-colors">
+      <h1 className="text-slate-900 dark:text-white text-3xl"></h1>
       {/* HEADER */}
       <div className="flex justify-end mb-6">
         <button
           className="
             bg-[#7c3aed]
             hover:bg-[#6d28d9]
+            text-white
             px-5
             py-2
             rounded-md
@@ -169,18 +170,21 @@ const FoodAndRefreshment = () => {
       {/* MAIN CARD */}
       <div
         className="
-          bg-[#1b1b35]
+          bg-white
+          dark:bg-[#1b1b35]
           border
-          border-[#2d2d4d]
+          border-slate-200
+          dark:border-[#2d2d4d]
           rounded-2xl
           p-5
+          shadow-sm
         "
       >
         {/* TOP INPUTS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
           {/* DATE */}
           <div>
-            <label className="block text-sm mb-2">
+            <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
               Select Date*
             </label>
 
@@ -196,14 +200,17 @@ const FoodAndRefreshment = () => {
                 }
                 className="
                   w-full
-                  bg-[#1f1f38]
+                  bg-slate-50
+                  dark:bg-[#1f1f38]
                   border
-                  border-[#3a3a5a]
+                  border-slate-300
+                  dark:border-[#3a3a5a]
                   rounded-md
                   px-4
                   py-3
                   pr-12
-                  text-white
+                  text-slate-900
+                  dark:text-white
                   outline-none
                   appearance-none
                 "
@@ -216,7 +223,8 @@ const FoodAndRefreshment = () => {
                   right-4
                   top-1/2
                   -translate-y-1/2
-                  text-[#b0b0c3]
+                  text-slate-500
+                  dark:text-[#b0b0c3]
                   pointer-events-none
                 "
               />
@@ -225,7 +233,7 @@ const FoodAndRefreshment = () => {
 
           {/* RESOURCE PERSON TYPE */}
           <div className="relative">
-            <label className="block text-sm mb-2">
+            <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
               Type of resource Person*
             </label>
 
@@ -237,9 +245,11 @@ const FoodAndRefreshment = () => {
               }
               className="
                 w-full
-                bg-[#1f1f38]
+                bg-slate-50
+                dark:bg-[#1f1f38]
                 border
-                border-[#3a3a5a]
+                border-slate-300
+                dark:border-[#3a3a5a]
                 rounded-md
                 px-4
                 py-3
@@ -252,8 +262,8 @@ const FoodAndRefreshment = () => {
               <span
                 className={
                   resourceType
-                    ? "text-white"
-                    : "text-[#8d8da8]"
+                    ? "text-slate-900 dark:text-white"
+                    : "text-slate-400 dark:text-[#8d8da8]"
                 }
               >
                 {resourceType ||
@@ -262,7 +272,7 @@ const FoodAndRefreshment = () => {
 
               <ChevronDown
                 size={18}
-                className={`transition-transform duration-300 ${
+                className={`transition-transform duration-300 text-slate-500 dark:text-[#b0b0c3] ${
                   showResourceDropdown
                     ? "rotate-180"
                     : "rotate-0"
@@ -271,7 +281,7 @@ const FoodAndRefreshment = () => {
             </div>
 
             {showResourceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] text-slate-900 dark:text-white rounded-md overflow-hidden z-50 shadow-lg">
                 {resourceOptions.map(
                   (item, index) => (
                     <div
@@ -285,7 +295,7 @@ const FoodAndRefreshment = () => {
                           false
                         );
                       }}
-                      className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                      className="px-4 py-3 hover:bg-violet-600 hover:text-white dark:hover:bg-[#3b82f6] cursor-pointer"
                     >
                       {item}
                     </div>
@@ -297,7 +307,7 @@ const FoodAndRefreshment = () => {
 
           {/* TOTAL RESOURCE PERSON */}
           <div>
-            <label className="block text-sm mb-2">
+            <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
               Total number of resource
               Person*
             </label>
@@ -313,13 +323,18 @@ const FoodAndRefreshment = () => {
               placeholder="5"
               className="
                 w-full
-                bg-[#1f1f38]
+                bg-slate-50
+                dark:bg-[#1f1f38]
                 border
-                border-[#3a3a5a]
+                border-slate-300
+                dark:border-[#3a3a5a]
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
                 outline-none
               "
             />
@@ -327,7 +342,7 @@ const FoodAndRefreshment = () => {
 
           {/* INTERNAL ACCOMPANYING COUNT */}
           <div>
-            <label className="block text-sm mb-2">
+            <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
               Total number of Internal
               Accompanying Person*
             </label>
@@ -345,13 +360,18 @@ const FoodAndRefreshment = () => {
               }
               className="
                 w-full
-                bg-[#1f1f38]
+                bg-slate-50
+                dark:bg-[#1f1f38]
                 border
-                border-[#3a3a5a]
+                border-slate-300
+                dark:border-[#3a3a5a]
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
                 outline-none
               "
             />
@@ -367,7 +387,7 @@ const FoodAndRefreshment = () => {
             >
               {/* STAFF NAME */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   Internal
                   Accompanying staff
                   name {index + 1} *
@@ -388,13 +408,18 @@ const FoodAndRefreshment = () => {
                   } name`}
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-slate-50
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />
@@ -402,7 +427,7 @@ const FoodAndRefreshment = () => {
 
               {/* STAFF MOBILE */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   Internal
                   Accompanying staff
                   Mobile number{" "}
@@ -424,13 +449,18 @@ const FoodAndRefreshment = () => {
                   }`}
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-slate-50
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />
@@ -441,7 +471,7 @@ const FoodAndRefreshment = () => {
 
         {/* FOOD TYPE */}
         <div className="relative mb-6">
-          <label className="block text-sm mb-2">
+          <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
             Food Type *
           </label>
 
@@ -453,9 +483,11 @@ const FoodAndRefreshment = () => {
             }
             className="
               w-full
-              bg-[#1f1f38]
+              bg-slate-50
+              dark:bg-[#1f1f38]
               border
-              border-[#3a3a5a]
+              border-slate-300
+              dark:border-[#3a3a5a]
               rounded-md
               px-4
               py-3
@@ -468,8 +500,8 @@ const FoodAndRefreshment = () => {
             <span
               className={
                 foodType
-                  ? "text-white"
-                  : "text-[#8d8da8]"
+                  ? "text-slate-900 dark:text-white"
+                  : "text-slate-400 dark:text-[#8d8da8]"
               }
             >
               {foodType ||
@@ -478,7 +510,7 @@ const FoodAndRefreshment = () => {
 
             <ChevronDown
               size={18}
-              className={`transition-transform duration-300 ${
+              className={`transition-transform duration-300 text-slate-500 dark:text-[#b0b0c3] ${
                 showFoodDropdown
                   ? "rotate-180"
                   : "rotate-0"
@@ -487,7 +519,7 @@ const FoodAndRefreshment = () => {
           </div>
 
           {showFoodDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+            <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] text-slate-900 dark:text-white rounded-md overflow-hidden z-50 shadow-lg">
               {foodOptions.map(
                 (item, index) => (
                   <div
@@ -499,7 +531,7 @@ const FoodAndRefreshment = () => {
                         false
                       );
                     }}
-                    className="px-4 py-3 hover:bg-[#3b82f6] cursor-pointer"
+                    className="px-4 py-3 hover:bg-violet-600 hover:text-white dark:hover:bg-[#3b82f6] cursor-pointer"
                   >
                     {item}
                   </div>
@@ -513,7 +545,11 @@ const FoodAndRefreshment = () => {
         {foodType && (
           <div
             className="
-              bg-[#252547]
+              bg-slate-50
+              dark:bg-[#252547]
+              border
+              border-slate-200
+              dark:border-transparent
               rounded-xl
               p-5
             "
@@ -525,7 +561,7 @@ const FoodAndRefreshment = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* VEG PARTICIPANTS */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   No. of veg In
                   Participants Menu*
                 </label>
@@ -541,13 +577,18 @@ const FoodAndRefreshment = () => {
                   placeholder="10"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-white
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />
@@ -555,7 +596,7 @@ const FoodAndRefreshment = () => {
 
               {/* VEG GUEST */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   No. of veg In
                   Guest/VIP Menu*
                 </label>
@@ -571,13 +612,18 @@ const FoodAndRefreshment = () => {
                   placeholder="10"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-white
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />
@@ -585,7 +631,7 @@ const FoodAndRefreshment = () => {
 
               {/* NON VEG PARTICIPANTS */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   No. of Non-veg In
                   Participants Menu*
                 </label>
@@ -603,13 +649,18 @@ const FoodAndRefreshment = () => {
                   placeholder="10"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-white
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />
@@ -617,7 +668,7 @@ const FoodAndRefreshment = () => {
 
               {/* NON VEG GUEST */}
               <div>
-                <label className="block text-sm mb-2">
+                <label className="block text-sm mb-2 text-slate-700 dark:text-slate-200">
                   No. of Non-veg In
                   Guest/VIP Menu*
                 </label>
@@ -633,13 +684,18 @@ const FoodAndRefreshment = () => {
                   placeholder="10"
                   className="
                     w-full
-                    bg-[#1f1f38]
+                    bg-white
+                    dark:bg-[#1f1f38]
                     border
-                    border-[#3a3a5a]
+                    border-slate-300
+                    dark:border-[#3a3a5a]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder:text-slate-400
+                    dark:placeholder:text-slate-500
                     outline-none
                   "
                 />

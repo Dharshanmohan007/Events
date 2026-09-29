@@ -526,12 +526,12 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col">
-            <div className="p-2 border-b border-[#3A3A5A]">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-xl">
+            <div className="p-2 border-b border-slate-200 dark:border-[#3A3A5A]">
               <div className="relative">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 dark:text-gray-400 pointer-events-none"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -547,12 +547,12 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
                   onChange={(e) => setSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   placeholder="Search requirements..."
-                  className="w-full bg-[#2A2A3F] border border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-50 dark:bg-[#2A2A3F] border border-slate-300 dark:border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:outline-none focus:border-purple-500"
                 />
                 {search && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setSearch(""); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -571,7 +571,7 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
             </div>
             <div className="max-h-52 overflow-y-auto custom-scrollbar">
               {filteredItems.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-gray-400">No requirements found</div>
+                <div className="px-4 py-3 text-sm text-slate-400 dark:text-gray-400">No requirements found</div>
               ) : (
                 filteredItems.map((item, i) => {
                   const isSelected = selected.includes(item);
@@ -580,15 +580,15 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
                       key={i}
                       onClick={() => toggle(item)}
                       className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${isSelected
-                          ? "bg-purple-600/30 text-white"
-                          : "text-white hover:bg-purple-500/20"
+                          ? "bg-purple-100 dark:bg-purple-600/30 text-purple-900 dark:text-white font-medium"
+                          : "text-slate-800 dark:text-white hover:bg-purple-50 dark:hover:bg-purple-500/20"
                         }`}
                     >
                       <span>{item}</span>
                       {isSelected && (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="w-4 h-4 text-purple-400"
+                          className="w-4 h-4 text-purple-600 dark:text-purple-400"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -1602,7 +1602,7 @@ export default function VenueForm({
                   setAdminDetails({ department: "", departmentHeadName: "", departmentHeadDesignation: "", departmentHeadMobile: "" });
                   setAdminErrors({});
                 }}
-                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
+                className="px-5 py-2.5 rounded-lg border border-slate-300 dark:border-[#4A4A6A] text-slate-700 dark:text-gray-300 text-sm font-medium hover:bg-slate-100 dark:hover:bg-[#2A2A3F] hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -1899,9 +1899,9 @@ export default function VenueForm({
                     });
                   }
                 }}
-                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                className="w-4 h-4 rounded border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
               />
-              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+              <span className="text-slate-800 dark:text-gray-300 text-sm font-medium">Same as Day 1</span>
             </label>
           )}
         </div>

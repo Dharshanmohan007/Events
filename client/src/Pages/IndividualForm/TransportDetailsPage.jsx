@@ -54,11 +54,11 @@ const createTransportForm = () => ({
 });
 
 const floatingLabelClass =
-  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+  "absolute left-3 -top-[9px] text-xs text-slate-700 dark:text-white px-1 z-10 pointer-events-none";
 
-const formFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+const formFloatingLabelClass = `${floatingLabelClass} bg-white dark:bg-[#1b1b35]`;
 
-const staffFloatingLabelClass = `${floatingLabelClass} bg-[#26264a]`;
+const staffFloatingLabelClass = `${floatingLabelClass} bg-slate-50 dark:bg-[#26264a]`;
 
 const sanitizeGuestName = (value) => value.replace(/[^A-Za-z\s]/g, "");
 const isValidIndianMobile = (value) => /^[6-9]\d{9}$/.test(String(value).trim());
@@ -1151,18 +1151,18 @@ const TransportDetailsPage = () => {
 
   if (isLoadingDetails) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-900 dark:text-white p-6 flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-        <p className="text-gray-300 text-sm">Loading Transport request details...</p>
+        <p className="text-slate-600 dark:text-gray-300 text-sm">Loading Transport request details...</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-900 dark:text-white p-6 flex flex-col items-center justify-center">
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
-          <p className="text-red-300 text-sm mb-4">{loadError}</p>
+          <p className="text-red-500 dark:text-red-300 text-sm mb-4">{loadError}</p>
           <button
             onClick={() => navigate(-1)}
             className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
@@ -1175,7 +1175,7 @@ const TransportDetailsPage = () => {
   }
 
   return (
-    <div className="transport-form min-h-screen bg-[#141428] text-white p-5">
+    <div className="transport-form min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-900 dark:text-white p-5">
       <style>{`
           .transport-form input:focus,
           .transport-form textarea:focus,
@@ -1189,12 +1189,12 @@ const TransportDetailsPage = () => {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
             {isEditMode ? "Edit Transport Details" : "Transport Details Form"}
           </h1>
           {isEditMode && (
-            <p className="text-gray-400 text-xs mt-1">
-              Editing Transport Request ID: <span className="text-purple-400 font-mono">{id}</span>
+            <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">
+              Editing Transport Request ID: <span className="text-purple-500 dark:text-purple-400 font-mono">{id}</span>
             </p>
           )}
         </div>
@@ -1202,7 +1202,7 @@ const TransportDetailsPage = () => {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+            className="text-xs text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white border border-slate-300 dark:border-gray-600 rounded-md px-3 py-1.5 transition"
           >
             Cancel
           </button>
@@ -1211,14 +1211,14 @@ const TransportDetailsPage = () => {
 
       {transportForms.some((form) => isFinanceYes(form.financeRequired)) && (
       <div className="mb-6">
-        <label className="block mb-2 text-sm text-white">
+        <label className="block mb-2 text-sm text-slate-800 dark:text-white font-medium">
           Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
         </label>
         {/* Show existing principal document in edit mode */}
         {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
-          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
-            <FileText size={16} className="text-purple-400 shrink-0" />
-            <span className="text-sm text-purple-300">Current file:</span>
+          <div className="mb-3 flex items-center gap-3 bg-white dark:bg-[#1b1b35] border border-slate-200 dark:border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-500 dark:text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-600 dark:text-purple-300">Current file:</span>
             <a
               href={
                 typeof existingPrincipalDocument === "string"
@@ -1233,7 +1233,7 @@ const TransportDetailsPage = () => {
               }
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-purple-400 underline truncate max-w-xs"
+              className="text-sm text-purple-600 dark:text-purple-400 underline truncate max-w-xs"
             >
               {typeof existingPrincipalDocument === "string"
                 ? existingPrincipalDocument.split("/").pop() || "View existing document"
@@ -1242,7 +1242,7 @@ const TransportDetailsPage = () => {
                    existingPrincipalDocument?.originalName ||
                    "View existing document")}
             </a>
-            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+            <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓ Will be retained</span>
           </div>
         )}
 
@@ -1252,7 +1252,7 @@ const TransportDetailsPage = () => {
           }
           onDrop={handlePrincipalDrop}
           onDragOver={handleUploadDragOver}
-          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+          className={`relative text-center p-4 text-sm w-full text-slate-700 dark:text-white rounded-lg flex flex-row items-center justify-center gap-3 bg-white dark:bg-transparent ${
             !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
           }`}
         >
@@ -1265,9 +1265,10 @@ const TransportDetailsPage = () => {
               rx="10"
               ry="10"
               fill="none"
-              stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+              stroke={principalFileError ? "#f87171" : "#94a3b8"}
               strokeWidth="2"
               strokeDasharray="10 4"
+              className="dark:stroke-[#3A3A5A]"
             />
           </svg>
 
@@ -1294,11 +1295,11 @@ const TransportDetailsPage = () => {
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
 
-                <span className="text-purple-300 text-sm font-medium">
+                <span className="text-purple-600 dark:text-purple-300 text-sm font-medium">
                   {principalApprovalDocument.name}
                 </span>
 
-                <span className="text-gray-400 text-xs">
+                <span className="text-slate-500 dark:text-gray-400 text-xs">
                   ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)}{" "}
                   MB)
                 </span>
@@ -1307,7 +1308,7 @@ const TransportDetailsPage = () => {
               <button
                 type="button"
                 onClick={handlePrincipalRemove}
-                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+                className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-500/40 dark:border-red-400/40 hover:border-red-500/60 dark:hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
               >
                 <svg
                   width="12"
@@ -1326,10 +1327,10 @@ const TransportDetailsPage = () => {
               </button>
             </div>
           ) : (
-            <p className="z-10">
+            <p className="z-10 text-slate-600 dark:text-white">
               Drag and drop files here{" "}
-              <span className="text-purple-400 underline">choose file</span>
-              <span className="block text-xs text-gray-500 mt-0.5">
+              <span className="text-purple-600 dark:text-purple-400 underline">choose file</span>
+              <span className="block text-xs text-slate-400 dark:text-gray-500 mt-0.5">
                 Only PDF files supported • Max file size: 1MB
               </span>
             </p>
@@ -1379,12 +1380,16 @@ const TransportDetailsPage = () => {
         <div
           key={formIndex}
           className="
-                bg-[#1b1b35]
+                bg-white
+                dark:bg-[#1b1b35]
                 border
-                border-[#2a2a40]
+                border-slate-200
+                dark:border-[#2a2a40]
                 rounded-2xl
                 p-6
                 mb-8
+                shadow-sm
+                dark:shadow-none
               "
         >
           <div className="flex items-center justify-between mb-6">
@@ -1447,7 +1452,7 @@ const TransportDetailsPage = () => {
                 updateFormField(formIndex, "pickupDateTime", date)
               }
               placeholder="Select pickup date & time"
-              labelBgClass="bg-[#1b1b35]"
+              labelBgClass="bg-white dark:bg-[#1b1b35]"
               maxDate={form.dropDateTime}
             />
 
@@ -1458,7 +1463,7 @@ const TransportDetailsPage = () => {
                 updateFormField(formIndex, "dropDateTime", date)
               }
               placeholder="Select drop date & time"
-              labelBgClass="bg-[#1b1b35]"
+              labelBgClass="bg-white dark:bg-[#1b1b35]"
               minDate={form.pickupDateTime}
             />
           </div>
@@ -1472,19 +1477,21 @@ const TransportDetailsPage = () => {
                     flex
                     items-center
                     gap-3
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                 
                     focus-within:border-[#3b82f6]
                     focus-within:ring-0
                     focus-within:ring-[#3b82f6]
                     transition-all
                   "
             >
-              <MapPin size={18} />
+              <MapPin size={18} className="text-slate-500 dark:text-gray-400" />
 
               <input
                 type="text"
@@ -1497,7 +1504,10 @@ const TransportDetailsPage = () => {
                       bg-transparent
                       outline-none
                       w-full
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                     "
               />
             </div>
@@ -1531,7 +1541,11 @@ const TransportDetailsPage = () => {
                   onDragOver={handleDragOver}
                   onDrop={() => handleDrop(formIndex, checkpointIndex)}
                   className="
-                          bg-[#282846]
+                          bg-slate-50
+                          dark:bg-[#282846]
+                          border
+                          border-slate-200
+                          dark:border-transparent
                           rounded-md
                           px-4
                           py-2
@@ -1540,10 +1554,10 @@ const TransportDetailsPage = () => {
                           justify-between
                         "
                 >
-                  <div className="flex  items-center gap-3 w-full">
-                    <GripVertical size={18} className="text-[#8d8da8]" />
+                  <div className="flex items-center gap-3 w-full">
+                    <GripVertical size={18} className="text-slate-400 dark:text-[#8d8da8]" />
 
-                    <MapPin size={18} />
+                    <MapPin size={18} className="text-slate-500 dark:text-gray-400" />
 
                     <input
                       type="text"
@@ -1557,12 +1571,17 @@ const TransportDetailsPage = () => {
                       }
                       placeholder={`Checkpoint ${checkpointIndex + 1}`}
                       className="
-                              bg-transparent
+                              bg-white
+                              dark:bg-transparent
                               outline-none
-                              text-white
+                              text-slate-900
+                              dark:text-white
+                              placeholder-slate-400
+                              dark:placeholder-gray-500
                               w-full
                               border
-                              border-[#2F2F47]
+                              border-slate-300
+                              dark:border-[#2F2F47]
                               rounded-md
                               px-2
                               py-2
@@ -1593,19 +1612,21 @@ const TransportDetailsPage = () => {
                     flex
                     items-center
                     gap-3
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                   
                     focus-within:border-[#3b82f6]
                     focus-within:ring-0
                     focus-within:ring-[#3b82f6]
                     transition-all
                   "
             >
-              <MapPin size={18} />
+              <MapPin size={18} className="text-slate-500 dark:text-gray-400" />
 
               <input
                 type="text"
@@ -1618,7 +1639,10 @@ const TransportDetailsPage = () => {
                       bg-transparent
                       outline-none
                       w-full
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                     "
               />
             </div>
@@ -1633,16 +1657,16 @@ const TransportDetailsPage = () => {
                   showFinanceDropdown: !form.showFinanceDropdown,
                 })
               }
-              className="transport-select-control w-full border border-[#2F2F47] rounded-md px-4 py-3 flex justify-between items-center cursor-pointer focus:border-[#3b82f6] transition-all"
+              className="transport-select-control w-full bg-white dark:bg-transparent border border-slate-300 dark:border-[#2F2F47] rounded-md px-4 py-3 flex justify-between items-center cursor-pointer focus:border-[#3b82f6] transition-all text-slate-900 dark:text-white"
             >
-              <span className={form.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              <span className={form.financeRequired === "Yes" ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
                 {form.financeRequired}
               </span>
-              <ChevronDown size={18} />
+              <ChevronDown size={18} className="text-slate-500 dark:text-gray-400" />
             </button>
 
             {form.showFinanceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#2F2F47] rounded-md overflow-hidden z-50 shadow-lg">
                 {["Yes", "No"].map((value) => (
                   <div
                     key={value}
@@ -1659,7 +1683,7 @@ const TransportDetailsPage = () => {
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       form.financeRequired === value
                         ? "bg-[#492A6F] text-white"
-                        : "text-white hover:bg-[#492A6F]"
+                        : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-[#492A6F]"
                     }`}
                   >
                     <span>{value}</span>
@@ -1690,12 +1714,18 @@ const TransportDetailsPage = () => {
               }}
               className="
                     w-full
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder-slate-400
+                    dark:placeholder-gray-500
                     outline-none
                     focus:border-[#3b82f6]
                     focus:ring-0
@@ -1703,7 +1733,7 @@ const TransportDetailsPage = () => {
                   "
             />
             {form.guestCountError && (
-              <p className="mt-1 text-sm text-red-400">{form.guestCountError}</p>
+              <p className="mt-1 text-sm text-red-500 dark:text-red-400">{form.guestCountError}</p>
             )}
           </div>
 
@@ -1713,7 +1743,7 @@ const TransportDetailsPage = () => {
               {(form.guests || []).map((guest, guestIndex) => (
                 <div
                   key={guestIndex}
-                  className="bg-[#26264a] border border-[#34345c] rounded-2xl p-5"
+                  className="bg-slate-50 dark:bg-[#26264a] border border-slate-200 dark:border-[#34345c] rounded-2xl p-5 shadow-sm dark:shadow-none"
                 >
                   <h3 className="text-[#b06cff] font-semibold mb-4">
                     Guest {guestIndex + 1}
@@ -1734,7 +1764,7 @@ const TransportDetailsPage = () => {
                           )
                         }
                         placeholder="Enter guest name"
-                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                        className="w-full bg-white dark:bg-[#26264a] border border-slate-300 dark:border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-[#3b82f6] focus:ring-0"
                       />
                     </div>
 
@@ -1749,7 +1779,7 @@ const TransportDetailsPage = () => {
                           updateGuestDetail(formIndex, guestIndex, "mobile", digits);
                         }}
                         placeholder="Enter mobile number"
-                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                        className="w-full bg-white dark:bg-[#26264a] border border-slate-300 dark:border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-[#3b82f6] focus:ring-0"
                       />
                     </div>
 
@@ -1767,7 +1797,7 @@ const TransportDetailsPage = () => {
                           )
                         }
                         placeholder="Enter organization name"
-                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                        className="w-full bg-white dark:bg-[#26264a] border border-slate-300 dark:border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-[#3b82f6] focus:ring-0"
                       />
                     </div>
 
@@ -1778,12 +1808,12 @@ const TransportDetailsPage = () => {
                         onChange={(e) =>
                           updateGuestDetail(formIndex, guestIndex, "gender", e.target.value)
                         }
-                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                        className="w-full bg-white dark:bg-[#26264a] border border-slate-300 dark:border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-slate-900 dark:text-white focus:border-[#3b82f6] focus:ring-0"
                       >
-                        <option value="">Select gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Other">Other</option>
+                        <option value="" className="bg-white dark:bg-[#26264a] text-slate-900 dark:text-white">Select gender</option>
+                        <option value="Male" className="bg-white dark:bg-[#26264a] text-slate-900 dark:text-white">Male</option>
+                        <option value="Female" className="bg-white dark:bg-[#26264a] text-slate-900 dark:text-white">Female</option>
+                        <option value="Other" className="bg-white dark:bg-[#26264a] text-slate-900 dark:text-white">Other</option>
                       </select>
                     </div>
 
@@ -1801,7 +1831,7 @@ const TransportDetailsPage = () => {
                           )
                         }
                         placeholder="Enter designation"
-                        className="w-full bg-[#26264a] border border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-white focus:border-[#3b82f6] focus:ring-0"
+                        className="w-full bg-white dark:bg-[#26264a] border border-slate-300 dark:border-[#2F2F47] rounded-xl px-4 py-4 outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-gray-500 focus:border-[#3b82f6] focus:ring-0"
                       />
                     </div>
                   </div>
@@ -1826,18 +1856,23 @@ const TransportDetailsPage = () => {
                 placeholder="Enter total passengers"
                 className="
                       w-full
-                     
+                      bg-white
+                      dark:bg-transparent
                       border
-                      border-[#2F2F47]
+                      border-slate-300
+                      dark:border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
                       outline-none
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                       focus-within:border-[#3b82f6]
-                    focus-within:ring-0
-                    focus-within:ring-[#3b82f6]
-                    transition-all
-                    
+                      focus-within:ring-0
+                      focus-within:ring-[#3b82f6]
+                      transition-all
                     "
               />
             </div>
@@ -1860,9 +1895,11 @@ const TransportDetailsPage = () => {
                 className="
                       transport-select-control
                       w-full
-                     
+                      bg-white
+                      dark:bg-transparent
                       border
-                      border-[#2F2F47]
+                      border-slate-300
+                      dark:border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
@@ -1876,6 +1913,8 @@ const TransportDetailsPage = () => {
                       focus-visible:ring-[#3b82f6]/20
                       hover:border-[#3b82f6]
                       transition-all
+                      text-slate-900
+                      dark:text-white
                     "
               >
                 <span className="truncate">
@@ -1884,11 +1923,11 @@ const TransportDetailsPage = () => {
                     : "Select Vehicle"}
                 </span>
 
-                <ChevronDown size={18} />
+                <ChevronDown size={18} className="text-slate-500 dark:text-gray-400" />
               </button>
 
               {form.showVehicleDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+                <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#2F2F47] rounded-md overflow-hidden z-50 shadow-lg">
                   {getVehicleOptions(form.totalPassengers).map((option, index) => {
                     const isSelected = (form.selectedVehicles || []).includes(
                       option,
@@ -1946,7 +1985,7 @@ const TransportDetailsPage = () => {
                                  ${
                                    isSelected
                                      ? "bg-[#492A6F] text-white"
-                                     : "hover:bg-[#492A6F]"
+                                     : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-[#492A6F]"
                                  }
                                `}
                       >
@@ -1960,7 +1999,7 @@ const TransportDetailsPage = () => {
               )}
 
               {form.pickupDateTime && form.dropDateTime && (
-                <div className="mt-2 text-xs text-gray-400">
+                <div className="mt-2 text-xs text-slate-500 dark:text-gray-400">
                   {form.inventoryLoading ? (
                     <span>Checking available vehicle counts...</span>
                   ) : Object.keys(form.availableVehicleCounts).length > 0 ? (
@@ -2035,12 +2074,18 @@ const TransportDetailsPage = () => {
                       }
                       className="
                             w-full
-                         
+                            bg-white
+                            dark:bg-transparent
                             border
-                            border-[#2F2F47]
+                            border-slate-300
+                            dark:border-[#2F2F47]
                             rounded-md
                             px-4
                             py-3
+                            text-slate-900
+                            dark:text-white
+                            placeholder-slate-400
+                            dark:placeholder-gray-500
                             outline-none
                             focus:border-[#3b82f6]
                             focus:ring-0
@@ -2100,13 +2145,18 @@ const TransportDetailsPage = () => {
               }}
               className="
                     w-full
-                   
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder-slate-400
+                    dark:placeholder-gray-500
                     outline-none
                     focus:border-[#3b82f6]
                     focus:ring-0
@@ -2123,11 +2173,15 @@ const TransportDetailsPage = () => {
                 <div
                   key={staffIndex}
                   className="
-                          bg-[#26264a]
+                          bg-slate-50
+                          dark:bg-[#26264a]
                           border
-                          border-[#34345c]
+                          border-slate-200
+                          dark:border-[#34345c]
                           rounded-2xl
                           p-5
+                          shadow-sm
+                          dark:shadow-none
                         "
                 >
                   <h3 className="text-[#b06cff] font-semibold mb-4">
@@ -2155,14 +2209,19 @@ const TransportDetailsPage = () => {
                         placeholder="Enter staff name"
                         className="
                                 w-full
-                                bg-[#26264a]
+                                bg-white
+                                dark:bg-[#26264a]
                                 border
-                                border-[#2F2F47]
+                                border-slate-300
+                                dark:border-[#2F2F47]
                                 rounded-xl
                                 px-4
                                 py-4
                                 outline-none
-                                text-white
+                                text-slate-900
+                                dark:text-white
+                                placeholder-slate-400
+                                dark:placeholder-gray-500
                                 focus:border-[#3b82f6]
                                 focus:ring-0
                                 focus:ring-[#3b82f6]
@@ -2191,14 +2250,19 @@ const TransportDetailsPage = () => {
                         placeholder="Enter mobile number"
                         className="
                                 w-full
-                                bg-[#26264a]
+                                bg-white
+                                dark:bg-[#26264a]
                                 border
-                                border-[#2F2F47]
+                                border-slate-300
+                                dark:border-[#2F2F47]
                                 rounded-xl
                                 px-4
                                 py-4
                                 outline-none
-                                text-white
+                                text-slate-900
+                                dark:text-white
+                                placeholder-slate-400
+                                dark:placeholder-gray-500
                                 focus:border-[#3b82f6]
                                 focus:ring-0
                                 focus:ring-[#3b82f6]
@@ -2225,8 +2289,11 @@ const TransportDetailsPage = () => {
               className="
                 transport-select-control
                 w-full
+                bg-white
+                dark:bg-transparent
                 border
-                border-[#2F2F47]
+                border-slate-300
+                dark:border-[#2F2F47]
                 rounded-md
                 px-4
                 py-3
@@ -2236,17 +2303,19 @@ const TransportDetailsPage = () => {
                 cursor-pointer
                 focus:border-[#3b82f6]
                 transition-all
+                text-slate-900
+                dark:text-white
               "
             >
-              <span className={form.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+              <span className={form.financeRequired === "Yes" ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
                 {form.financeRequired}
               </span>
 
-              <ChevronDown size={18} />
+              <ChevronDown size={18} className="text-slate-500 dark:text-gray-400" />
             </button>
 
             {form.showFinanceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#2F2F47] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#2F2F47] rounded-md overflow-hidden z-50 shadow-lg">
                 {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
                   <div
                     key={opt.label}
@@ -2263,7 +2332,7 @@ const TransportDetailsPage = () => {
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       form.financeRequired === opt.value
                         ? "bg-[#492A6F] text-white"
-                        : "text-white hover:bg-[#492A6F] hover:text-white"
+                        : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-[#492A6F]"
                     }`}
                   >
                     <span>{opt.label}</span>
@@ -2288,12 +2357,18 @@ const TransportDetailsPage = () => {
                   placeholder="0"
                   className="
                     w-full
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    text-slate-900
+                    dark:text-white
+                    placeholder-slate-400
+                    dark:placeholder-gray-500
                     outline-none
                   "
                 />
@@ -2311,24 +2386,29 @@ const TransportDetailsPage = () => {
                     placeholder="0"
                     className={`
                       w-full
+                      bg-white
+                      dark:bg-transparent
                       border
                       rounded-md
                       px-4
                       py-3
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                       outline-none
                       ${
                         Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
                         form.estimatedEventBudget !== ""
                           ? "border-red-500"
-                          : "border-[#2F2F47]"
+                          : "border-slate-300 dark:border-[#2F2F47]"
                       }
                     `}
                   />
 
                   {Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
                     form.estimatedEventBudget !== "" && (
-                      <p className="mt-1 text-sm text-red-400">
+                      <p className="mt-1 text-sm text-red-500 dark:text-red-400">
                         Advance amount cannot exceed the estimated event budget.
                       </p>
                     )}
@@ -2344,12 +2424,18 @@ const TransportDetailsPage = () => {
                     placeholder="Purpose"
                     className="
                       w-full
+                      bg-white
+                      dark:bg-transparent
                       border
-                      border-[#2F2F47]
+                      border-slate-300
+                      dark:border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                       outline-none
                     "
                   />
@@ -2368,12 +2454,18 @@ const TransportDetailsPage = () => {
                     placeholder="0"
                     className="
                       w-full
+                      bg-white
+                      dark:bg-transparent
                       border
-                      border-[#2F2F47]
+                      border-slate-300
+                      dark:border-[#2F2F47]
                       rounded-md
                       px-4
                       py-3
-                      text-white
+                      text-slate-900
+                      dark:text-white
+                      placeholder-slate-400
+                      dark:placeholder-gray-500
                       outline-none
                     "
                   />
@@ -2397,14 +2489,20 @@ const TransportDetailsPage = () => {
               placeholder="Enter any special requirements"
               className="
                     w-full
-                   
+                    bg-white
+                    dark:bg-transparent
                     border
-                    border-[#2F2F47]
+                    border-slate-300
+                    dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
                     outline-none
                     resize-none
+                    text-slate-900
+                    dark:text-white
+                    placeholder-slate-400
+                    dark:placeholder-gray-500
                     focus:border-[#3b82f6]
                     focus:ring-0
                     focus:ring-[#3b82f6]
@@ -2417,7 +2515,7 @@ const TransportDetailsPage = () => {
 
       {/* ERRORS */}
       {validationErrors.length > 0 && (
-        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+        <div className="mb-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-600 dark:text-red-200">
           <ul className="list-disc list-inside space-y-1">
             {validationErrors.map((error, idx) => (
               <li key={idx}>{error}</li>
@@ -2428,7 +2526,7 @@ const TransportDetailsPage = () => {
 
       {/* SUCCESS */}
       {submitMessage && (
-        <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+        <div className="mb-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-600 dark:text-green-200">
           {submitMessage}
         </div>
       )}

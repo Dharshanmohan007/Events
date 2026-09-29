@@ -17,11 +17,11 @@ import { API_BASE } from "../../utils/apiConfig";
 import { decodeToken, isTokenExpired } from "../../utils/tokenUtils";
 
 const floatingLabelClass =
-  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+  "absolute left-3 -top-[9px] text-xs text-slate-700 dark:text-white px-1 z-10 pointer-events-none";
 
-const pageFloatingLabelClass = `${floatingLabelClass} bg-[#141428]`;
+const pageFloatingLabelClass = `${floatingLabelClass} bg-slate-100 dark:bg-[#141428]`;
 
-const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+const cardFloatingLabelClass = `${floatingLabelClass} bg-white dark:bg-[#1b1b35]`;
 
 const getFinanceComparisonError = (estimatedAmount, advanceAmount) => {
   const estimated = Number(estimatedAmount);
@@ -1054,16 +1054,16 @@ const [trophyContent, setTrophyContent] = useState("");
 
   if (isLoadingDetails) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white flex items-center justify-center">
-        <p className="text-lg text-purple-300 animate-pulse">Loading media request...</p>
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-800 dark:text-white flex items-center justify-center">
+        <p className="text-lg text-purple-500 dark:text-purple-300 animate-pulse">Loading media request...</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white flex flex-col items-center justify-center gap-4">
-        <p className="text-red-400 text-lg">{loadError}</p>
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-800 dark:text-white flex flex-col items-center justify-center gap-4">
+        <p className="text-red-500 dark:text-red-400 text-lg">{loadError}</p>
         <button
           onClick={() => navigate(-1)}
           className="px-6 py-2 rounded-lg bg-[#8b3dff] hover:bg-[#9a52ff] text-white text-sm transition-all"
@@ -1075,7 +1075,7 @@ const [trophyContent, setTrophyContent] = useState("");
   }
 
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6 media-details-page">
+    <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-800 dark:text-white p-6 media-details-page">
       {/* TITLE + CANCEL */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">
@@ -1085,7 +1085,7 @@ const [trophyContent, setTrophyContent] = useState("");
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="px-5 py-2 rounded-lg border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-purple-500 text-sm transition-all"
+            className="px-5 py-2 rounded-lg border border-slate-300 dark:border-[#3a3a5a] text-slate-600 dark:text-gray-300 hover:text-slate-800 dark:hover:text-white hover:border-purple-500 text-sm transition-all"
           >
             Cancel
           </button>
@@ -1109,7 +1109,7 @@ const [trophyContent, setTrophyContent] = useState("");
         </label>
         {/* Show existing principal document in edit mode */}
         {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
-          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+          <div className="mb-3 flex items-center gap-3 bg-slate-200 dark:bg-[#1b1b35] border border-slate-300 dark:border-[#2F2F3E] rounded-lg px-4 py-2">
             <FileText size={16} className="text-purple-400 shrink-0" />
             <span className="text-sm text-purple-300">Current file:</span>
             <a
@@ -1254,7 +1254,7 @@ const [trophyContent, setTrophyContent] = useState("");
           className="
             w-full
             border
-            border-[#2F2F3E]
+            border-slate-300 dark:border-[#2F2F3E]
             rounded-md
             px-4
             py-3
@@ -1263,15 +1263,16 @@ const [trophyContent, setTrophyContent] = useState("");
             items-center
             cursor-pointer
             flex-wrap gap-2
+            bg-white dark:bg-transparent
           "
         >
           <div className="flex flex-wrap gap-2">
             {selectedTypes.length > 0 ? (
-              <span className="text-white text-sm">
+              <span className="text-slate-800 dark:text-white text-sm">
                 {selectedTypes.join(", ")}
               </span>
             ) : (
-              <span className="text-[#8d8da8]">
+              <span className="text-slate-400 dark:text-[#8d8da8]">
                 Select Types
               </span>
             )}
@@ -1281,7 +1282,7 @@ const [trophyContent, setTrophyContent] = useState("");
         </div>
 
         {showTypeDropdown && (
-          <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+          <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] rounded-md overflow-hidden z-50">
             {typeOptions.map(
               (item, index) => {
                 const isSelected = selectedTypes.includes(item);
@@ -1309,9 +1310,9 @@ const [trophyContent, setTrophyContent] = useState("");
 
           <div
             onClick={() => setShowFinanceDropdown(!showFinanceDropdown)}
-            className="w-full bg-transparent border border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-white"
+            className="w-full bg-white dark:bg-transparent border border-slate-300 dark:border-[#2F2F3E] rounded-lg px-4 py-3.25 flex justify-between items-center cursor-pointer text-slate-800 dark:text-white"
           >
-            <span className={financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+            <span className={financeRequired === "Yes" ? "text-slate-800 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
               {financeRequired === "Yes" ? "Yes" : "No"}
             </span>
 
@@ -1319,7 +1320,7 @@ const [trophyContent, setTrophyContent] = useState("");
           </div>
 
           {showFinanceDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+            <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] rounded-md overflow-hidden z-50">
               {[{ label: "Yes", value: "Yes" }, { label: "No", value: "No" }].map((opt) => (
                 <div
                   key={opt.label}
@@ -1353,7 +1354,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 value={financeEstimatedAmount}
                 onChange={(e) => setFinanceEstimatedAmount(e.target.value)}
                 placeholder="0"
-                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                className="w-full border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 bg-transparent text-slate-800 dark:text-white outline-none"
               />
               {financeComparisonError && (
                 <p className="mt-1 text-sm text-red-400">{financeComparisonError}</p>
@@ -1368,7 +1369,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 value={financeAdvanceAmount}
                 onChange={(e) => setFinanceAdvanceAmount(e.target.value)}
                 placeholder="0"
-                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                className="w-full border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 bg-transparent text-slate-800 dark:text-white outline-none"
               />
             </div>
 
@@ -1379,7 +1380,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 value={financeAdvancePurpose}
                 onChange={(e) => setFinanceAdvancePurpose(e.target.value)}
                 placeholder="Purpose"
-                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                className="w-full border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 bg-transparent text-slate-800 dark:text-white outline-none"
               />
             </div>
 
@@ -1391,7 +1392,7 @@ const [trophyContent, setTrophyContent] = useState("");
                 value={financeAdvanceToBeReceviedWithin}
                 onChange={(e) => setFinanceAdvanceToBeReceviedWithin(e.target.value)}
                 placeholder="0"
-                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                className="w-full border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 bg-transparent text-slate-800 dark:text-white outline-none"
               />
             </div>
           </div>
@@ -1399,7 +1400,7 @@ const [trophyContent, setTrophyContent] = useState("");
       </div>
 
       {selectedTypes.includes("Poster") && (
-        <div className="bg-[#1b1b35] border border-[#2F2F3E] rounded-2xl p-6 mt-8">
+        <div className="bg-white dark:bg-[#1b1b35] border border-slate-200 dark:border-[#2F2F3E] rounded-2xl p-6 mt-8">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">Poster</h2>
 
           <div className="relative mb-6">
@@ -1410,7 +1411,7 @@ const [trophyContent, setTrophyContent] = useState("");
               className="
                 w-full
                 border
-                border-[#2F2F3E]
+                border-slate-300 dark:border-[#2F2F3E]
                 rounded-md
                 px-4
                 py-3
@@ -1418,9 +1419,10 @@ const [trophyContent, setTrophyContent] = useState("");
                 justify-between
                 items-center
                 cursor-pointer
+                bg-transparent
               "
             >
-              <span className={selectedDisplays.length ? "text-white" : "text-[#8d8da8]"}>
+              <span className={selectedDisplays.length ? "text-slate-800 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
                 {selectedDisplays.length ? selectedDisplays.join(", ") : "Select design type"}
               </span>
 
@@ -1428,7 +1430,7 @@ const [trophyContent, setTrophyContent] = useState("");
             </div>
 
             {showDisplayDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50 max-h-[280px] overflow-y-auto">
+              <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] rounded-md overflow-hidden z-50 max-h-[280px] overflow-y-auto">
                 {displayOptions.map((item, index) => {
                   const isSelected = selectedDisplays.includes(item);
                   return (
@@ -1468,7 +1470,7 @@ const [trophyContent, setTrophyContent] = useState("");
                         ? "Enter size for Box-Arch"
                         : "Enter size"
                 }
-                className="w-full border border-[#2F2F3E] rounded-md px-4 py-3 text-white outline-none"
+                className="w-full border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 bg-transparent text-slate-800 dark:text-white outline-none"
               />
             </div>
           )}
@@ -1495,7 +1497,7 @@ const [trophyContent, setTrophyContent] = useState("");
       {/* ===================================================== */}
 
       {selectedTypes.includes("Video") && (
-        <div className="bg-[#1b1b35] border border-[#2d2d4d] rounded-2xl p-6 mt-8">
+        <div className="bg-white dark:bg-[#1b1b35] border border-slate-200 dark:border-[#2d2d4d] rounded-2xl p-6 mt-8">
           <h2 className="text-[#8b5cf6] text-2xl font-bold mb-6">
             Video
           </h2>
@@ -1613,7 +1615,7 @@ const [trophyContent, setTrophyContent] = useState("");
             </label>
 
             {videoFile && (
-              <div className="mt-4 bg-[#141428] border border-[#2F2F3E] rounded-md px-4 py-3 flex items-center justify-between">
+              <div className="mt-4 bg-slate-200 dark:bg-[#141428] border border-slate-300 dark:border-[#2F2F3E] rounded-md px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <FileText size={18} />
 
@@ -1654,7 +1656,7 @@ const [trophyContent, setTrophyContent] = useState("");
             </div>
 
             <div className="relative w-full pt-px">
-              <label className="absolute left-3 -top-2.25 text-xs text-white px-1 z-10 bg-[#1f1f3a]">
+              <label className="absolute left-3 -top-2.25 text-xs text-slate-700 dark:text-white px-1 z-10 bg-white dark:bg-[#1f1f3a]">
                 Priority *
               </label>
 
@@ -1666,9 +1668,9 @@ const [trophyContent, setTrophyContent] = useState("");
                 }
                 className="
                   w-full
-                  bg-transparent
+                  bg-white dark:bg-transparent
                   border
-                  border-[#2F2F3E]
+                  border-slate-300 dark:border-[#2F2F3E]
                   rounded-lg
                   px-4
                   py-3.25
@@ -1676,7 +1678,7 @@ const [trophyContent, setTrophyContent] = useState("");
                   justify-between
                   items-center
                   cursor-pointer
-                  text-white
+                  text-slate-800 dark:text-white
                 "
               >
                 <span>{videoPriority}</span>
@@ -1688,7 +1690,7 @@ const [trophyContent, setTrophyContent] = useState("");
               </div>
 
               {showVideoPriorityDropdown && (
-                <div className="absolute w-full mt-2 bg-[#26264a] border border-[#3a3a5a] rounded-md overflow-hidden z-50">
+                <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#3a3a5a] rounded-md overflow-hidden z-50">
                   {priorityOptions.map(
                     (item, index) => (
                       <div
@@ -1726,10 +1728,11 @@ const [trophyContent, setTrophyContent] = useState("");
               className="
                 w-full
                 border
-                border-[#2F2F3E]
+                border-slate-300 dark:border-[#2F2F3E]
                 rounded-md
                 p-4
-                text-white
+                bg-transparent
+                text-slate-700 dark:text-white
                 outline-none
               "
             />

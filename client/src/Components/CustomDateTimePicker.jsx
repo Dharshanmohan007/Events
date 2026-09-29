@@ -52,24 +52,18 @@ function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
     <div className="relative flex flex-col items-center" style={{ width: 56 }}>
       {/* Fade top */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg"
-        style={{
-          height: ITEM_H * 2,
-          background: "linear-gradient(to bottom, #1a1a35 0%, transparent 100%)",
-        }}
+        className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg bg-gradient-to-b from-white dark:from-[#1a1a35] to-transparent"
+        style={{ height: ITEM_H * 2 }}
       />
       {/* Highlight band */}
       <div
-        className="absolute left-0 right-0 z-10 pointer-events-none rounded-md border border-purple-500/40 bg-purple-600/10"
+        className="absolute left-0 right-0 z-10 pointer-events-none rounded-md border border-purple-500/40 bg-purple-500/10"
         style={{ top: ITEM_H * 2, height: ITEM_H }}
       />
       {/* Fade bottom */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg"
-        style={{
-          height: ITEM_H * 2,
-          background: "linear-gradient(to top, #1a1a35 0%, transparent 100%)",
-        }}
+        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg bg-gradient-to-t from-white dark:from-[#1a1a35] to-transparent"
+        style={{ height: ITEM_H * 2 }}
       />
 
       {/* Scroll container — hidden scrollbar */}
@@ -110,10 +104,10 @@ function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
               style={{ height: ITEM_H }}
               className={`flex items-center justify-center text-base font-mono select-none transition-colors ${
                 isItemDisabled(i)
-                  ? "text-gray-700 cursor-not-allowed"
+                  ? "text-slate-300 dark:text-gray-700 cursor-not-allowed"
                   : i === value
-                  ? "text-white font-semibold cursor-pointer"
-                  : "text-gray-500 hover:text-gray-300 cursor-pointer"
+                  ? "text-purple-600 dark:text-white font-semibold cursor-pointer"
+                  : "text-slate-500 dark:text-gray-500 hover:text-slate-800 dark:hover:text-gray-300 cursor-pointer"
               }`}
             >
               {item}
@@ -376,8 +370,8 @@ export default function CustomDateTimePicker({
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Back</button>
-                <span className="text-sm font-medium text-white">{displayYear}</span>
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">← Back</button>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">{displayYear}</span>
                 <div />
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -385,7 +379,7 @@ export default function CustomDateTimePicker({
                   <button key={m} type="button"
                     onClick={() => { setDisplayMonth(i); setView("calendar"); }}
                     className={`py-2 rounded-lg text-xs transition-colors ${
-                      displayMonth === i ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-[#2a2a4a]"
+                      displayMonth === i ? "bg-purple-600 text-white font-medium" : "text-slate-800 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}>
                     {m.slice(0, 3)}
                   </button>
@@ -399,13 +393,13 @@ export default function CustomDateTimePicker({
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setYearPage((p) => p - 1)}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
                   <ChevronLeft size={16} />
                 </button>
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Back</button>
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">← Back</button>
                 <button type="button" onClick={() => setYearPage((p) => p + 1)}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-slate-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -414,7 +408,7 @@ export default function CustomDateTimePicker({
                   <button key={y} type="button"
                     onClick={() => { setDisplayYear(y); setView("calendar"); }}
                     className={`py-2 rounded-lg text-xs transition-colors ${
-                      displayYear === y ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-[#2a2a4a]"
+                      displayYear === y ? "bg-purple-600 text-white font-medium" : "text-slate-800 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}>
                     {y}
                   </button>
@@ -428,8 +422,8 @@ export default function CustomDateTimePicker({
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Date</button>
-                <span className="text-sm font-medium text-white flex items-center gap-1">
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">← Date</button>
+                <span className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1">
                   <Clock size={14} /> Select Time
                 </span>
                 <div />
@@ -448,7 +442,7 @@ export default function CustomDateTimePicker({
                   isItemDisabled={(i) => isTimeBeforeMin(i % 12, 59, ampm)}
                 />
 
-                <span className="text-white text-2xl font-mono mb-1 select-none">:</span>
+                <span className="text-slate-900 dark:text-white text-2xl font-mono mb-1 select-none">:</span>
 
                 {/* Minute drum */}
                 <ScrollDrum
@@ -475,7 +469,7 @@ export default function CustomDateTimePicker({
                       className={`w-12 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         ampm === ap
                           ? "bg-purple-600 text-white"
-                          : "bg-[#2a2a4a] text-gray-400 hover:text-white"
+                          : "bg-slate-100 dark:bg-[#2a2a4a] text-slate-700 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       {ap}
@@ -484,12 +478,12 @@ export default function CustomDateTimePicker({
                 </div>
               </div>
 
-              <p className="text-center text-xs text-gray-500 mt-2 mb-3">
+              <p className="text-center text-xs text-slate-500 dark:text-gray-500 mt-2 mb-3">
                 Scroll to pick hour &amp; minute
               </p>
 
               <button type="button" onClick={handleTimeConfirm}
-                className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-lg text-sm font-medium transition-colors">
+                className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors cursor-pointer">
                 Confirm
               </button>
             </div>

@@ -143,7 +143,7 @@ function buildPurchasePayload(dayData) {
 
 // ── MultiSelect ───────────────────────────────────────────────────────────────
 
-function MultiSelect({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-slate-50 dark:bg-[#16162A]" }) {
+function MultiSelect({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-[#16162A]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -321,7 +321,7 @@ function MinZeroInput({ label, value, onChange, error, labelClassName = "bg-whit
           value={value || ""}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={`w-full bg-transparent border rounded-lg p-4 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors duration-200 ${
+          className={`w-full bg-transparent border rounded-lg p-4 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-purple-500 transition-colors duration-200 ${
             error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         />
@@ -352,7 +352,7 @@ function CashPrizeInput({ value, onChange, error, labelClassName = "bg-white dar
           }`}
         >
           {showPrefix && (
-            <span className="pl-4 text-white text-sm select-none">₹</span>
+            <span className="pl-4 text-slate-700 dark:text-white text-sm select-none">₹</span>
           )}
           <input
             type="number"
@@ -367,7 +367,7 @@ function CashPrizeInput({ value, onChange, error, labelClassName = "bg-white dar
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder={showPrefix ? "" : "Enter amount"}
-            className="flex-1 bg-transparent p-4 text-white text-sm focus:outline-none placeholder-gray-600"
+            className="flex-1 bg-transparent p-4 text-slate-900 dark:text-white text-sm focus:outline-none placeholder-slate-400 dark:placeholder-gray-600"
             style={{ paddingLeft: showPrefix ? "4px" : undefined }}
           />
         </div>
@@ -591,7 +591,7 @@ function StudentCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -599,7 +599,7 @@ function StudentCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600"
         />
       </div>
     </div>
@@ -759,7 +759,7 @@ function GuestCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -767,7 +767,7 @@ function GuestCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-slate-900 dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-slate-400 dark:placeholder-gray-600"
         />
       </div>
     </div>
@@ -981,7 +981,7 @@ export default function Purchase({
         completedDays={completedDays}
       />
 
-      <h2 className="text-white text-lg font-bold">
+      <h2 className="text-slate-900 dark:text-white text-lg font-bold">
         Purchase Details
       </h2>
 
@@ -1031,7 +1031,7 @@ export default function Purchase({
           {showIdCard && (
             <MinZeroInput
               label="Id Card Hard Copy Quantity *"
-              labelClassName="bg-white dark:bg-slate-50 dark:bg-[#16162A]"
+              labelClassName="bg-white dark:bg-[#16162A]"
               value={current.idCardQty || ""}
               onChange={(val) => updateCurrent({ idCardQty: val })}
               error={currentErrors.idCardQty}
@@ -1040,7 +1040,7 @@ export default function Purchase({
           {showCertificate && (
             <MinZeroInput
               label="Certificate Hard Copy Quantity *"
-              labelClassName="bg-white dark:bg-slate-50 dark:bg-[#16162A]"
+              labelClassName="bg-white dark:bg-[#16162A]"
               value={current.certificateQty || ""}
               onChange={(val) => updateCurrent({ certificateQty: val })}
               error={currentErrors.certificateQty}

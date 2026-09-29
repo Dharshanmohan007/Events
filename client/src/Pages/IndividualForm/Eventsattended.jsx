@@ -261,13 +261,13 @@ const Eventsattended = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#081b2d] px-6 py-8 text-white">
-      <div className="w-full rounded-[18px] border border-[#1f2d42] bg-[#071b2f] px-6 py-5 shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
+    <div className="min-h-screen w-full bg-slate-100 dark:bg-[#081b2d] px-6 py-8 text-slate-900 dark:text-white transition-colors">
+      <div className="w-full rounded-[18px] border border-slate-200 dark:border-[#1f2d42] bg-white dark:bg-[#071b2f] px-6 py-5 shadow-sm dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02)]">
         <div className="mb-8">
-          <h1 className="text-[30px] font-semibold tracking-tight text-white">
+          <h1 className="text-[30px] font-semibold tracking-tight text-slate-900 dark:text-white">
             Request for attending Program / Event / Visit
           </h1>
-          <p className="mt-2 text-sm text-slate-300/80">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/80">
             Lorem ipsum is simply dummy text of the printing and typesetting industry.
             Lorem ipsum has been the industry&apos;s standard dummy text ever since the 1500s
           </p>
@@ -276,14 +276,14 @@ const Eventsattended = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-5 md:grid-cols-2">
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
                 Type of the program/event/visit
               </label>
               <div className="relative">
                 <select
                   value={form.type}
                   onChange={(e) => updateField("type", e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                  className="w-full appearance-none rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition focus:border-violet-500"
                 >
                   <option value="">Select</option>
                   <option value="seminar">Seminar</option>
@@ -292,7 +292,7 @@ const Eventsattended = () => {
                   <option value="visit">Visit</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-500 dark:text-slate-300">
                     <path
                       fillRule="evenodd"
                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -304,66 +304,66 @@ const Eventsattended = () => {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
                 Name of the program/event/visit
               </label>
               <input
                 type="text"
                 value={form.name}
                 onChange={(e) => updateField("name", e.target.value)}
-                className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                className="w-full rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-violet-500"
                 placeholder=""
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
               Number of participants
             </label>
             <input
               type="text"
               value={form.participants}
               onChange={(e) => updateField("participants", e.target.value)}
-              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-violet-500"
             />
           </div>
 
           {participantCount > 0 && (
-            <div className="rounded-xl border border-[#2d3a4d] bg-[#0c1f3b] p-4">
+            <div className="rounded-xl border border-slate-200 dark:border-[#2d3a4d] bg-slate-50/50 dark:bg-[#0c1f3b] p-4">
               <div className="space-y-3">
                 {participantRows.map((row, index) => (
                   <div key={row.id} className="grid gap-4 md:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-[#2b3c5a] bg-white dark:bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-500 dark:text-slate-300">{index + 1}.</span>
                       <input
                         type="text"
                         value={participantDetails[index]?.name || ""}
                         onChange={(e) => updateParticipantField(index, "name", e.target.value)}
                         placeholder={row.label}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                        className="w-full bg-transparent text-sm text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
                       />
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-[#2b3c5a] bg-white dark:bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-500 dark:text-slate-300">{index + 1}.</span>
                       <input
                         type="text"
                         value={participantDetails[index]?.department || ""}
                         onChange={(e) => updateParticipantField(index, "department", e.target.value)}
                         placeholder={row.department}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                        className="w-full bg-transparent text-sm text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
                       />
                     </div>
 
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
+                    <div className="flex items-center gap-3 rounded-lg border border-slate-200 dark:border-[#2b3c5a] bg-white dark:bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-500 dark:text-slate-300">{index + 1}.</span>
                       <input
                         type="text"
                         value={participantDetails[index]?.phone || ""}
                         onChange={(e) => updateParticipantField(index, "phone", e.target.value)}
                         placeholder={row.phone}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                        className="w-full bg-transparent text-sm text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
                       />
                     </div>
                   </div>
@@ -373,104 +373,104 @@ const Eventsattended = () => {
           )}
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
               Expected outcome of the program/event/visit
             </label>
             <input
               type="text"
               value={form.expectedOutcome}
               onChange={(e) => updateField("expectedOutcome", e.target.value)}
-              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+              className="w-full rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-violet-500"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
               Date of the program/event/visit
             </label>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   From
                 </label>
-                <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
+                <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-slate-50 dark:bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
                   <input
                     type="date"
                     value={form.programFrom}
                     onChange={(e) => updateField("programFrom", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                    className="w-full bg-transparent text-base text-slate-900 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="dd-mm-yyyy"
                   />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                 </div>
               </div>
 
               <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   To
                 </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
+                <div className="flex w-full items-center rounded-[14px] border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-3 py-3">
                   <input
                     type="date"
                     value={form.programTo}
                     onChange={(e) => updateField("programTo", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                    className="w-full bg-transparent text-base text-slate-900 dark:text-slate-200 outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="dd-mm-yyyy"
                   />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                 </div>
               </div>
             </div>
 
             {form.programFrom && form.programTo && (
-              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
-                <span className="text-slate-300">Total days: </span>
-                <span className="font-semibold text-white">{getDayDiff(form.programFrom, form.programTo)} day(s)</span>
+              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-violet-50/50 dark:bg-[#0d2240] px-4 py-3 text-sm text-slate-800 dark:text-slate-200">
+                <span className="text-slate-600 dark:text-slate-300">Total days: </span>
+                <span className="font-semibold text-slate-900 dark:text-white">{getDayDiff(form.programFrom, form.programTo)} day(s)</span>
               </div>
             )}
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
+            <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
               Request for On-Duty / Off Campus time
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   From
                 </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
+                <div className="flex w-full items-center rounded-[14px] border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-3 py-3">
                   <input
                     type="date"
                     value={form.onDutyFrom}
                     onChange={(e) => updateField("onDutyFrom", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none"
+                    className="w-full bg-transparent text-base text-slate-900 dark:text-slate-200 outline-none"
                   />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                 </div>
               </div>
 
               <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
                   To
                 </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
+                <div className="flex w-full items-center rounded-[14px] border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-3 py-3">
                   <input
                     type="date"
                     value={form.onDutyTo}
                     onChange={(e) => updateField("onDutyTo", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none"
+                    className="w-full bg-transparent text-base text-slate-900 dark:text-slate-200 outline-none"
                   />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-500 dark:text-slate-300" />
                 </div>
               </div>
             </div>
 
             {form.onDutyFrom && form.onDutyTo && (
-              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
-                <span className="text-slate-300">Total days: </span>
-                <span className="font-semibold text-white">{totalOnDutyDays} day(s)</span>
+              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-violet-50/50 dark:bg-[#0d2240] px-4 py-3 text-sm text-slate-800 dark:text-slate-200">
+                <span className="text-slate-600 dark:text-slate-300">Total days: </span>
+                <span className="font-semibold text-slate-900 dark:text-white">{totalOnDutyDays} day(s)</span>
               </div>
             )}
           </div>
@@ -483,18 +483,18 @@ const Eventsattended = () => {
                 { label: "Accomodation Required", field: "accommodationRequired" },
               ].map(({ label, field }) => (
                 <div key={field}>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">{label}</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">{label}</label>
                   <div className="relative">
                     <select
                       value={form[field]}
                       onChange={(e) => updateField(field, e.target.value)}
-                      className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                      className="w-full appearance-none rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition focus:border-violet-500"
                     >
                       <option value="No">No</option>
                       <option value="Yes">Yes</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-500 dark:text-slate-300">
                         <path
                           fillRule="evenodd"
                           d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -508,81 +508,22 @@ const Eventsattended = () => {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
+              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-200">
                 Others, If any requirements
               </label>
               <textarea
                 value={form.otherRequirements}
                 onChange={(e) => updateField("otherRequirements", e.target.value)}
                 rows={3}
-                className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                className="w-full rounded-xl border border-slate-300 dark:border-[#2d3a4d] bg-slate-50 dark:bg-[#0d2240] px-4 py-3 text-base text-slate-900 dark:text-slate-200 outline-none transition placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:border-violet-500"
                 placeholder="Mention any other requirements"
               />
             </div>
           </div>
 
-          {/* <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              If you want any external transport request
-            </label>
-            <div className="relative">
-              <select
-                value={form.transport}
-                onChange={(e) => updateField("transport", e.target.value)}
-                className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-              >
-                <option value="">yes / no</option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-            </div>
-
-            {form.transport === "yes" && (
-              <div className="mt-6 overflow-hidden rounded-xl border border-[#2d3a4d] bg-[#071b2f]">
-                <IndividualExternalTransportDetails onDataChange={setExternalTransportDetails} />
-              </div>
-            )}
-          </div> */}
-
-          {/* <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              In case of expense
-            </label>
-            <div className="relative">
-              <select
-                value={form.expense}
-                onChange={(e) => updateField("expense", e.target.value)}
-                className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-              >
-                <option value="">Select</option>
-                <option value="self">Self</option>
-                <option value="department">Department</option>
-                <option value="approved">Approved Budget</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
-                  <path
-                    fillRule="evenodd"
-                    d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div> */}
-
           <div className="flex flex-col items-end gap-3 pt-2">
             {submitMessage && (
-              <p className={`text-sm ${submitMessage.includes("successfully") ? "text-emerald-400" : "text-red-400"}`}>
+              <p className={`text-sm ${submitMessage.includes("successfully") ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
                 {submitMessage}
               </p>
             )}

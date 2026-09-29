@@ -170,22 +170,22 @@ export default function CustomSelect({
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-hidden flex flex-col">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-20 max-h-60 overflow-hidden flex flex-col shadow-xl">
             {searchable && (
-              <div className="p-2 border-b border-[#3A3A5A]">
+              <div className="p-2 border-b border-slate-200 dark:border-[#3A3A5A]">
                 <input
                   ref={searchRef}
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search..."
-                  className="w-full bg-[#16162A] text-white text-sm rounded-md px-3 py-1.5 focus:outline-none border border-[#3A3A5A] focus:border-purple-500 placeholder-gray-500"
+                  className="w-full bg-slate-50 dark:bg-[#16162A] text-slate-900 dark:text-white text-sm rounded-md px-3 py-1.5 focus:outline-none border border-slate-300 dark:border-[#3A3A5A] focus:border-purple-500 placeholder-slate-400 dark:placeholder-gray-500"
                 />
               </div>
             )}
             <div className="overflow-y-auto max-h-48 custom-scrollbar">
               {filteredOptions.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-gray-500">No results</div>
+                <div className="px-4 py-3 text-sm text-slate-400 dark:text-gray-500">No results</div>
               ) : (
                 filteredOptions.map((opt, i) => (
                   <div
@@ -199,8 +199,8 @@ export default function CustomSelect({
                     }}
                     className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${
                       value === opt
-                        ? "bg-purple-600 text-white"
-                        : "text-white hover:bg-purple-500/30"
+                        ? "bg-purple-600 text-white font-medium"
+                        : "text-slate-800 dark:text-white hover:bg-purple-50 dark:hover:bg-purple-500/30"
                     }`}
                   >
                     {opt}
@@ -471,16 +471,16 @@ export default function CustomSelect({
           aria-multiselectable="true"
         >
           {/* Main Dropdown Panel */}
-          <div className="w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg overflow-hidden flex flex-col max-h-72">
+          <div className="w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg overflow-hidden flex flex-col max-h-72 shadow-xl">
             {/* Search input */}
-            <div className="p-2 border-b border-[#3A3A5A]/50">
+            <div className="p-2 border-b border-slate-200 dark:border-[#3A3A5A]/50">
               <input
                 ref={searchRef}
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search..."
-                className="w-full bg-[#16162A] text-white text-sm rounded-md px-3 py-1.5 focus:outline-none border border-[#3A3A5A] focus:border-purple-500 placeholder-gray-500"
+                className="w-full bg-slate-50 dark:bg-[#16162A] text-slate-900 dark:text-white text-sm rounded-md px-3 py-1.5 focus:outline-none border border-slate-300 dark:border-[#3A3A5A] focus:border-purple-500 placeholder-slate-400 dark:placeholder-gray-500"
                 aria-label="Search options"
               />
             </div>
@@ -488,7 +488,7 @@ export default function CustomSelect({
             {/* Options list */}
             <div className="overflow-y-auto max-h-56 custom-scrollbar" ref={listRef}>
               {sortedOptions.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-gray-500">No results</div>
+                <div className="px-4 py-3 text-sm text-slate-400 dark:text-gray-500">No results</div>
               ) : (
                 sortedOptions.map((opt, i) => {
                   const hasChildren = hasNested(opt);
@@ -519,10 +519,10 @@ export default function CustomSelect({
                         focusIndex === parentFlatIdx
                           ? "bg-purple-500/20 outline outline-1 outline-purple-500/50"
                           : isSelected
-                          ? "bg-purple-600/15"
+                          ? "bg-purple-50 dark:bg-purple-600/15"
                           : isIndeterminate
-                          ? "bg-purple-600/10"
-                          : "hover:bg-purple-500/10"
+                          ? "bg-purple-50/60 dark:bg-purple-600/10"
+                          : "hover:bg-purple-50 dark:hover:bg-purple-500/10"
                       }`}
                       role="option"
                       aria-selected={isSelected}
@@ -531,7 +531,7 @@ export default function CustomSelect({
                       <Checkbox checked={isSelected} indeterminate={isIndeterminate} />
 
                       {/* Label */}
-                      <span className={`flex-1 ${isSelected || isIndeterminate ? "text-white font-medium" : "text-gray-200"}`}>
+                      <span className={`flex-1 ${isSelected || isIndeterminate ? "text-purple-900 dark:text-white font-medium" : "text-slate-800 dark:text-gray-200"}`}>
                         {opt}
                       </span>
 
@@ -539,7 +539,7 @@ export default function CustomSelect({
                       {hasChildren && (
                         <div className="flex items-center gap-1.5">
                           {(isSelected || isIndeterminate) && (
-                            <span className="text-[10px] text-purple-400 bg-purple-500/20 px-1.5 py-0.5 rounded-full font-medium">
+                            <span className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-500/20 px-1.5 py-0.5 rounded-full font-medium">
                               {(nestedOptions[opt] || []).filter(c => selectedArr.includes(c)).length}/{(nestedOptions[opt] || []).length}
                             </span>
                           )}
@@ -572,19 +572,16 @@ export default function CustomSelect({
           {/* Nested Flyout Panel — Rendered completely OUTSIDE to the right */}
           {expandedParent && hasNested(expandedParent) && (
             <div
-              className="absolute left-[calc(100%+8px)] top-0 w-72 bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-40 overflow-hidden flex flex-col"
-              style={{
-                boxShadow: "0 12px 35px rgba(0,0,0,0.6), 0 0 0 1px rgba(168,85,247,0.2)",
-              }}
+              className="absolute left-[calc(100%+8px)] top-0 w-72 bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-40 overflow-hidden flex flex-col shadow-2xl"
               onMouseEnter={() => setExpandedParent(expandedParent)}
             >
               {/* Flyout Header */}
-              <div className="px-3 py-2.5 bg-[#16162A] border-b border-[#3A3A5A]/60 flex items-center justify-between">
+              <div className="px-3 py-2.5 bg-slate-50 dark:bg-[#16162A] border-b border-slate-200 dark:border-[#3A3A5A]/60 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-purple-400 font-semibold tracking-wide uppercase">
+                  <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold tracking-wide uppercase">
                     {expandedParent} Goals
                   </span>
-                  <span className="text-[10px] text-gray-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                  <span className="text-[10px] text-slate-500 dark:text-gray-400 bg-purple-100 dark:bg-purple-500/10 px-1.5 py-0.5 rounded font-medium">
                     {(nestedOptions[expandedParent] || []).filter(c => selectedArr.includes(c)).length}/{(nestedOptions[expandedParent] || []).length}
                   </span>
                 </div>
@@ -593,7 +590,7 @@ export default function CustomSelect({
                     e.stopPropagation();
                     toggleOption(expandedParent);
                   }}
-                  className="text-[11px] text-purple-300 hover:text-purple-100 bg-purple-600/30 hover:bg-purple-600/50 px-2 py-0.5 rounded transition-colors"
+                  className="text-[11px] text-purple-700 dark:text-purple-300 hover:text-purple-900 dark:hover:text-purple-100 bg-purple-100 dark:bg-purple-600/30 hover:bg-purple-200 dark:hover:bg-purple-600/50 px-2 py-0.5 rounded transition-colors"
                 >
                   {allChildrenSelected(expandedParent) ? "Deselect All" : "Select All"}
                 </button>
@@ -602,7 +599,7 @@ export default function CustomSelect({
               {/* Flyout Items List */}
               <div className="overflow-y-auto max-h-64 custom-scrollbar">
                 {getNestedChildren(expandedParent).length === 0 ? (
-                  <div className="px-4 py-3 text-xs text-gray-500">No matching items</div>
+                  <div className="px-4 py-3 text-xs text-slate-400 dark:text-gray-500">No matching items</div>
                 ) : (
                   getNestedChildren(expandedParent).map((child, ci) => {
                     const childSelected = selectedArr.includes(child);
@@ -621,8 +618,8 @@ export default function CustomSelect({
                           focusIndex === childFlatIdx
                             ? "bg-purple-500/20"
                             : childSelected
-                            ? "bg-purple-600/15 text-white"
-                            : "hover:bg-purple-500/10 text-gray-300"
+                            ? "bg-purple-50 dark:bg-purple-600/15 text-purple-950 dark:text-white"
+                            : "hover:bg-purple-50 dark:hover:bg-purple-500/10 text-slate-800 dark:text-gray-300"
                         }`}
                         role="option"
                         aria-selected={childSelected}
@@ -631,7 +628,7 @@ export default function CustomSelect({
                         <Checkbox checked={childSelected} size={14} />
 
                         {/* Label without color dots */}
-                        <span className={`flex-1 text-[13px] leading-tight ${childSelected ? "text-white font-medium" : "text-gray-300"}`}>
+                        <span className={`flex-1 text-[13px] leading-tight ${childSelected ? "text-purple-950 dark:text-white font-medium" : "text-slate-800 dark:text-gray-300"}`}>
                           {child}
                         </span>
 

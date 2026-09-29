@@ -40,13 +40,13 @@ const MONTHS = [
 ];
 
 const floatingLabelClass =
-  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+  "absolute left-3 -top-[9px] text-xs text-slate-700 dark:text-white px-1 z-10 pointer-events-none";
 
-const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+const cardFloatingLabelClass = `${floatingLabelClass} bg-white dark:bg-[#1b1b35]`;
 
-const staffFloatingLabelClass = `${floatingLabelClass} bg-[#232344]`;
+const staffFloatingLabelClass = `${floatingLabelClass} bg-slate-50 dark:bg-[#232344]`;
 
-const foodSectionFloatingLabelClass = `${floatingLabelClass} bg-[#282846]`;
+const foodSectionFloatingLabelClass = `${floatingLabelClass} bg-slate-100 dark:bg-[#282846]`;
 
 function getDaysInMonth(year, month) {
   return new Date(year, month + 1, 0).getDate();
@@ -380,9 +380,11 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
         }}
         className="
           w-full
-          
+          bg-slate-50
+          dark:bg-transparent
           border
-          border-[#383847]
+          border-slate-300
+          dark:border-[#383847]
           food-field-border
           rounded-md
           px-4
@@ -393,18 +395,18 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
           text-left
         "
       >
-        <span className={value ? "text-white" : "text-[#8d8da8]"}>
+        <span className={value ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
           {formatDisplay()}
         </span>
 
-        <div className="flex gap-2 text-[#b0b0c3]">
+        <div className="flex gap-2 text-slate-500 dark:text-[#b0b0c3]">
           <CalendarDays size={18} />
           {showTime && <Clock size={18} />}
         </div>
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#383847] rounded-xl shadow-2xl w-72 overflow-hidden">
+        <div className="absolute z-50 mt-2 bg-white dark:bg-[#1a1a35] border border-slate-200 dark:border-[#383847] rounded-xl shadow-2xl w-72 overflow-hidden text-slate-900 dark:text-white">
           {/* CALENDAR */}
           {view === "calendar" && (
             <div className="p-3">
@@ -412,7 +414,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                 <button
                   type="button"
                   onClick={prevMonth}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-slate-500 dark:text-gray-400"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -421,7 +423,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                   <button
                     type="button"
                     onClick={() => setView("month")}
-                    className="text-sm font-medium text-white"
+                    className="text-sm font-medium text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
                   >
                     {MONTHS[displayMonth]}
                   </button>
@@ -433,7 +435,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
 
                       setView("year");
                     }}
-                    className="text-sm font-medium text-white"
+                    className="text-sm font-medium text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400"
                   >
                     {displayYear}
                   </button>
@@ -442,7 +444,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                 <button
                   type="button"
                   onClick={nextMonth}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-slate-500 dark:text-gray-400"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -452,7 +454,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-xs text-gray-500 py-1"
+                    className="text-center text-xs text-slate-400 dark:text-gray-500 py-1"
                   >
                     {d}
                   </div>
@@ -495,10 +497,10 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                       disabled={isDisabled}
                       className={`text-xs py-1.5 rounded-lg ${
                         isDisabled
-                          ? "text-gray-600 cursor-not-allowed"
+                          ? "text-slate-300 dark:text-gray-600 cursor-not-allowed"
                           : isSelected
                           ? "bg-purple-600 text-white"
-                          : "text-gray-300 hover:bg-[#2a2a4a]"
+                          : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                       }`}
                     >
                       {day}
@@ -515,7 +517,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                     mt-4
                     w-full
                     border
-                    border-[#383847]
+                    border-slate-300
+                    dark:border-[#383847]
                     rounded-lg
                     px-4
                     py-3
@@ -523,9 +526,11 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                     items-center
                     justify-center
                     gap-2
-                    text-[#c7c7d9]
-                    hover:border-[#3b82f6]
-                    hover:text-white
+                    text-slate-700
+                    dark:text-[#c7c7d9]
+                    hover:border-purple-500
+                    hover:text-purple-600
+                    dark:hover:text-white
                     transition-all
                   "
                 >
@@ -544,12 +549,12 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                 <button
                   type="button"
                   onClick={() => setView("calendar")}
-                  className="text-sm text-[#c084fc] hover:text-white"
+                  className="text-sm text-purple-600 dark:text-[#c084fc] hover:underline"
                 >
                   ← Date
                 </button>
 
-                <div className="flex items-center gap-2 text-base font-semibold text-white">
+                <div className="flex items-center gap-2 text-base font-semibold text-slate-900 dark:text-white">
                   <Clock size={16} />
                   Select Time
                 </div>
@@ -569,8 +574,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                       onClick={() => handleTimePartChange("hour", hour)}
                       className={`h-10 w-[70px] rounded-lg font-mono text-lg transition-all ${
                         index === 2
-                          ? "border border-[#8b3dff] bg-[#3a225e] text-white"
-                          : "text-[#595977]"
+                          ? "border border-purple-500 bg-purple-50 dark:bg-[#3a225e] text-purple-700 dark:text-white font-bold"
+                          : "text-slate-400 dark:text-[#595977]"
                       }`}
                     >
                       {hour}
@@ -578,7 +583,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                   ))}
                 </div>
 
-                <span className="text-2xl font-bold text-white">:</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white">:</span>
 
                 <div
                   onWheel={(e) => handleTimeWheel("minute", e)}
@@ -591,8 +596,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                       onClick={() => handleTimePartChange("minute", minute)}
                       className={`h-10 w-[70px] rounded-lg font-mono text-lg transition-all ${
                         index === 2
-                          ? "border border-[#8b3dff] bg-[#3a225e] text-white"
-                          : "text-[#595977]"
+                          ? "border border-purple-500 bg-purple-50 dark:bg-[#3a225e] text-purple-700 dark:text-white font-bold"
+                          : "text-slate-400 dark:text-[#595977]"
                       }`}
                     >
                       {minute}
@@ -608,8 +613,8 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                       onClick={() => handleTimePartChange("period", period)}
                       className={`h-10 w-[60px] rounded-lg text-sm font-bold transition-all ${
                         timePeriod === period
-                          ? "bg-[#9d16ff] text-white"
-                          : "bg-[#2b2b49] text-[#9b9bb3]"
+                          ? "bg-purple-600 text-white"
+                          : "bg-slate-100 dark:bg-[#2b2b49] text-slate-700 dark:text-[#9b9bb3]"
                       }`}
                     >
                       {period}
@@ -618,14 +623,14 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                 </div>
               </div>
 
-              <p className="mt-3 text-center text-xs text-[#8d8da8]">
+              <p className="mt-3 text-center text-xs text-slate-500 dark:text-[#8d8da8]">
                 Scroll to pick hour &amp; minute
               </p>
 
               <button
                 type="button"
                 onClick={closePicker}
-                className="mt-4 w-full rounded-md bg-[#a914ff] px-4 py-3 text-base font-semibold text-white hover:bg-[#b72cff]"
+                className="mt-4 w-full rounded-md bg-purple-600 px-4 py-3 text-base font-semibold text-white hover:bg-purple-700"
               >
                 Confirm
               </button>
@@ -648,7 +653,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                     className={`py-2 rounded-lg text-xs ${
                       displayMonth === i
                         ? "bg-purple-600 text-white"
-                        : "text-gray-300 hover:bg-[#2a2a4a]"
+                        : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}
                   >
                     {m.slice(0, 3)}
@@ -674,7 +679,7 @@ function CustomDateTimePicker({ label, value, onChange, placeholder, showTime = 
                     className={`py-2 rounded-lg text-xs ${
                       displayYear === y
                         ? "bg-purple-600 text-white"
-                        : "text-gray-300 hover:bg-[#2a2a4a]"
+                        : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}
                   >
                     {y}
@@ -1579,18 +1584,18 @@ if (submitSuccess) {
 
 if (isLoadingDetails) {
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#141428] text-slate-900 dark:text-white p-6 flex flex-col items-center justify-center transition-colors">
       <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-      <p className="text-gray-300 text-sm">Loading Food request details...</p>
+      <p className="text-slate-600 dark:text-gray-300 text-sm">Loading Food request details...</p>
     </div>
   );
 }
 
 if (loadError) {
   return (
-    <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#141428] text-slate-900 dark:text-white p-6 flex flex-col items-center justify-center transition-colors">
       <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
-        <p className="text-red-300 text-sm mb-4">{loadError}</p>
+        <p className="text-red-500 dark:text-red-300 text-sm mb-4">{loadError}</p>
         <button
           onClick={() => navigate(-1)}
           className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
@@ -1603,17 +1608,13 @@ if (loadError) {
 }
 
   return (
-    <div className="individual-food-form min-h-screen bg-[#141428] text-white p-6">
+    <div className="individual-food-form min-h-screen bg-slate-50 dark:bg-[#141428] text-slate-900 dark:text-white p-6 transition-colors">
       <style>{`
-        .individual-food-form .food-field-border {
-          border-color: #383847 !important;
-        }
-
         .individual-food-form input:focus,
         .individual-food-form textarea:focus,
         .individual-food-form button:focus,
         .individual-food-form .food-select-control:focus {
-          border-color: #3b82f6 !important;
+          border-color: #a855f7 !important;
           box-shadow: none !important;
           outline: none !important;
         }
@@ -1621,18 +1622,18 @@ if (loadError) {
       {/* TITLE */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-3xl font-bold">
+          <h1 className="text-slate-900 dark:text-white text-3xl font-bold">
             {isEditMode ? "Edit Food And Refreshment Request" : "Food And Refreshment Form"}
           </h1>
           {isEditMode && (
-            <p className="text-gray-400 text-xs mt-1">Editing Food Request ID: <span className="text-purple-400 font-mono">{id}</span></p>
+            <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">Editing Food Request ID: <span className="text-purple-600 dark:text-purple-400 font-mono">{id}</span></p>
           )}
         </div>
         {isEditMode && (
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+            className="text-xs text-slate-500 hover:text-slate-900 dark:text-gray-400 dark:hover:text-white border border-slate-300 dark:border-gray-600 rounded-md px-3 py-1.5 transition"
           >
             Cancel
           </button>
@@ -1641,15 +1642,15 @@ if (loadError) {
 
       {formCards.some((formCard) => formCard.financeRequired === "Yes") && (
       <div className="mb-6">
-        <label className="block mb-2 text-sm text-white">
+        <label className="block mb-2 text-sm text-slate-800 dark:text-white">
           Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
         </label>
 
         {/* Show existing principal document in edit mode */}
         {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
-          <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
-            <FileText size={16} className="text-purple-400 shrink-0" />
-            <span className="text-sm text-purple-300">Current file:</span>
+          <div className="mb-3 flex items-center gap-3 bg-slate-100 dark:bg-[#1b1b35] border border-slate-200 dark:border-[#2F2F3E] rounded-lg px-4 py-2">
+            <FileText size={16} className="text-purple-600 dark:text-purple-400 shrink-0" />
+            <span className="text-sm text-purple-700 dark:text-purple-300">Current file:</span>
             <a
               href={
                 typeof existingPrincipalDocument === "string"
@@ -1664,7 +1665,7 @@ if (loadError) {
               }
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-purple-400 underline truncate max-w-xs"
+              className="text-sm text-purple-600 dark:text-purple-400 underline truncate max-w-xs"
             >
               {typeof existingPrincipalDocument === "string"
                 ? existingPrincipalDocument.split("/").pop() || "View existing document"
@@ -1675,7 +1676,7 @@ if (loadError) {
                    existingPrincipalDocument?.originalname ||
                    (existingPrincipalDocument?.url ? existingPrincipalDocument.url.split("/").pop() : "View existing document"))}
             </a>
-            <span className="ml-auto text-xs text-green-400">✓ Will be retained</span>
+            <span className="ml-auto text-xs text-green-600 dark:text-green-400">✓ Will be retained</span>
           </div>
         )}
 
@@ -1683,11 +1684,11 @@ if (loadError) {
           onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
           onDrop={handlePrincipalDrop}
           onDragOver={handleDragOver}
-          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+          className={`relative text-center p-4 text-sm w-full text-slate-800 dark:text-white rounded-lg flex flex-row items-center justify-center gap-3 bg-slate-50/60 dark:bg-transparent ${
             !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
           }`}
         >
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none text-slate-300 dark:text-[#3A3A5A]">
             <rect
               x="1"
               y="1"
@@ -1697,7 +1698,7 @@ if (loadError) {
               ry="10"
               fill="none"
               stroke={
-                principalFileError ? "#f87171" : "#3A3A5A"
+                principalFileError ? "#f87171" : "currentColor"
               }
               strokeWidth="2"
               strokeDasharray="10 4"
@@ -1727,11 +1728,11 @@ if (loadError) {
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
 
-                <span className="text-purple-300 text-sm font-medium">
+                <span className="text-purple-600 dark:text-purple-300 text-sm font-medium">
                   {principalApprovalDocument.name}
                 </span>
 
-                <span className="text-gray-400 text-xs">
+                <span className="text-slate-500 dark:text-gray-400 text-xs">
                   ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
                 </span>
               </div>
@@ -1739,7 +1740,7 @@ if (loadError) {
               <button
                 type="button"
                 onClick={handlePrincipalRemove}
-                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+                className="flex items-center gap-1 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
               >
                 <svg
                   width="12"
@@ -1759,10 +1760,10 @@ if (loadError) {
               </button>
             </div>
           ) : (
-            <p className="z-10">
-              Drag and drop files here or <span className="text-purple-400 underline">choose file</span>
+            <p className="z-10 text-slate-600 dark:text-slate-300">
+              Drag and drop files here or <span className="text-purple-600 dark:text-purple-400 underline">choose file</span>
 
-              <span className="block text-xs text-gray-500 mt-0.5">
+              <span className="block text-xs text-slate-400 dark:text-gray-500 mt-0.5">
                 Only PDF files supported • Max file size: 1MB
               </span>
             </p>
@@ -1778,7 +1779,7 @@ if (loadError) {
         />
 
         {principalFileError && (
-          <p className="text-red-400 text-xs mt-1">
+          <p className="text-red-500 dark:text-red-400 text-xs mt-1">
             {principalFileError}
           </p>
         )}
@@ -1794,6 +1795,7 @@ if (loadError) {
             className="
               bg-[#7c3aed]
               hover:bg-[#6d28d9]
+              text-white
               px-5
               py-2
               rounded-md
@@ -1814,7 +1816,7 @@ if (loadError) {
       {formCards.map((card, cardIndex) => (
       <div key={card.id} className="mb-6">
       <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-white text-xl font-semibold">
+        <h2 className="text-slate-900 dark:text-white text-xl font-semibold">
           
         </h2>
 
@@ -1823,7 +1825,7 @@ if (loadError) {
             type="button"
             onClick={() => handleDeleteForm(card.id)}
             aria-label="Delete food and refreshment form"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ffd6d6] text-[#ff2b2b] hover:bg-[#ffc7c7] transition-colors duration-200 focus:border-[#3b82f6]"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100 dark:bg-[#ffd6d6] text-red-600 dark:text-[#ff2b2b] hover:bg-red-200 dark:hover:bg-[#ffc7c7] transition-colors duration-200"
           >
             <Trash2 size={20} strokeWidth={3} />
           </button>
@@ -1833,11 +1835,14 @@ if (loadError) {
       {/* MAIN CARD */}
       <div
         className="
-          bg-[#1b1b35]
+          bg-white
+          dark:bg-[#1b1b35]
           border
-          border-[#383847]
+          border-slate-200
+          dark:border-[#383847]
           rounded-2xl
           p-5
+          shadow-sm
         "
       >
         {/* TOP INPUTS */}
@@ -1853,7 +1858,6 @@ if (loadError) {
           />
 
           {/* RESOURCE PERSON TYPE */}
-          {/* RESOURCE PERSON TYPE */}
           <div className="relative">
             <label className={cardFloatingLabelClass}>
               Type of resource Person*
@@ -1867,23 +1871,25 @@ if (loadError) {
                 })
               }
               className="
-    food-select-control
-    w-full
-  
-    border
-    border-[#383847]
-    rounded-md
-    px-4
-    py-3
-    flex
-    justify-between
-    items-center
-    cursor-pointer
-  "
+                food-select-control
+                w-full
+                bg-slate-50
+                dark:bg-transparent
+                border
+                border-slate-300
+                dark:border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                flex
+                justify-between
+                items-center
+                cursor-pointer
+              "
             >
               <span
                 className={
-                  card.resourceType.length > 0 ? "text-white" : "text-[#8d8da8]"
+                  card.resourceType.length > 0 ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"
                 }
               >
                 {card.resourceType.length > 0
@@ -1893,14 +1899,14 @@ if (loadError) {
 
               <ChevronDown
                 size={18}
-                className={`transition-transform duration-300 ${
+                className={`transition-transform duration-300 text-slate-500 dark:text-[#b0b0c3] ${
                   card.showResourceDropdown ? "rotate-180" : "rotate-0"
                 }`}
               />
             </div>
 
             {card.showResourceDropdown && (
-              <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+              <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#383847] text-slate-900 dark:text-white rounded-md overflow-hidden z-50 shadow-xl">
                 {resourceOptions.map((item, index) => {
                   const isSelected = card.resourceType.includes(item);
 
@@ -1914,15 +1920,15 @@ if (loadError) {
                             : [...card.resourceType, item],
                         });
                       }}
-                      className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                      className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors ${
                         isSelected
-                          ? "bg-[#492A6F] text-white"
-                          : "text-white hover:bg-[#492A6F] hover:text-white"
+                          ? "bg-purple-50 dark:bg-[#492A6F] text-purple-700 dark:text-white font-medium"
+                          : "text-slate-800 dark:text-white hover:bg-purple-100 dark:hover:bg-[#492A6F]"
                       }`}
                     >
                       <span>{item}</span>
 
-                      {isSelected && <span>✓</span>}
+                      {isSelected && <span className="text-purple-600 dark:text-white">✓</span>}
                     </div>
                   );
                 })}
@@ -1946,16 +1952,21 @@ if (loadError) {
               }
               placeholder="5"
               className="
-                  w-full
-                
-                  border
-                  border-[#383847]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
+                w-full
+                bg-slate-50
+                dark:bg-transparent
+                border
+                border-slate-300
+                dark:border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
+                outline-none
+              "
             />
           </div>
 
@@ -1975,15 +1986,21 @@ if (loadError) {
                 e.target.value = e.target.value.replace(/[^0-9]/g, "");
               }}
               className="
-                  w-full
-                  border
-                  border-[#383847]
-                  rounded-md
-                  px-4
-                  py-3
-                  text-white
-                  outline-none
-                "
+                w-full
+                bg-slate-50
+                dark:bg-transparent
+                border
+                border-slate-300
+                dark:border-[#383847]
+                rounded-md
+                px-4
+                py-3
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
+                outline-none
+              "
             />
           </div>
         </div>
@@ -2002,8 +2019,11 @@ if (loadError) {
             className="
               food-select-control
               w-full
+              bg-slate-50
+              dark:bg-transparent
               border
-              border-[#383847]
+              border-slate-300
+              dark:border-[#383847]
               rounded-md
               px-4
               py-3
@@ -2013,20 +2033,20 @@ if (loadError) {
               cursor-pointer
             "
           >
-            <span className={card.financeRequired === "Yes" ? "text-white" : "text-[#8d8da8]"}>
+            <span className={card.financeRequired === "Yes" ? "text-slate-900 dark:text-white" : "text-slate-400 dark:text-[#8d8da8]"}>
               {card.financeRequired}
             </span>
 
             <ChevronDown
               size={18}
-              className={`transition-transform duration-300 ${
+              className={`transition-transform duration-300 text-slate-500 dark:text-[#b0b0c3] ${
                 card.showFinanceDropdown ? "rotate-180" : "rotate-0"
               }`}
             />
           </div>
 
           {card.showFinanceDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+            <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#383847] text-slate-900 dark:text-white rounded-md overflow-hidden z-50 shadow-xl">
               {[
                 { label: "Yes", value: "Yes" },
                 { label: "No", value: "No" },
@@ -2047,15 +2067,15 @@ if (loadError) {
                         : {}),
                     })
                   }
-                  className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                  className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors ${
                     card.financeRequired === opt.value
-                      ? "bg-[#492A6F] text-white"
-                      : "text-white hover:bg-[#492A6F] hover:text-white"
+                      ? "bg-purple-50 dark:bg-[#492A6F] text-purple-700 dark:text-white font-medium"
+                      : "text-slate-800 dark:text-white hover:bg-purple-100 dark:hover:bg-[#492A6F]"
                   }`}
                 >
                   <span>{opt.label}</span>
 
-                  {card.financeRequired === opt.value && <span>✓</span>}
+                  {card.financeRequired === opt.value && <span className="text-purple-600 dark:text-white">✓</span>}
                 </div>
               ))}
             </div>
@@ -2080,23 +2100,26 @@ if (loadError) {
                 placeholder="0"
                 className={`
                 w-full
+                bg-slate-50
+                dark:bg-transparent
                 border
                 ${
                   Number(card.advanceAmount) > Number(card.estimatedEventBudget) &&
                   card.estimatedEventBudget !== ""
                     ? "border-red-500"
-                    : "border-[#383847]"
+                    : "border-slate-300 dark:border-[#383847]"
                 }
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
                 outline-none
               `}
               />
               {Number(card.advanceAmount) > Number(card.estimatedEventBudget) &&
                 card.estimatedEventBudget !== "" && (
-                  <p className="mt-1 text-sm text-red-400">
+                  <p className="mt-1 text-sm text-red-500 dark:text-red-400">
                     Advance amount cannot exceed the estimated event budget.
                   </p>
                 )}
@@ -2116,12 +2139,18 @@ if (loadError) {
                 placeholder="Purpose"
                 className="
                 w-full
+                bg-slate-50
+                dark:bg-transparent
                 border
-                border-[#383847]
+                border-slate-300
+                dark:border-[#383847]
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
                 outline-none
               "
               />
@@ -2142,12 +2171,18 @@ if (loadError) {
                 placeholder="0"
                 className="
                 w-full
+                bg-slate-50
+                dark:bg-transparent
                 border
-                border-[#383847]
+                border-slate-300
+                dark:border-[#383847]
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
                 outline-none
               "
               />
@@ -2170,12 +2205,18 @@ if (loadError) {
                 placeholder="0"
                 className="
                 w-full
+                bg-slate-50
+                dark:bg-transparent
                 border
-                border-[#383847]
+                border-slate-300
+                dark:border-[#383847]
                 rounded-md
                 px-4
                 py-3
-                text-white
+                text-slate-900
+                dark:text-white
+                placeholder:text-slate-400
+                dark:placeholder:text-slate-500
                 outline-none
               "
               />
@@ -2189,16 +2230,18 @@ if (loadError) {
             <div
               key={index}
               className="
-          bg-[#232344]
+          bg-slate-50
+          dark:bg-[#232344]
           border
-          border-[#383847]
+          border-slate-200
+          dark:border-[#383847]
           rounded-2xl
           p-5
           mb-5
         "
             >
               {/* STAFF TITLE */}
-              <h3 className="text-[#c084fc] text-lg font-semibold mb-5">
+              <h3 className="text-purple-600 dark:text-[#c084fc] text-lg font-semibold mb-5">
                 Staff {index + 1}
               </h3>
 
@@ -2219,20 +2262,23 @@ if (loadError) {
                     }
                     required
                     className="
-                w-full
-              
-                border
-                border-[#383847]
-                rounded-xl
-                px-4
-                py-4
-                text-white
-                outline-none
-                focus:border-[#3b82f6]
-                focus:ring-0
-                transition-all
-                duration-300
-              "
+                      w-full
+                      bg-white
+                      dark:bg-transparent
+                      border
+                      border-slate-300
+                      dark:border-[#383847]
+                      rounded-xl
+                      px-4
+                      py-4
+                      text-slate-900
+                      dark:text-white
+                      placeholder:text-slate-400
+                      dark:placeholder:text-slate-500
+                      outline-none
+                      transition-all
+                      duration-300
+                    "
                   />
                 </div>
 
@@ -2252,20 +2298,23 @@ if (loadError) {
                     }
                     required
                     className="
-                w-full
-              
-                border
-                border-[#383847]
-                rounded-xl
-                px-4
-                py-4
-                text-white
-                outline-none
-                focus:border-[#3b82f6]
-                focus:ring-0
-                transition-all
-                duration-300
-              "
+                      w-full
+                      bg-white
+                      dark:bg-transparent
+                      border
+                      border-slate-300
+                      dark:border-[#383847]
+                      rounded-xl
+                      px-4
+                      py-4
+                      text-slate-900
+                      dark:text-white
+                      placeholder:text-slate-400
+                      dark:placeholder:text-slate-500
+                      outline-none
+                      transition-all
+                      duration-300
+                    "
                   />
                 </div>
               </div>
@@ -2285,8 +2334,11 @@ if (loadError) {
             className="
               food-select-control
               w-full
+              bg-slate-50
+              dark:bg-transparent
               border
-              border-[#383847]
+              border-slate-300
+              dark:border-[#383847]
               rounded-md
               px-4
               py-3
@@ -2294,16 +2346,14 @@ if (loadError) {
               justify-between
               items-center
               cursor-pointer
-             
-              
               transition-all
             "
           >
             <span
               className={
                 Object.values(card.selectedFoodTypes).some((v) => v)
-                  ? "text-white"
-                  : "text-[#8d8da8]"
+                  ? "text-slate-900 dark:text-white"
+                  : "text-slate-400 dark:text-[#8d8da8]"
               }
             >
               {Object.keys(card.selectedFoodTypes)
@@ -2313,14 +2363,14 @@ if (loadError) {
 
             <ChevronDown
                 size={18}
-                className={`transition-transform duration-300 ${
+                className={`transition-transform duration-300 text-slate-500 dark:text-[#b0b0c3] ${
                 card.showFoodDropdown ? "rotate-180" : "rotate-0"
               }`}
             />
           </div>
 
           {card.showFoodDropdown && (
-            <div className="absolute w-full mt-2 bg-[#26264a] border border-[#383847] rounded-md overflow-hidden z-50">
+            <div className="absolute w-full mt-2 bg-white dark:bg-[#26264a] border border-slate-200 dark:border-[#383847] text-slate-900 dark:text-white rounded-md overflow-hidden z-50 shadow-xl">
               {foodOptions.map((item, index) => {
                 const isSelected = card.selectedFoodTypes[item];
 
@@ -2335,15 +2385,15 @@ if (loadError) {
                         },
                       });
                     }}
-                    className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
+                    className={`px-4 py-3 cursor-pointer flex items-center justify-between transition-colors ${
                       isSelected
-                        ? "bg-[#492A6F] text-white"
-                        : "text-white hover:bg-[#492A6F] hover:text-white"
+                        ? "bg-purple-50 dark:bg-[#492A6F] text-purple-700 dark:text-white font-medium"
+                        : "text-slate-800 dark:text-white hover:bg-purple-100 dark:hover:bg-[#492A6F]"
                     }`}
                   >
                     <span>{item}</span>
 
-                    {isSelected && <span>✓</span>}
+                    {isSelected && <span className="text-purple-600 dark:text-white">✓</span>}
                   </div>
                 );
               })}
@@ -2352,8 +2402,8 @@ if (loadError) {
         </div>
 
         {card.selectedFoodTypes["Morning Refreshment"] && (
-          <div className="bg-[#282846] border border-[#383847] rounded-2xl p-5 mt-5">
-            <h2 className="text-[#c084fc] text-lg font-semibold mb-4">Morning Refreshment</h2>
+          <div className="bg-slate-100/70 dark:bg-[#282846] border border-slate-200 dark:border-[#383847] rounded-2xl p-5 mt-5">
+            <h2 className="text-purple-600 dark:text-[#c084fc] text-lg font-semibold mb-4">Morning Refreshment</h2>
             <div className="relative">
               <label className={foodSectionFloatingLabelClass}>Count</label>
               <input
@@ -2364,15 +2414,15 @@ if (loadError) {
                   updateFormCard(card.id, { morningRefreshmentCount: e.target.value })
                 }
                 placeholder="10"
-                className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
               />
             </div>
           </div>
         )}
 
         {card.selectedFoodTypes["Evening Refreshment"] && (
-          <div className="bg-[#282846] border border-[#383847] rounded-2xl p-5 mt-5">
-            <h2 className="text-[#c084fc] text-lg font-semibold mb-4">Evening Refreshment</h2>
+          <div className="bg-slate-100/70 dark:bg-[#282846] border border-slate-200 dark:border-[#383847] rounded-2xl p-5 mt-5">
+            <h2 className="text-purple-600 dark:text-[#c084fc] text-lg font-semibold mb-4">Evening Refreshment</h2>
             <div className="relative">
               <label className={foodSectionFloatingLabelClass}>Count</label>
               <input
@@ -2383,7 +2433,7 @@ if (loadError) {
                   updateFormCard(card.id, { eveningRefreshmentCount: e.target.value })
                 }
                 placeholder="10"
-                className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
               />
             </div>
           </div>
@@ -2395,15 +2445,17 @@ if (loadError) {
               <div
                 key={type}
                 className="
-                  bg-[#282846]
+                  bg-slate-100/70
+                  dark:bg-[#282846]
                   border
-                  border-[#383847]
+                  border-slate-200
+                  dark:border-[#383847]
                   rounded-2xl
                   p-5
                   mt-5
                 "
               >
-                <h2 className="text-[#c084fc] text-lg font-semibold mb-4">
+                <h2 className="text-purple-600 dark:text-[#c084fc] text-lg font-semibold mb-4">
                   {type}
                 </h2>
 
@@ -2428,7 +2480,7 @@ if (loadError) {
                         })
                       }
                       placeholder="10"
-                      className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                      className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
                     />
                   </div>
 
@@ -2452,7 +2504,7 @@ if (loadError) {
                         })
                       }
                       placeholder="10"
-                      className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                      className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
                     />
                   </div>
 
@@ -2478,7 +2530,7 @@ if (loadError) {
                             })
                           }
                           placeholder="10"
-                          className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                          className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
                         />
                       </div>
 
@@ -2502,7 +2554,7 @@ if (loadError) {
                             })
                           }
                           placeholder="10"
-                          className="w-full bg-[#282846] border border-[#383847] rounded-md px-4 py-3 text-white outline-none focus:border-[#3b82f6] transition-all"
+                          className="w-full bg-white dark:bg-[#282846] border border-slate-300 dark:border-[#383847] rounded-md px-4 py-3 text-slate-900 dark:text-white outline-none transition-all"
                         />
                       </div>
                     </>
@@ -2529,17 +2581,20 @@ if (loadError) {
             placeholder="Enter any special requirements"
             className="
               w-full
+              bg-slate-50
+              dark:bg-transparent
               border
-              border-[#383847]
+              border-slate-300
+              dark:border-[#383847]
               rounded-md
               px-4
               py-3
               outline-none
               resize-none
-              text-white
-              focus:border-[#3b82f6]
-              focus:ring-0
-              focus:ring-[#3b82f6]
+              text-slate-900
+              dark:text-white
+              placeholder:text-slate-400
+              dark:placeholder:text-slate-500
               transition-all
             "
           />
@@ -2547,7 +2602,7 @@ if (loadError) {
 
         {/* ERRORS */}
         {validationErrors.length > 0 && (
-          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-200">
+          <div className="mt-6 rounded-lg bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-600 dark:text-red-200">
             <ul className="list-disc list-inside space-y-1">
               {validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -2558,7 +2613,7 @@ if (loadError) {
 
         {/* SUCCESS */}
         {submitMessage && (
-          <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-200">
+          <div className="mt-6 rounded-lg bg-green-500/10 border border-green-500/30 p-4 text-sm text-green-600 dark:text-green-200">
             {submitMessage}
           </div>
         )}

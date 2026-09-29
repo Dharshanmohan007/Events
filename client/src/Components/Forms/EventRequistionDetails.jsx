@@ -359,7 +359,7 @@ export default function EventRequisitionDetails({
         organizers={organizers} setOrganizers={setOrganizers}
         errors={mergedOrgErrors}
       />
-      <hr className="my-1 border-[#333351]" />
+      <hr className="my-1 border-slate-200 dark:border-[#333351]" />
 
       <EventDetails
         // disabled={!isPrincipalUploaded}
@@ -369,7 +369,7 @@ export default function EventRequisitionDetails({
         setEventData={setEventData}
         setErrors={setEventErrors}
       />
-      <hr className="my-1 border-[#333351]" />
+      <hr className="my-1 border-slate-200 dark:border-[#333351]" />
 
       <EventRequirements
         // disabled={!isPrincipalUploaded}

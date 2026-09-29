@@ -44,9 +44,9 @@ const MONTHS = [
 ];
 
 const floatingLabelClass =
-  "absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none";
+  "absolute left-3 -top-[9px] text-xs text-slate-700 dark:text-white px-1 z-10 pointer-events-none";
 
-const cardFloatingLabelClass = `${floatingLabelClass} bg-[#1b1b35]`;
+const cardFloatingLabelClass = `${floatingLabelClass} bg-white dark:bg-[#1b1b35]`;
 
 /* ================= DATE PICKER ================= */
 
@@ -57,7 +57,7 @@ function DateTimePicker({
   placeholder,
   error,
   minDate,
-  labelBgClass = "bg-[#141428]",
+  labelBgClass = "bg-slate-100 dark:bg-[#141428]",
 }) {
   const [open, setOpen] = useState(false);
   const [viewMode, setViewMode] = useState("calendar");
@@ -146,16 +146,16 @@ function DateTimePicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors ${
+        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-colors bg-white dark:bg-transparent text-slate-800 dark:text-white ${
           error
             ? "border-red-500"
             : open
               ? "border-purple-500"
-              : "border-[#3A3A40]"
+              : "border-slate-300 dark:border-[#3A3A40]"
         }`}
       >
         <span
-          className={`text-sm ${value ? "text-gray-300" : "text-gray-500"}`}
+          className={`text-sm ${value ? "text-slate-700 dark:text-gray-300" : "text-slate-400 dark:text-gray-500"}`}
         >
           {formatDisplay()}
         </span>
@@ -165,13 +165,13 @@ function DateTimePicker({
       {error && <p className="text-red-400 text-sm mt-1">{error}</p>}
 
       {open && (
-        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3a3a5a] rounded-xl shadow-2xl w-72 overflow-hidden">
+        <div className="absolute z-50 mt-2 bg-white dark:bg-[#1a1a35] border border-slate-200 dark:border-[#3a3a5a] rounded-xl shadow-2xl w-72 overflow-hidden">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
                 onClick={prevMonth}
-                className="p-2 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-400 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               >
                 <ChevronLeft size={18} />
               </button>
@@ -179,14 +179,14 @@ function DateTimePicker({
                 <button
                   type="button"
                   onClick={() => setViewMode("calendar")}
-                  className="text-sm font-medium text-white"
+                  className="text-sm font-medium text-slate-700 dark:text-white"
                 >
                   {MONTHS[displayMonth]}
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("year")}
-                  className="text-sm font-medium text-white"
+                  className="text-sm font-medium text-slate-700 dark:text-white"
                 >
                   {displayYear}
                 </button>
@@ -194,7 +194,7 @@ function DateTimePicker({
               <button
                 type="button"
                 onClick={nextMonth}
-                className="p-2 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-slate-700 dark:hover:text-white transition-colors"
               >
                 <ChevronRight size={18} />
               </button>
@@ -206,17 +206,17 @@ function DateTimePicker({
                   <button
                     type="button"
                     onClick={() => setYearPage((page) => page - 1)}
-                    className="px-3 py-2 text-xs rounded-lg bg-[#2a2a4a] text-gray-300 hover:bg-[#3b3b65] transition-colors"
+                    className="px-3 py-2 text-xs rounded-lg bg-slate-100 dark:bg-[#2a2a4a] text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-[#3b3b65] transition-colors"
                   >
                     Prev
                   </button>
-                  <div className="text-sm text-gray-300">
+                  <div className="text-sm text-slate-600 dark:text-gray-300">
                     {yearStart} - {yearStart + 11}
                   </div>
                   <button
                     type="button"
                     onClick={() => setYearPage((page) => page + 1)}
-                    className="px-3 py-2 text-xs rounded-lg bg-[#2a2a4a] text-gray-300 hover:bg-[#3b3b65] transition-colors"
+                    className="px-3 py-2 text-xs rounded-lg bg-slate-100 dark:bg-[#2a2a4a] text-slate-600 dark:text-gray-300 hover:bg-slate-200 dark:hover:bg-[#3b3b65] transition-colors"
                   >
                     Next
                   </button>
@@ -244,7 +244,7 @@ function DateTimePicker({
                 {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
                   <div
                     key={d}
-                    className="text-center text-xs text-gray-500 font-medium py-2"
+                    className="text-center text-xs text-slate-400 dark:text-gray-500 font-medium py-2"
                   >
                     {d}
                   </div>
@@ -280,10 +280,10 @@ function DateTimePicker({
                       disabled={isDisabled}
                       className={`text-sm py-2 rounded-lg transition-colors ${
                         isDisabled
-                          ? "text-gray-600 cursor-not-allowed"
+                          ? "text-slate-300 dark:text-gray-600 cursor-not-allowed"
                           : isSelected
                           ? "bg-purple-600 text-white font-semibold"
-                          : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                          : "text-slate-600 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       {day}
@@ -1185,18 +1185,18 @@ export default function PurchaseDetails() {
 
   if (isLoadingDetails) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-800 dark:text-white p-6 flex flex-col items-center justify-center">
         <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
-        <p className="text-gray-300 text-sm">Loading Purchase request details...</p>
+        <p className="text-slate-500 dark:text-gray-300 text-sm">Loading Purchase request details...</p>
       </div>
     );
   }
 
   if (loadError) {
     return (
-      <div className="min-h-screen bg-[#141428] text-white p-6 flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-100 dark:bg-[#141428] text-slate-800 dark:text-white p-6 flex flex-col items-center justify-center">
         <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-6 max-w-md text-center">
-          <p className="text-red-300 text-sm mb-4">{loadError}</p>
+          <p className="text-red-400 text-sm mb-4">{loadError}</p>
           <button
             onClick={() => navigate(-1)}
             className="bg-purple-600 hover:bg-purple-700 text-white text-xs px-4 py-2 rounded-md transition"
@@ -1211,8 +1211,8 @@ export default function PurchaseDetails() {
   return (
     <div
       className="w-full min-h-screen
-      bg-[#141428]
-      p-6 text-white"
+      bg-slate-100 dark:bg-[#141428]
+      p-6 text-slate-800 dark:text-white"
     >
       <style>{`
         .purchase-upload-dropzone {
@@ -1225,7 +1225,7 @@ export default function PurchaseDetails() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-white text-3xl font-bold">
+          <h1 className="text-slate-800 dark:text-white text-3xl font-bold">
             {isEditMode ? "Edit Purchase Request" : "Purchase Form"}
           </h1>
           {isEditMode && (
@@ -1247,13 +1247,13 @@ export default function PurchaseDetails() {
       <div className="w-full space-y-5 mt-4">
         {form.financeRequired === "Yes" && (
         <div className="mb-2">
-          <label className="block mb-2 text-sm text-white">
+          <label className="block mb-2 text-sm text-slate-700 dark:text-white">
             Principal Approval Form {isEditMode ? "(Upload only to replace existing document)" : "(without uploading this document you cannot proceed further)"} *
           </label>
 
           {/* Show existing principal document in edit mode */}
           {isEditMode && existingPrincipalDocument && !principalApprovalDocument && (
-            <div className="mb-3 flex items-center gap-3 bg-[#1b1b35] border border-[#2F2F3E] rounded-lg px-4 py-2">
+            <div className="mb-3 flex items-center gap-3 bg-slate-200 dark:bg-[#1b1b35] border border-slate-300 dark:border-[#2F2F3E] rounded-lg px-4 py-2">
               <FileText size={16} className="text-purple-400 shrink-0" />
               <span className="text-sm text-purple-300">Current file:</span>
               <a
@@ -1499,13 +1499,14 @@ export default function PurchaseDetails() {
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    bg-transparent
+                    text-slate-800 dark:text-white
                     outline-none
                     ${
                       Number(form.advanceAmount) > Number(form.estimatedEventBudget) &&
                       form.estimatedEventBudget !== ""
                         ? "border-red-500"
-                        : "border-[#2F2F47]"
+                        : "border-slate-300 dark:border-[#2F2F47]"
                     }
                     border
                   `}
@@ -1534,11 +1535,12 @@ export default function PurchaseDetails() {
                   className="
                     w-full
                     border
-                    border-[#2F2F47]
+                    border-slate-300 dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    bg-transparent
+                    text-slate-800 dark:text-white
                     outline-none
                   "
                 />
@@ -1562,11 +1564,12 @@ export default function PurchaseDetails() {
                   className="
                     w-full
                     border
-                    border-[#2F2F47]
+                    border-slate-300 dark:border-[#2F2F47]
                     rounded-md
                     px-4
                     py-3
-                    text-white
+                    bg-transparent
+                    text-slate-800 dark:text-white
                     outline-none
                   "
                 />
@@ -1677,9 +1680,9 @@ function PersonSection({ title, data, errors = {}, onChange }) {
   return (
     <div
       className="w-full
-      bg-[#1b1b35]
+      bg-white dark:bg-[#1b1b35]
       rounded-xl p-5
-      border border-[#2f2f5c]"
+      border border-slate-200 dark:border-[#2f2f5c]"
     >
       <h2
         className="text-[#8b3dff]
@@ -1705,7 +1708,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
           }
           options={["Trophy", "Gifts", "Voucher"]}
           placeholder="Select Gift Type"
-          labelBgClass="bg-[#1b1b35]"
+          labelBgClass="bg-white dark:bg-[#1b1b35]"
           error={getError("giftType")}
         />
 
@@ -1720,7 +1723,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
           }
           options={["Yes", "No"]}
           placeholder="Select Option"
-          labelBgClass="bg-[#1b1b35]"
+          labelBgClass="bg-white dark:bg-[#1b1b35]"
           error={getError("registrationKitNeeded")}
         />
       </div>
@@ -1746,7 +1749,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
               }
               options={["Basic", "Elite"]}
               placeholder="Select Trophy Type"
-              labelBgClass="bg-[#1b1b35]"
+              labelBgClass="bg-white dark:bg-[#1b1b35]"
               error={getError("trophyType")}
             />
           </div>
@@ -1759,8 +1762,8 @@ function PersonSection({ title, data, errors = {}, onChange }) {
                   placeholder="2"
                   value={data.basicTrophyQty}
                   onChange={handleFieldChange("basicTrophyQty")}
-                  labelBgClass="bg-[#1b1b35]"
-                  bgClass="bg-[#1b1b35]"
+                  labelBgClass="bg-white dark:bg-[#1b1b35]"
+                  bgClass="bg-white dark:bg-[#1b1b35]"
                   error={getError("basicTrophyQty")}
                 />
               </div>
@@ -1774,7 +1777,8 @@ function PersonSection({ title, data, errors = {}, onChange }) {
                   placeholder="2"
                   value={data.eliteTrophyQty}
                   onChange={handleFieldChange("eliteTrophyQty")}
-                  labelBgClass="bg-[#1b1b35]"
+                  labelBgClass="bg-white dark:bg-[#1b1b35]"
+                  bgClass="bg-white dark:bg-[#1b1b35]"
                   error={getError("eliteTrophyQty")}
                 />
               </div>
@@ -1789,7 +1793,8 @@ function PersonSection({ title, data, errors = {}, onChange }) {
             placeholder="10"
             value={data.giftCount}
             onChange={handleFieldChange("giftCount")}
-            labelBgClass="bg-[#1b1b35]"
+            labelBgClass="bg-white dark:bg-[#1b1b35]"
+            bgClass="bg-white dark:bg-[#1b1b35]"
             error={getError("giftCount")}
           />
         </div>
@@ -1814,7 +1819,7 @@ function PersonSection({ title, data, errors = {}, onChange }) {
             }
             options={["₹ 1000", "₹ 2000", "₹ 5000", "₹ 10000"]}
             placeholder="Select Voucher Worth"
-            labelBgClass="bg-[#1b1b35]"
+            labelBgClass="bg-white dark:bg-[#1b1b35]"
             error={getError("voucherWorth")}
           />
 
@@ -1835,7 +1840,8 @@ function PersonSection({ title, data, errors = {}, onChange }) {
                       },
                     })
                   }
-                  labelBgClass="bg-[#1b1b35]"
+                  labelBgClass="bg-white dark:bg-[#1b1b35]"
+                  bgClass="bg-white dark:bg-[#1b1b35]"
                   error={getError("voucherQty")}
                 />
               ))}
@@ -1851,8 +1857,8 @@ function PersonSection({ title, data, errors = {}, onChange }) {
             placeholder="2"
             value={data.registrationKitQty}
             onChange={handleFieldChange("registrationKitQty")}
-            labelBgClass="bg-[#1b1b35]"
-            bgClass="bg-[#1b1b35]"
+            labelBgClass="bg-white dark:bg-[#1b1b35]"
+            bgClass="bg-white dark:bg-[#1b1b35]"
             error={getError("registrationKitQty")}
           />
         </div>
@@ -1871,10 +1877,11 @@ function PersonSection({ title, data, errors = {}, onChange }) {
           onChange={handleFieldChange("specialRequirements")}
           placeholder="Enter special requirements..."
           className="w-full 
-          border border-[#3A3A40]
+          border border-slate-300 dark:border-[#3A3A40]
           rounded-md px-4 py-3
-          text-sm text-gray-300
-          placeholder:text-gray-500
+          bg-transparent
+          text-sm text-slate-700 dark:text-gray-300
+          placeholder:text-slate-400 dark:placeholder:text-gray-500
           outline-none resize-none
           focus:border-[#8b3dff]
           focus:ring-1
@@ -1912,8 +1919,8 @@ function InputField({
         ${bgClass}
         border
         rounded-md px-4 py-3
-        text-sm text-gray-300
-        placeholder:text-gray-500
+        text-sm text-slate-700 dark:text-gray-300
+        placeholder:text-slate-400 dark:placeholder:text-gray-500
         outline-none
         transition-all duration-300
         focus:border-[#8b3dff]
@@ -1922,7 +1929,7 @@ function InputField({
         ${
           error
             ? "border-red-500"
-            : "border-[#3A3A40]"
+            : "border-slate-300 dark:border-[#3A3A40]"
         }`}
       />
 
@@ -1951,7 +1958,7 @@ function CustomDropdown({
   placeholder,
   error,
   multiSelect = false,
-  labelBgClass = "bg-[#141428]",
+  labelBgClass = "bg-slate-100 dark:bg-[#141428]",
 }) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -2018,6 +2025,7 @@ function CustomDropdown({
           transition-all
           duration-300
           outline-none
+          bg-transparent
           focus:border-[#8b3dff]
           focus:ring-1
           focus:ring-[#8b3dff]/30
@@ -2026,15 +2034,15 @@ function CustomDropdown({
               ? "border-[#492A6F]"
               : error
                 ? "border-red-500"
-                : "border-[#3A3A40]"
+                : "border-slate-300 dark:border-[#3A3A40]"
           }
         `}
       >
         <span
           className={`text-sm ${
             selectedValues.length > 0
-              ? "text-white"
-              : "text-[#8d8da8]"
+              ? "text-slate-800 dark:text-white"
+              : "text-slate-400 dark:text-[#8d8da8]"
           }`}
         >
           {displayText}
@@ -2065,9 +2073,9 @@ function CustomDropdown({
             z-50
             mt-2
             w-full
-            bg-[#22223B]
+            bg-white dark:bg-[#22223B]
             border
-            border-[#3a3a5a]
+            border-slate-200 dark:border-[#3a3a5a]
             rounded-md
             overflow-hidden
             shadow-2xl
@@ -2097,7 +2105,7 @@ function CustomDropdown({
                   ${
                     isSelected
                       ? "bg-[#492A6F] text-white"
-                      : "text-white hover:bg-[#492A6F]"
+                      : "text-slate-700 dark:text-white hover:bg-[#492A6F] hover:text-white"
                   }
                   focus:bg-[#492A6F]
                   focus:text-white

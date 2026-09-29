@@ -86,9 +86,9 @@ const ThemedDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
                     }
                     setOpen((current) => !current);
                 }}
-                className={`filter-container border rounded-lg flex h-9 items-center px-3 gap-2 bg-[#232A3C] text-xs transition-colors ${open ? "border-[#8B3DFF] text-white" : "border-gray-700 text-gray-300"}`}
+                className={`filter-container border rounded-lg flex h-9 items-center px-3 gap-2 bg-white dark:bg-[#232A3C] text-xs transition-colors ${open ? "border-[#8B3DFF] text-slate-900 dark:text-white" : "border-slate-300 dark:border-gray-700 text-slate-700 dark:text-gray-300"}`}
             >
-                <Calendar size={16} className="text-gray-400" />
+                <Calendar size={16} className="text-purple-600 dark:text-gray-400" />
                 <span className="min-w-[78px] text-left">{value ? formatDisplayDate(value) : placeholder}</span>
                 {value && (
                     <span
@@ -105,7 +105,7 @@ const ThemedDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
                                 onChange("");
                             }
                         }}
-                        className="ml-1 rounded text-gray-500 hover:text-white"
+                        className="ml-1 rounded text-slate-400 dark:text-gray-500 hover:text-slate-700 dark:hover:text-white"
                         aria-label="Clear date filter"
                     >
                         <X size={13} />
@@ -114,22 +114,22 @@ const ThemedDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
             </button>
 
             {open && (
-                <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-[#303b52] bg-[#171F31] p-3 shadow-2xl">
+                <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-slate-200 dark:border-[#303b52] bg-white dark:bg-[#171F31] p-3 shadow-2xl">
                     <div className="mb-3 flex items-center justify-between">
                         <button
                             type="button"
                             onClick={goToPreviousMonth}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-[#232A3C] hover:text-white"
+                            className="rounded-lg p-1.5 text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white"
                         >
                             <ChevronLeft size={16} />
                         </button>
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white">
                             {MONTHS[displayMonth]} {displayYear}
                         </span>
                         <button
                             type="button"
                             onClick={goToNextMonth}
-                            className="rounded-lg p-1.5 text-gray-400 hover:bg-[#232A3C] hover:text-white"
+                            className="rounded-lg p-1.5 text-slate-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white"
                         >
                             <ChevronRight size={16} />
                         </button>
@@ -137,7 +137,7 @@ const ThemedDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
 
                     <div className="mb-1 grid grid-cols-7">
                         {WEEK_DAYS.map((day) => (
-                            <div key={day} className="py-1 text-center text-xs text-[#7f8799]">
+                            <div key={day} className="py-1 text-center text-xs text-slate-500 dark:text-[#7f8799] font-medium">
                                 {day}
                             </div>
                         ))}
@@ -157,7 +157,7 @@ const ThemedDatePicker = ({ value, onChange, placeholder = "Select date" }) => {
                                     key={dateKey}
                                     type="button"
                                     onClick={() => handleDateSelect(day)}
-                                    className={`h-8 rounded-lg text-xs transition-colors ${isSelected ? "bg-[#8B3DFF] text-white" : "text-gray-300 hover:bg-[#232A3C] hover:text-white"}`}
+                                    className={`h-8 rounded-lg text-xs transition-colors ${isSelected ? "bg-[#8B3DFF] text-white" : "text-slate-800 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white"}`}
                                 >
                                     {day}
                                 </button>

@@ -27,37 +27,29 @@ export default function FormSubmitted() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#16162A]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-[#16162A] transition-colors">
 
       {/*
         Radial glow behind card.
-        radial-gradient() has no Tailwind equivalent — kept as a single inline style.
       */}
       <div
         className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
                    w-[600px] h-[600px] rounded-full pointer-events-none"
-        // style={{
-        //   background:
-        //     "radial-gradient(circle, rgba(124,58,237,0.12) 0%, transparent 70%)",
-        // }}
       />
 
       {/* Card */}
       <div
         className={`
-          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px]w-full max-w-[480px]`}
+          relative flex flex-col items-center gap-6 px-12 py-16 rounded-[20px] w-full max-w-[480px] bg-white dark:bg-[#1f1f3a] border border-slate-200 dark:border-transparent shadow-xl dark:shadow-2xl`}
       >
 
         {/*
           Check icon circle.
-          The spring bounce uses cubic-bezier(0.34,1.56,0.64,1) which Tailwind
-          cannot express — kept as a single inline transition string.
-          Everything else (size, color, shadow, opacity, scale) is Tailwind.
         */}
         <div
           className={`
             flex items-center justify-center
-            w-20 h-20 rounded-full bg-violet-600`}
+            w-20 h-20 rounded-full bg-violet-600 text-white shadow-lg shadow-violet-600/30`}
           style={{
             transition:
               "opacity 0.5s ease 0.15s, transform 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s",
@@ -81,7 +73,7 @@ export default function FormSubmitted() {
         <div className="text-center">
           <h1
             className={`
-              text-white text-[28px] font-extrabold mb-3 tracking-tight
+              text-slate-900 dark:text-white text-[28px] font-extrabold mb-3 tracking-tight
               transition-[opacity,transform] duration-500 ease-out delay-[250ms]
               ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
             `}
@@ -90,7 +82,7 @@ export default function FormSubmitted() {
           </h1>
           <p
             className={`
-              text-white/50 text-sm leading-relaxed max-w-[340px] mx-auto
+              text-slate-600 dark:text-white/60 text-sm leading-relaxed max-w-[340px] mx-auto
               transition-[opacity,transform] duration-500 ease-out delay-[350ms]
               ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"}
             `}
@@ -106,7 +98,7 @@ export default function FormSubmitted() {
           className={`
             mt-2 px-8 py-3 rounded-[10px] border-0 cursor-pointer
             bg-violet-600 hover:bg-violet-700
-            text-white text-[15px] font-semibold tracking-wide
+            text-white text-[15px] font-semibold tracking-wide shadow-md shadow-violet-600/20 transition-colors
           `}
         >
           Go to Dashboard

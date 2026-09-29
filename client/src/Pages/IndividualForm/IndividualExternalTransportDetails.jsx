@@ -36,7 +36,7 @@ const IndividualExternalTransportDetails = ({ onDataChange } = {}) => {
   }, [])
 
   return (
-    <div className="min-h-screen bg-[#16162A] p-6">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#16162A] p-6 transition-colors">
       {!isLoading && <ExternalTransportForm onDataChange={onDataChange} />}
     </div>
   )

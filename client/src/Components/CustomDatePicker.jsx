@@ -46,14 +46,14 @@ const CustomDropdown = ({ value, options, onChange, label, isOpen, setIsOpen }) 
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="flex items-center gap-1.5 rounded-md border border-[#283247] bg-[#1b2435] px-2 py-1 text-[11px] text-white cursor-pointer transition-colors hover:border-[#853FF9] focus:border-[#853FF9] outline-none"
+                className="flex items-center gap-1.5 rounded-md border border-slate-300 dark:border-[#283247] bg-slate-100 dark:bg-[#1b2435] px-2 py-1 text-[11px] text-slate-800 dark:text-white cursor-pointer transition-colors hover:border-[#853FF9] focus:border-[#853FF9] outline-none"
             >
                 <span className="min-w-[50px] text-left truncate">{displayValue || label}</span>
-                <ChevronDown size={12} className={`text-[#FFFFFF80] transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={12} className={`text-slate-500 dark:text-[#FFFFFF80] transition-transform ${isOpen ? "rotate-180" : ""}`} />
             </button>
 
             {isOpen && (
-                <div className="absolute top-full left-0 z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-[#283247] bg-[#151d2e] shadow-xl custom-scrollbar">
+                <div className="absolute top-full left-0 z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-slate-200 dark:border-[#283247] bg-white dark:bg-[#151d2e] shadow-xl custom-scrollbar">
                     {options.map((option) => {
                         const optValue = typeof option === "object" ? option.value : option;
                         const optLabel = typeof option === "object" ? option.label : option;
@@ -69,8 +69,8 @@ const CustomDropdown = ({ value, options, onChange, label, isOpen, setIsOpen }) 
                                 }}
                                 className={`w-full px-3 py-1.5 text-[11px] text-left cursor-pointer transition-colors ${
                                     isSelected
-                                        ? "bg-[#853FF9]/15 text-[#A78BFA] font-medium"
-                                        : "text-[#FFFFFFCC] hover:bg-[#232A3C] hover:text-white"
+                                        ? "bg-[#853FF9]/15 text-[#853FF9] dark:text-[#A78BFA] font-medium"
+                                        : "text-slate-700 dark:text-[#FFFFFFCC] hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white"
                                 }`}
                             >
                                 {optLabel}
@@ -145,11 +145,11 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                     setOpen((c) => !c);
                 }}
                 className={`flex h-8 items-center gap-2 rounded-md border px-2 text-[11px] transition-colors cursor-pointer ${open
-                        ? "border-[#8B3DFF] text-white"
-                        : "border-[#283247] text-[#FFFFFF80] hover:border-[#8B3DFF]"
-                    } bg-[#1b2435] ${className}`}
+                        ? "border-[#8B3DFF] text-slate-900 dark:text-white"
+                        : "border-slate-300 dark:border-[#283247] text-slate-700 dark:text-[#FFFFFF80] hover:border-[#8B3DFF]"
+                    } bg-white dark:bg-[#1b2435] ${className}`}
             >
-                <Calendar size={13} className="text-[#0c000080] dark:text-[#1c5be4]" />
+                <Calendar size={13} className="text-purple-600 dark:text-purple-400" />
                 <span className="min-w-[70px] text-left">{value ? formatDisplayDate(value) : placeholder}</span>
                 {value && (
                     <span
@@ -166,7 +166,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                                 onChange("");
                             }
                         }}
-                        className="ml-1 rounded text-[#FFFFFF66] hover:text-white"
+                        className="ml-1 rounded text-slate-400 dark:text-[#FFFFFF66] hover:text-slate-700 dark:hover:text-white"
                         aria-label="Clear date"
                     >
                         <X size={12} />
@@ -175,13 +175,13 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
             </button>
 
             {open && (
-                <div className="absolute top-full left-0 z-50 mt-1 w-72 rounded-xl border border-[#283247] bg-[#151d2e] p-3 shadow-2xl">
+                <div className="absolute top-full left-0 z-50 mt-1 w-72 rounded-xl border border-slate-200 dark:border-[#283247] bg-white dark:bg-[#151d2e] p-3 shadow-2xl">
                     {/* Month & Year selectors */}
                     <div className="mb-3 flex items-center justify-between gap-2">
                         <button
                             type="button"
                             onClick={goToPreviousMonth}
-                            className="rounded-lg p-1.5 text-[#FFFFFF80] hover:bg-[#232A3C] hover:text-white cursor-pointer"
+                            className="rounded-lg p-1.5 text-slate-600 dark:text-[#FFFFFF80] hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white cursor-pointer"
                         >
                             <ChevronLeft size={16} />
                         </button>
@@ -209,7 +209,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                         <button
                             type="button"
                             onClick={goToNextMonth}
-                            className="rounded-lg p-1.5 text-[#FFFFFF80] hover:bg-[#232A3C] hover:text-white cursor-pointer"
+                            className="rounded-lg p-1.5 text-slate-600 dark:text-[#FFFFFF80] hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white cursor-pointer"
                         >
                             <ChevronRight size={16} />
                         </button>
@@ -218,7 +218,7 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                     {/* Week day headers */}
                     <div className="mb-1 grid grid-cols-7">
                         {WEEK_DAYS.map((day) => (
-                            <div key={day} className="py-1 text-center text-[10px] text-[#FFFFFF66]">
+                            <div key={day} className="py-1 text-center text-[10px] text-slate-500 dark:text-[#FFFFFF66] font-medium">
                                 {day}
                             </div>
                         ))}
@@ -248,12 +248,12 @@ const CustomDatePicker = ({ value, onChange, placeholder = "Select date", minDat
                                     disabled={isDisabled}
                                     className={`h-8 rounded-lg text-[11px] transition-colors ${
                                             isDisabled
-                                                ? "text-[#FFFFFF40] cursor-not-allowed bg-transparent"
+                                                ? "text-slate-300 dark:text-[#FFFFFF40] cursor-not-allowed bg-transparent"
                                                 : isSelected
                                                 ? "bg-[#853FF9] text-white font-semibold cursor-pointer"
                                                 : isToday
-                                                    ? "border border-[#853FF9] text-[#A78BFA] cursor-pointer"
-                                                    : "text-[#FFFFFFCC] hover:bg-[#232A3C] hover:text-white cursor-pointer"
+                                                    ? "border border-[#853FF9] text-[#853FF9] dark:text-[#A78BFA] cursor-pointer"
+                                                    : "text-slate-800 dark:text-[#FFFFFFCC] hover:bg-slate-100 dark:hover:bg-[#232A3C] hover:text-slate-900 dark:hover:text-white cursor-pointer"
                                         }`}
                                 >
                                     {day}
