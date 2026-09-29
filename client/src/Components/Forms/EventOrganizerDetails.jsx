@@ -21,12 +21,16 @@ export default function EventOrganizerDetails({
   setFinance,
   advanceAmount,
   setAdvanceAmount,
+  fundingSource = [],
+  setFundingSource,
   purposeOfAdvance,
   setPurposeOfAdvance,
   advanceToBeReceivedWithin,
   setAdvanceToBeReceivedWithin,
   expectedEventOutcome,
   setExpectedEventOutcome,
+  aboutProgram,
+  setAboutProgram,
   estimatedBudget,
   setEstimatedBudget,
   budget,
@@ -51,6 +55,31 @@ export default function EventOrganizerDetails({
   const [advanceDaysError, setAdvanceDaysError] = React.useState("");
   // const [advanceAmount, setAdvanceAmount] = useState(initialEventRequisition.advanceAmount || "");
   // const [advancePurpose, setAdvancePurpose] = useState(initialEventRequisition.advancePurpose || "");
+
+  const fundingType = fundingSource.length === 2
+    ? "Both"
+    : fundingSource[0]?.type || "";
+
+  const getFundingAmount = (type) => (
+    fundingSource.find((source) => source.type === type)?.amount ?? ""
+  );
+
+  const handleFundingTypeChange = (type) => {
+    if (type === "Both") {
+      setFundingSource([
+        { type: "Institutional Fund", amount: getFundingAmount("Institutional Fund") },
+        { type: "Department Funding", amount: getFundingAmount("Department Funding") },
+      ]);
+      return;
+    }
+    setFundingSource(type ? [{ type, amount: getFundingAmount(type) }] : []);
+  };
+
+  const updateFundingAmount = (type, amount) => {
+    setFundingSource((current) => current.map((source) => (
+      source.type === type ? { ...source, amount } : source
+    )));
+  };
 
   const handleOrganizersChange = (e) => {
     let val = e.target.value;
@@ -82,7 +111,7 @@ export default function EventOrganizerDetails({
                 if (!arr[0]?.name) {
                   arr[0] = {
                     ...arr[0],
-                    name: facultyData.firstName || facultyData.name || facultyData.facultyName || facultyData?.data?.firstName || facultyData?.data?.name || facultyData?.data?.facultyName || "",
+                    name: (facultyData.firstName ? `${facultyData.salutation ? facultyData.salutation + ' ' : ''}${facultyData.firstName} ${facultyData.lastName || ''}`.trim() : (facultyData.name || facultyData.facultyName || facultyData?.data?.firstName || facultyData?.data?.name || facultyData?.data?.facultyName || "")),
                     department: facultyData.department || facultyData?.data?.department || "",
                     mobile: facultyData.mobile || facultyData.phone || facultyData?.data?.mobile || facultyData?.data?.phone || "",
                     designation: facultyData.designation || facultyData?.data?.designation || "",
@@ -282,134 +311,6 @@ export default function EventOrganizerDetails({
       <h1 className="text-white text-base sm:text-lg font-bold mb-6 playfair">
         Event Organizer Details
       </h1>
-      {/* Principal Approval Form Upload */}
-      <div className="mb-7">
-        <label className="block mb-1 text-sm text-white">
-          Principal Approval Form *
-        </label>
-
-        <div
-          onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
-          onDrop={handlePrincipalDrop}
-          onDragOver={handleDragOver}
-          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
-            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
-          }`}
-        >
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
-            <rect
-              x="1"
-              y="1"
-              width="calc(100% - 2px)"
-              height="calc(100% - 2px)"
-              rx="10"
-              ry="10"
-              fill="none"
-              stroke={
-                errors.principalApprovalDocument || principalFileError
-                  ? "#f87171"
-                  : "#3A3A5A"
-              }
-              strokeWidth="2"
-              strokeDasharray="10 4"
-            />
-          </svg>
-
-          <img
-            src={UploadIcon}
-            alt="upload"
-            className="w-7 h-8 opacity-80 z-10 flex-shrink-0"
-          />
-
-          {principalApprovalDocument ? (
-            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
-              <div className="flex items-center gap-2">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#a855f7"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-
-                <span 
-                  className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer text-sm font-medium transition-colors"
-                  onClick={handlePreviewPrincipal}
-                >
-                  {typeof principalApprovalDocument === 'string'
-                    ? principalApprovalDocument.split('/').pop()
-                    : (principalApprovalDocument.name || principalApprovalDocument.filename || 'Uploaded Document')}
-                </span>
-
-                {typeof principalApprovalDocument !== 'string' && principalApprovalDocument.size && (
-                  <span className="text-gray-400 text-xs">
-                    ({(principalApprovalDocument.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
-                )}
-              </div>
-
-              <button
-                type="button"
-                onClick={handleRemovePrincipalFile}
-                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
-              >
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-
-                Remove
-              </button>
-            </div>
-          ) : (
-            <p className="z-10">
-              Drag and drop files here or{" "}
-              <span className="text-purple-400 underline">
-                choose file
-              </span>
-
-              <span className="block text-xs text-gray-500 mt-0.5">
-                Only PDF files supported • Max file size: 1MB
-              </span>
-            </p>
-          )}
-        </div>
-
-        <input
-          type="file"
-          accept=".pdf,application/pdf"
-          ref={principalInputRef}
-          onChange={handlePrincipalFileChange}
-          className="hidden"
-        />
-
-        {principalFileError && (
-          <p className="text-red-400 text-xs mt-1">
-            {principalFileError}
-          </p>
-        )}
-
-        {errors.principalApprovalDocument && !principalFileError && (
-          <p className="text-red-400 text-xs mt-1">
-            {errors.principalApprovalDocument}
-          </p>
-        )}
-      </div>
       {/* <div
         className={`${
           !principalApprovalDocument
@@ -550,6 +451,7 @@ export default function EventOrganizerDetails({
                 setEstimatedBudget("");
                 setAdvanceAmount("");
                 setPurposeOfAdvance("");
+                setFundingSource([]);
               }
             }}
             options={["Yes", "No"]}
@@ -560,6 +462,208 @@ export default function EventOrganizerDetails({
         {finance === "Yes" && (
           <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
 
+          <div className="col-span-1 sm:col-span-2">
+            <CustomSelect
+              label="Funding Type"
+              required
+              value={fundingType}
+              onChange={handleFundingTypeChange}
+              options={["Institutional Fund", "Department Funding", "Both"]}
+              placeholder="Select funding type"
+            />
+            {fundingType === "Institutional Fund" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Institutional Fund Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Institutional Fund")}
+                  onChange={(e) => updateFundingAmount("Institutional Fund", e.target.value)}
+                  placeholder="Enter institutional fund amount"
+                />
+              </div>
+            ) : null}
+            {fundingType === "Department Funding" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Department Funding Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Department Funding")}
+                  onChange={(e) => updateFundingAmount("Department Funding", e.target.value)}
+                  placeholder="Enter department funding amount"
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Principal Approval Form Upload */}
+      <div className="mb-7 sm:col-span-2">
+        <label className="block mb-1 text-sm text-white">
+          Principal Approval Form *
+        </label>
+
+        <div
+          onClick={!principalApprovalDocument ? openPrincipalFilePicker : undefined}
+          onDrop={handlePrincipalDrop}
+          onDragOver={handleDragOver}
+          className={`relative text-center p-4 text-sm w-full text-white rounded-lg flex flex-row items-center justify-center gap-3 ${
+            !principalApprovalDocument ? "cursor-pointer" : "cursor-default"
+          }`}
+        >
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <rect
+              x="1"
+              y="1"
+              width="calc(100% - 2px)"
+              height="calc(100% - 2px)"
+              rx="10"
+              ry="10"
+              fill="none"
+              stroke={
+                errors.principalApprovalDocument || principalFileError
+                  ? "#f87171"
+                  : "#3A3A5A"
+              }
+              strokeWidth="2"
+              strokeDasharray="10 4"
+            />
+          </svg>
+
+          <img
+            src={UploadIcon}
+            alt="upload"
+            className="w-7 h-8 opacity-80 z-10 flex-shrink-0"
+          />
+
+          {principalApprovalDocument ? (
+            <div className="z-10 flex items-center gap-3 flex-wrap justify-center">
+              <div className="flex items-center gap-2">
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+
+                <span
+                  className="text-blue-400 hover:text-blue-300 hover:underline cursor-pointer text-sm font-medium transition-colors"
+                  onClick={handlePreviewPrincipal}
+                >
+                  {typeof principalApprovalDocument === "string"
+                    ? principalApprovalDocument.split("/").pop()
+                    : principalApprovalDocument.name ||
+                      principalApprovalDocument.filename ||
+                      "Uploaded Document"}
+                </span>
+
+                {typeof principalApprovalDocument !== "string" &&
+                  principalApprovalDocument.size && (
+                    <span className="text-gray-400 text-xs">
+                      (
+                      {(
+                        principalApprovalDocument.size /
+                        1024 /
+                        1024
+                      ).toFixed(2)}{" "}
+                      MB)
+                    </span>
+                  )}
+              </div>
+
+              <button
+                type="button"
+                onClick={handleRemovePrincipalFile}
+                className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 border border-red-400/40 hover:border-red-300/60 rounded-md px-2 py-1 transition-colors"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+
+                Remove
+              </button>
+            </div>
+          ) : (
+            <p className="z-10">
+              Drag and drop files here or{" "}
+              <span className="text-purple-400 underline">
+                choose file
+              </span>
+
+              <span className="block text-xs text-gray-500 mt-0.5">
+                Only PDF files supported • Max file size: 1MB
+              </span>
+            </p>
+          )}
+        </div>
+
+        <input
+          type="file"
+          accept=".pdf,application/pdf"
+          ref={principalInputRef}
+          onChange={handlePrincipalFileChange}
+          className="hidden"
+        />
+
+        {principalFileError && (
+          <p className="text-red-400 text-xs mt-1">
+            {principalFileError}
+          </p>
+        )}
+
+        {errors.principalApprovalDocument && !principalFileError && (
+          <p className="text-red-400 text-xs mt-1">
+            {errors.principalApprovalDocument}
+          </p>
+        )}
+
+        {/* ─────────────────────────────────────────────────────────────
+            Principal Approval Form Template Download
+          ───────────────────────────────────────────────────────────── */}
+        <div className="mt-3 flex justify-end">
+          <a
+            href="/templates/Principal_Approval_Form_Template.docx"
+            download="Principal_Approval_Form_Template.docx"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-xs font-medium"
+            title="Download Principal Approval Form Template"
+          >
+            {/* Download Icon */}
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+
+            Download Principal Approval Form Template
+          </a>
+        </div>
+      </div>
             {/* Estimated Event Budget */}
             <div>
               <div className="relative">
@@ -698,7 +802,7 @@ export default function EventOrganizerDetails({
       {/* Expected Event Outcome */}
       <div className="mb-6">
         <CustomInput
-          label="Expected Outcome"
+          label="Event Outcome"
           value={expectedEventOutcome}
           onChange={(e) => setExpectedEventOutcome(e.target.value)}
           placeholder="Enter the outcome of the event"
@@ -707,6 +811,26 @@ export default function EventOrganizerDetails({
           <p className="text-red-400 text-xs mt-1">
             {errors.expectedEventOutcome}
           </p>
+        )}
+      </div>
+
+      {/* About the program */}
+      <div className="mb-6">
+        <div className="relative w-full">
+          <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-[#16162A] z-10 pointer-events-none">
+            About the program *
+          </span>
+          <textarea
+            value={aboutProgram}
+            onChange={(e) => setAboutProgram(e.target.value)}
+            className={`w-full bg-transparent text-white rounded-lg focus:outline-none p-3.5 text-sm border placeholder-gray-500 min-h-[100px] resize-y ${
+              errors.aboutProgram ? "border-red-400" : "border-[#3A3A5A]"
+            } focus:border-purple-500`}
+            placeholder="Enter about the program"
+          />
+        </div>
+        {errors.aboutProgram && (
+          <p className="text-red-400 text-xs mt-1">{errors.aboutProgram}</p>
         )}
       </div>
 
@@ -749,6 +873,7 @@ export default function EventOrganizerDetails({
                 "INNOVATION",
                 "COE",
                 "HR",
+                "Library"
               ]}
             placeholder="Select an option"
           />

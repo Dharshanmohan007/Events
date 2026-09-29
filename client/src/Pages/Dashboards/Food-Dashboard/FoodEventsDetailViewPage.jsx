@@ -42,6 +42,7 @@ const FoodEventsDetailViewPage = () => {
             headers: token ? { Authorization: `Bearer ${token}` } : {},
           },
         );
+
         const payload = await res.json();
         if (!res.ok)
           throw new Error(payload.message || "Failed to fetch food details");
@@ -49,13 +50,18 @@ const FoodEventsDetailViewPage = () => {
         const eventData = payload.data || payload;
         if (!eventData.refreshmentDetails)
           throw new Error("Food details are not available");
+        console.log("head food data : ", eventData);
 
         setRefreshmentDetails(eventData.refreshmentDetails);
         setEventData(eventData);
         const eventDetails = eventData.requestDetails?.eventDetails || {};
         setEventName(eventDetails.eventName || "Event Details");
         setEventSchedule(eventDetails.eventSchedule || []);
-        setOrganizingDepartment(eventDetails.organizingDepartment || "");
+        setOrganizingDepartment(
+          eventDetails.organizingDepartment ||
+            eventData.requestDetails?.organizerDetails?.organizingDepartment ||
+            "",
+        );
 
         const foodStatus = eventData.refreshmentDetails.status?.status;
         if (foodStatus) {
@@ -124,7 +130,7 @@ const FoodEventsDetailViewPage = () => {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ">
             {status === "Pending for Acknowledge" && (
               <button
                 onClick={() => handleStatusUpdate("acknowledge")}
@@ -149,7 +155,7 @@ const FoodEventsDetailViewPage = () => {
         </header>
 
         <section className="mt-3">
-          <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
+          {/* <div className="mb-2 flex items-center gap-2 text-[10px] font-medium text-[#CBC3D7]/65">
             <span
               className={`h-3 w-3 rounded-full ${status === "Completed" ? "bg-[#6D3BD8]" : status === "Acknowledged" ? "bg-[#25A987]" : "bg-[#B32058]"}`}
             />
@@ -159,7 +165,7 @@ const FoodEventsDetailViewPage = () => {
                 ? "ACKNOWLEDGED"
                 : "PENDING"}{" "}
             (1)
-          </div>
+          </div> */}
         </section>
 
         <section className="mt-3 overflow-hidden">

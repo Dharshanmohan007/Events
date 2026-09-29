@@ -3,6 +3,7 @@ import CustomSelect, { SDG_GOALS } from "../CustomSelect";
 import CustomInput from "../CustomInput";
 import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
+import InternalStudentBreakdown from './InternalStudentBreakdown';
 
 export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
   const daysData = eventData.eventDays || [];
@@ -281,6 +282,14 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
         </div>
       </div>
 
+      {audienceValue.includes("Internal Students") && (
+        <InternalStudentBreakdown
+          eventData={eventData}
+          setEventData={setEventData}
+          errors={errors}
+        />
+      )}
+
       {/* Day Cards */}
       {daysData.map((day, i) => {
         const today = new Date().toISOString().split("T")[0];
@@ -297,6 +306,23 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             day1Guests={i > 0 ? daysData[0].guests : []}
             minDate={calculatedMinDate}
             errors={(errors.days && errors.days[i]) || {}}
+            onDelete={() => {
+              const updated = daysData.filter((_, index) => index !== i);
+
+              setEventDays(updated);
+              setEventData((prev) => ({
+                ...prev,
+                eventDays: updated,
+              }));
+
+              if (setErrors) {
+                setErrors((prev) => ({
+                  ...prev,
+                  days: (prev.days || []).filter((_, index) => index !== i),
+                  numDays: "",
+                }));
+              }
+            }}
             updateDay={(updatedDay) => {
               const updated = [...daysData];
               updated[i] = updatedDay;

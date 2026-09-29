@@ -28,11 +28,13 @@ const formatDate = (dateStr) => {
 }
 
 const Status = ({ status }) => {
-    const completed = status === 'Completed'
+    const v = (status || '').toLowerCase().trim();
+    const isPositive = v.includes('approved') || v.includes('completed') || v.includes('closed') ||
+                       v.includes('acknowledged') || v.includes('accepted') || v.includes('sanctioned');
 
     return (
-        <span className={`inline-flex items-center gap-2 font-semibold ${completed ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${completed ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
+        <span className={`inline-flex items-center gap-2 font-semibold ${isPositive ? 'text-[#20D18C]' : 'text-[#F20768]'}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${isPositive ? 'bg-[#20D18C]' : 'bg-[#F20768]'}`} />
             {status}
         </span>
     )

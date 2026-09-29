@@ -11,7 +11,7 @@ const ictsFacultyData = [
     "#": 2,
     "NAME": "PRAKASH.P",
     "DESIG": "LAB TECHNICAN",
-    "MAIL ID": "prakash.p@sece.ac.in",
+    "MAIL ID": "prakash.p@sece.ac.in", 
     "PH NO": 8248741551,
     "STAFF ID": "SECENCC002"
   },

@@ -30,7 +30,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
   const selectFaculty = (faculty) => {
     onChange({
       ...data,
-      name: faculty.name,
+      name: (faculty.firstName ? `${faculty.salutation ? faculty.salutation + ' ' : ''}${faculty.firstName} ${faculty.lastName || ''}`.trim() : faculty.name),
       department: faculty.department,
       mobile: faculty.phone != null ? String(faculty.phone) : "",   // ← force string
       designation: faculty.designation,
@@ -125,7 +125,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
             required
             value={data.department || ""}
             onChange={handleSelect("department")}
-            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","Maths","S&H","Media","Transport","Placement","Innovation","IR","HR","CFRD","IQAC","PD","COE","IT"]}
+            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","Maths","S&H","Media","Transport","Placement","Innovation","IR","HR","CFRD","IQAC","PD","COE","IT","Library"]}
             placeholder="Select department"
             searchable
           />

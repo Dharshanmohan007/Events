@@ -219,7 +219,9 @@ const EventsExpenditureDetailView = () => {
             {role?.toLowerCase() !== "faculty" && (
               <button
                 type="button"
-                onClick={() => navigate(`/dashboard-admin/expenditures/edit/${eventId}`)}
+                onClick={() =>
+                  navigate(`/dashboard-admin/expenditures/edit/${eventId}`)
+                }
                 className="ml-1 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
               >
                 <Pencil size={14} strokeWidth={2} />
@@ -451,6 +453,7 @@ const EventsExpenditureDetailView = () => {
 
             <div className="grid grid-cols-3 gap-2">
               {incomeData?.map((item) => {
+                console.log("income source data : ", incomeData);
                 return (
                   <div className="min-h-[94px] rounded-md mb-2 border border-[#283147] bg-[#2a3347] p-3">
                     <div className="mb-2 flex items-center gap-1">
@@ -466,24 +469,12 @@ const EventsExpenditureDetailView = () => {
                     </div>
 
                     <div className="space-y-2">
-                      {/* <div className="flex items-center justify-between">
-                    <p className="text-[14px] text-[#a1a7b5]">
-                      Registration ( NO's )
-                    </p>
-
-                    <p className="text-[14px] font-medium text-white">2</p>
-                  </div> */}
-
-                      {/* <div className="flex items-center justify-between">
-                    <p className="text-[14px] text-[#a1a7b5]">Calculation</p>
-
-                    <p className="text-[14px] font-medium text-white">1</p>
-                  </div> */}
-
                       <div className="flex items-center justify-between">
                         <p className="text-[14px] text-[#a1a7b5]">Amount</p>
 
-                        <p className="text-[14px] font-medium text-white">20</p>
+                        <p className="text-[14px] font-medium text-white">
+                          {item?.amount}
+                        </p>
                       </div>
                     </div>
 

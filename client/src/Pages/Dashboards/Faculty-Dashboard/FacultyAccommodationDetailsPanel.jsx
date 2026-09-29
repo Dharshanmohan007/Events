@@ -53,71 +53,158 @@ const GuestRow = ({ name, gender, phone }) => (
 
 const AccommodationDayDetails = ({ accommodation }) => {
   const guests = accommodation.guests || []
-  const roomOccupancy = accommodation.roomOccupancy || []
-  const roomCategory = accommodation.roomCategory || []
+  const roomSelections = accommodation.roomSelections || []
   const dineInCounts = accommodation.dineInCounts || []
 
   const stayDates = [
-    { icon: CalendarDays, label: 'Check-in Date', value: formatDateTime(accommodation.checkInDateTime, { day: '2-digit', month: '2-digit', year: 'numeric' }) },
-    { icon: Clock3, label: 'Check-in Time', value: formatDateTime(accommodation.checkInDateTime, { hour: '2-digit', minute: '2-digit', hour12: true }) },
-    { icon: CalendarDays, label: 'Check-out Date', value: formatDateTime(accommodation.checkOutDateTime, { day: '2-digit', month: '2-digit', year: 'numeric' }) },
-    { icon: Clock3, label: 'Check-out Time', value: formatDateTime(accommodation.checkOutDateTime, { hour: '2-digit', minute: '2-digit', hour12: true }) },
+    {
+      icon: CalendarDays,
+      label: 'Check-in Date',
+      value: formatDateTime(accommodation.checkInDateTime, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }),
+    },
+    {
+      icon: Clock3,
+      label: 'Check-in Time',
+      value: formatDateTime(accommodation.checkInDateTime, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    },
+    {
+      icon: CalendarDays,
+      label: 'Check-out Date',
+      value: formatDateTime(accommodation.checkOutDateTime, {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }),
+    },
+    {
+      icon: Clock3,
+      label: 'Check-out Time',
+      value: formatDateTime(accommodation.checkOutDateTime, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      }),
+    },
   ]
-
-  const occupancyMap = {}
-  roomOccupancy.forEach((item) => { occupancyMap[item.type] = item.count })
-  const categoryMap = {}
-  roomCategory.forEach((item) => { categoryMap[item.type] = item.count })
-
-  const roomRows = [
-    [['No. of Single Rooms', displayValue(occupancyMap['Single'] || 0)], ['No. of Double Rooms', displayValue(occupancyMap['Double'] || 0)]],
-    [['No. of Suite Rooms', displayValue(occupancyMap['Suite'] || 0)], ['No. of D - Block Rooms', displayValue(occupancyMap['D Block'] || 0)]],
-  ]
-
-  if (roomCategory.length) {
-    roomCategory.forEach((cat) => {
-      if (!roomRows.some((row) => row.some(([label]) => label.includes(cat.type)))) {
-        roomRows.push([[`No. of ${cat.type}`, displayValue(cat.count)]])
-      }
-    })
-  }
 
   const dineInRows = []
+
   for (let i = 0; i < dineInCounts.length; i += 2) {
     dineInRows.push(
-      dineInCounts.slice(i, i + 2).map((item) => [`No. of Guest In ${item.type} Dine-in`, displayValue(item.count)])
+      dineInCounts.slice(i, i + 2).map((item) => [
+        `No. of Guest In ${item.type} Dine-in`,
+        displayValue(item.count),
+      ])
     )
   }
 
   return (
     <div className="space-y-5">
+
+      {/* Check-in / Check-out Details */}
       <div className="grid grid-cols-4 rounded-md border border-[#374155]/60 bg-[#242B3D] py-4">
         {stayDates.map((item, index) => (
-          <IconInfoCell key={item.label} {...item} className={`px-4 ${index !== stayDates.length - 1 ? 'border-r border-[#6b7280]/50' : ''}`} />
+          <IconInfoCell
+            key={item.label}
+            {...item}
+            className={`px-4 ${
+              index !== stayDates.length - 1
+                ? 'border-r border-[#6b7280]/50'
+                : ''
+            }`}
+          />
         ))}
       </div>
 
+      {/* Guests */}
       {guests.map((guest, index) => (
-        <GuestRow key={`${guest.name}-${index}`} name={guest.name} gender={guest.gender} phone={guest.mobile} />
+        <GuestRow
+          key={`${guest.name}-${index}`}
+          name={guest.name}
+          gender={guest.gender}
+          phone={guest.mobile}
+        />
       ))}
 
-      {roomRows.map((row, i) => (
-        <SplitInfoRow key={i} items={row} />
-      ))}
+      {/* Room Selections */}
+      {roomSelections.length > 0 && (
+        <section className="rounded-lg border border-[#465168] bg-[#232A3B]">
+          
+          <div className="border-b border-[#465168] px-5 py-4">
+            <h3 className="text-base font-medium text-[#E6E2F0]">
+              Room Details
+            </h3>
+          </div>
 
+          <div className="divide-y divide-[#465168]">
+            {roomSelections.map((room, index) => (
+              <div
+                key={`${room.roomId}-${index}`}
+                className="grid grid-cols-3"
+              >
+                <div className="border-r border-[#465168] px-5 py-4">
+                  <p className="mb-1 text-xs text-gray-400">
+                    Venue
+                  </p>
+
+                  <p className="text-sm font-medium text-[#E6E2F0]">
+                    {displayValue(room.venue)}
+                  </p>
+                </div>
+
+                <div className="border-r border-[#465168] px-5 py-4">
+                  <p className="mb-1 text-xs text-gray-400">
+                    Room Number
+                  </p>
+
+                  <p className="text-sm font-medium text-[#E6E2F0]">
+                    {displayValue(room.roomNumber)}
+                  </p>
+                </div>
+
+                <div className="px-5 py-4">
+                  <p className="mb-1 text-xs text-gray-400">
+                    Number of Occupants
+                  </p>
+
+                  <p className="text-sm font-medium text-[#E6E2F0]">
+                    {displayValue(room.occupantCount)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </section>
+      )}
+
+      {/* Dine-in Details */}
       {dineInRows.map((row, i) => (
         <SplitInfoRow key={i} items={row} />
       ))}
 
+      {/* Special Requirements */}
       {accommodation.specialRequirements ? (
         <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-5">
           <div className="mb-4 flex items-center gap-2 text-base font-medium text-[#E6E2F0]">
             <FileText size={16} />
             Special Requirement
           </div>
-          <p className="text-sm font-medium leading-7 text-[#E6E2F0]">{displayValue(accommodation.specialRequirements)}</p>
+
+          <p className="text-sm font-medium leading-7 text-[#E6E2F0]">
+            {displayValue(accommodation.specialRequirements)}
+          </p>
         </section>
       ) : null}
+
     </div>
   )
 }

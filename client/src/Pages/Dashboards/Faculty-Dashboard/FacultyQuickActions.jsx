@@ -6,14 +6,14 @@ const actions = [
     { title: 'Transport Request', icon: Bus, color: 'text-[#8390FF]', bg: 'bg-[#263164]', link: "/transports" },
     { title: 'Media Request', icon: Clapperboard, color: 'text-[#A78BFA]', bg: 'bg-[#39285d]', link: "/media" },
     { title: 'Purchase Request', icon: ShoppingCart, color: 'text-[#19D399]', bg: 'bg-[#143d3d]', link: "/purchase" },
-    { title: 'Food & Refreshment Request', icon: Utensils, color: 'text-[#FB923C]', bg: 'bg-[#432a1e]', link: "/IndividualFoodAndRefreshment" },
+    // { title: 'Food & Refreshment Request', icon: Utensils, color: 'text-[#FB923C]', bg: 'bg-[#432a1e]', link: "/IndividualFoodAn dRefreshment" },
 ]
 
 const FacultyQuickActions = () => {
     return (
         <section className="mt-4 rounded-lg border border-[#263044] bg-[#151d2d] px-4 py-3">
             <h2 className="text-lg font-medium text-white">Quick Action</h2>
-            <div className="mt-1 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-1 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-3">
                 {actions.map(({ title, icon: Icon, color, bg, link }) => (
                     <Link to={link}
                         key={title}

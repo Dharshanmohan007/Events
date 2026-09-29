@@ -9,7 +9,7 @@ import DatePicker from "react-datepicker";
 import { Trash2, Plus, Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
-
+import CustomSelect from "../CustomSelect";
 
 // ─── DatePicker dark theme override (injected once) ──────────────────────────
 const DATE_PICKER_STYLES = `
@@ -291,7 +291,8 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
 function createForm() {
   return {
     id: crypto.randomUUID(),
-    date: null,
+    fromDate: null,
+    toDate: null,
     resourcePersonType: [],
     resourcePersons: "",
     internalCount: "",
@@ -299,6 +300,8 @@ function createForm() {
     foodTypes: [],
     morningRefreshmentCount: "",
     eveningRefreshmentCount: "",
+    morningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
+    eveningRefreshmentVenue: "Main block - Guest dinning (opp. to II floor auditorium)",
     breakfast: {
       participants: { vegCount: "", nonVegCount: "" },
       vipGuests: { vegCount: "", nonVegCount: "" },
@@ -322,11 +325,12 @@ function createForm() {
 }
 
 // ─── Validation ───────────────────────────────────────────────────────────────
-function validateFoodForms(forms) {
+function validateFoodForms(forms, autoVenues = []) {
   if (!forms || forms.length === 0) return { _global: "Enter at least one food entry" };
   const errors = forms.map((form) => {
     const err = {};
-    if (!form.date) err.date = "Date is required";
+    if (!form.fromDate) err.fromDate = "From Date is required";
+    if (!form.toDate) err.toDate = "To Date is required";
     if (!form.resourcePersonType || form.resourcePersonType.length === 0)
       err.resourcePersonType = "Resource person type is required";
     if (!form.resourcePersons?.trim()) err.resourcePersons = "Resource count is required";
@@ -374,6 +378,18 @@ function validateFoodForms(forms) {
       }
     });
 
+    // Validate Morning Refreshment
+    if (form.foodTypes?.includes("Morning Refreshment")) {
+      const totalStr = form.morningRefreshmentCount || "";
+      if (!totalStr) err.morningRefreshmentCount = "Total count is required";
+    }
+
+    // Validate Evening Refreshment
+    if (form.foodTypes?.includes("Evening Refreshment")) {
+      const totalStr = form.eveningRefreshmentCount || "";
+      if (!totalStr) err.eveningRefreshmentCount = "Total count is required";
+    }
+
     Object.assign(err, mealErrors);
     const count = parseInt(form.internalCount) || 0;
     if (count > 0) {
@@ -420,10 +436,58 @@ export default function FoodAndRefreshments({
   prevStep,
   registerChildNavigation,
   foodData: initialFoodData,
+  venues = [],
   onFoodDataChange,
   eventId,
+  isEditMode = false,
   errors: propErrors = {},
 }) {
+  const [venuesList, setVenuesList] = useState([]);
+  
+  useEffect(() => {
+    const fetchVenues = async () => {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/venues`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setVenuesList(data);
+        }
+      } catch (err) {
+        console.error("Failed to load venues in food form", err);
+      }
+    };
+    fetchVenues();
+  }, []);
+
+  const getAutoRefreshmentVenues = useCallback(() => {
+    const blocks = new Set();
+    const uniqueVenues = Array.from(new Set(
+      venues.flatMap(day => (day.selectedVenues || [])).map(v => typeof v === 'string' ? v : v.roomName || v.venueName || String(v))
+    ));
+    uniqueVenues.forEach(venueName => {
+      const match = venuesList.find(v => v.venue === venueName);
+      if (match && match.block) blocks.add(match.block.toLowerCase());
+    });
+    
+    const refreshmentVenues = [];
+    let mainAdded = false;
+    let aidsMechAdded = false;
+
+    blocks.forEach(block => {
+      if (block.includes("main") && !mainAdded) {
+        refreshmentVenues.push("Main block - Guest dinning (opp. to II floor auditorium)");
+        mainAdded = true;
+      } else if ((block.includes("aids") || block.includes("mech") || block.includes("ai")) && !aidsMechAdded) {
+        refreshmentVenues.push("AI & Mech Block: Cyber lab (opp. to Vista hall)");
+        aidsMechAdded = true;
+      }
+    });
+
+    return refreshmentVenues;
+  }, [venues, venuesList]);
+
   // Inject dark datepicker styles once
   useEffect(() => {
     const id = "food-datepicker-dark";
@@ -441,7 +505,7 @@ export default function FoodAndRefreshments({
   const [forms, setForms] = useState(() => {
     if (initialFoodData && initialFoodData.length > 0) {
       const savedForms = initialFoodData
-        .filter((f) => f.date) // only keep entries that have actual saved data
+        .filter((f) => f.fromDate || f.toDate || f.date) // only keep entries that have actual saved data
         .map((f) => ({
           ...f,
           staffList: f.staffList || syncStaffList([], f.internalCount || ""),
@@ -460,7 +524,8 @@ export default function FoodAndRefreshments({
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   // ── DatePicker refs (one per form, keyed by form.id) ────────────────────────
-  const datePickerRefs = useRef({});
+  const fromDatePickerRefs = useRef({});
+  const toDatePickerRefs = useRef({});
 
   const formsRef = useRef(forms);
   useEffect(() => { formsRef.current = forms; }, [forms]);
@@ -585,6 +650,53 @@ export default function FoodAndRefreshments({
     });
   };
 
+  const handleVenueChange = (id, field, venueIndex, key, value) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        const updatedVenues = currentVenues.map((v, i) =>
+          i === venueIndex ? { ...v, [key]: value } : v
+        );
+        return { ...form, [field]: updatedVenues };
+      })
+    );
+    setErrors((prev) => {
+      if (!Array.isArray(prev)) return prev;
+      const idx = forms.findIndex((f) => f.id === id);
+      if (idx === -1) return prev;
+      const updated = [...prev];
+      const formErr = { ...(updated[idx] || {}) };
+      if (formErr[field]) {
+        const fieldErrs = [...formErr[field]];
+        fieldErrs[venueIndex] = { ...(fieldErrs[venueIndex] || {}), [key]: "" };
+        formErr[field] = fieldErrs;
+      }
+      updated[idx] = formErr;
+      return updated;
+    });
+  };
+
+  const handleAddVenue = (id, field) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        return { ...form, [field]: [...currentVenues, { venue: "", count: "" }] };
+      })
+    );
+  };
+
+  const handleRemoveVenue = (id, field, venueIndex) => {
+    setForms((prev) =>
+      prev.map((form) => {
+        if (form.id !== id) return form;
+        const currentVenues = form[field] || [];
+        return { ...form, [field]: currentVenues.filter((_, i) => i !== venueIndex) };
+      })
+    );
+  };
+
   const handleAdd = () => setForms((prev) => [...prev, createForm()]);
 
   // ── Delete form card (with popup) ───────────────────────────────────────────
@@ -644,7 +756,16 @@ export default function FoodAndRefreshments({
     return errors[idx]?.[meal]?.[field] || "";
   };
 
-  const buildPayload = (latest) => {
+  const buildPayload = (latest, autoVenues) => {
+    const formatLocalDate = (d) => {
+      if (!d) return "";
+      const date = new Date(d);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
     return {
       refreshmentDetails: {
         refreshments: latest.map((form) => {
@@ -677,9 +798,26 @@ export default function FoodAndRefreshments({
               return payloadObj;
             }
             if (type === "Morning Refreshment" || type === "Evening Refreshment") {
+              const totalCount = parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0;
+              const venue = (type === "Morning Refreshment" ? form.morningRefreshmentVenue : form.eveningRefreshmentVenue) || "Main block - Guest dinning (opp. to II floor auditorium)";
+              
+              let venueWiseDetails = [];
+              if (autoVenues.length > 0) {
+                venueWiseDetails = autoVenues.map((vName, idx) => ({
+                  venueName: vName,
+                  count: idx === 0 ? totalCount : 0
+                }));
+              } else {
+                venueWiseDetails = [{
+                  venueName: venue,
+                  count: totalCount
+                }];
+              }
+              
               return {
                 type,
-                refreshmentCount: parseInt(type === "Morning Refreshment" ? form.morningRefreshmentCount : form.eveningRefreshmentCount) || 0
+                refreshmentCount: totalCount,
+                venueWiseDetails
               };
             }
             return {
@@ -692,7 +830,8 @@ export default function FoodAndRefreshments({
           });
 
           return {
-            date: form.date ? form.date.toISOString() : "",
+            fromDate: formatLocalDate(form.fromDate),
+            toDate: formatLocalDate(form.toDate),
             resourcePersonType: form.resourcePersonType || [],
             numberOfResourcePersons: parseInt(form.resourcePersons) || 0,
             numberOfInternalAccompanyingStaff: parseInt(form.internalCount) || 0,
@@ -710,16 +849,21 @@ export default function FoodAndRefreshments({
 
   const handleNext = useCallback(async () => {
     const latest = formsRef.current;
-    const errs = validateFoodForms(latest);
+    const autoVenues = getAutoRefreshmentVenues();
+    const errs = isEditMode ? {} : validateFoodForms(latest, autoVenues);
     const hasErrors = !Array.isArray(errs)
       ? Object.keys(errs).length > 0
       : errs.some((e) => Object.keys(e).length > 0);
-    if (hasErrors) { setErrors(errs); return; }
+    if (hasErrors) {
+      console.warn("Food form validation failed:", errs);
+      setErrors(errs);
+      return false;
+    }
     setErrors({});
     setIsLoading(true);
     setApiError("");
     try {
-      const payload = buildPayload(latest);
+      const payload = buildPayload(latest, autoVenues);
       // console.log("food payload:", payload);
       const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}`, {
         method: "PUT",
@@ -769,6 +913,11 @@ export default function FoodAndRefreshments({
   ];
   const MEAL_SECTIONS = ["Breakfast", "Lunch", "Dinner"];
 
+  const uniqueVenues = Array.from(new Set(
+    venues.flatMap(day => (day.selectedVenues || [])).map(v => typeof v === 'string' ? v : v.roomName || v.venueName || String(v))
+  ));
+  const VENUE_OPTIONS = uniqueVenues.length > 0 ? uniqueVenues : ["Main Hall", "Auditorium", "Seminar Room"];
+
   return (
     <div className="w-full">
       {/* Delete confirmation popup */}
@@ -817,25 +966,25 @@ export default function FoodAndRefreshments({
 
           <div className={`p-5 grid grid-cols-1 md:grid-cols-2 gap-5 ${index !== 0 ? "pt-2" : ""}`}>
 
-            {/* Row 1: Date + Resource Person Type */}
-            <div className="w-full">
-              <div className="relative">
+            {/* Row 1: Dates */}
+            <div className="col-span-1 md:col-span-2 w-full flex flex-col sm:flex-row gap-4">
+              {/* From Date */}
+              <div className="relative w-full">
                 <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
-                  Select Date *
+                  From Date *
                 </label>
-                {/* Calendar icon — clicking it opens the picker */}
                 <button
                   type="button"
-                  onClick={() => datePickerRefs.current[form.id]?.setOpen(true)}
+                  onClick={() => fromDatePickerRefs.current[form.id]?.setOpen(true)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
                   tabIndex={-1}
                 >
                   <Calendar size={18} />
                 </button>
                 <DatePicker
-                  ref={(el) => { datePickerRefs.current[form.id] = el; }}
-                  selected={form.date}
-                  onChange={(date) => handleChange(form.id, "date", date)}
+                  ref={(el) => { fromDatePickerRefs.current[form.id] = el; }}
+                  selected={form.fromDate}
+                  onChange={(date) => handleChange(form.id, "fromDate", date)}
                   dateFormat="dd/MM/yyyy"
                   minDate={new Date()}
                   shouldCloseOnSelect
@@ -846,13 +995,45 @@ export default function FoodAndRefreshments({
                   wrapperClassName="w-full"
                   calendarClassName="food-dark-cal"
                 />
+                {getError(form.id, "fromDate") && (
+                  <p className="text-red-400 text-xs mt-1">{getError(form.id, "fromDate")}</p>
+                )}
               </div>
-              {getError(form.id, "date") && (
-                <p className="text-red-400 text-xs mt-1">{getError(form.id, "date")}</p>
-              )}
+              
+              {/* To Date */}
+              <div className="relative w-full">
+                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                  To Date *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => toDatePickerRefs.current[form.id]?.setOpen(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-gray-400 hover:text-purple-400 transition-colors focus:outline-none"
+                  tabIndex={-1}
+                >
+                  <Calendar size={18} />
+                </button>
+                <DatePicker
+                  ref={(el) => { toDatePickerRefs.current[form.id] = el; }}
+                  selected={form.toDate}
+                  onChange={(date) => handleChange(form.id, "toDate", date)}
+                  dateFormat="dd/MM/yyyy"
+                  minDate={form.fromDate || new Date()}
+                  shouldCloseOnSelect
+                  popperPlacement="bottom-start"
+                  popperClassName="food-datepicker-popper"
+                  popperProps={{ strategy: "fixed" }}
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  wrapperClassName="w-full"
+                  calendarClassName="food-dark-cal"
+                />
+                {getError(form.id, "toDate") && (
+                  <p className="text-red-400 text-xs mt-1">{getError(form.id, "toDate")}</p>
+                )}
+              </div>
             </div>
 
-            <div>
+            <div className="col-span-1 md:col-span-2">
               <MultiSelect
                 label="Type of Resource Person *"
                 options={RESOURCE_OPTIONS}
@@ -1001,43 +1182,101 @@ export default function FoodAndRefreshments({
             })}
 
             {/* Refreshment Counts */}
-            {form.foodTypes.includes("Morning Refreshment") && (
-              <div className="col-span-1 md:col-span-2">
-                <CustomInput
-                  label="Morning Refreshment Count *"
-                  labelBg="#1f1f38"
-                  value={form.morningRefreshmentCount || ""}
-                  onChange={(e) =>
-                    handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))
-                  }
-                  type="text"
-                />
-                {getError(form.id, "morningRefreshmentCount") && (
-                  <p className="text-red-400 text-xs mt-1">
-                    {getError(form.id, "morningRefreshmentCount")}
-                  </p>
-                )}
+            {form.foodTypes.includes("Morning Refreshment") && (() => {
+              const autoVenues = getAutoRefreshmentVenues();
+              return (
+              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    {autoVenues.length > 0 ? (
+                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                          {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <CustomSelect
+                          label="Venue *"
+                          labelBg="#2a2a4a"
+                          options={[
+                            "Main block - Guest dinning (opp. to II floor auditorium)",
+                            "AI & Mech Block: Cyber lab (opp. to Vista hall)"
+                          ]}
+                          value={form.morningRefreshmentVenue || ""}
+                          onChange={(val) => handleChange(form.id, "morningRefreshmentVenue", val)}
+                        />
+                        {getError(form.id, "morningRefreshmentVenue") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentVenue")}</p>}
+                      </>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <CustomInput
+                      label="Total Morning Refreshment Count (Timing: 10.45 AM to 11.15 AM) *"
+                      labelBg="#2a2a4a"
+                      value={form.morningRefreshmentCount || ""}
+                      onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                      type="text"
+                    />
+                    {getError(form.id, "morningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "morningRefreshmentCount")}</p>}
+                  </div>
+                </div>
               </div>
-            )}
+              );
+            })()}
 
-            {form.foodTypes.includes("Evening Refreshment") && (
-              <div className="col-span-1 md:col-span-2">
-                <CustomInput
-                  label="Evening Refreshment Count *"
-                  labelBg="#1f1f38"
-                  value={form.eveningRefreshmentCount || ""}
-                  onChange={(e) =>
-                    handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))
-                  }
-                  type="text"
-                />
-                {getError(form.id, "eveningRefreshmentCount") && (
-                  <p className="text-red-400 text-xs mt-1">
-                    {getError(form.id, "eveningRefreshmentCount")}
-                  </p>
-                )}
+            {form.foodTypes.includes("Evening Refreshment") && (() => {
+              const autoVenues = getAutoRefreshmentVenues();
+              return (
+              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="mb-4">
+                    {autoVenues.length > 0 ? (
+                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                          {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
+                        </ul>
+                      </div>
+                    ) : (
+                      <>
+                        <CustomSelect
+                          label="Venue *"
+                          labelBg="#2a2a4a"
+                          options={[
+                            "Main block - Guest dinning (opp. to II floor auditorium)",
+                            "AI & Mech Block: Cyber lab (opp. to Vista hall)"
+                          ]}
+                          value={form.eveningRefreshmentVenue || ""}
+                          onChange={(val) => handleChange(form.id, "eveningRefreshmentVenue", val)}
+                        />
+                        {getError(form.id, "eveningRefreshmentVenue") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentVenue")}</p>}
+                      </>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <CustomInput
+                      label="Total Evening Refreshment Count (Timing: 3.30 PM to 4 PM) *"
+                      labelBg="#2a2a4a"
+                      value={form.eveningRefreshmentCount || ""}
+                      onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
+                      type="text"
+                    />
+                    {getError(form.id, "eveningRefreshmentCount") && <p className="text-red-400 text-xs mt-1">{getError(form.id, "eveningRefreshmentCount")}</p>}
+                  </div>
+                </div>
               </div>
-            )}
+              );
+            })()}
 
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">

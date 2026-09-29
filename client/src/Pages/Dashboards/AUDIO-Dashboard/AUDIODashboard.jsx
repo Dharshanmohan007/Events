@@ -16,7 +16,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 const statCardData = [
     {
-        lable: 'Total Sessions',
+        lable: 'Total ',
         value: 120,
         icon: calendarFill,
         bgColor: 'bg-gradient-to-r from-[#241d43] to-[#3d196b]',
@@ -24,7 +24,7 @@ const statCardData = [
         iconBg: 'bg-[#b89aff]',
     },
     {
-        lable: 'Active Sessions',
+        lable: 'Approved ',
         value: 45,
         icon: tick,
         bgColor: 'bg-gradient-to-r from-[#171d3b] to-[#1b196c]',
@@ -32,7 +32,7 @@ const statCardData = [
         iconBg: 'bg-[#818cf8]',
     },
     {
-        lable: 'Completed Sessions',
+        lable: 'Completed ',
         value: 65,
         icon: circleTick,
         bgColor: 'bg-gradient-to-r from-[#162d36] to-[#146147]',
@@ -40,7 +40,7 @@ const statCardData = [
         iconBg: 'bg-[#34d399]',
     },
     {
-        lable: 'Scheduled Sessions',
+        lable: 'Pending',
         value: 10,
         icon: hourglassFill,
         bgColor: 'bg-gradient-to-r from-[#261e35] to-[#591941]',

@@ -12,7 +12,7 @@ const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'ackno
 
 const ReportStatus = ({ status }) => {
   const label = status || 'Pending'
-  const isPositive = POSITIVE_STATUSES.includes(label.toLowerCase())
+  const isPositive = POSITIVE_STATUSES.some(p => String(label).toLowerCase().includes(p))
   return (
     <span
       className={`flex items-center gap-1.5 text-[11px] font-semibold ${
@@ -366,7 +366,7 @@ const TransportsReportsPage = () => {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <section className="min-h-screen bg-[#0b1326] poppins">
-      <DashboardHeader basePath="/dashboard-transport" />
+      <DashboardHeader basePath="/dashboard-transports" />
 
       <main className="px-6 pb-10">
         {/* Page header row — title/subtitle left, pill-toggle right */}

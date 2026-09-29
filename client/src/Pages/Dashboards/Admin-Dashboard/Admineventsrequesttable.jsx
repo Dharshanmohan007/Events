@@ -6,7 +6,10 @@ import ThemedDatePicker from "../../../Components/ThemedDatePicker";
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 const EVENT_REQUEST_URL = `${API_BASE_URL}/api/table/dashboard-table?module=admin`;
+// const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
+console.log("fixed request list api issue");
 const INDIVIDUAL_REQUEST_URL = `${API_BASE_URL}/api/individual-submissions`;
+console.log("fixed request list api issue");
 
 const formatDate = (dateValue) => {
   if (!dateValue) return "-";
@@ -62,6 +65,7 @@ const normalizeIndividualRequest = (request) => ({
   date: request.createdAt ? formatDate(request.createdAt) : "-",
   dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
   status: typeof request.status === "string" ? request.status : "-",
+  adminStatus: request?.superAdminApproval?.status || "-",
 });
 
 const getStatusColor = (status = "") => {
@@ -460,7 +464,8 @@ const IndividualRequestTable = ({ rows, selectedDateKey }) => (
               </div>
             </td>
             <td className="px-6 py-4 whitespace-nowrap">
-              <StatusBadge status={request.status} />
+              {/* {console.log("admin status : ", request.adminStatus)} */}
+              <StatusBadge status={request.adminStatus} />
             </td>
             <td className="px-6 py-4">
               <Link

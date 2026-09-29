@@ -32,7 +32,11 @@ const normalizeEvent = (event) => ({
     : [event.eventVenue || event.venue].filter(Boolean),
   department: event.organizingDepartment || event.department,
   status: event.overallStatus || event.acknowledgeStatus,
-  approvedStatus: event.adminApproval ? "Approved" : "Pending",
+  approvedStatus: /deleted|rejected/i.test(String(event.overallStatus || ""))
+    ? event.overallStatus
+    : event.adminApproval
+      ? "Approved"
+      : "Pending",
 });
 
 const normalizeIndividualRequest = (request) => ({
@@ -42,12 +46,13 @@ const normalizeIndividualRequest = (request) => ({
   eventType: request.formType || "-",
   date: request.createdAt ? formatDate(request.createdAt) : "-",
   status: typeof request.status === "string" ? request.status : "-",
+  superAdminStatus : request.superAdminApproval.status
 });
 
 const getStatusColor = (status = "") => {
   const normalizedStatus = String(status).toLowerCase();
 
-  if (normalizedStatus.includes("rejected"))
+  if (normalizedStatus.includes("rejected") || normalizedStatus.includes("deleted"))
     return { text: "text-red-400", dot: "bg-red-400" };
   if (normalizedStatus.includes("acknowledged"))
     return { text: "text-emerald-400", dot: "bg-emerald-400" };
@@ -170,6 +175,8 @@ const AdminUpcomingEventsTable = ({
             (responseData.data || []).map(normalizeIndividualRequest),
           );
         }
+        console.log("individual response : ", responseData)
+        console.log("Indiviudal data fetched in admin and the endpoint is used", responseData)
       })
       .catch((error) => {
         console.warn(error.message);
@@ -337,7 +344,9 @@ const AdminUpcomingEventsTable = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <StatusBadge status={row.status} />
+                        {console.log("admin individual status  : ", row)}
+                        {/* <StatusBadge status={row.status} /> */}
+                        <StatusBadge status={row.superAdminStatus} />
                       </td>
                       <td className="px-6 py-4">
                         {/* <Link

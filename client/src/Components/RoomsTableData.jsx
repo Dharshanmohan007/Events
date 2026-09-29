@@ -13,6 +13,7 @@ export default function RoomsTableData({
   onEdit,
   onDelete,
   onRetry,
+  readOnly = false,
 }) {
   return (
     <div
@@ -337,7 +338,7 @@ export default function RoomsTableData({
                   <td className="px-5 py-4">
                     <div className="flex items-center justify-center gap-2">
                       {/* EDIT */}
-                      <button
+                      {!readOnly && (<button
                         type="button"
                         onClick={() => onEdit(room)}
                         title="Edit Room"
@@ -355,10 +356,10 @@ export default function RoomsTableData({
                         "
                       >
                         <Pencil className="w-4 h-4" />
-                      </button>
+                      </button>)}
 
                       {/* DELETE */}
-                      <button
+                      {!readOnly && (<button
                         type="button"
                         onClick={() => onDelete(room)}
                         title="Delete Room"
@@ -376,7 +377,7 @@ export default function RoomsTableData({
                         "
                       >
                         <Trash2 className="w-4 h-4" />
-                      </button>
+                      </button>)}
                     </div>
                   </td>
                 </tr>

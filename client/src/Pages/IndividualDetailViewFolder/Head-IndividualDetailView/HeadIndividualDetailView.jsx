@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import IndividualFoodDetailPage from "../IndividualFoodDetailPage";
 import IndividualPurchaseDetailPage from "../IndividualPurchaseDetailPage";
 import IndividualTrasnportDetailPage from "../IndividualTrasnportDetailPage";
@@ -8,6 +8,7 @@ import axios from "axios";
 import DashboardHeader from "../../Dashboards/ICTC-Dashboard/DashboardHeader";
 import { jwtDecode } from "jwt-decode";
 import IndividualVideoDetailPage from "../IndividualVideoDetailPage";
+import { DEPARTMENT_ROUTES, getRouteForRole } from "../../../utils/roleRoutes";
 
 const HeadIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -15,13 +16,23 @@ const HeadIndividualDetailView = () => {
 
   console.log("id ", eventId);
 
-  // token
   const token = localStorage.getItem("token");
 
   const [data, setData] = useState([]);
   const [formType, setFormType] = useState(null);
-  const [role, setRole] = useState("");
-  const [department, setDepartment] = useState("");
+
+  const basePath = useMemo(() => {
+    try {
+      const decoded = jwtDecode(token);
+      const dept = decoded?.department?.toLowerCase().trim();
+      if (dept && DEPARTMENT_ROUTES[dept]) {
+        return DEPARTMENT_ROUTES[dept];
+      }
+      return getRouteForRole(decoded?.role, decoded?.department);
+    } catch {
+      return "/forms";
+    }
+  }, [token]);
 
   useEffect(() => {
     async function fetchData() {
@@ -47,22 +58,11 @@ const HeadIndividualDetailView = () => {
     fetchData();
   }, [eventId]);
 
-  useEffect(() => {
-    const decoded = jwtDecode(token);
-    if (decoded.department.toLowerCase() == "purchase") {
-      setDepartment("dashboard-purchase");
-    } else if (decoded.department.toLowerCase() == "media") {
-      setDepartment("dashboard-media");
-    } else if (decoded.department.toLowerCase() == "food") {
-      setDepartment("dashboard-food");
-    }
-  }, []);
-
-  console.log("dept : ", department);
+  console.log("basePath : ", basePath);
 
   return (
     <>
-      <DashboardHeader basePath={`/${department}`} />
+      <DashboardHeader basePath={basePath} />
 
       <div className="main-container bg-[#0b1326] min-h-[calc(100vh-60px)] text-white p-5">
         {formType?.toLowerCase() == "food" && (

@@ -30,7 +30,7 @@ const POSITIVE_STATUSES = ['closed', 'approved', 'completed', 'accepted', 'ackno
 
 const ReportStatus = ({ status }) => {
   const label = status || 'Pending'
-  const isPositive = POSITIVE_STATUSES.includes(String(label).toLowerCase())
+  const isPositive = POSITIVE_STATUSES.some(p => String(label).toLowerCase().includes(p))
   return (
     <span
       className={`flex items-center gap-1.5 text-[11px] font-semibold ${

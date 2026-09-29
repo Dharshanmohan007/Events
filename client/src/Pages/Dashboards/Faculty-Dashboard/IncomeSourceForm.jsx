@@ -98,15 +98,14 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
     {
       key: "institutionalAmount",
       title: "Institutional Amount",
-      fields: ["selectRequired", "amount"],
+      fields: ["amount"],
       showDetails: true,
     },
     {
       key: "departmentFund",
       title: "Department Fund",
-      fields: ["amount"],
+      fields: ["selectRequired", "amount"],
       showDetails: true,
-      detailsFirst: true,
     },
     {
       key: "others",
@@ -114,6 +113,39 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
       fields: ["amount"],
       showDetails: true,
     },
+  ];
+
+  const departments = [
+    "IQAC",
+    "COLLEGE MAINTENANCE",
+    "Student Welfare",
+    "OFFICE",
+    "Innovation",
+    "CSE",
+    "Electrical and Maintenance",
+    "Transport",
+    "Media",
+    "CSBS",
+    "HR",
+    "CYS",
+    "PLACEMENT",
+    "S&H",
+    "EEE",
+    "English",
+    "MATHS",
+    "ECE",
+    "QPT",
+    "CFRD",
+    "AI&DS",
+    "PRO",
+    "Library",
+    "COE",
+    "IR",
+    "PD",
+    "Mech",
+    "AIML",
+    "IT",
+    "CCE",
   ];
 
   return (
@@ -138,7 +170,7 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
                 <div className="mb-4">
                   <FloatingTextarea
                     placeholder="Details, Requirements (Nos.) and Calculation"
-                    label="Details, If any ( 100 words ) *"
+                    label="Details, Requirements (Nos.) and Calculation *"
                     value={data.details || ""}
                     onChange={(e) =>
                       handleChange(section.key, "details", e.target.value)
@@ -166,21 +198,16 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
                           <option value="" className="bg-[#151d31]">
                             Select
                           </option>
-                          <option value="CSE / ECE" className="bg-[#151d31]">
-                            CSE / ECE
-                          </option>
-                          <option value="MECH" className="bg-[#151d31]">
-                            MECH
-                          </option>
-                          <option value="EEE" className="bg-[#151d31]">
-                            EEE
-                          </option>
-                          <option value="CIVIL" className="bg-[#151d31]">
-                            CIVIL
-                          </option>
-                          <option value="IT" className="bg-[#151d31]">
-                            IT
-                          </option>
+
+                          {departments.map((department) => (
+                            <option
+                              key={department}
+                              value={department}
+                              className="bg-[#151d31]"
+                            >
+                              {department}
+                            </option>
+                          ))}
                         </FloatingSelect>
                       </div>
                     );
@@ -190,7 +217,6 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
                     return (
                       <div key={field} className="relative">
                         <FloatingInput
-                        
                           label="Amount *"
                           type="number"
                           value={data.amount || ""}
@@ -213,7 +239,7 @@ const IncomeSourceForm = ({ incomeData, setIncomeData }) => {
                 <div>
                   <FloatingTextarea
                     placeholder="Details, Requirements (Nos.) and Calculation"
-                    label="Details, If any ( 100 words ) *"
+                    label="Details, Requirements (Nos.) and Calculation *"
                     value={data.details || ""}
                     onChange={(e) =>
                       handleChange(section.key, "details", e.target.value)

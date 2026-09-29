@@ -19,9 +19,9 @@ const AdminIndividualDetailView = () => {
   // token
   const token = localStorage.getItem("token");
   const decoded = jwtDecode(token);
-  const role = decoded.role
+  const role = decoded.role;
 
-  // states 
+  // states
   const [data, setData] = useState([]);
   const [formType, setFormType] = useState(null);
 
@@ -55,7 +55,6 @@ const AdminIndividualDetailView = () => {
 
   return (
     <>
-
       <AdminDashboardHeader />
 
       <div className="main-container bg-[#0b1326] text-white p-5">

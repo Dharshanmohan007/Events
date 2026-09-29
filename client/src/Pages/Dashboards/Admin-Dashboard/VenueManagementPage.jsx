@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import DeleteConfirmationPopup from './DeleteConfirmationPopup'
 import VenueCard from './VenueCard'
 import VenuFormPopup from './VenuFormPopup'
+import { useAuth } from '../../../Components/AuthContext'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://sece-events.onrender.com'
 
@@ -14,6 +15,7 @@ const normalizeVenue = (venue) => ({
   id: venue._id,
   raw: venue,
   name: venue.venue || '-',
+  category: venue.category || '-',
   location: formatLocation(venue.block, venue.floor),
   block: venue.block || '',
   floor: venue.floor || '',
@@ -91,11 +93,13 @@ const SelectFilter = ({ value, onChange, options, label }) => {
 }
 
 const VenueManagementPage = () => {
+  const { isAdminSecretary } = useAuth()
   const [venues, setVenues] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [floorFilter, setFloorFilter] = useState('all')
   const [blockFilter, setBlockFilter] = useState('all')
   const [venueFilter, setVenueFilter] = useState('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [popupMode, setPopupMode] = useState(null)
   const [editingVenue, setEditingVenue] = useState(null)
   const [deletingVenue, setDeletingVenue] = useState(null)
@@ -219,19 +223,21 @@ const VenueManagementPage = () => {
     floors: [...new Set(venues.map((venue) => venue.floor).filter(Boolean))],
     blocks: [...new Set(venues.map((venue) => venue.block).filter(Boolean))],
     venueNames: [...new Set(venues.map((venue) => venue.name).filter(Boolean))],
+    categories: [...new Set(venues.map((venue) => venue.category).filter((category) => category && category !== '-'))],
   }), [venues])
 
   const filteredVenues = venues.filter((venue) => {
     const query = searchQuery.toLowerCase()
-    const matchesSearch = [venue.name, venue.location, venue.block, venue.floor]
+    const matchesSearch = [venue.id, venue.name, venue.category, venue.location, venue.block, venue.floor]
       .join(' ')
       .toLowerCase()
       .includes(query)
     const matchesFloor = floorFilter === 'all' || venue.floor === floorFilter
     const matchesBlock = blockFilter === 'all' || venue.block === blockFilter
     const matchesVenue = venueFilter === 'all' || venue.name === venueFilter
+    const matchesCategory = categoryFilter === 'all' || venue.category === categoryFilter
 
-    return matchesSearch && matchesFloor && matchesBlock && matchesVenue
+    return matchesSearch && matchesFloor && matchesBlock && matchesVenue && matchesCategory
   })
 
   return (
@@ -245,10 +251,11 @@ const VenueManagementPage = () => {
             <p className='text-[#FFFFFF80] text-sm'>View, manage, and organize all venue details, availability, and booking information easily.</p>
           </div>
 
-          <button onClick={handleAddClick} className='flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]'>
+          {!isAdminSecretary && (<button onClick={handleAddClick} className='flex items-center gap-2 cursor-pointer hover:bg-gradient-to-r hover:from-[#7c3ae7d2] hover:to-[#3f1e79] px-4 py-2.5 rounded-lg text-white bg-gradient-to-r from-[#7C3AE7] to-[#4E2593]'>
             <Plus size={17} />
             Add Venue
           </button>
+          )}
         </div>
 
         {/* card filters  */}
@@ -280,6 +287,9 @@ const VenueManagementPage = () => {
             {/* Venue filter */}
             <SelectFilter value={venueFilter} onChange={setVenueFilter} options={filterOptions.venueNames} label="Venue" />
 
+            {/* Category filter */}
+            <SelectFilter value={categoryFilter} onChange={setCategoryFilter} options={filterOptions.categories} label="Category" />
+
           </div>
 
         </div>
@@ -294,6 +304,7 @@ const VenueManagementPage = () => {
           venues={filteredVenues}
           onEdit={handleEditClick}
           onDelete={setDeletingVenue}
+          readOnly={isAdminSecretary}
         />
 
       </main>

@@ -45,8 +45,6 @@ const isPlacementDept = () => getDepartmentFromStorage() === "placement";
 
 function validateIctsCard(card, showProctoring) {
   const e = {};
-  if (!card.laptopTypes || card.laptopTypes.length === 0)
-    e.laptopTypes = "Select at least one laptop type";
   if (!card.internetFacility) e.internetFacility = "This field is required";
   if (
     card.expectedInternetUsers === "" ||
@@ -68,8 +66,6 @@ function validateIctsCard(card, showProctoring) {
   ) {
     e.totalGuestCount = "This field is required";
   }
-  if (!card.requirements || card.requirements.length === 0)
-    e.requirements = "Select at least one requirement";
   // desktopCount / laptopCount are optional — not validated here.
   return e;
 }
@@ -85,11 +81,13 @@ function validateDay(dayIndex, venues, latestIctsData, showProctoring) {
   return dayErrors;
 }
 
-const buildIctsPayload = (ictsData) => {
+const buildIctsPayload = (ictsData, venueData) => {
   const ictses = [];
   Object.entries(ictsData).forEach(([dayIndexStr, venues]) => {
     const dayIndex = parseInt(dayIndexStr);
+    const selectedVenuesForDay = venueData[dayIndex]?.selectedVenues || [];
     Object.entries(venues || {}).forEach(([venueName, card]) => {
+      if (!selectedVenuesForDay.includes(venueName)) return;
       const laptopSpec = (card.laptopTypes || []).map((type) => ({
         type,
         count:
@@ -287,7 +285,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <RequirementsSelect
-            label="Guest Laptop Types *"
+            label="Guest Laptop Types"
             options={LAPTOP_TYPE_OPTIONS}
             placeholder="Select laptop types..."
             selected={laptopTypes}
@@ -473,7 +471,7 @@ function IctsVenueCard({ venueName, index, data, onChange, errors = {}, showProc
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <RequirementsSelect
-            label="Requirements *"
+            label="Requirements"
             selected={data.requirements || []}
             onChange={(val) => onChange({ ...data, requirements: val })}
             error={errors.requirements}
@@ -520,6 +518,7 @@ export default function IctsForm({
   ictsData: initialIctsData = {},
   onIctsDataChange,
   eventId,
+  isEditMode = false,
 }) {
   const dayCount = eventDays.length;
 
@@ -578,7 +577,11 @@ export default function IctsForm({
   const updateCardData = (dayIndex, venueName, updated) => {
     setIctsData((prev) => ({
       ...prev,
-      [dayIndex]: { ...(prev[dayIndex] || {}), [venueName]: updated },
+      [dayIndex]: { 
+        ...(prev[dayIndex] || {}), 
+        [venueName]: updated,
+        sameAsDay1: false
+      },
     }));
     setErrors((prev) => {
       const next = { ...prev };
@@ -598,10 +601,10 @@ export default function IctsForm({
     const latestIctsData = ictsDataRef.current;
     const venues = getVenuesForDay(currentDayIndex);
 
-    const dayErrors = validateDay(currentDayIndex, venues, latestIctsData, showProctoring);
+    const dayErrors = isEditMode ? {} : validateDay(currentDayIndex, venues, latestIctsData, showProctoring);
     const hasErrors = Object.keys(dayErrors).length > 0;
     setErrors((prev) => ({ ...prev, [currentDayIndex]: dayErrors }));
-    if (hasErrors) return;
+    if (hasErrors) return false;
 
     setErrors((prev) => ({ ...prev, [currentDayIndex]: {} }));
 
@@ -613,7 +616,7 @@ export default function IctsForm({
       setIsLoading(true);
       setApiError("");
       try {
-        const payload = buildIctsPayload(latestIctsData);
+        const payload = buildIctsPayload(latestIctsData, venueData);
         const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId || ""}`, {
           method: "PUT",
           headers: {
@@ -710,9 +713,51 @@ export default function IctsForm({
           completedDays={completedDays}
         />
 
-        <h2 className="text-white text-lg font-bold">
-          ICTS Details
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-white text-lg font-bold">
+            ICTS Details
+          </h2>
+          {currentDayIndex > 0 && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={ictsData[currentDayIndex]?.sameAsDay1 || false}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  if (checked) {
+                    const day1Data = ictsData[0] || {};
+                    const day1Venues = Object.keys(day1Data).filter(k => k !== 'sameAsDay1');
+                    const defaultCard = day1Venues.length > 0 ? day1Data[day1Venues[0]] : {};
+                    
+                    const currentVenuesList = venueData[currentDayIndex]?.selectedVenues || [];
+                    const newDayData = { sameAsDay1: true };
+                    
+                    currentVenuesList.forEach((vName, idx) => {
+                      let sourceCard = day1Data[vName];
+                      if (!sourceCard && day1Venues[idx]) sourceCard = day1Data[day1Venues[idx]];
+                      if (!sourceCard) sourceCard = defaultCard;
+                      newDayData[vName] = JSON.parse(JSON.stringify(sourceCard || {}));
+                    });
+                    
+                    setIctsData(prev => ({
+                      ...prev,
+                      [currentDayIndex]: newDayData
+                    }));
+                  } else {
+                    setIctsData(prev => ({
+                      ...prev,
+                      [currentDayIndex]: {
+                        sameAsDay1: false
+                      }
+                    }));
+                  }
+                }}
+                className="w-4 h-4 rounded border-[#3A3A5A] bg-[#16162A] text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+              />
+              <span className="text-gray-300 text-sm font-medium">Same as Day 1</span>
+            </label>
+          )}
+        </div>
         <h2 className="text-white text-lg ">
           If Guest Wifi needed, Kindly Contact <span className="text-[#9E25FD] font-bold">ICTS Admin</span>
         </h2>

@@ -11,11 +11,7 @@ import LoginBackground from "../assets/login_Background.svg";
 
 
 async function loginApi(email, password) {
-  // console.log("BASE URL:", import.meta.env.VITE_API_BASE_URL);
-  // console.log(
-  //   "LOGIN URL:",
-  //   `${import.meta.env.VITE_API_BASE_URL}/api/auth/login/v1`
-  // );
+ 
   const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/login/`, {
     method: "POST",
     headers: {

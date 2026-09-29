@@ -69,3 +69,20 @@ export async function fetchAllVenuesEvents({ date }) {
     eventsByVenue: data?.eventsByVenue || {},
   };
 }
+
+// ----------------------------------------
+// GET /api/calendar/all-rooms-events
+// Returns { rooms: Room[], eventsByRoom: { [roomId]: Event[] } }
+// ----------------------------------------
+export async function fetchAllRoomsEvents({ date }) {
+  const { data } = await CALENDAR_API.get("/api/calendar/all-rooms-events", {
+    params: {
+      date: date.toISOString(),
+    },
+  });
+
+  return {
+    rooms: data?.rooms || [],
+    eventsByRoom: data?.eventsByRoom || {},
+  };
+}

@@ -6,6 +6,7 @@ const VIEWS = [
   { key: "month", label: "Month" },
   { key: "day", label: "Day" },
   { key: "allVenues", label: "All Venues" },
+  { key: "allRooms", label: "Rooms" },
 ];
 
 export default function CalendarHeader({
@@ -25,7 +26,7 @@ export default function CalendarHeader({
         {formatMonthYear(currentDate)}
         <span className="text-slate-500"> - </span>
         <span className="text-violet-400">
-          {view === "allVenues" ? "All Venues" : venue}
+          {view === "allVenues" ? "All Venues" : view === "allRooms" ? "All Rooms" : venue}
         </span>
       </h1>
 
@@ -59,7 +60,7 @@ export default function CalendarHeader({
           ))}
         </div>
 
-        {view !== "allVenues" && (
+        {view !== "allVenues" && view !== "allRooms" && (
           <div className="relative">
             <select
               value={venue}

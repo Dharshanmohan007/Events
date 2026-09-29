@@ -27,6 +27,7 @@ export const ROLE_ROUTES = {
   super_admin:     "/dashboard-admin",
   superadmin:      "/dashboard-admin",
   admin:           "/dashboard-admin",
+  "admin secretary": "/dashboard-admin",
   user:            "/forms",
 };
 

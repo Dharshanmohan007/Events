@@ -9,7 +9,7 @@ import AUDIODashboard from "./Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard";
 import AudioEventsDetailViewPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsDetailViewPage";
 import AudioReportsPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioReportsPage";
 import Login from "./Pages/Login.jsx";
-import Login1 from "./Pages/Login1.jsx";
+// import Login1 from "./Pages/Login1.jsx";
 import Events from "./Pages/Dashboards/ICTC-Dashboard/Events";
 import Reports from "./Pages/Dashboards/ICTC-Dashboard/Reports";
 import IctcEventDetailsPage from "./Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage";
@@ -93,6 +93,8 @@ import PurchaseIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboa
 import TransportIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/TransportIndividualDocumentUpload";
 import MediaIndividualDocumentUpload from "./Pages/Dashboards/Faculty-Dashboard/MediaIndividualDocumentUpload";
 import IndividualExpenditureDetailView from './Components/IndividualExpenditureDetailView';
+import Eventsattended from './Pages/IndividualForm/Eventsattended.jsx';
+import IndividualReportPage from "./Pages/Dashboards/IndividualReportPage/IndividualReportPage.jsx";
 
 
 import Calendar from "./Pages/Calendar/Calendar.jsx";
@@ -112,6 +114,8 @@ import FacultyExpenditureDetailView from "./Pages/Dashboards/Faculty-Dashboard/F
 
 import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/IndividualVideoDetailPage.jsx";
 
+import IndividualExternalTransportDetails from "./Pages/IndividualForm/IndividualExternalTransportDetails.jsx";
+
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
 import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
 import Dashboard from "./Pages/Dashboards/Ticketing-Dashboard/Dashboard.jsx";
@@ -130,8 +134,22 @@ function AppRoutes() {
   return (
     <Routes>
       {/* ── Always show login at "/" ── */}
-      <Route path="/" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/access-cronical" element={<PublicRoute><Login1 /></PublicRoute>} />
+      <Route
+        path="/"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
+      {/* <Route
+        path="/access-cronical"
+        element={
+          <PublicRoute>
+            <Login1 />
+          </PublicRoute>
+        }
+      /> */}
       <Route path="/forget-password" element={<ForgetPassword />} />
 
       {/* ── Protected routes (just need to be logged in) ── */}
@@ -156,6 +174,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <EventsForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/individual-report"
+        element={
+          <ProtectedRoute>
+            <IndividualReportPage />
           </ProtectedRoute>
         }
       />
@@ -423,18 +450,38 @@ function AppRoutes() {
         <Route path="FacultyManagement" element={<FacultyManagementPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
         {/* <Route path="other-managements" element={<AdminOtherManagementPage />} /> */}
-        <Route path="AdminEventsRequests/:eventId" element={<EventDetailsPage />} />
-
-        <Route path="expenditures/IndividualExpenditureDetailView/:requestId" element={<IndividualExpenditureDetailView />} />
-        <Route path="expenditures/IndividualExpenditureDetailView" element={<IndividualExpenditureDetailView />} />
-
+        <Route
+          path="AdminEventsRequests/:eventId"
+          element={<EventDetailsPage />}
+        />
+        <Route
+          path="expenditures/IndividualExpenditureDetailView/:requestId"
+          element={<IndividualExpenditureDetailView />}
+        />
+        <Route
+          path="expenditures/IndividualExpenditureDetailView"
+          element={<IndividualExpenditureDetailView />}
+        />
         {/* <Route
           path="AdminEventsRequests/:eventId"
           element={<EventDetailsPage />}
         /> */}
-        <Route path="expenditures" element={<AdminExpenditureTable />} />        <Route path="expenditures/EventExpenditureDetailView/:eventId" element={<EventsExpenditureDetailView />} />
-        <Route path="expenditures/edit/:eventId" element={<AdminExpenditureEditPage />} />
+        <Route path="expenditures" element={<AdminExpenditureTable />} />{" "}
+        <Route
+          path="expenditures/EventExpenditureDetailView/:eventId"
+          element={<EventsExpenditureDetailView />}
+        />
+        <Route
+          path="expenditures/edit/:eventId"
+          element={<AdminExpenditureEditPage />}
+        />
       </Route>
+
+      <Route
+        path="IndividualExternalTransportDetails"
+        element={<IndividualExternalTransportDetails />}
+      />
+
       <Route
         path="/dashboard/AdminIndividualDetailView/v2/:eventId"
         element={<AdminIndividualDetailView />}
@@ -605,7 +652,10 @@ function AppRoutes() {
         path="/dashboard-faculty/IndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
-            <IndividualDocumentUpload requestType="Food Request" sectionTitle="Food Details" />
+            <IndividualDocumentUpload
+              requestType="Food Request"
+              sectionTitle="Food Details"
+            />
           </ProtectedRoute>
         }
       />
@@ -790,6 +840,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route path="events-attended" element={<Eventsattended />} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

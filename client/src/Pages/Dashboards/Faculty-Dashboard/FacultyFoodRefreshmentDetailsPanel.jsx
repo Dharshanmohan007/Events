@@ -42,34 +42,91 @@ const SplitInfoRow = ({ items }) => (
   </div>
 );
 
-const MealSection = ({ title, foodType }) => {
+const MealSection = ({ title, foodType, showPlacement = false }) => {
   if (!foodType) return null;
-  const { participants = {}, vipGuests = {} } = foodType;
+  const {
+    participants = {},
+    vipGuests = {},
+    trainer = {},
+    placement = {},
+    refreshmentCount,
+    venueWiseDetails = [],
+  } = foodType;
+
+  // For Morning/Evening Refreshment - show refreshment count and venue wise details
+  const isRefreshment = foodType.type === 'Morning Refreshment' || foodType.type === 'Evening Refreshment';
+
+  // Show non-veg counts for every meal type when the data actually contains them
+  const hasNonVegData = [participants, vipGuests, trainer, placement].some(
+    (section) => Number(section?.nonVegCount) > 0,
+  );
+
   return (
     <section className="rounded-lg border border-[#465168] bg-[#232A3B] p-4">
       <h3 className="text-lg font-semibold text-[#8F5BFF]">{title}</h3>
       <div className="mt-4 space-y-3">
-        <SplitInfoRow
-          items={[
-            [
-              "No. of veg In Participants Menu",
-              displayValue(participants.vegCount),
-            ],
-            ["No. of veg In Guest/VIP Menu", displayValue(vipGuests.vegCount)],
-          ]}
-        />
-        <SplitInfoRow
-          items={[
-            [
-              "No. of Non-veg In Participants Menu",
-              displayValue(participants.nonVegCount),
-            ],
-            [
-              "No. of Non-veg In Guest/VIP Menu",
-              displayValue(vipGuests.nonVegCount),
-            ],
-          ]}
-        />
+        {isRefreshment ? (
+          <>
+            <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">Refreshment Count</p>
+              <p className="mt-1 text-sm font-semibold text-white">{displayValue(refreshmentCount)}</p>
+            </div>
+            {venueWiseDetails.length > 0 && (
+              <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45 mb-3">Venue Wise Details</p>
+                <div className="space-y-2">
+                  {venueWiseDetails.map((venue, index) => (
+                    <div key={index} className="flex items-center justify-between text-sm">
+                      <span className="text-white capitalize">{displayValue(venue.venueName)}</span>
+                      <span className="text-[#CBC3D7]/70">{displayValue(venue.count)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <SplitInfoRow
+              items={[
+                ['No. of veg In Participants Menu', displayValue(participants.vegCount)],
+                ['No. of veg In Guest/VIP Menu', displayValue(vipGuests.vegCount)],
+              ]}
+            />
+            <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+              <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of veg In Trainer Menu</p>
+              <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.vegCount)}</p>
+            </div>
+            {showPlacement && (
+              <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of veg In Placement Menu</p>
+                <p className="mt-1 text-sm font-semibold text-white">{displayValue(placement.vegCount)}</p>
+              </div>
+            )}
+            {/* Show non-veg for Lunch, and for Breakfast/Dinner when the data has non-veg counts */}
+            {(foodType.type !== 'Breakfast' && foodType.type !== 'Dinner' ||
+              hasNonVegData) && (
+              <>
+                <SplitInfoRow
+                  items={[
+                    ['No. of Non-veg In Participants Menu', displayValue(participants.nonVegCount)],
+                    ['No. of Non-veg In Guest/VIP Menu', displayValue(vipGuests.nonVegCount)],
+                  ]}
+                />
+                <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                  <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of Non-veg In Trainer Menu</p>
+                  <p className="mt-1 text-sm font-semibold text-white">{displayValue(trainer.nonVegCount)}</p>
+                </div>
+                {showPlacement && (
+                  <div className="rounded-md border border-[#374155]/60 bg-[#242B3D] px-4 py-4">
+                    <p className="text-[10px] font-semibold uppercase text-[#CBC3D7]/45">No. of Non-veg In Placement Menu</p>
+                    <p className="mt-1 text-sm font-semibold text-white">{displayValue(placement.nonVegCount)}</p>
+                  </div>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
     </section>
   );
@@ -132,6 +189,7 @@ const FoodDetails = ({ refreshment }) => {
           key={foodType.type}
           title={mealTitleMap[foodType.type] || foodType.type}
           foodType={foodType}
+          showPlacement={(refreshment.resourcePersonType || []).includes("Placement")}
         />
       ))}
 
@@ -155,6 +213,7 @@ const FacultyFoodRefreshmentDetailsPanel = ({
   eventData,
   eventSchedule = [],
 }) => {
+  
   const [activeDay, setActiveDay] = useState(0);
   const refreshments = refreshmentDetails?.refreshments || [];
   if (!refreshmentDetails)

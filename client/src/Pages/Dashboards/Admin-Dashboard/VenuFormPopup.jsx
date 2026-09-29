@@ -5,6 +5,7 @@ const emptyForm = {
     block: '',
     floor: '',
     venue: '',
+    category: '',
     capacity: '',
     audio: {
         wiredMic: '',
@@ -31,6 +32,7 @@ const createInitialForm = (venue) => {
         block: venue.block || '',
         floor: venue.floor || '',
         venue: venue.venue || '',
+        category: venue.category || '',
         capacity: venue.capacity ?? '',
         audio: {
             wiredMic: venue.audio?.wiredMic ?? '',
@@ -53,6 +55,7 @@ const buildPayload = (form) => ({
     block: form.block,
     floor: form.floor,
     venue: form.venue,
+    category: form.category,
     capacity: toNumber(form.capacity),
     audio: {
         wiredMic: toNumber(form.audio.wiredMic),
@@ -166,6 +169,10 @@ const VenuFormPopup = ({ mode = 'add', venue, onClose, onSubmit, saving, blockOp
 
                         <div className="mt-3">
                             <Field label="Venue" value={form.venue} onChange={(value) => updateField('venue', value)} required />
+                        </div>
+
+                        <div className="mt-3">
+                            <Field label="Category" value={form.category} onChange={(value) => updateField('category', value)} required />
                         </div>
 
                         <div className="mt-3">

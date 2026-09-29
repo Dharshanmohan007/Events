@@ -220,7 +220,7 @@ export default function TransportPreview({ transportData = [] }) {
                   : "bg-[#1c1c34] text-gray-400 border border-[#2a2a45] hover:text-white"
               }`}
             >
-              Day {i + 1}
+              Trip {i + 1}
             </button>
           ))}
         </div>

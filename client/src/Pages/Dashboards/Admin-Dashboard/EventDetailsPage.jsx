@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Pencil, Trash, X } from "lucide-react";
+import { Check, ChevronRight, Clock, Pencil, Trash, X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -16,6 +16,8 @@ import RejectionReasonPopup from "./RejectionReasonPopup";
 import DeleteConfirmationPopup from "./DeleteConfirmationPopup";
 import ExternalTransportPreview from "../../../Components/Preview/ExternalTransportPreview";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../../../Components/AuthContext";
+import ApprovalHistoryCanvas from "../../../Components/ApprovalHistoryCanvas";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -51,6 +53,9 @@ const getStatusClassName = (status) => {
 const EventDetailsPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const { isAdminSecretary } = useAuth();
+
+  const [showAppprovalCanvas, setShowApprovalCanvas] = useState(false);
 
   // ── Tabs state ──────────────────────────────────────────────────────
   const [detailTabs, setDetailTabs] = useState([]);
@@ -112,6 +117,7 @@ const EventDetailsPage = () => {
 
   // ── Delete confirmation state ─────────────────────────────────────
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteReason, setDeleteReason] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   // ── Fetch requisition details (extracted for reuse) ────────────────
@@ -674,18 +680,38 @@ const EventDetailsPage = () => {
 
   // ── Delete event handler ──────────────────────────────────────────
   const handleDeleteEvent = async () => {
+    if (!deleteReason.trim()) {
+      toast.error("Please enter a reason for deleting the event");
+      return;
+    }
+
     setDeleting(true);
+
     try {
       const token = localStorage.getItem("token");
+
       const res = await fetch(`${API_BASE_URL}/api/events/${eventId}`, {
         method: "DELETE",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          remarks: deleteReason.trim(),
+        }),
       });
+
       const responseData = await res.json().catch(() => ({}));
-      if (!res.ok)
+
+      if (!res.ok) {
         throw new Error(responseData.message || "Failed to delete event");
+      }
+
       toast.success("Event deleted successfully");
+
       setShowDeleteConfirm(false);
+      setDeleteReason("");
+
       // Go back to the previous page after deletion
       navigate(-1);
     } catch (err) {
@@ -708,6 +734,14 @@ const EventDetailsPage = () => {
       window.location.reload();
     }
   };
+
+  function convertToIST(dateString) {
+    return new Date(dateString).toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "medium",
+      timeStyle: "medium",
+    });
+  }
 
   // ── Render active panel based on tab ────────────────────────────────
   const renderActivePanel = () => {
@@ -943,13 +977,19 @@ const EventDetailsPage = () => {
               )}
             </div>
 
-            {role.toLowerCase() == "hod" ? (
+            {role.toLowerCase() == "hod" || isAdminSecretary ? (
               ""
             ) : (
               <>
                 {data?.status?.toLowerCase() !== "closed" && (
                   <Link
-                    to={`/forms/edit/${eventId}`}
+                    to={
+                      activeTab === "Transportation Details" &&
+                      (transportDetails?.transports?.[0]?._id ||
+                        transportDetails?.transports?.[0]?.id)
+                        ? `/transports/edit/${transportDetails.transports[0]._id || transportDetails.transports[0].id}`
+                        : `/forms/edit/${eventId}`
+                    }
                     className="flex items-center gap-2 text-white text-sm bg-[#2e3c5cce] hover:bg-[#263352ce]  px-2 py-2 rounded-lg cursor-pointer "
                   >
                     <Pencil size={14} className="text-[#34D399]  " />
@@ -976,8 +1016,14 @@ const EventDetailsPage = () => {
               <Check size={16} className="text-white" />
               Closed
             </div>
-          ) : data?.adminApproval == false ? (
-            <div className="btn-container flex items-center gap-2">
+          ) : data?.adminApproval == false &&
+            data?.status.toLowerCase() !== "deleted" &&
+            !isAdminSecretary ? (
+            <div className="btn-container flex items-center gap-3">
+               <h1 className="text-amber-400">
+                Submitted at :{" "}
+                <span>{convertToIST(data?.timeline?.submittedAt)}</span>{" "}
+              </h1>
               <button
                 onClick={handleApprove}
                 disabled={actionLoading !== null}
@@ -998,10 +1044,22 @@ const EventDetailsPage = () => {
                 </span>{" "}
                 {actionLoading === "reject" ? "Processing..." : "Reject"}
               </button>
+             
             </div>
           ) : (
             ""
           )}
+
+          {/* approval history button  */}
+          {/* <button
+            onClick={() => setShowApprovalCanvas(true)}
+            className="text-white flex items-center gap-1 bg-linear-to-r from-amber-800 via-amber-600 to-amber-300 hover:bg-linear-to-l hover:from-amber-800  hover:via-amber-600 hover:to-amber-300  px-3 py-1 rounded-md cursor-pointer"
+          >
+            <span>
+              <Clock size={16} />
+            </span>{" "}
+            Timeline
+          </button> */}
         </header>
 
         {/* Status summary bar */}
@@ -1037,7 +1095,7 @@ const EventDetailsPage = () => {
 
         {/* Main content: sidebar + panel */}
         <section className="mt-2 flex min-h-[calc(100vh-160px)] gap-2">
-          {console.log("Added a console for testing ")}
+          {/* {console.log("Added a console for testing ")} */}
           <EventDetailsSidePanel
             tabs={detailTabs}
             activeTab={activeTab}
@@ -1095,12 +1153,23 @@ const EventDetailsPage = () => {
       {showDeleteConfirm && (
         <DeleteConfirmationPopup
           title="Delete Event"
-          message="Are you sure you want to delete this event? This action cannot be undone."
+          message="Please provide a reason before deleting this event. This action cannot be undone."
+          reason={deleteReason}
+          onReasonChange={setDeleteReason}
           deleting={deleting}
-          onCancel={() => setShowDeleteConfirm(false)}
+          onCancel={() => {
+            setShowDeleteConfirm(false);
+            setDeleteReason("");
+          }}
           onDelete={handleDeleteEvent}
         />
       )}
+      {/* {showAppprovalCanvas && (
+        <ApprovalHistoryCanvas
+          timeLineData={data.timeline}
+          setShowApprovalCanvas={setShowApprovalCanvas}
+        />
+      )} */}
     </>
   );
 };

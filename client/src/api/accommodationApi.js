@@ -1,7 +1,8 @@
 import { API_BASE } from "../utils/apiConfig";
 
-export async function fetchAvailableRooms(startDateTime, endDateTime) {
+export async function fetchAvailableRooms(startDateTime, endDateTime, eventId) {
   const params = new URLSearchParams({ startDateTime, endDateTime });
+  if (eventId) params.set("excludeEventId", eventId);
   const response = await fetch(`${API_BASE}/api/accommodation/rooms/availability?${params}`, {
     headers: {
       Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -21,6 +22,7 @@ export async function fetchAvailableRooms(startDateTime, endDateTime) {
     roomNumber: room.roomNumber || room.name || room.identifier || "",
     venue: room.venue || room.venueName || "",
     occupantCount: room.occupantCount ?? room.capacity ?? room.maxOccupants ?? 0,
+    available: room.available,
     requiresAdminConfirmation: room.requiresAdminConfirmation === true,
     adminMessage: room.message || "This room was occupied immediately before the requested time. Please contact the admin team to confirm room availability.",
   }));
