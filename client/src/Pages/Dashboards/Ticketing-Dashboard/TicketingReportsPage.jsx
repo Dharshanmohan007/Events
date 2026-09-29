@@ -3,8 +3,10 @@ import { useState } from "react";
 import { Search, Download, ExternalLink } from "lucide-react";
 import TicketingNavbar from "./TicketingNavbar";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const TicketingReportsPage = () => {
+  const navigate = useNavigate();
   // Auth
   const token = localStorage.getItem("token");
 
@@ -167,7 +169,14 @@ const TicketingReportsPage = () => {
 
                         <td className="px-5 py-4 text-center flex">
                           <div className="btn-contaienr w-fit m-auto flex items-center gap-3">
-                            <button className="text-[#8995a8] w-fit  hover:text-white flex items-center justify-center gap-3">
+                            <button
+                              type="button"
+                              aria-label={`View ${event.eventName} details`}
+                              onClick={() =>
+                                navigate(`/ticketing-dashboard/event-request/${event.eventId}`)
+                              }
+                              className="text-[#8995a8] w-fit hover:text-white flex items-center justify-center gap-3"
+                            >
                               <ExternalLink size={16} />
                             </button>
                             <button className="text-[#8995a8] w-fit  hover:text-white flex items-center justify-center gap-3">
