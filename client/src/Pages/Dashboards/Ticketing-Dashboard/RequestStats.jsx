@@ -69,14 +69,14 @@ const RequestStats = () => {
           {/* Approved Events */}
           <div className="rounded-md border border-[#267a6b] bg-gradient-to-r from-[#173b3a] to-[#215e52] p-2">
             <div className="flex items-center justify-between">
-              <p className="text-[14px] text-[#c5c1d0]">Approved Events</p>
+              <p className="text-[14px] text-[#c5c1d0]">Acknowledged Events</p>
 
               <div className="flex h-8 w-8 items-center justify-center rounded-sm bg-[#63d5bd]">
                 <CheckCircle2 size={14} className="text-[#ffffff]" />
               </div>
             </div>
 
-            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">{statcard?.approved}</p>
+            <p className="mt-1 text-sm font-semibold text-[#e6e7eb]">{statcard?.acknowledged}</p>
           </div>
 
           {/* Completed Events */}
