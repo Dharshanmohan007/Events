@@ -17,7 +17,7 @@ import {
 import EventHeaderData from "../EventHeaderData";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { toast } from "react-toastify";
+import { showErrorToast, showSuccessToast } from "../../../Components/CustomToast";
 
 const TicketingEventDetailView = () => {
   const token = localStorage.getItem("token");
@@ -58,7 +58,7 @@ const TicketingEventDetailView = () => {
     try {
       const res = await axios.patch(
         `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/status`,
-        { action, module: "externalTransports" },
+        { action, module: "externalTransport" },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -67,12 +67,13 @@ const TicketingEventDetailView = () => {
       );
       if (!res.data.success)
         throw new Error(res.data.message || `Failed to ${action}`);
-      toast.success(
+      showSuccessToast(
+        "Success",
         `Status updated to ${action === "acknowledge" ? "Acknowledged" : "Completed"} successfully`,
       );
       setReloadKey((k) => k + 1);
     } catch (err) {
-      toast.error(err.message || `Failed to ${action}`);
+      showErrorToast("Error", err.message || `Failed to ${action}`);
     } finally {
       setActionLoading(false);
     }
