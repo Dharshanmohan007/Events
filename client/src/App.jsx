@@ -835,8 +835,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="events-attended" element={<Eventsattended />} />
-
+      <Route path="events-attended" e
+        lement={<Eventsattended />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
