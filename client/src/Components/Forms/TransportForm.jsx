@@ -479,7 +479,7 @@ function VehicleMultiSelect({
                     onClick={() => onToggle(vehicle.vehicleType)}
                     className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors text-left ${
                       isSelected
-                        ? "bg-purple-600/40 text-slate-900 dark:text-white"
+                        ? "bg-[#9E25FE] dark:bg-purple-600/40 text-slate-900 text-white"
                         : "text-slate-900 dark:text-white hover:bg-black/5 dark:hover:bg-white/5"
                     }`}
                   >
@@ -654,30 +654,23 @@ function CheckpointList({
                 }}
               >
                 <div
-                  className="flex items-stretch rounded-lg border overflow-hidden"
+                  className={`flex items-stretch rounded-lg border overflow-hidden ${
+                    isDropTarget
+                      ? "bg-purple-100 dark:bg-[#32325a] border-purple-400 dark:border-[#a855f7] shadow-[0_0_0_2px_rgba(168,85,247,0.4)]"
+                      : isBeingDragged
+                      ? "bg-purple-50 dark:bg-[#2e2e50] border-purple-500 dark:border-[#7c3aed] shadow-[0_4px_20px_rgba(124,58,237,0.3)]"
+                      : "bg-slate-50 dark:bg-[#2a2a4a] border-slate-300 dark:border-[#4b5563]"
+                  }`}
                   style={{
                     minHeight: "46px",
-                    backgroundColor: isDropTarget
-                      ? "#32325a"
-                      : isBeingDragged
-                      ? "#2e2e50"
-                      : "#2a2a4a",
-                    borderColor: isDropTarget
-                      ? "#a855f7"
-                      : isBeingDragged
-                      ? "#7c3aed"
-                      : "#4b5563",
-                    boxShadow: isDropTarget
-                      ? "0 0 0 2px rgba(168,85,247,0.4)"
-                      : isBeingDragged
-                      ? "0 4px 20px rgba(124,58,237,0.3)"
-                      : "none",
                     transition:
                       "background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease",
                   }}
                 >
                   <div
-                    className="flex items-center justify-center border-r border-gray-600 bg-[#23234a] select-none flex-shrink-0"
+                    className={`flex items-center justify-center border-r select-none flex-shrink-0 ${
+                      isDropTarget || isBeingDragged ? "border-purple-300 dark:border-purple-500/50" : "border-slate-300 dark:border-gray-600"
+                    } bg-slate-200 dark:bg-[#23234a]`}
                     style={{ minWidth: 36, cursor: "grab" }}
                     onMouseDown={() => {
                       const row = rowRefs.current[cpIndex];
@@ -718,7 +711,7 @@ function CheckpointList({
                       onChange={(e) =>
                         onChange(formIndex, cpIndex, e.target.value)
                       }
-                      className="bg-transparent outline-none text-gray-300 w-full text-sm"
+                      className="bg-transparent outline-none text-slate-900 dark:text-gray-300 w-full text-sm"
                       onMouseDown={(e) => e.stopPropagation()}
                     />
                   </div>
@@ -1254,7 +1247,7 @@ export default function TransportForm({
                     return (
                       <div
                         key={g.guestId}
-                        className="flex justify-between items-center gap-4 bg-[#2a2a4a] border border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer"
+                        className="flex justify-between items-center gap-4 bg-slate-100 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3a3a5a] p-3 rounded-lg mb-2 cursor-pointer transition-colors"
                         onClick={() => {
                           const current = form.selectedGuestIds || [];
                           const next = current.includes(g.guestId)
@@ -1274,20 +1267,20 @@ export default function TransportForm({
                               handleChange(formIndex, "selectedGuestIds", next);
                             }}
                           />
-                          <span className="text-sm text-white truncate">{g.name}</span>
+                          <span className="text-sm text-slate-900 dark:text-white truncate">{g.name}</span>
                         </div>
-                        <div className="flex gap-6 text-xs text-gray-400 items-center flex-shrink-0">
+                        <div className="flex gap-6 text-xs text-slate-500 dark:text-gray-400 items-center flex-shrink-0">
                           {/* <span className="flex items-center gap-1.5">
                             <Building2 className="text-purple-500" size={16} />
-                            <span className="text-gray-300">{g.organization || "—"}</span>
+                            <span className="text-slate-600 dark:text-gray-300">{g.organization || "—"}</span>
                           </span> */}
                           <span className="flex items-center gap-1.5">
                             <GenderIcon gender={g.gender} />
-                            <span className="text-gray-300">{g.gender || "—"}</span>
+                            <span className="text-slate-600 dark:text-gray-300">{g.gender || "—"}</span>
                           </span>
                           <span className="flex items-center gap-1.5">
                             <PhoneIconFilled />
-                            <span className="text-gray-300">{g.mobile || "—"}</span>
+                            <span className="text-slate-600 dark:text-gray-300">{g.mobile || "—"}</span>
                           </span>
                         </div>
                       </div>

@@ -333,8 +333,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                         key={opt.id}
                         onClick={() => toggle(opt.id)}
                         className={`px-3 py-2 rounded-md cursor-pointer transition-colors flex items-center justify-between ${isSelected
-                            ? "bg-purple-600/30 text-slate-900 dark:text-white"
-                            : "text-slate-900 dark:text-white hover:bg-purple-500/20"
+                          ? "bg-purple-600/30 text-slate-900 dark:text-white"
+                          : "text-slate-900 dark:text-white hover:bg-purple-500/20"
                           }`}
                       >
                         <div className="flex flex-col">
@@ -422,8 +422,8 @@ function MultiVenueSelect({ label, options, selected, onChange, error, totalPart
                           key={opt.id}
                           onClick={() => toggle(opt.id)}
                           className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center justify-between transition-colors ${isSelected
-                              ? "bg-purple-600/30 text-slate-900 dark:text-white"
-                              : "text-slate-700 dark:text-gray-300 hover:bg-purple-500/20"
+                            ? "bg-purple-600/30 text-slate-900 dark:text-white"
+                            : "text-slate-700 dark:text-gray-300 hover:bg-purple-500/20"
                             }`}
                         >
                           <div className="flex items-center gap-2">
@@ -526,8 +526,8 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
         </div>
 
         {open && (
-          <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-20 flex flex-col">
-            <div className="p-2 border-b border-[#3A3A5A]">
+          <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-300 dark:border-[#3A3A5A] rounded-lg z-20 flex flex-col shadow-lg">
+            <div className="p-2 border-b border-slate-300 dark:border-[#3A3A5A]">
               <div className="relative">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -547,7 +547,7 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
                   onChange={(e) => setSearch(e.target.value)}
                   onClick={(e) => e.stopPropagation()}
                   placeholder="Search requirements..."
-                  className="w-full bg-[#2A2A3F] border border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-white dark:bg-[#2A2A3F] border border-slate-300 dark:border-[#3A3A5A] rounded-md pl-8 pr-3 py-2 text-sm text-slate-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-purple-500"
                 />
                 {search && (
                   <button
@@ -571,7 +571,7 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
             </div>
             <div className="max-h-52 overflow-y-auto custom-scrollbar">
               {filteredItems.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-gray-400">No requirements found</div>
+                <div className="px-4 py-3 text-sm text-slate-500 dark:text-gray-400">No requirements found</div>
               ) : (
                 filteredItems.map((item, i) => {
                   const isSelected = selected.includes(item);
@@ -580,8 +580,8 @@ function HallRequirementsSelect({ label, selected, onChange, error }) {
                       key={i}
                       onClick={() => toggle(item)}
                       className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${isSelected
-                          ? "bg-purple-600/30 text-white"
-                          : "text-white hover:bg-purple-500/20"
+                        ? "bg-[#9E25FE] dark:bg-purple-600/30 text-slate-900 text-white"
+                        : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                         }`}
                     >
                       <span>{item}</span>
@@ -792,10 +792,10 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
               <div className="flex flex-col items-center min-w-[140px]">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-all duration-300 ${isCompleted
-                      ? "bg-purple-600 border-purple-600 text-white"
-                      : isCurrent
-                        ? "border-purple-500 text-purple-400"
-                        : "border-gray-600 text-gray-500"
+                    ? "bg-purple-600 border-purple-600 text-white"
+                    : isCurrent
+                      ? "border-purple-500 text-purple-400"
+                      : "border-gray-600 text-gray-500"
                     }`}
                 >
                   {isCompleted ? (
@@ -817,10 +817,10 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
                   <div className="mt-2 text-center">
                     <p
                       className={`text-xs font-semibold ${isCompleted
-                          ? "text-purple-400"
-                          : isCurrent
-                            ? "text-purple-300"
-                            : "text-gray-400"
+                        ? "text-purple-400"
+                        : isCurrent
+                          ? "text-purple-300"
+                          : "text-gray-400"
                         }`}
                     >
                       {day.date}
@@ -828,10 +828,10 @@ export function DayTimeline({ days, currentDayIndex, completedDays }) {
                     {day.startTime && day.endTime && (
                       <p
                         className={`text-xs ${isCompleted
-                            ? "text-purple-400"
-                            : isCurrent
-                              ? "text-purple-300"
-                              : "text-gray-500"
+                          ? "text-purple-400"
+                          : isCurrent
+                            ? "text-purple-300"
+                            : "text-gray-500"
                           }`}
                       >
                         ({day.startTime} - {day.endTime})
@@ -1141,7 +1141,7 @@ export default function VenueForm({
         String(rawContact).toLowerCase() === "yes" ||
         rawContact === 1;
 
-            if (existing) {
+      if (existing) {
         if (isSingleVenue) {
           // Sole selected venue → keep it synced with total participants.
           return {
@@ -1504,7 +1504,7 @@ export default function VenueForm({
             <div className="px-6 py-5">
 
               <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 px-4 py-4">
-                <p className="text-purple-200 text-sm leading-6">
+                <p className="text-black dark:text-purple-200 text-sm leading-6">
                   Kindly get permission from the respective department
                   venue in-charge, classroom in-charge, or lab in-charge
                   before using the selected venue.
@@ -1602,7 +1602,7 @@ export default function VenueForm({
                   setAdminDetails({ department: "", departmentHeadName: "", departmentHeadDesignation: "", departmentHeadMobile: "" });
                   setAdminErrors({});
                 }}
-                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] hover:text-white transition-colors"
+                className="px-5 py-2.5 rounded-lg border border-[#4A4A6A] text-gray-300 text-sm font-medium hover:bg-[#2A2A3F] text-black hover:text-white transition-colors"
               >
                 Cancel
               </button>
@@ -1743,7 +1743,7 @@ export default function VenueForm({
           )}
 
         <div className="flex items-center justify-between">
-          <h2 className="text-white text-lg font-bold">
+          <h2 className=" text-black dark:text-white text-lg font-bold">
             Venue Details
           </h2>
 

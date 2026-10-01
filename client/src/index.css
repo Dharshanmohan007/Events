@@ -144,3 +144,20 @@ input[type="password"]:focus {
     linear-gradient(0deg, #313e5a 50%, transparent 50%) left / 1px 16px repeat-y,
     linear-gradient(0deg, #313e5a 50%, transparent 50%) right / 1px 16px repeat-y;
 }
+
+/* WebKit */
+.custom-select-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-select-scrollbar::-webkit-scrollbar-thumb {
+  background: #9B1BFC;
+  border-radius: 6px;
+}
+
+/* Firefox */
+.custom-select-scrollbar {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #9B1BFC transparent;
+}

@@ -224,12 +224,12 @@ function AudioRequirementsSelect({
                   key={key}
                   onClick={() => toggle(key)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-slate-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-[#A12FFF] text-white" : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{label}</span>
                   {isSelected && (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-purple-400"
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-white"
                       viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12" />

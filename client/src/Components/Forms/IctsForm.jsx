@@ -202,15 +202,15 @@ function RequirementsSelect({
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
                     isSelected
-                      ? "bg-purple-600/30 text-slate-900 dark:text-white"
-                      : "text-slate-700 dark:text-white hover:bg-purple-500/20"
+                      ? "bg-[#A12FFF] text-white"
+                      : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
                   {isSelected && (
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="w-4 h-4 text-purple-400"
+                      className="w-4 h-4 text-white"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"

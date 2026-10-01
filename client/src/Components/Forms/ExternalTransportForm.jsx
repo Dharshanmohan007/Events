@@ -324,10 +324,14 @@ function CustomSelectDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-900 dark:text-white hover:bg-purple-600/20 transition-colors text-left cursor-pointer"
+                className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${
+                  isSelected
+                    ? "bg-[#9B1BFC] text-white"
+                    : "text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-600/20"
+                }`}
               >
                 <span>{opt}</span>
-                {isSelected && <Check size={14} className="text-purple-400" />}
+                {isSelected && <Check size={14} className="text-white" />}
               </button>
             );
           })}
@@ -636,14 +640,16 @@ export default function ExternalTransportForm({
           className="rounded-2xl mb-8 relative bg-white dark:bg-[#1e1e2f] border border-slate-300 dark:border-[#3A3A5A]"
         >
           {index > 0 && (
-            <button
-              type="button"
-              onClick={() => setDeleteIndex(index)}
-              className="absolute top-4 right-4 z-10 text-gray-400 hover:text-red-400 transition-colors bg-white dark:bg-[#1E1E2F] rounded-full p-1 border border-slate-200 dark:border-[#3A3A5A] cursor-pointer"
-              title="Remove Entry"
-            >
-              <Trash2 size={18} />
-            </button>
+            <div className="flex items-center justify-end px-6 pt-5 pb-3 border-slate-200 dark:border-[#2e2e50]">
+              <button
+                type="button"
+                onClick={() => setDeleteIndex(index)}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer"
+                title="Remove Entry"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           )}
 
           <div className="p-6 space-y-6">
@@ -662,21 +668,19 @@ export default function ExternalTransportForm({
               </div>
 
               {(form.travelOption === "Train" || form.travelOption === "Flight") && (
-                <div className="relative">
+                <div className="relative w-full">
                   <div
-                    className="absolute -top-2 left-3 z-10 px-1 text-xs text-slate-800 dark:text-white bg-white dark:bg-[#1e1e2f]"
+                    className="absolute -top-[9px] left-3 z-10 px-1 text-xs text-slate-800 dark:text-white bg-white dark:bg-[#1e1e2f] pointer-events-none"
                   >
                     Travel Date *
                   </div>
-                  <div className="pt-2">
-                    <CustomDatePicker
-                      value={form.travelDate}
-                      onChange={(val) => handleChange(index, "travelDate", val)}
-                      placeholder="Select Travel Date"
-                      minDate={todayDateStr}
-                      className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-gray-500 dark:text-white"
-                    />
-                  </div>
+                  <CustomDatePicker
+                    value={form.travelDate}
+                    onChange={(val) => handleChange(index, "travelDate", val)}
+                    placeholder="Select Travel Date"
+                    minDate={todayDateStr}
+                    className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-slate-900 dark:text-white"
+                  />
                   {getError(index, "travelDate") && (
                     <p className="text-red-400 text-xs mt-1">{getError(index, "travelDate")}</p>
                   )}
