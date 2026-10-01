@@ -256,7 +256,7 @@
         </tr>
         <tr>
           <th style="width:18%;">Type of Expense</th>
-          <th style="width:28%;">Vendor / Guest Name</th>
+          <th style="width:28%;">Name of the remuneration</th>
           <th style="width:16%;">Bill No</th>
           <th style="width:16%;">Bill Date</th>
           <th style="width:22%;">Bill Amount</th>
@@ -437,8 +437,8 @@ function renderExpenditure() {
         cells += `<td class="cat-tag" rowspan="${cat.items.length}">${cat.category}</td>`;
       }
       cells += `
-        <td>${item.guest || item.expense || ""}</td>
-        <td>${item.billNo || ""}</td>
+        <td style="text-align: center;">${item.expense || "-"}</td>
+        <td style="text-align: center;">${item.billNo || ""}</td>
         <td>${item.billDate || ""}</td>
         <td class="amt" valign="top" align="right"><div style="display: block; position: absolute; top: 2px; right: 4px;">${item.amount ?? ""}</div></td>`;
       tr.innerHTML = cells;

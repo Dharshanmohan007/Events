@@ -9,7 +9,9 @@ import clgLogo from '../assets/clg-logo2.webp';
 function formatDate(dateStr) {
   if (!dateStr) return "-";
   const d = new Date(dateStr);
-  return d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  if (isNaN(d.getTime())) return "-";
+  const yy = String(d.getFullYear()).slice(-2);
+  return `${d.getDate()}/${d.getMonth() + 1}/${yy}`;
 }
 
 function formatDateTime(dateStr) {
@@ -56,7 +58,24 @@ function buildEventTemplate(event = {}) {
       if (displayName && displayName.includes('undefined')) {
         displayName = null;
       }
-      const safeName = displayName || o?.fullName || '-';
+      let combinedName = null;
+      if (o?.firstName && o?.lastName) {
+        combinedName = `${o.firstName} ${o.lastName}`;
+      } else if (o?.firstName) {
+        combinedName = o.firstName;
+      }
+      
+      let safeName = o?.fullName || combinedName || displayName || '-';
+      
+      // If the name is a single word and email is like firstname.i@sece.ac.in, append the initial
+      if (safeName && !safeName.includes(' ') && o?.email) {
+        const match = o.email.match(/^([a-z]+)\.([a-z]+)@/i);
+        if (match && match[1].toLowerCase() === safeName.toLowerCase()) {
+           safeName = `${safeName} ${match[2].toUpperCase()}`;
+        }
+      }
+      
+      // (Removed the forced Dr. prefix block as requested)
       
       return `
       <tr>
@@ -233,11 +252,10 @@ function buildEventTemplate(event = {}) {
       const roomSel = (a.roomSelections || []);
       const roomHtml = roomSel.length
         ? roomSel.map(rs => {
-            // rs.roomNumber already contains the full label (e.g. "Room 1"), don't prepend "Room"
-            const num = rs.roomNumber || rs.room || '-';
-            // rs.venue holds room type/category (e.g. "SUIT"), not the building venue
-            const type = rs.venue ? ` [${rs.venue}]` : '';
-            return `<strong>${num}</strong>${type} (Occupants: ${rs.occupantCount ?? '-'})`;
+            const num = rs.roomNumber || rs.room || '';
+            const type = rs.venue || '';
+            const combined = `${type} ${num}`.trim();
+            return `<strong>${combined || '-'}</strong>`;
           }).join('<br/>')
         : '-';
 
@@ -289,7 +307,7 @@ function buildEventTemplate(event = {}) {
   const getDayInfo = (r, idx, eventDetails, venueDetails) => {
     const dayIdx = r?.dayIndex ?? idx;
     const scheduleDate = (eventDetails?.eventSchedule || [])[dayIdx]?.eventDate;
-    const dateToUse = r?.date || scheduleDate;
+    const dateToUse = r?.fromDate || r?.date || scheduleDate;
     const formattedDate = dateToUse ? formatDate(dateToUse) : `Day ${dayIdx + 1}`;
     
     const allVenues = new Set();
@@ -356,15 +374,45 @@ function buildEventTemplate(event = {}) {
   // ── Pivot Food table (Breakfast / Lunch / Dinner per date column) ──────────
   const allRefreshments = refreshmentDetails?.refreshments || [];
 
+  const expandDates = (r, fallbackRaw, fallbackFormatted, venueStr, arr) => {
+    let pushed = false;
+    if (r?.fromDate && r?.toDate) {
+      const start = new Date(r.fromDate);
+      const end = new Date(r.toDate);
+      if (!isNaN(start) && !isNaN(end) && start <= end) {
+        const cur = new Date(start);
+        while (cur <= end) {
+          const dl = new Date(cur);
+          const dlStr = dl.toISOString().substring(0, 10);
+          if (!arr.find(x => x.raw === dlStr)) {
+            arr.push({ raw: dlStr, label: formatDate(dl.toISOString()), entry: r, venueStr });
+          }
+          cur.setDate(cur.getDate() + 1);
+        }
+        pushed = true;
+      }
+    }
+    if (!pushed) {
+      if (!arr.find(x => x.raw === fallbackRaw)) {
+        arr.push({ raw: fallbackRaw, label: fallbackFormatted, entry: r, venueStr });
+      }
+    }
+  };
+
+  const getSummaryLabel = (r) => {
+    if (r?.fromDate && r?.toDate && r.fromDate !== r.toDate) {
+      return `${formatDate(r.fromDate)} to ${formatDate(r.toDate)}`;
+    }
+    return getDayInfo(r, allRefreshments.indexOf(r), eventDetails, venueDetails).formattedDate;
+  };
+
   // Collect distinct dates that have meal-type food entries
   const foodDates = [];
   allRefreshments.forEach((r, idx) => {
     const hasMeals = (r?.foodTypes || []).some(f => MEAL_TYPES.includes(f?.type));
     if (hasMeals) {
       const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
-      if (!foodDates.find(fd => fd.raw === rawDate)) {
-        foodDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
-      }
+      expandDates(r, rawDate, formattedDate, venueStr, foodDates);
     }
   });
 
@@ -373,10 +421,10 @@ function buildEventTemplate(event = {}) {
     if (foodDates.length === 0) return '';
 
     // Summary block above the table
-    const summaryLines = foodDates.map(fd => {
-      const r = fd.entry;
+    const uniqueEntries = Array.from(new Set(foodDates.map(fd => fd.entry)));
+    const summaryLines = uniqueEntries.map(r => {
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-      return `<strong>${fd.label}</strong>: Venue: ${fd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+      return `<strong>${getSummaryLabel(r)}</strong> | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
     }).join('<br/>');
 
     // Header row: date groups, each split into V / NV
@@ -417,19 +465,18 @@ function buildEventTemplate(event = {}) {
     const hasRefresh = (r?.foodTypes || []).some(f => REFRESH_TYPES.includes(f?.type));
     if (hasRefresh) {
       const { formattedDate, rawDate, venueStr } = getDayInfo(r, idx, eventDetails, venueDetails);
-      if (!refreshDates.find(rd => rd.raw === rawDate)) {
-        refreshDates.push({ raw: rawDate, label: formattedDate, entry: r, venueStr });
-      }
+      expandDates(r, rawDate, formattedDate, venueStr, refreshDates);
     }
   });
 
   const buildRefreshPivot = () => {
     if (refreshDates.length === 0) return '';
 
-    const summaryLines = refreshDates.map(rd => {
-      const r = rd.entry;
+    const uniqueEntries = Array.from(new Set(refreshDates.map(rd => rd.entry)));
+    const summaryLines = uniqueEntries.map(r => {
+      const { venueStr } = getDayInfo(r, allRefreshments.indexOf(r), eventDetails, venueDetails);
       const staff = (r?.accompanyingStaff || []).map(s => `${s.name}${s.mobile ? ' ('+s.mobile+')' : ''}`).join(', ');
-      return `<strong>${rd.label}</strong>: Venue: ${rd.venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
+      return `<strong>${getSummaryLabel(r)}</strong> | Venue: ${venueStr} | Resource: ${(r?.resourcePersonType||[]).join(', ')||'-'} — ${r?.numberOfResourcePersons||0} person(s)${r?.numberOfInternalAccompanyingStaff?', Internal Staff: '+r.numberOfInternalAccompanyingStaff:''}${staff?' | Staff: '+staff:''}${r?.specialRequirements?' | Special: '+r.specialRequirements:''}`;
     }).join('<br/>');
 
     const dateHeaders = refreshDates.map(rd =>
@@ -558,7 +605,10 @@ function buildEventTemplate(event = {}) {
 
   const foodSection = (reqFlags.refreshmentRequired && foodPivot) ? `
     <div class="section">
-      <h2>Food</h2>
+      <h2 style="display: flex; justify-content: space-between; align-items: center;">
+        <span>Food</span>
+        <span>Guest Dining @ Amnity Centre</span>
+      </h2>
       ${foodPivot}
     </div>
   ` : '';
