@@ -1,5 +1,5 @@
 import React from 'react'
-import { ArrowUpRight, Bus, Clapperboard, ShoppingCart, Utensils } from 'lucide-react'
+import { ArrowUpRight, Bus, Clapperboard, ShoppingCart, UserRoundPlus } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const actions = [
@@ -7,13 +7,15 @@ const actions = [
     { title: 'Media Request', icon: Clapperboard, color: 'text-[#A78BFA]', bg: 'bg-[#39285d]', link: "/media" },
     { title: 'Purchase Request', icon: ShoppingCart, color: 'text-[#19D399]', bg: 'bg-[#143d3d]', link: "/purchase" },
     // { title: 'Food & Refreshment Request', icon: Utensils, color: 'text-[#FB923C]', bg: 'bg-[#432a1e]', link: "/IndividualFoodAn dRefreshment" },
+    { title: 'Events Attended', icon: UserRoundPlus, color: 'text-amber-500', bg: 'bg-amber-100/10', link: "/events-attended" },
 ]
+
 
 const FacultyQuickActions = () => {
     return (
         <section className="mt-4 rounded-lg border border-[#263044] bg-[#151d2d] px-4 py-3">
             <h2 className="text-lg font-medium text-white">Quick Action</h2>
-            <div className="mt-1 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-3">
+            <div className="mt-1 grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-4">
                 {actions.map(({ title, icon: Icon, color, bg, link }) => (
                     <Link to={link}
                         key={title}

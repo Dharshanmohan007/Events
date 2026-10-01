@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IndividualExternalTransportDetails from "./IndividualExternalTransportDetails";
 import FormSubmitted from "./FormSubmitted";
 import { buildIndividualReportHtml } from "./IndividualReport";
 import { API_BASE } from "../../utils/apiConfig";
+import UploadIcon from "../../assets/upload.svg";
 
 const INDIVIDUAL_EVENT_API_BASE = import.meta.env.DEV ? "" : API_BASE;
 
@@ -27,6 +28,9 @@ const Eventsattended = () => {
   });
   const [participantDetails, setParticipantDetails] = useState([]);
   const [externalTransportDetails, setExternalTransportDetails] = useState([]);
+  const [principalApprovalFile, setPrincipalApprovalFile] = useState(null);
+  const [principalFileError, setPrincipalFileError] = useState("");
+  const principalInputRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitMessage, setSubmitMessage] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -36,6 +40,66 @@ const Eventsattended = () => {
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
+
+  const handlePrincipalFileChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== "application/pdf") {
+      setPrincipalApprovalFile(null);
+      setPrincipalFileError("Only PDF files are allowed.");
+      event.target.value = "";
+      return;
+    }
+
+    if (selectedFile.size > 1024 * 1024) {
+      setPrincipalApprovalFile(null);
+      setPrincipalFileError("File size must be less than 1MB.");
+      event.target.value = "";
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalFile(selectedFile);
+  };
+
+  const handlePrincipalDrop = (event) => {
+    event.preventDefault();
+
+    const droppedFile = event.dataTransfer.files?.[0];
+    if (!droppedFile) return;
+
+    if (droppedFile.type !== "application/pdf") {
+      setPrincipalFileError("Only PDF files are allowed.");
+      return;
+    }
+
+    if (droppedFile.size > 1024 * 1024) {
+      setPrincipalFileError("File size must be less than 1MB.");
+      return;
+    }
+
+    setPrincipalFileError("");
+    setPrincipalApprovalFile(droppedFile);
+  };
+
+  const handlePrincipalRemove = (event) => {
+    event.stopPropagation();
+    setPrincipalApprovalFile(null);
+    setPrincipalFileError("");
+    if (principalInputRef.current) principalInputRef.current.value = "";
+  };
+
+  const openPrincipalFilePicker = () => principalInputRef.current?.click();
+
+  const readFileAsDataUrl = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error("Unable to read the Principal approval file."));
+      reader.readAsDataURL(file);
+    });
 
   useEffect(() => {
     const count = Number(form.participants) || 0;
@@ -58,6 +122,9 @@ const Eventsattended = () => {
 
   const getDayDiff = (fromDate, toDate) => {
     if (!fromDate || !toDate) return 0;
+
+
+
 
     const start = new Date(fromDate);
     const end = new Date(toDate);
@@ -84,7 +151,7 @@ const Eventsattended = () => {
     return `${dateValue}T${timeValue || "00:00:00"}`;
   };
 
-  const openSubmittedReport = (payload, responseData) => {
+    const openSubmittedReport = (payload, responseData) => {
     const responseReportData = responseData?.data || responseData || {};
     const storedIqacNumber = Number(localStorage.getItem("individualEventIqacNumber")) || 0;
     const apiIqacNumber = Number(responseReportData.iqacNumber) || 0;
@@ -137,7 +204,7 @@ const Eventsattended = () => {
         transportNumber,
         trainNumber,
         flightNumber,
-        specialRequirements: item.specialRequirements?.trim() || "None",
+        externalTransportSpecialRequirement: item.specialRequirements?.trim() || "None",
         passengers: (item.passengers || []).map((passenger) => ({
           name: passenger.name || "",
           phone: String(passenger.phone || "").trim(),
@@ -165,6 +232,7 @@ const Eventsattended = () => {
     if (!form.participants || Number(form.participants) <= 0) missingFields.push("number of participants");
     if (!form.programFrom || !form.programTo) missingFields.push("program date range");
     if (!form.onDutyFrom || !form.onDutyTo) missingFields.push("on-duty date range");
+    if (!principalApprovalFile) missingFields.push("Principal approval file");
 
     if (missingFields.length > 0) {
       setSubmitMessage(`Please complete the ${missingFields.join(", ")}.`);
@@ -179,6 +247,10 @@ const Eventsattended = () => {
     setIsSubmitting(true);
 
     try {
+      const principalApprovalData = principalApprovalFile
+        ? await readFileAsDataUrl(principalApprovalFile)
+        : "";
+
       let department = "";
       try {
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -204,11 +276,26 @@ const Eventsattended = () => {
         programToDate: form.programTo || "",
         onDutyFrom: formatDateTime(form.onDutyFrom, "09:00:00"),
         onDutyTo: formatDateTime(form.onDutyTo, "17:00:00"),
+        offCampusFrom: formatDateTime(form.onDutyFrom, "09:00:00"),
+        offCampusTo: formatDateTime(form.onDutyTo, "17:00:00"),
         foodRequired: form.foodRequired === "Yes",
         transportRequired: form.transportRequired === "Yes",
         accommodationRequired: form.accommodationRequired === "Yes",
+        food: form.foodRequired,
+        transport: form.transportRequired,
+        accommodation: form.accommodationRequired,
+        specialRequirement: form.otherRequirements || "",
         otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
+        principalApprovalFormName: principalApprovalFile?.name || "",
+        principalApprovalForm: principalApprovalFile
+          ? {
+              name: principalApprovalFile.name,
+              type: principalApprovalFile.type,
+              size: principalApprovalFile.size,
+              data: principalApprovalData,
+            }
+          : null,
         externalTransport: form.transport === "yes" ? normalizeExternalTransport(externalTransportDetails) : [],
       };
 
@@ -235,6 +322,16 @@ const Eventsattended = () => {
         }
       }
 
+      const responseRecord = data?.data;
+      if (responseRecord && typeof responseRecord === "object") {
+        responseRecord.specialRequirement =
+          responseRecord.specialRequirement ??
+          responseRecord.specialRequirements ??
+          payload.specialRequirement ??
+          "";
+        delete responseRecord.specialRequirements;
+      }
+
       if (!response.ok) {
         const serverMessage =
           data?.message ||
@@ -246,7 +343,10 @@ const Eventsattended = () => {
 
       setSubmitMessage("Request submitted successfully.");
       setSubmitSuccess(true);
-      console.log("Event attended submission payload:", payload);
+      console.log(
+        "Event attended submission payload:",
+        JSON.stringify(payload, null, 2),
+      );
       console.log("API response:", data);
     } catch (error) {
       console.error("Submit error:", error);
@@ -273,8 +373,56 @@ const Eventsattended = () => {
           </p>
         </div>
 
+<div>
+            <label className="mb-2 block text-sm font-medium text-slate-200">
+              Date of the program/event/visit
+            </label>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="relative">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  From
+                </label>
+                <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
+                  <input
+                    type="date"
+                    value={form.programFrom}
+                    onChange={(e) => updateField("programFrom", e.target.value)}
+                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                    placeholder="dd-mm-yyyy"
+                  />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                </div>
+              </div>
+
+              <div className="relative">
+                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  To
+                </label>
+                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
+                  <input
+                    type="date"
+                    value={form.programTo}
+                    onChange={(e) => updateField("programTo", e.target.value)}
+                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                    placeholder="dd-mm-yyyy"
+                  />
+                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+                </div>
+              </div>
+            </div>
+
+            {form.programFrom && form.programTo && (
+              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
+                <span className="text-slate-300">Total days: </span>
+                <span className="font-semibold text-white">{getDayDiff(form.programFrom, form.programTo)} day(s)</span>
+              </div>
+            )}
+          </div>
+
+
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2 mt-6">
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
                 Type of the program/event/visit
@@ -384,55 +532,11 @@ const Eventsattended = () => {
             />
           </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              Date of the program/event/visit
-            </label>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  From
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
-                  <input
-                    type="date"
-                    value={form.programFrom}
-                    onChange={(e) => updateField("programFrom", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
-                    placeholder="dd-mm-yyyy"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  To
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
-                  <input
-                    type="date"
-                    value={form.programTo}
-                    onChange={(e) => updateField("programTo", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
-                    placeholder="dd-mm-yyyy"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
-            </div>
-
-            {form.programFrom && form.programTo && (
-              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
-                <span className="text-slate-300">Total days: </span>
-                <span className="font-semibold text-white">{getDayDiff(form.programFrom, form.programTo)} day(s)</span>
-              </div>
-            )}
-          </div>
+          
 
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-200">
-              Request for On-Duty / Off Campus time
+              Request for  Off Campus time
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -476,6 +580,106 @@ const Eventsattended = () => {
           </div>
 
           <div className="space-y-5 pt-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                Principal Approval File
+              </label>
+              <div
+                onClick={!principalApprovalFile ? openPrincipalFilePicker : undefined}
+                onDrop={handlePrincipalDrop}
+                onDragOver={(event) => event.preventDefault()}
+                className={`relative flex w-full flex-row items-center justify-center gap-3 rounded-lg p-4 text-center text-sm text-white ${
+                  !principalApprovalFile ? "cursor-pointer" : "cursor-default"
+                }`}
+              >
+                <svg className="pointer-events-none absolute inset-0 h-full w-full">
+                  <rect
+                    x="1"
+                    y="1"
+                    width="calc(100% - 2px)"
+                    height="calc(100% - 2px)"
+                    rx="10"
+                    fill="none"
+                    stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+                    strokeWidth="2"
+                    strokeDasharray="10 4"
+                  />
+                </svg>
+
+                <img src={UploadIcon} alt="upload" className="z-10 h-8 w-7 opacity-80" />
+
+                {principalApprovalFile ? (
+                  <div className="z-10 flex flex-wrap items-center justify-center gap-3">
+                    <span className="text-sm font-medium text-purple-300">
+                      {principalApprovalFile.name}
+                    </span>
+                    <span className="text-xs text-gray-400">
+                      ({(principalApprovalFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handlePrincipalRemove}
+                      className="rounded-md border border-red-400/40 px-2 py-1 text-xs text-red-400 transition-colors hover:border-red-300/60 hover:text-red-300"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ) : (
+                  <p className="z-10">
+                    Drag and drop files here or{" "}
+                    <span className="text-purple-400 underline">choose file</span>
+                    <span className="mt-0.5 block text-xs text-gray-500">
+                      Only PDF files supported - Max file size: 1MB
+                    </span>
+                  </p>
+                )}
+              </div>
+
+              <input
+                ref={principalInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={handlePrincipalFileChange}
+                className="hidden"
+              />
+
+              {principalFileError && (
+                <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                External Transport Required
+              </label>
+              <div className="relative">
+                <select
+                  value={form.transport}
+                  onChange={(e) => updateField("transport", e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                >
+                  <option value="">Select</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 1.04l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {form.transport === "yes" && (
+              <div className="overflow-hidden rounded-xl border border-[#2d3a4d] bg-[#071b2f]">
+                <IndividualExternalTransportDetails onDataChange={setExternalTransportDetails} />
+              </div>
+            )}
+
             <div className="grid gap-4 md:grid-cols-3">
               {[
                 { label: "Food Required", field: "foodRequired" },

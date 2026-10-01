@@ -9,6 +9,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import AdminDashboardHeader from "../../Dashboards/Admin-Dashboard/AdminDashboardHeader";
 import IndividualTicketingDetailView from "../IndividualTicketingDetailView";
+import EventsAttendedDetailView from "../../../Components/EventsAttendedDetailView";
 
 const AdminIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -39,6 +40,7 @@ const AdminIndividualDetailView = () => {
         setData(res.data.data);
        
         setFormType(res.data.data[0].formType);
+        console.log("form type : ", res.data.data[0].formType);
       } catch (err) {
         console.error(
           "error occured while fetching invidiual details page data : ",
@@ -73,7 +75,9 @@ const AdminIndividualDetailView = () => {
         {formType?.toLowerCase() == "individualticketing" && (
           <IndividualTicketingDetailView data={data[0]} />
         )}
-
+        {formType?.toLowerCase() == "eventattending" && (
+          <EventsAttendedDetailView data={data[0]} />
+        )}
       </div>
     </>
   );
