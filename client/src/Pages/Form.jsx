@@ -2149,8 +2149,6 @@ export default function Form() {
   if (!CurrentComponent) return null;
 
   return (
-    <div className="flex h-screen bg-[#16162A] overflow-hidden">
-      <div className="hidden md:block w-[325px] flex-shrink-">
     <>
       {restrictionPopup && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
