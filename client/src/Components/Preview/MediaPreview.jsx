@@ -153,7 +153,7 @@ function TwoColumnCard({
   rightIcon: RightIcon,
 }) {
   return (
-    <div className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl overflow-hidden">
+    <div className="bg-slate-50 dark:bg-white dark:bg-[#252C3F] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] rounded-xl overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <div className="flex items-center justify-between gap-6 px-6 py-6">
           <div className="flex items-center gap-3">
@@ -166,7 +166,7 @@ function TwoColumnCard({
           </span>
         </div>
 
-        <div className="border-l border-slate-200 dark:border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
+        <div className="border-l border-slate-200 dark:border-slate-200 dark:border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
           <div className="flex items-center gap-3">
             {RightIcon && <RightIcon size={18} className="text-[#C4B5FD]" />}
             <span className="text-[14px] text-[#C4C8D4]">{rightLabel}</span>
@@ -187,7 +187,7 @@ function TwoColumnCard({
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="border border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-[#1E2435] p-5 min-w-0 overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-5 min-w-0 overflow-hidden">
       <h3 className="flex items-center gap-2 text-[20px] playfair font-bold text-[#8B5CF6] mb-5">
         <Icon size={18} className="text-[#C4B5FD]" />
         {title}
@@ -227,7 +227,7 @@ function DetailGrid({ items }) {
         <div
           key={idx}
           className={`flex flex-wrap gap-6 ${
-            idx < rows.length - 1 ? "pb-5 border-b border-slate-200 dark:border-[#434A60]" : ""
+            idx < rows.length - 1 ? "pb-5 border-b border-slate-200 dark:border-slate-200 dark:border-[#434A60]" : ""
           }`}
         >
           {pair.map((item, i) => (
@@ -251,7 +251,7 @@ function FileChip({ file, label, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen({ name, url, isImage, isVideo })}
-      className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-[#2A3042] px-3 py-2 text-left hover:border-slate-200 dark:border-[#8B5CF6] transition-colors"
+      className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-white dark:bg-[#2A3042] px-3 py-2 text-left hover:border-slate-200 dark:border-[#8B5CF6] transition-colors"
     >
       {isImage ? (
         <ImageIcon className="w-4 h-4 text-[#C4B5FD]" />
@@ -277,16 +277,16 @@ function PreviewModal({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-6">
-      <div className="relative w-full max-w-6xl rounded-2xl bg-slate-50 dark:bg-[#1C2233] border border-slate-200 dark:border-[#343C59] shadow-2xl">
+      <div className="relative w-full max-w-6xl rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] shadow-2xl">
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 dark:bg-[#2A3042] hover:bg-slate-50 dark:bg-[#374151]"
+          className="absolute top-4 right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 dark:bg-white dark:bg-[#2A3042] hover:bg-slate-50 dark:bg-[#374151]"
         >
           <X size={20} className="text-slate-900 dark:text-white" />
         </button>
 
-        <div className="p-5 border-b border-slate-200 dark:border-[#343C59]">
+        <div className="p-5 border-b border-slate-200 dark:border-slate-200 dark:border-[#343C59]">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
             {title}
           </h3>
@@ -319,7 +319,7 @@ function PreviewModal({
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-[#1E2435] p-12 text-center">
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-12 text-center">
       <p className="text-[#98A2B3]">{message}</p>
     </div>
   );
@@ -338,7 +338,7 @@ function DayTabs({ labels, current, onChange }) {
           className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
             i === current
               ? "bg-[#7C3AED] border-slate-200 dark:border-[#7C3AED] text-slate-900 dark:text-white"
-              : "bg-slate-50 dark:bg-[#252C3F] border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
+              : "bg-slate-50 dark:bg-white dark:bg-[#252C3F] border-slate-200 dark:border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
           }`}
         >
           {label}
@@ -354,7 +354,7 @@ function DayTabs({ labels, current, onChange }) {
 
 function ContentBlock({ icon: Icon, title, content }) {
   return (
-    <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
+    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
       <div className="flex items-center gap-2 mb-3">
         <Icon size={16} className="text-[#C4B5FD]" />
         <span className="text-[14px] font-semibold text-[#C4B5FD]">{title}</span>
@@ -369,7 +369,7 @@ function ContentBlock({ icon: Icon, title, content }) {
 
 function PillList({ label, items = [] }) {
   return (
-    <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
+    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
       <h4 className="text-[14px] font-semibold text-[#C4B5FD] mb-3">{label}</h4>
 
       <div className="flex flex-wrap gap-2">
@@ -394,7 +394,7 @@ function FileDisplayRow({ label, files = [], onOpen }) {
   const list = asFileArray(files);
 
   return (
-    <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4">
+    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
       <p className="text-[14px] font-semibold text-[#C4B5FD] mb-3">{label}</p>
 
       {list.length === 0 ? (
@@ -412,7 +412,7 @@ function FileDisplayRow({ label, files = [], onOpen }) {
 
 function InfoRow({ label, value, icon: Icon }) {
   return (
-    <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4">
+    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
       <div className="flex items-center gap-2 mb-2">
         <Icon size={16} className="text-[#C4B5FD]" />
         <span className="text-[14px] text-[#C4C8D4]">{label}</span>
@@ -457,7 +457,7 @@ function PosterPreview({ data = {}, dayData = {}, onOpen }) {
               {showGlass && <InfoRow label="Size for Glass Sticker" value={glassSize} icon={Flag} />}
             </div>
           ) : (
-            <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4">
+            <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
               <p className="text-[14px] text-[#98A2B3]">No display size selected.</p>
             </div>
           )}
@@ -552,7 +552,7 @@ export default function MediaPreview({
   if (dayCount === 0) {
     return (
       <div className="space-y-6">
-        <div className="rounded-2xl bg-slate-50 dark:bg-[#1C2233] border border-slate-200 dark:border-[#343C59] p-6">
+        <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6">
           <PreviewHeader description={description} />
         </div>
         <EmptyState message="No media requirement details submitted." />
@@ -562,7 +562,7 @@ export default function MediaPreview({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-slate-50 dark:bg-[#1C2233] border border-slate-200 dark:border-[#343C59] p-6 space-y-6">
+      <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6 space-y-6">
         <PreviewHeader description={description} />
 
         {/* <TwoColumnCard

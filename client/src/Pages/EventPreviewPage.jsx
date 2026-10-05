@@ -1,5 +1,4 @@
-import React, {useMemo,  useState, useContext } from "react";
-import { ThemeContext } from "../context/ThemeContext";
+import { useTheme } from "../context/ThemeContext";
 import { Sun, Moon } from "lucide-react";
 import EventPreview from "../Components/Preview/EventPreview";
 import VenuePreview from "../Components/Preview/VenuePreview";
@@ -33,7 +32,7 @@ export default function EventPreviewPage({
         media: "Media Details",
     };
 
-    const { isDarkMode, toggleTheme } = useContext(ThemeContext);
+    const { isDarkMode, toggleTheme } = useTheme();
 
     const requirementKeys = Array.isArray(selectedRequirements)
         ? selectedRequirements

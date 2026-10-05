@@ -1606,6 +1606,36 @@ export default function Form() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [restrictionPopup, setRestrictionPopup] = useState(false);
+
+  useEffect(() => {
+    if (isEditMode) return;
+    
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const facultyId = decoded.facultyId || decoded.id || decoded._id;
+        if (facultyId) {
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '') : '';
+          fetch(`${apiBaseUrl}/api/events/faculty-restriction/${facultyId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.actionRestricted) {
+                setRestrictionPopup(true);
+              }
+            })
+            .catch(err => console.error("Error checking faculty restriction:", err));
+        }
+      } catch (err) {
+        console.error("Error decoding token:", err);
+      }
+    }
+  }, [isEditMode]);
 
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
@@ -2117,8 +2147,25 @@ export default function Form() {
   if (!CurrentComponent) return null;
 
   return (
-    <div className="flex h-screen bg-[#ffffff] dark:bg-[#16162A] overflow-hidden">
-      <div className="hidden md:block w-[325px] flex-shrink-0">
+    <>
+      {restrictionPopup && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white dark:bg-[#1C1C33] rounded-2xl shadow-xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-800 text-center">
+            <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Submission Restricted</h2>
+            <p className="text-slate-700 dark:text-slate-300 mb-6">
+              You cannot submit the event before closing the previous event.
+            </p>
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+            >
+              Back to Dashboard
+            </button>
+          </div>
+        </div>
+      )}
+      <div className="flex h-screen bg-[#ffffff] dark:bg-[#16162A] overflow-hidden">
+        <div className="hidden md:block w-[325px] flex-shrink-0">
         <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps} />
       </div>
       <div className="w-full flex-1 flex flex-col overflow-hidden">
@@ -2189,5 +2236,6 @@ export default function Form() {
         </div>
       </div>
     </div>
+    </>
   );
 }
