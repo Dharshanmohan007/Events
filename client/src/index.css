@@ -151,7 +151,7 @@ input[type="password"]:focus {
 }
 
 .custom-select-scrollbar::-webkit-scrollbar-thumb {
-  background: #9B1BFC;
+  background: #9B1DFC;
   border-radius: 6px;
 }
 
@@ -159,5 +159,106 @@ input[type="password"]:focus {
 .custom-select-scrollbar {
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: #9B1BFC transparent;
+  scrollbar-color: #9B1DFC transparent;
+}
+
+/* Base popper */
+.food-datepicker-popper {
+  z-index: 9999 !important;
+}
+
+/* Light Theme (Default) */
+html:not(.dark) .food-datepicker-popper .react-datepicker {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  font-family: inherit !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__current-month,
+html:not(.dark) .food-datepicker-popper .react-datepicker__day-name,
+html:not(.dark) .food-datepicker-popper .react-datepicker-time__header {
+  color: #0f172a !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day {
+  color: #334155 !important;
+  border-radius: 6px !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day:hover {
+  background-color: #9B1DFC !important;
+  color: #fff !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day--selected,
+html:not(.dark) .food-datepicker-popper .react-datepicker__day--keyboard-selected {
+  background-color: #9B1DFC !important;
+  color: #fff !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day--outside-month {
+  color: #94a3b8 !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__navigation-icon::before {
+  border-color: #64748b !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #0f172a !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__triangle {
+  display: none !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day--disabled {
+  color: #cbd5e1 !important;
+  cursor: not-allowed !important;
+}
+html:not(.dark) .food-datepicker-popper .react-datepicker__day--disabled:hover {
+  background-color: transparent !important;
+  color: #cbd5e1 !important;
+}
+
+/* Dark Theme */
+.dark .food-datepicker-popper .react-datepicker {
+  background-color: #1E1E2F !important;
+  border: 1px solid #3A3A5A !important;
+  color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__header {
+  background-color: #1E1E2F !important;
+  border-bottom: 1px solid #3A3A5A !important;
+}
+.dark .food-datepicker-popper .react-datepicker__current-month,
+.dark .food-datepicker-popper .react-datepicker__day-name,
+.dark .food-datepicker-popper .react-datepicker-time__header {
+  color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day {
+  color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day:hover {
+  background-color: #9B1DFC !important;
+  color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day--selected,
+.dark .food-datepicker-popper .react-datepicker__day--keyboard-selected {
+  background-color: #9B1DFC !important;
+  color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day--outside-month {
+  color: #555580 !important;
+}
+.dark .food-datepicker-popper .react-datepicker__navigation-icon::before {
+  border-color: #aaa !important;
+}
+.dark .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
+  border-color: #fff !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day--disabled {
+  color: #3a3a5a !important;
+}
+.dark .food-datepicker-popper .react-datepicker__day--disabled:hover {
+  color: #3a3a5a !important;
 }

@@ -11,65 +11,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 
-// ─── DatePicker dark theme override (injected once) ──────────────────────────
-const DATE_PICKER_STYLES = `
-  .food-datepicker-popper {
-    z-index: 9999 !important;
-  }
-  .food-datepicker-popper .react-datepicker {
-    background-color: #1E1E2F !important;
-    border: 1px solid #3A3A5A !important;
-    border-radius: 12px !important;
-    font-family: inherit !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__header {
-    background-color: #1E1E2F !important;
-    border-bottom: 1px solid #3A3A5A !important;
-    border-radius: 12px 12px 0 0 !important;
-  }
-  .food-datepicker-popper .react-datepicker__current-month,
-  .food-datepicker-popper .react-datepicker__day-name,
-  .food-datepicker-popper .react-datepicker-time__header {
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day {
-    color: #fff !important;
-    border-radius: 6px !important;
-  }
-  .food-datepicker-popper .react-datepicker__day:hover {
-    background-color: #7c3aed !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--selected,
-  .food-datepicker-popper .react-datepicker__day--keyboard-selected {
-    background-color: #7c3aed !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--outside-month {
-    color: #555580 !important;
-  }
-  .food-datepicker-popper .react-datepicker__navigation-icon::before {
-    border-color: #aaa !important;
-  }
-  .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
-    border-color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__triangle {
-    display: none !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--disabled {
-    color: #3a3a5a !important;
-    cursor: not-allowed !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--disabled:hover {
-    background-color: transparent !important;
-    color: #3a3a5a !important;
-  }
-`;
+
 
 // ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
-function MultiSelect({ label, options, selected = [], onToggle, labelClassName = "bg-white dark:bg-[#1f1f38]" }) {
+function MultiSelect({ 
+  label, 
+  options, 
+  selected = [], 
+  onToggle, 
+  labelClassName = "bg-white dark:bg-[#1f1f38]",
+  dropdownClassName = "bg-white dark:bg-[#1E1E2F] border-slate-200 dark:border-[#3A3A5A]",
+  selectedClassName = "bg-[#9B1DFC] text-white",
+  unselectedClassName = "text-slate-800 dark:text-gray-300 hover:bg-[#9B1DFC]/10 hover:text-[#9B1DFC] dark:hover:bg-[#9B1DFC]/20 dark:hover:text-white"
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -123,7 +77,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelClassName =
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
+        <div className={`absolute top-full mt-1 w-full border rounded-lg z-50 max-h-52 overflow-y-auto ${dropdownClassName}`}>
           {options.map((opt, i) => {
             const isSelected = selected.includes(opt);
             return (
@@ -131,16 +85,14 @@ function MultiSelect({ label, options, selected = [], onToggle, labelClassName =
                 key={i}
                 onClick={() => onToggle(opt)}
                 className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-purple-600/30 text-white"
-                    : "text-gray-300 hover:bg-purple-500/20 hover:text-white"
+                  isSelected ? selectedClassName : unselectedClassName
                 }`}
               >
-                <span>{opt}</span>
+                <span className={isSelected && selectedClassName.includes("bg-[") ? "text-white" : ""}>{opt}</span>
                 <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center ml-3">
                   {isSelected && (
                     <svg
-                      className="w-4 h-4 text-purple-400"
+                      className={`w-4 h-4 ${selectedClassName.includes("bg-[") ? "text-white" : "text-purple-500 dark:text-purple-400"}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -487,16 +439,7 @@ export default function FoodAndRefreshments({
     return refreshmentVenues;
   }, [venues, venuesList]);
 
-  // Inject dark datepicker styles once
-  useEffect(() => {
-    const id = "food-datepicker-dark";
-    if (!document.getElementById(id)) {
-      const style = document.createElement("style");
-      style.id = id;
-      style.textContent = DATE_PICKER_STYLES;
-      document.head.appendChild(style);
-    }
-  }, []);
+
 
   // ── FIX: Only restore forms that have a date set (real saved data).
   //         Auto-generated empty day-based entries from the parent are ignored
@@ -992,7 +935,6 @@ export default function FoodAndRefreshments({
                   popperProps={{ strategy: "fixed" }}
                   className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
-                  calendarClassName="food-dark-cal"
                 />
                 {getError(form.id, "fromDate") && (
                   <p className="text-red-400 text-xs mt-1">{getError(form.id, "fromDate")}</p>
@@ -1024,7 +966,6 @@ export default function FoodAndRefreshments({
                   popperProps={{ strategy: "fixed" }}
                   className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
-                  calendarClassName="food-dark-cal"
                 />
                 {getError(form.id, "toDate") && (
                   <p className="text-red-400 text-xs mt-1">{getError(form.id, "toDate")}</p>

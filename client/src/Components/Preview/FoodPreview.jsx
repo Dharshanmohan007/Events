@@ -64,7 +64,7 @@ function TwoColumnCard({
   rightIcon: RightIcon,
 }) {
   return (
-    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl overflow-hidden">
+    <div className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
 
         {/* Left */}
@@ -84,14 +84,14 @@ function TwoColumnCard({
             </span>
           </div>
 
-          <span className="font-semibold text-white text-[16px]">
+          <span className="font-semibold text-slate-900 dark:text-white text-[16px]">
             {leftValue || "—"}
           </span>
         </div>
 
         {/* Right */}
 
-        <div className="border-l border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
+        <div className="border-l border-slate-200 dark:border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
 
           <div className="flex items-center gap-3">
 
@@ -107,7 +107,7 @@ function TwoColumnCard({
             </span>
           </div>
 
-          <span className="font-semibold text-white text-[16px] text-right">
+          <span className="font-semibold text-slate-900 dark:text-white text-[16px] text-right">
             {rightValue || "—"}
           </span>
         </div>
@@ -128,7 +128,7 @@ function MealRow({
   rightValue,
 }) {
   return (
-    <div className="bg-[#2A3042] border border-[#394156] rounded-xl overflow-hidden">
+    <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl overflow-hidden">
       <div className={`grid grid-cols-1 ${rightLabel ? 'lg:grid-cols-2' : ''}`}>
 
         <div className="flex justify-between items-center px-5 py-6">
@@ -136,18 +136,18 @@ function MealRow({
             {leftLabel}
           </span>
 
-          <span className="font-bold text-white text-[20px]">
+          <span className="font-bold text-slate-900 dark:text-white text-[20px]">
             {leftValue ?? 0}
           </span>
         </div>
 
         {rightLabel && (
-          <div className="border-t lg:border-t-0 lg:border-l border-[#434A60] flex justify-between items-center px-5 py-6">
+          <div className="border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-[#434A60] flex justify-between items-center px-5 py-6">
             <span className="text-[#C4C8D4] text-[14px]">
               {rightLabel}
             </span>
 
-            <span className="font-bold text-white text-[20px]">
+            <span className="font-bold text-slate-900 dark:text-white text-[20px]">
               {rightValue ?? 0}
             </span>
           </div>
@@ -169,7 +169,7 @@ function MealSection({ title, data = {} }) {
   const placement = data?.placement || {};
 
   return (
-    <div className="border border-[#343C59] rounded-2xl bg-[#1E2435] p-5">
+    <div className="border border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-[#1E2435] p-5">
       <h3 className="text-[26px] font-bold text-[#8B5CF6] mb-5">
         {title}
       </h3>
@@ -229,7 +229,7 @@ export default function FoodPreview({ foodData = [] }) {
 
   if (!Array.isArray(foodData) || foodData.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#343C59] bg-[#1E2435] p-12 text-center">
+      <div className="rounded-2xl border border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-[#1E2435] p-12 text-center">
         <p className="text-[#98A2B3]">
           No Food & Refreshment Details Added
         </p>
@@ -270,8 +270,8 @@ export default function FoodPreview({ foodData = [] }) {
               onClick={() => setActiveDay(index)}
               className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
                 safeIndex === index
-                  ? "bg-[#7C3AED] border-[#7C3AED] text-white"
-                  : "bg-[#252C3F] border-[#343C59] text-[#C4C8D4] hover:border-[#7C3AED]"
+                  ? "bg-[#7C3AED] border-slate-200 dark:border-[#7C3AED] text-slate-900 dark:text-white"
+                  : "bg-slate-50 dark:bg-[#252C3F] border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
               }`}
             >
               Day {index + 1}
@@ -282,7 +282,7 @@ export default function FoodPreview({ foodData = [] }) {
 
       {/* Main Card */}
 
-      <div className="rounded-2xl bg-[#1C2233] border border-[#343C59] p-6 space-y-6">
+      <div className="rounded-2xl bg-slate-50 dark:bg-[#1C2233] border border-slate-200 dark:border-[#343C59] p-6 space-y-6">
 
         <PreviewHeader />
 
@@ -394,13 +394,13 @@ export default function FoodPreview({ foodData = [] }) {
 
         {/* Special Requirements */}
 
-        <div className="border border-[#343C59] rounded-2xl bg-[#1E2435] p-5">
+        <div className="border border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-[#1E2435] p-5">
 
           <h3 className="text-[24px] font-bold text-[#8B5CF6] mb-4">
             Special Requirements
           </h3>
 
-          <div className="bg-[#2A3042] border border-[#343C59] rounded-xl p-5">
+          <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
 
             <p className="text-[#D6D8E1] text-[14px] leading-6 whitespace-pre-wrap">
               {day.specialRequirements?.trim()

@@ -355,7 +355,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelCla
       <div
         className={`relative w-full h-10 px-3 rounded-lg bg-transparent border ${
           error ? "border-red-400" : open ? "border-purple-500" : "border-slate-200 dark:border-[#3a3a5a]"
-        } text-white cursor-pointer flex items-center justify-between transition`}
+        } cursor-pointer flex items-center justify-between transition`}
         onClick={() => {
           const nextOpen = !open;
           setOpen(nextOpen);
@@ -374,8 +374,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelCla
         />
       </div>
       <label
-        className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
-
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label}
       </label>
@@ -391,7 +390,7 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelCla
               onChange={(e) => setSearch(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               placeholder="Search..."
-              className="bg-transparent text-white text-sm outline-none w-full placeholder-gray-500"
+              className="bg-transparent text-black dark:text-white text-sm outline-none w-full placeholder-gray-500"
             />
           </div>
 
@@ -410,8 +409,8 @@ function RoomMultiSelect({ label, options, value = [], onChange, error, labelCla
                   onClick={() => toggle(opt)}
                   className={`flex items-center justify-between px-4 py-1.5 cursor-pointer text-sm transition-colors ${
                     selected
-                      ? "bg-purple-700/30 text-white"
-                      : "text-gray-300 hover:bg-white dark:bg-[#2a2a4a] hover:text-white"
+                      ? "bg-[#9B1DFC] text-white"
+                      : "text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] hover:text-black dark:hover:text-white"
                   }`}
                 >
                   <span className="flex min-w-0 flex-1 items-start gap-2">
@@ -462,7 +461,7 @@ function MultiSelect({ label, options, value = [], onChange, error, labelClassNa
       <div
         className={`relative w-full p-3 rounded-lg bg-transparent border ${
           error ? "border-red-400" : open ? "border-purple-500" : "border-slate-200 dark:border-[#3a3a5a]"
-        } text-white cursor-pointer flex items-center justify-between transition`}
+        } cursor-pointer flex items-center justify-between transition`}
         onClick={() => setOpen((o) => !o)}
       >
         <span className={`text-sm truncate ${value.length === 0 ? "text-gray-500" : "text-slate-900 dark:text-white"}`}>
@@ -474,8 +473,7 @@ function MultiSelect({ label, options, value = [], onChange, error, labelClassNa
         />
       </div>
       <label
-        className="absolute left-3 -top-2 text-xs text-gray-300 px-1 pointer-events-none z-10"
-
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label}
       </label>
@@ -490,8 +488,8 @@ function MultiSelect({ label, options, value = [], onChange, error, labelClassNa
                 onClick={() => toggle(opt)}
                 className={`flex items-center justify-between px-4 py-2.5 cursor-pointer text-sm transition-colors ${
                   selected
-                    ? "bg-purple-700/30 text-white"
-                    : "text-gray-300 hover:bg-white dark:bg-[#2a2a4a] hover:text-white"
+                    ? "bg-[#9B1DFC] text-white"
+                    : "text-black dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] hover:text-black dark:hover:text-white"
                 }`}
               >
                 <span>{opt}</span>

@@ -103,7 +103,7 @@ function TwoColumnCard({
   rightIcon: RightIcon,
 }) {
   return (
-    <div className="bg-[#252C3F] border border-[#343C59] rounded-xl overflow-hidden">
+    <div className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2">
         <div className="flex items-center justify-between gap-6 px-6 py-6">
           <div className="flex items-center gap-3">
@@ -111,18 +111,18 @@ function TwoColumnCard({
             <span className="text-[14px] text-[#C4C8D4]">{leftLabel}</span>
           </div>
 
-          <span className="font-semibold text-white text-[14px]">
+          <span className="font-semibold text-slate-900 dark:text-white text-[14px]">
             {leftValue || "—"}
           </span>
         </div>
 
-        <div className="border-l border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
+        <div className="border-l border-slate-200 dark:border-[#434A60] flex items-center justify-between gap-6 px-6 py-6">
           <div className="flex items-center gap-3">
             {RightIcon && <RightIcon size={18} className="text-[#C4B5FD]" />}
             <span className="text-[14px] text-[#C4C8D4]">{rightLabel}</span>
           </div>
 
-          <span className="font-semibold text-white text-[14px] text-right">
+          <span className="font-semibold text-slate-900 dark:text-white text-[14px] text-right">
             {rightValue || "—"}
           </span>
         </div>
@@ -137,7 +137,7 @@ function TwoColumnCard({
 
 function  SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="border border-[#343C59] rounded-2xl bg-[#1E2435] p-5">
+    <div className="border border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-[#1E2435] p-5">
       <h3 className="flex items-center gap-2 text-[20px] playfair font-bold text-[#8B5CF6] mb-5">
         <Icon size={18} className="text-[#C4B5FD]" />
         {title}
@@ -167,7 +167,7 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
 
   if (accommodations.length === 0) {
     return (
-      <div className="rounded-2xl border border-[#343C59] bg-[#1E2435] p-12 text-center">
+      <div className="rounded-2xl border border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-[#1E2435] p-12 text-center">
         <p className="text-[#98A2B3]">No Accommodation Details Added</p>
       </div>
     );
@@ -192,8 +192,8 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
               onClick={() => setActiveDay(index)}
               className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
                 safeIndex === index
-                  ? "bg-[#7C3AED] border-[#7C3AED] text-white"
-                  : "bg-[#252C3F] border-[#343C59] text-[#C4C8D4] hover:border-[#7C3AED]"
+                  ? "bg-[#7C3AED] border-slate-200 dark:border-[#7C3AED] text-slate-900 dark:text-white"
+                  : "bg-slate-50 dark:bg-[#252C3F] border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
               }`}
             >
               Day {index + 1}
@@ -202,7 +202,7 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
         </div>
       )}
 
-      <div className="rounded-2xl bg-[#1C2233] border border-[#343C59] p-6 space-y-6">
+      <div className="rounded-2xl bg-slate-50 dark:bg-[#1C2233] border border-slate-200 dark:border-[#343C59] p-6 space-y-6">
         <PreviewHeader />
 
         <TwoColumnCard
@@ -231,10 +231,10 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
               {selectedGuests.map((guest) => (
                 <div
                   key={guest.guestId}
-                  className="bg-[#2A3042] border border-[#394156] rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+                  className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl px-4 py-3 flex items-center justify-between gap-3"
                 >
                   <div className="min-w-0">
-                    <p className="text-[14px] font-semibold text-white truncate">
+                    <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">
                       {guest.name || "—"}
                     </p>
                   </div>
@@ -257,19 +257,19 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
 
         <SectionCard title="Room Details" icon={BedDouble}>
           <div className="space-y-3">
-            <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4">
+            <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4">
               <p className="text-[14px] text-[#C4C8D4] mb-2">Room Selections</p>
               {roomSelections.length > 0 ? (
                 <div className="space-y-2">
                   {roomSelections.map((room, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2 last:border-b-0 last:pb-0"
+                      className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-[#434A60] pb-2 last:border-b-0 last:pb-0"
                     >
                       <span className="text-[14px] text-[#D6D8E1]">
                         {room.venue} - Room {room.roomNumber}
                       </span>
-                      <span className="text-[14px] text-white font-semibold">
+                      <span className="text-[14px] text-slate-900 dark:text-white font-semibold">
                         Capacity: {room.occupantCount}
                       </span>
                     </div>
@@ -283,18 +283,18 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
         </SectionCard>
 
         <SectionCard title="Dine-in" icon={UtensilsCrossed}>
-          <div className="bg-[#2A3042] border border-[#394156] rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2">
+          <div className="bg-slate-50 dark:bg-[#2A3042] border border-slate-200 dark:border-[#394156] rounded-xl p-4 space-y-2">
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-[#434A60] pb-2">
               <span className="text-[14px] text-[#C4C8D4]">Dine-in Required</span>
-              <span className="text-[14px] text-white font-semibold">{acc.dine || "—"}</span>
+              <span className="text-[14px] text-slate-900 dark:text-white font-semibold">{acc.dine || "—"}</span>
             </div>
 
             {(acc.dineTypes || []).length > 0 ? (
               <div className="space-y-2">
                 {acc.dineTypes?.includes("Hostel") && (
-                  <div className="flex items-center justify-between gap-4 border-b border-[#434A60] pb-2">
+                  <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-[#434A60] pb-2">
                     <span className="text-[14px] text-[#C4C8D4]">Hostel Dine-in Guests</span>
-                    <span className="text-[14px] text-white font-semibold">
+                    <span className="text-[14px] text-slate-900 dark:text-white font-semibold">
                       {acc.hostelGuests || 0}
                     </span>
                   </div>
@@ -303,7 +303,7 @@ export default function AccommodationPreview({ accommodationData, eventDays = []
                 {acc.dineTypes?.includes("Amenity") && (
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-[14px] text-[#C4C8D4]">Amenity Dine-in Guests</span>
-                    <span className="text-[14px] text-white font-semibold">
+                    <span className="text-[14px] text-slate-900 dark:text-white font-semibold">
                       {acc.amenityGuests || 0}
                     </span>
                   </div>

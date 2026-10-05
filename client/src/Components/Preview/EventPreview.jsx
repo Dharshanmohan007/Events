@@ -45,14 +45,14 @@ import {
     };
 
     return (
-        <div className="bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
+        <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white">
         {/* Header */}
         <div className="mb-6">
             <h2 className="text-xl font-semibold text-purple-400 playfair">
             Event Requisition Details
             </h2>
 
-            <p className="text-gray-400 text-sm mt-1">
+            <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
             Review all information before submitting the requisition.
             </p>
         </div>
@@ -61,10 +61,10 @@ import {
                                 EVENT BASIC DETAILS
             ========================================================== */}
 
-        <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mb-6">
+        <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mb-6">
             <div className="grid md:grid-cols-4 gap-5">
-            <div className="border-r border-[#8e93a6] pr-4">
-                <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
+            <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-gray-400 text-xs uppercase">
                 <FileText size={14} />
                 Event Name
                 </div>
@@ -72,8 +72,8 @@ import {
                 <p className="mt-2 font-semibold">{eventData.eventName || "-"}</p>
             </div>
 
-            <div className="border-r border-[#8e93a6] pr-4">
-                <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
+            <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-gray-400 text-xs uppercase">
                 <Calendar size={14} />
                 Event Date
                 </div>
@@ -81,8 +81,8 @@ import {
                 <p className="mt-2 font-semibold">{(firstDay.date)}</p>
             </div>
 
-            <div className="border-r border-[#8e93a6] pr-4">
-                <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
+            <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-gray-400 text-xs uppercase">
                 <Clock size={14} />
                 Event Start Time
                 </div>
@@ -91,7 +91,7 @@ import {
             </div>
 
             <div>
-                <div className="flex items-center gap-2 text-gray-400 text-xs uppercase">
+                <div className="flex items-center gap-2 text-slate-500 dark:text-gray-400 text-xs uppercase">
                 <Clock size={14} />
                 Event End Time
                 </div>
@@ -106,10 +106,10 @@ import {
             ========================================================== */}
 
         <div className="space-y-4 mb-6">
-            <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4">
+            <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-lg p-4">
             <div className="grid md:grid-cols-2 gap-5">
-                <div className="flex justify-between border-r border-[#8e93a6] pr-4">
-                <span className="text-gray-400 text-sm">
+                <div className="flex justify-between border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                <span className="text-slate-500 dark:text-gray-400 text-sm">
                     Completion of Previous Event Documentation
                 </span>
 
@@ -147,16 +147,16 @@ import {
                         </button>
                         </div>
                     ) : (
-                        <span className="text-gray-300">{reason || "-"}</span>
+                        <span className="text-slate-600 dark:text-gray-300">{reason || "-"}</span>
                     )}
                 </div>
             </div>
             </div>
             {(principalApprovalDocument?.url || principalApprovalDocument instanceof File || typeof principalApprovalDocument === "string") && (
-                <div className="bg-[#20263B] border border-[#343C59] rounded-lg p-4 mt-4">
+                <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-lg p-4 mt-4">
                     <div className="grid md:grid-cols-2 gap-5">
-                        <div className="flex justify-between border-r border-[#8e93a6] pr-4">
-                            <span className="text-gray-400 text-sm">
+                        <div className="flex justify-between border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                            <span className="text-slate-500 dark:text-gray-400 text-sm">
                                 Principal Approval Form
                             </span>
                         </div>
@@ -192,15 +192,15 @@ import {
                             ORGANIZER DETAILS
             ========================================================== */}
 
-        <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mb-6">
+        <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mb-6">
             <h3 className="font-semibold mb-5 text-lg">Organizer Details</h3>
 
             <div className="space-y-4">
             {organizers.map((org, index) => (
-                <div key={index} className="border border-[#343C59] rounded-lg p-4 bg-[#FFFFFF0D]">
+                <div key={index} className="border border-slate-200 dark:border-[#343C59] rounded-lg p-4 bg-[#FFFFFF0D]">
                 <div className="grid md:grid-cols-4 gap-5">
-                    <div className="border-r border-[#8e93a6] pr-4">
-                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase ">
+                    <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 uppercase ">
                         <User size={14} />
                         Organizer Name
                     </div>
@@ -208,8 +208,8 @@ import {
                     <p className="mt-2">{org.name || "-"}</p>
                     </div>
 
-                    <div className="border-r border-[#8e93a6] pr-4">
-                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+                    <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 uppercase">
                         <BadgeCheck size={14} />
                         Employee ID
                     </div>
@@ -217,8 +217,8 @@ import {
                     <p className="mt-2">{org.empId || "-"}</p>
                     </div>
 
-                    <div className="border-r border-[#8e93a6] pr-4">
-                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+                    <div className="border-r border-slate-300 dark:border-[#8e93a6] pr-4">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 uppercase">
                         <Phone size={14} />
                         Mobile Number
                     </div>
@@ -227,7 +227,7 @@ import {
                     </div>
 
                     <div>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 uppercase">
                         <Building2 size={14} />
                         Department
                     </div>
@@ -243,11 +243,11 @@ import {
                                 EVENT DETAILS
             ========================================================== */}
 
-        <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+        <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mt-6">
             <h3 className="font-semibold text-lg mb-5">Event Details</h3>
 
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
-                <PreviewRow title="Finance Required" value={finance} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow title="Finance Required" value={finance} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
                 <PreviewRow
                     title="Type of Event"
                     value={
@@ -255,9 +255,9 @@ import {
                         ? eventData.eventTypeOther
                         : eventData.eventType
                     }
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
-                <PreviewRow title="Budget Approved" value={budget} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow title="Budget Approved" value={budget} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
                 <PreviewRow
                     title="Professional Society"
                     value={
@@ -265,10 +265,10 @@ import {
                         ? eventData.societyOther
                         : eventData.society
                     }
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
-                <PreviewRow title="Department" value={department} className="border-b border-[#363D57] pb-3"/>
-                <PreviewRow title="IIC Required" value={eventData.iic} className="border-b border-[#363D57] pb-3"/>
+                <PreviewRow title="Department" value={department} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
+                <PreviewRow title="IIC Required" value={eventData.iic} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
                 <PreviewRow
                     title="Target Audience"
                     value={
@@ -276,12 +276,12 @@ import {
                         ? eventData.audience.join(", ")
                         : eventData.audience
                     }
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
                 <PreviewRow
                     title="Expected Outcome"
                     value={expectedEventOutcome}
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
                 <PreviewRow
                     title="Poster Logos"
@@ -290,24 +290,24 @@ import {
                         ? eventData.logos.join(", ")
                         : eventData.logos
                     }
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
                 <PreviewRow
                     title="Estimated Budget"
                     value={estimatedBudget ? `₹ ${estimatedBudget}` : "-"}
-                    className="border-b border-[#363D57] pb-3"
+                    className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                 />
                 {finance === "Yes" && (
                     <>
                     <PreviewRow
                         title="Advance Amount"
                         value={advanceAmount ? `₹ ${advanceAmount}` : "-"}
-                        className="border-b border-[#363D57] pb-3"
+                        className="border-b border-slate-200 dark:border-[#363D57] pb-3"
                     />
 
-                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} className="border-b border-[#363D57] pb-3"/>
+                    <PreviewRow title="Purpose of Advance" value={purposeOfAdvance} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
                     
-                    <PreviewRow title="Advance Expected Within" value={advanceToBeReceivedWithin} className="border-b border-[#363D57] pb-3"/>
+                    <PreviewRow title="Advance Expected Within" value={advanceToBeReceivedWithin} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
                     </>
                 )}
             </div>
@@ -317,7 +317,7 @@ import {
                                 INTERNAL STUDENTS BREAKDOWN
             ========================================================== */}
         {eventData.internalStudentsBreakdown && eventData.internalStudentsBreakdown.length > 0 && (
-          <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+          <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mt-6">
             <h3 className="font-semibold text-lg mb-5">Internal Students Breakdown</h3>
             <div className="space-y-6">
               {eventData.internalStudentsBreakdown.map((yearData, i) => {
@@ -325,14 +325,14 @@ import {
                 yearData.departments.forEach(d => d.sections.forEach(s => yearTotal += Number(s.count) || 0));
                 
                 return (
-                  <div key={i} className="border border-[#343C59] rounded-lg overflow-hidden">
-                    <div className="flex justify-between items-center bg-[#161B2D] px-4 py-3 text-purple-400 font-semibold text-sm border-b border-[#343C59]">
+                  <div key={i} className="border border-slate-200 dark:border-[#343C59] rounded-lg overflow-hidden">
+                    <div className="flex justify-between items-center bg-white dark:bg-[#161B2D] px-4 py-3 text-purple-400 font-semibold text-sm border-b border-slate-200 dark:border-[#343C59]">
                       <span>Year {yearData.year}</span>
-                      <span className="text-gray-300">Total: {yearTotal}</span>
+                      <span className="text-slate-600 dark:text-gray-300">Total: {yearTotal}</span>
                     </div>
                     
-                    <div className="bg-[#1E1E35]">
-                      <div className="grid grid-cols-3 p-3 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#343C59]">
+                    <div className="bg-slate-50 dark:bg-[#1E1E35]">
+                      <div className="grid grid-cols-3 p-3 text-xs font-semibold text-slate-500 dark:text-gray-400 uppercase tracking-wider border-b border-slate-200 dark:border-[#343C59]">
                         <div>Department</div>
                         <div>Section</div>
                         <div className="text-right">Count</div>
@@ -343,7 +343,7 @@ import {
                           <React.Fragment key={j}>
                             {deptData.sections.map((sectionData, k) => (
                               <div key={`${j}-${k}`} className="grid grid-cols-3 p-3 text-sm text-gray-200 items-center">
-                                <div className="font-medium text-white">{deptData.department}</div>
+                                <div className="font-medium text-slate-900 dark:text-white">{deptData.department}</div>
                                 <div>{sectionData.section}</div>
                                 <div className="text-right font-medium">{sectionData.count}</div>
                               </div>
@@ -363,16 +363,16 @@ import {
                                 EVENT SHEDULE & GUEST DETIAILS
             ========================================================== */}
 
-            <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+            <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mt-6">
             <h3 className="font-semibold text-lg mb-5">Event Schedule</h3>
 
             {eventDays.length === 0 ? (
-                <p className="text-gray-400">No Event Days Added</p>
+                <p className="text-slate-500 dark:text-gray-400">No Event Days Added</p>
             ) : (
                 <>
                 {/* Tabs */}
                 {eventDays.length > 1 && (
-                <div className="flex border-b border-[#343C59] mb-6">
+                <div className="flex border-b border-slate-200 dark:border-[#343C59] mb-6">
                     {eventDays.map((_, index) => (
                     <button
                         key={index}
@@ -380,8 +380,8 @@ import {
                         className={`px-5 py-3 text-[15px] font-semibold transition-colors duration-200 cursor-pointer
                         ${
                             selectedDay === index
-                            ? "text-[#8B5CF6] border-b-[3px] border-[#8B5CF6]"
-                            : "text-[#E5E7EB] border-b-[3px] border-transparent hover:text-white"
+                            ? "text-[#8B5CF6] border-b-[3px] border-slate-200 dark:border-[#8B5CF6]"
+                            : "text-[#E5E7EB] border-b-[3px] border-transparent hover:text-slate-900 dark:text-white"
                         }`}
                     >
                         Day {index + 1}
@@ -396,7 +396,7 @@ import {
                     return (
                     <div className="space-y-6">
                         {/* Date & Time */}
-                        <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+                        <div className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
                             <div className="grid md:grid-cols-3 gap-5">
                                 <PreviewInfo
                                     icon={Calendar}
@@ -431,7 +431,7 @@ import {
                             {day.guests.map((guest, guestIndex) => (
                             <div
                                 key={guestIndex}
-                                className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-4"
+                                className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-4"
                             >
                                 <h5 className="text-sm font-semibold text-purple-300 mb-4">
                                 Chief Guest {guestIndex + 1}
@@ -484,32 +484,32 @@ import {
                                 EVENT REQUIREMENTS
             ========================================================== */}
 
-        <div className="rounded-xl bg-[#20263B] border border-[#343C59] p-5 mt-6">
+        <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 mt-6">
             <h3 className="font-semibold text-lg mb-5">Event Requirements</h3>
 
             <div className="grid md:grid-cols-2 gap-x-10 gap-y-4">
-            <PreviewRow title="Venue Required" value={requirements.venue} className="border-b border-[#363D57] pb-3"/>
+            <PreviewRow title="Venue Required" value={requirements.venue} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
 
-            <PreviewRow title="ICTS Required" value={requirements.icts} className="border-b border-[#363D57] pb-3"/>
+            <PreviewRow title="ICTS Required" value={requirements.icts} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
 
-            <PreviewRow title="Audio Required" value={requirements.audio} className="border-b border-[#363D57] pb-3"/>
+            <PreviewRow title="Audio Required" value={requirements.audio} className="border-b border-slate-200 dark:border-[#363D57] pb-3"/>
 
             <PreviewRow
                 title="Transport Required"
                 value={requirements.transport}
-                className="border-b border-[#363D57] pb-3"
+                className="border-b border-slate-200 dark:border-[#363D57] pb-3"
             />
 
             <PreviewRow
                 title="Food & Refreshments"
                 value={requirements.foodandrefreshments}
-                className="border-b border-[#363D57] pb-3"
+                className="border-b border-slate-200 dark:border-[#363D57] pb-3"
             />
 
             <PreviewRow
                 title="Accommodation"
                 value={requirements.accommodation}
-                className="border-b border-[#363D57] pb-3"
+                className="border-b border-slate-200 dark:border-[#363D57] pb-3"
             />
 
             <PreviewRow title="Purchase" value={requirements.purchase} />
@@ -524,7 +524,7 @@ import {
     function PreviewRow({ title, value, className="" }) {
         return (
             <div className={`flex justify-between ${className}`}>
-                <span className="text-gray-400">
+                <span className="text-slate-500 dark:text-gray-400">
                     {title}
                 </span>
 
@@ -534,7 +534,7 @@ import {
                             ? "text-green-400"
                             : value === "No"
                             ? "text-red-400"
-                            : "text-white"
+                            : "text-slate-900 dark:text-white"
                     }`}
                 >
                     {value || "-"}
@@ -545,13 +545,13 @@ import {
 
     function PreviewInfo({ icon: Icon, title, value, isLast = false }) {
         return (
-            <div className={`${!isLast ? "border-r border-[#8e93a6] pr-4" : ""}`}>
-                <div className="flex items-center gap-2 text-xs text-gray-400 uppercase">
+            <div className={`${!isLast ? "border-r border-slate-300 dark:border-[#8e93a6] pr-4" : ""}`}>
+                <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-gray-400 uppercase">
                     <Icon size={14} />
                     {title}
                 </div>
 
-                <p className="mt-2 font-medium text-white">
+                <p className="mt-2 font-medium text-slate-900 dark:text-white">
                     {value || "-"}
                 </p>
             </div>

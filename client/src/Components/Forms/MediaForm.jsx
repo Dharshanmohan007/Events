@@ -249,7 +249,7 @@ function MultiSelectDropdown({ label, options, selected, onChange, error, labelC
           }`}
         >
           <span
-            className={`text-sm leading-snug flex-1 mr-2 ${selected.length ? "text-slate-900 dark:text-white" : "text-slate-500 dark:text-gray-500"}`}
+            className={`text-sm leading-snug flex-1 mr-2 ${selected.length ? "text-black dark:text-white" : "text-black dark:text-gray-500"}`}
             style={{ whiteSpace: "normal", wordBreak: "break-word" }}
           >
             {displayText || "Select options..."}
@@ -267,7 +267,7 @@ function MultiSelectDropdown({ label, options, selected, onChange, error, labelC
               return (
                 <div key={i} onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-slate-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/20"
+                    isSelected ? "bg-[#9B1DFC] text-white" : "text-black dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                   }`}>
                   <span>{item}</span>
                   {isSelected && (

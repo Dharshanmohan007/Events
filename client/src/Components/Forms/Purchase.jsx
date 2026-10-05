@@ -173,7 +173,7 @@ function MultiSelect({ label, options, selected, onChange, error, labelClassName
             open ? "border-purple-500" : error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         >
-          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
+          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-black dark:text-gray-500"}`}>
             {selected.length ? selected.join(" / ") : "Select..."}
           </span>
           <svg
@@ -194,7 +194,7 @@ function MultiSelect({ label, options, selected, onChange, error, labelClassName
                   key={i}
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-purple-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/10 dark:hover:bg-purple-500/20"
+                    isSelected ? "bg-[#9B1DFC] text-white" : "text-black dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
@@ -246,7 +246,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelClassName = "
             open ? "border-purple-500" : error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         >
-          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
+          <span className={`text-sm truncate max-w-[85%] ${selected.length ? "text-slate-900 dark:text-white" : "text-black dark:text-gray-500"}`}>
             {selected.length ? selected.join(" / ") : "Select..."}
           </span>
           <svg
@@ -267,7 +267,7 @@ function TrophyTypeSelect({ label, selected, onChange, error, labelClassName = "
                   key={i}
                   onClick={() => toggle(item)}
                   className={`px-4 py-2.5 text-sm cursor-pointer transition-colors flex items-center justify-between ${
-                    isSelected ? "bg-purple-600/30 text-purple-900 dark:text-white" : "text-slate-700 dark:text-white hover:bg-purple-500/10 dark:hover:bg-purple-500/20"
+                    isSelected ? "bg-[#9B1DFC] text-white" : "text-black dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/20"
                   }`}
                 >
                   <span>{item}</span>
@@ -321,7 +321,7 @@ function MinZeroInput({ label, value, onChange, error, labelClassName = "bg-whit
           value={value || ""}
           onChange={handleChange}
           onBlur={handleBlur}
-          className={`w-full bg-transparent border rounded-lg p-4 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors duration-200 ${
+          className={`w-full bg-transparent border rounded-lg p-4 text-black dark:text-white text-sm focus:outline-none focus:border-purple-500 transition-colors duration-200 placeholder-black dark:placeholder-gray-500 ${
             error ? "border-red-400" : "border-slate-200 dark:border-[#3A3A5A]"
           }`}
         />
@@ -352,7 +352,7 @@ function CashPrizeInput({ value, onChange, error, labelClassName = "bg-white dar
           }`}
         >
           {showPrefix && (
-            <span className="pl-4 text-white text-sm select-none">₹</span>
+            <span className="pl-4 text-black dark:text-white text-sm select-none">₹</span>
           )}
           <input
             type="number"
@@ -367,7 +367,7 @@ function CashPrizeInput({ value, onChange, error, labelClassName = "bg-white dar
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
             placeholder={showPrefix ? "" : "Enter amount"}
-            className="flex-1 bg-transparent p-4 text-white text-sm focus:outline-none placeholder-gray-600"
+            className="flex-1 bg-transparent p-4 text-black dark:text-white text-sm focus:outline-none placeholder-black dark:placeholder-gray-500"
             style={{ paddingLeft: showPrefix ? "4px" : undefined }}
           />
         </div>
@@ -591,7 +591,7 @@ function StudentCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -599,7 +599,7 @@ function StudentCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-black dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-black dark:placeholder-gray-500"
         />
       </div>
     </div>
@@ -759,7 +759,7 @@ function GuestCard({ data, onChange, errors = {} }) {
 
       {/* Special Requirements */}
       <div className="relative w-full">
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 bg-white dark:bg-[#1E1E35] z-10 pointer-events-none">
           Special Requirements, if any
         </span>
         <textarea
@@ -767,7 +767,7 @@ function GuestCard({ data, onChange, errors = {} }) {
           onChange={(e) => onChange({ ...data, specialRequirements: e.target.value })}
           rows={3}
           placeholder="Enter any special requirements..."
-          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-gray-600"
+          className="w-full bg-transparent border border-slate-200 dark:border-[#3A3A5A] text-black dark:text-white rounded-lg p-4 text-sm focus:outline-none focus:border-purple-500 resize-none placeholder-black dark:placeholder-gray-500"
         />
       </div>
     </div>

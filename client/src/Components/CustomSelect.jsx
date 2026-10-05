@@ -199,8 +199,8 @@ export default function CustomSelect({
                     }}
                     className={`px-4 py-2.5 text-sm cursor-pointer transition-colors ${
                       value === opt
-                        ? "bg-[#9B1BFC] text-white"
-                        : "text-slate-700 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-500/30"
+                        ? "bg-[#9B1DFC] text-white"
+                        : "text-black dark:text-white hover:bg-[#9B1DFC]/10 dark:hover:bg-[#9B1DFC]/30"
                     }`}
                   >
                     {opt}
@@ -403,12 +403,12 @@ export default function CustomSelect({
     >
       {checked && (
         <svg width={size - 4} height={size - 4} viewBox="0 0 12 12" fill="none">
-          <path d="M2 6L5 9L10 3" stroke="#9B1BFC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M2 6L5 9L10 3" stroke="#9B1DFC" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       )}
       {indeterminate && !checked && (
         <svg width={size - 4} height={size - 4} viewBox="0 0 12 12" fill="none">
-          <path d="M2 6H10" stroke="#9B1BFC" strokeWidth="2.5" strokeLinecap="round" />
+          <path d="M2 6H10" stroke="#9B1DFC" strokeWidth="2.5" strokeLinecap="round" />
         </svg>
       )}
     </span>
@@ -515,10 +515,10 @@ export default function CustomSelect({
                         focusIndex === parentFlatIdx
                           ? "bg-purple-500/20 outline outline-1 outline-purple-500/50"
                           : isSelected
-                          ? "bg-[#9B1BFC] text-white"
+                          ? "bg-[#9B1DFC] text-white"
                           : isIndeterminate
-                          ? "bg-[#9B1BFC]/80 text-white"
-                          : "hover:bg-slate-100 dark:hover:bg-purple-500/10"
+                          ? "bg-[#9B1DFC]/80 text-white"
+                          : "hover:bg-slate-100 dark:hover:bg-[#9B1DFC]/10"
                       }`}
                       role="option"
                       aria-selected={isSelected}
@@ -527,7 +527,7 @@ export default function CustomSelect({
                       <Checkbox checked={isSelected} indeterminate={isIndeterminate} />
 
                       {/* Label */}
-                      <span className={`flex-1 ${isSelected || isIndeterminate ? "text-white font-medium" : "text-slate-700 dark:text-gray-200"}`}>
+                      <span className={`flex-1 ${isSelected || isIndeterminate ? "text-white font-medium" : "text-black dark:text-gray-200"}`}>
                         {opt}
                       </span>
 
@@ -615,10 +615,10 @@ export default function CustomSelect({
                         }}
                         className={`px-3.5 py-2 text-sm cursor-pointer transition-all duration-150 flex items-center gap-2.5 ${
                           focusIndex === childFlatIdx
-                            ? "bg-purple-100 dark:bg-purple-500/20"
+                            ? "bg-[#9B1DFC]/10 dark:bg-purple-500/20"
                             : childSelected
-                            ? "bg-purple-50 dark:bg-purple-600/15 text-slate-900 dark:text-white"
-                            : "hover:bg-slate-100 dark:hover:bg-purple-500/10 text-slate-700 dark:text-gray-300"
+                            ? "bg-[#9B1DFC]/10 dark:bg-purple-600/15 text-black dark:text-white"
+                            : "hover:bg-slate-100 dark:hover:bg-purple-500/10 text-black dark:text-gray-300"
                         }`}
                         role="option"
                         aria-selected={childSelected}
@@ -627,7 +627,7 @@ export default function CustomSelect({
                         <Checkbox checked={childSelected} size={14} />
 
                         {/* Label without color dots */}
-                        <span className={`flex-1 text-[13px] leading-tight ${childSelected ? "text-slate-900 dark:text-white font-medium" : "text-slate-700 dark:text-gray-300"}`}>
+                        <span className={`flex-1 text-[13px] leading-tight ${childSelected ? "text-black dark:text-white font-medium" : "text-black dark:text-gray-300"}`}>
                           {child}
                         </span>
 

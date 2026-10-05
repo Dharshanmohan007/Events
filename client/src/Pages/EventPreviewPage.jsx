@@ -1,4 +1,6 @@
-import React, {useMemo,  useState } from "react";
+import React, {useMemo,  useState, useContext } from "react";
+import { ThemeContext } from "../context/ThemeContext";
+import { Sun, Moon } from "lucide-react";
 import EventPreview from "../Components/Preview/EventPreview";
 import VenuePreview from "../Components/Preview/VenuePreview";
 import ICTSPreview from "../Components/Preview/ICTSPreview";
@@ -30,6 +32,8 @@ export default function EventPreviewPage({
         purchase: "Purchase Details",
         media: "Media Details",
     };
+
+    const { isDarkMode, toggleTheme } = useContext(ThemeContext);
 
     const requirementKeys = Array.isArray(selectedRequirements)
         ? selectedRequirements
@@ -129,9 +133,14 @@ export default function EventPreviewPage({
         <div className="h-screen bg-slate-50 dark:bg-[#0B1326] text-slate-900 dark:text-white flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5">
-                <h1 className="text-2xl font-bold">
-                Event Preview
-                </h1>
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Event Preview
+                    </h1>
+                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-[#1f2937] text-slate-800 dark:text-white transition-colors">
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                </div>
 
                 <p className="text-sm text-slate-500 dark:text-white/70">
                     Kindly verify your, final event details before submit...
