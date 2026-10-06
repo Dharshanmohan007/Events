@@ -17,6 +17,7 @@ function createEmptyForm() {
     classOrBerth: [], // array for train, string for flight
     trainNumber: "",
     flightNumber: "",
+    busName: "",
     specialRequirements: "None",
     passengers: [],
   };
@@ -56,18 +57,19 @@ function sanitiseForm(v) {
       (v.travelOption === "Train" ? [] : "Economy"),
     trainNumber: v.trainNumber || "",
     flightNumber: v.flightNumber || "",
+    busName: v.busName || "",
     specialRequirements: v.specialRequirements || "None",
     passengers: Array.isArray(v.passengers)
       ? v.passengers.map((p) => ({
-          id: p.id || crypto.randomUUID(),
-          name: p.name || "",
-          phone: p.phone !== undefined && p.phone !== null ? String(p.phone) : "",
-          email: p.email || "",
-          age: p.age !== undefined && p.age !== null ? String(p.age) : "",
-          gender: p.gender || "",
-          designation: p.designation || "",
-          organization: p.organization || "",
-        }))
+        id: p.id || crypto.randomUUID(),
+        name: p.name || "",
+        phone: p.phone !== undefined && p.phone !== null ? String(p.phone) : "",
+        email: p.email || "",
+        age: p.age !== undefined && p.age !== null ? String(p.age) : "",
+        gender: p.gender || "",
+        designation: p.designation || "",
+        organization: p.organization || "",
+      }))
       : [],
   };
 }
@@ -126,11 +128,14 @@ export function validateExternalTransport(forms) {
       const classes = Array.isArray(form.classOrBerth)
         ? form.classOrBerth
         : form.classOrBerth
-        ? [form.classOrBerth]
-        : [];
+          ? [form.classOrBerth]
+          : [];
       if (classes.length === 0) err.classOrBerth = "Select at least one train class";
     } else if (form.travelOption === "Flight") {
       if (!form.flightNumber?.trim()) err.flightNumber = "Flight number is required";
+    } else if (form.travelOption === "Bus") {
+      if (!form.busName?.trim()) err.busName = "Bus name is required";
+      if (!form.classOrBerth || form.classOrBerth.length === 0) err.classOrBerth = "Bus type is required";
     }
 
     const paxErrors = [];
@@ -300,18 +305,16 @@ function CustomSelectDropdown({
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors cursor-pointer ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
-        }`}
+        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors cursor-pointer ${open ? "border-purple-500" : "border-[#3A3A5A]"
+          }`}
       >
         <span className={`text-sm ${value ? "text-white" : "text-gray-500"}`}>
           {value || placeholder}
         </span>
         <ChevronDown
           size={16}
-          className={`text-gray-400 flex-shrink-0 transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
+          className={`text-gray-400 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""
+            }`}
         />
       </button>
       {open && (
@@ -405,28 +408,29 @@ export default function ExternalTransportForm({
 
     try {
       const externalTransports = formsRef.current.map((item) => ({
-            travelOption: item.travelOption || "",
-            travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
-            from: item.from || "",
-            to: item.to || "",
-            totalPassengers: Number(item.totalPassengers) || 0,
-            numberOfPassengers: Number(item.totalPassengers) || 0,
-            classOrBerth: formatClassOrBerth(item.classOrBerth, item.travelOption),
-            travelClass: formatClassOrBerth(item.classOrBerth, item.travelOption),
-            trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
-            flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
-            specialRequirements: item.specialRequirements?.trim() || "None",
-            passengers: (item.passengers || []).map((p) => ({
-              name: p.name || "",
-              phone: String(p.phone || "").trim(),
-              phoneNumber: String(p.phone || "").trim(),
-              email: p.email || "",
-              age: Number(p.age) || 0,
-              gender: p.gender || "",
-              designation: p.designation || "",
-              organization: p.organization || "",
-            })),
-          }));
+        travelOption: item.travelOption || "",
+        travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+        from: item.from || "",
+        to: item.to || "",
+        totalPassengers: Number(item.totalPassengers) || 0,
+        numberOfPassengers: Number(item.totalPassengers) || 0,
+        classOrBerth: formatClassOrBerth(item.classOrBerth, item.travelOption),
+        travelClass: formatClassOrBerth(item.classOrBerth, item.travelOption),
+        trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : (item.travelOption === "Bus" ? (item.busName || "") : ""),
+        flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
+        busName: item.travelOption === "Bus" ? (item.busName || "") : "",
+        specialRequirements: item.specialRequirements?.trim() || "None",
+        passengers: (item.passengers || []).map((p) => ({
+          name: p.name || "",
+          phone: String(p.phone || "").trim(),
+          phoneNumber: String(p.phone || "").trim(),
+          email: p.email || "",
+          age: Number(p.age) || 0,
+          gender: p.gender || "",
+          designation: p.designation || "",
+          organization: p.organization || "",
+        })),
+      }));
 
       const headers = {
         "Content-Type": "application/json",
@@ -520,7 +524,8 @@ export default function ExternalTransportForm({
         if (oldVal !== val) {
           updated[index].trainNumber = "";
           updated[index].flightNumber = "";
-          updated[index].classOrBerth = val === "Flight" ? "Economy" : [];
+          updated[index].busName = "";
+          updated[index].classOrBerth = val === "Flight" ? "Economy" : val === "Bus" ? "" : [];
         }
       } else if (field === "from" || field === "to") {
         val = val.replace(/[^a-zA-Z\s]/g, "");
@@ -655,7 +660,7 @@ export default function ExternalTransportForm({
                 <CustomSelectDropdown
                   label="Travel Option *"
                   value={form.travelOption}
-                  options={["Train", "Flight"]}
+                  options={["Train", "Flight", "Bus"]}
                   onChange={(val) => handleChange(index, "travelOption", val)}
                   bgClass="bg-[#1e1e2f]"
                 />
@@ -664,7 +669,7 @@ export default function ExternalTransportForm({
                 )}
               </div>
 
-              {(form.travelOption === "Train" || form.travelOption === "Flight") && (
+              {["Train", "Flight", "Bus"].includes(form.travelOption) && (
                 <div className="relative">
                   <div
                     className="absolute -top-2 left-3 z-10 px-1 text-xs text-white"
@@ -677,7 +682,7 @@ export default function ExternalTransportForm({
                       value={form.travelDate}
                       onChange={(val) => handleChange(index, "travelDate", val)}
                       placeholder="Select Travel Date"
-                      minDate={todayDateStr}
+                      minDate={isEditMode ? null : todayDateStr}
                       className="w-full bg-transparent border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-white"
                     />
                   </div>
@@ -688,7 +693,7 @@ export default function ExternalTransportForm({
               )}
             </div>
 
-            {(form.travelOption === "Train" || form.travelOption === "Flight") && (
+            {["Train", "Flight", "Bus"].includes(form.travelOption) && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -772,6 +777,45 @@ export default function ExternalTransportForm({
                           options={["Economy"]}
                           onChange={(val) => handleChange(index, "classOrBerth", val)}
                           bgClass="bg-[#1e1e2f]"
+                        />
+                        {getError(index, "classOrBerth") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "classOrBerth")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {form.travelOption === "Bus" && (
+                    <>
+                      <div>
+                        <FloatingInput
+                          label="Bus Name *"
+                          value={form.busName}
+                          onChange={(e) => handleChange(index, "busName", e.target.value)}
+                          bgClass="bg-[#1e1e2f]"
+                        />
+                        {getError(index, "busName") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "busName")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomSelectDropdown
+                          label="Select Bus Type *"
+                          value={form.classOrBerth || ""}
+                          className="custom-scrollbar"
+                        options={[
+                          "Non A/C Sleeper",
+                          "Non A/C Semi Sleeper",
+                          "Non A/C Seater",
+                          "A/C Sleeper",
+                          "A/C Semi Sleeper",
+                          "A/C Seater"
+                        ]}
+                        onChange={(val) => handleChange(index, "classOrBerth", val)}
+                        bgClass="bg-[#1e1e2f]"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">

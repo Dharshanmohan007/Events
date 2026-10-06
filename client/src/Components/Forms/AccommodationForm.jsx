@@ -526,6 +526,7 @@ function AccommodationBlock({
   onRetryRooms,
   onRevokeRoom,
   canRemove,
+  isEditMode = false,
 }) {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [adminRoom, setAdminRoom] = useState(null);
@@ -618,7 +619,7 @@ function AccommodationBlock({
             <CustomDateTimePicker
               label="Check In Date & Time *"
               value={acc.checkIn}
-              minDate={new Date()}
+              minDate={isEditMode ? null : new Date()}
               onChange={(date) => onChange({ ...acc, checkIn: date })}
               placeholder="__/__/____  --:-- --"
             />
@@ -630,7 +631,7 @@ function AccommodationBlock({
             <CustomDateTimePicker
               label="Check Out Date & Time *"
               value={acc.checkOut}
-              minDate={acc.checkIn}
+              minDate={isEditMode ? null : acc.checkIn}
               onChange={(date) => onChange({ ...acc, checkOut: date })}
               placeholder="__/__/____  --:-- --"
             />
@@ -1048,6 +1049,7 @@ export default function AccommodationForm({
         <AccommodationBlock
           key={index}
           index={index}
+          isEditMode={isEditMode}
           acc={acc}
           onChange={(updated) => updateBlock(index, updated)}
           onRemove={() => removeBlock(index)}

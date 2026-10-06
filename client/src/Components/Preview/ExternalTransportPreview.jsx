@@ -103,6 +103,20 @@ export default function ExternalTransportPreview({ data }) {
                     />
                   </>
                 )}
+                {item.travelOption === "Bus" && (
+                  <>
+                    <InfoBlock
+                      icon={AlignLeft}
+                      label="Bus Name"
+                      value={item.busName}
+                    />
+                    <InfoBlock
+                      icon={AlignLeft}
+                      label="Bus Type"
+                      value={item.classOrBerth}
+                    />
+                  </>
+                )}
                 {item.specialRequirements &&
                   item.specialRequirements !== "None" && (
                     <div className="md:col-span-2">

@@ -1207,7 +1207,7 @@ export default function TransportForm({
                   <CustomDateTimePicker
                     label="Pickup date & Time *"
                     value={form.pickupDate}
-                    minDate={new Date()}
+                    minDate={isEditMode ? null : new Date()}
                     onChange={(date) =>
                       handleChange(formIndex, "pickupDate", date)
                     }
@@ -1223,7 +1223,7 @@ export default function TransportForm({
                   <CustomDateTimePicker
                     label="Drop date & Time *"
                     value={form.dropDate}
-                    minDate={form.pickupDate}
+                    minDate={isEditMode ? null : form.pickupDate}
                     onChange={(date) =>
                       handleChange(formIndex, "dropDate", date)
                     }
