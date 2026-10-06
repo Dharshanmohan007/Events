@@ -221,19 +221,26 @@ export async function generateSettlementPdf(eventId, token, mapper) {
   iframe.style.cssText =
     `position:fixed;left:-9999px;top:-9999px;width:${PDF_USABLE_WIDTH_PX}px;border:none;visibility:hidden;`;
 
+  // Use a Blob URL instead of iframe.srcdoc.
+  // srcdoc has a browser-enforced size limit (~2-4 KB on some hosts) that
+  // silently truncates the 42 KB template in production, making .page-wrap
+  // disappear. Blob URLs have no size limit.
+  const blob = new Blob([populatedHtml], { type: "text/html;charset=utf-8" });
+  const blobUrl = URL.createObjectURL(blob);
+
   const iframeLoaded = new Promise((resolve, reject) => {
     iframe.onload = resolve;
     iframe.onerror = reject;
   });
 
-  iframe.srcdoc = populatedHtml;
+  iframe.src = blobUrl;
   document.body.appendChild(iframe);
 
   try {
     await iframeLoaded;
 
     // Allow a small extra delay for CSS/fonts to settle
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 500));
 
     // ── Step 6: Capture with html2canvas ───────────────────────────────────
     const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
@@ -338,5 +345,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
     if (document.body.contains(iframe)) {
       document.body.removeChild(iframe);
     }
+    // Release the Blob URL to free memory
+    URL.revokeObjectURL(blobUrl);
   }
 }
