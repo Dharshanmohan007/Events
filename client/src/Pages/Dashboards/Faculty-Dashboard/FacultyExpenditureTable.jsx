@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Search, CalendarDays, ExternalLink, Download } from "lucide-react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Search, CalendarDays, ExternalLink, Download, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
+import { toast } from "react-toastify";
+import { mapSettlementData } from "../../../utils/settlementMapper.js";
+import { generateSettlementPdf } from "../../../utils/settlementPdfGenerator.js";
 
 const tabs = ["Event expenditures", "Individual expenditures"];
 
@@ -21,6 +24,29 @@ const FacultyExpenditureTable = () => {
   const [eventsExpenditureData, setEventsExpenditureData] = useState([]);
   const [selectedTab, setSelectedTab] = useState("Event expenditures");
   const [searchQuery, setSearchQuery] = useState("");
+  const [downloadingEventId, setDownloadingEventId] = useState(null);
+
+
+  // ── PDF Download Handler ──────────────────────────────────────────────────
+  const downloadSettlementPdf = useCallback(
+    async (eventId) => {
+      if (!eventId) {
+        toast.error("Invalid event ID");
+        return;
+      }
+      setDownloadingEventId(eventId);
+      try {
+        await generateSettlementPdf(eventId, token, mapSettlementData);
+        toast.success("PDF downloaded successfully!");
+      } catch (err) {
+        console.error("Settlement PDF generation failed:", err);
+        toast.error(err.message || "Failed to generate PDF. Please try again.");
+      } finally {
+        setDownloadingEventId(null);
+      }
+    },
+    [token]
+  );
 
   const getStatusColor = (status = "") => {
     const normalizedStatus = String(status).toLowerCase();
@@ -334,9 +360,14 @@ const FacultyExpenditureTable = () => {
                           </Link>
                           <button
                             type="button"
-                            className="text-[#8b93a5] transition hover:text-white"
+                            onClick={() => downloadSettlementPdf(item.eventId?._id)}
+                            disabled={downloadingEventId === item.eventId?._id}
+                            title="Download Settlement PDF"
+                            className="text-[#8b93a5] transition hover:text-white disabled:opacity-50"
                           >
-                            <Download size={13} strokeWidth={1.8} />
+                            {downloadingEventId === item.eventId?._id
+                              ? <Loader2 size={13} strokeWidth={1.8} className="animate-spin" />
+                              : <Download size={13} strokeWidth={1.8} />}
                           </button>
                         </div>
                       </td>
@@ -451,12 +482,7 @@ const FacultyExpenditureTable = () => {
                             >
                               <ExternalLink size={13} strokeWidth={1.8} />
                             </button>
-                            <button
-                              type="button"
-                              className="text-[#8b93a5] hover:text-white"
-                            >
-                              <Download size={13} strokeWidth={1.8} />
-                            </button>
+
                           </div>
                         </td>
                       </tr>
