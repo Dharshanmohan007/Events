@@ -445,7 +445,7 @@ export default function CustomSelect({
             setOpen(!open);
           }
         }}
-        className={`w-full bg-transparent border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
+        className={`w-full bg-[#1F1F38] border rounded-lg p-3.5 flex items-center justify-between transition-colors duration-200 ${
           readOnly
             ? "cursor-not-allowed opacity-70"
             : "cursor-pointer"

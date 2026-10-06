@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import CustomDateTimePicker from "../../Components/CustomDateTimePicker";
 import IndividualExternalTransportDetails from "./IndividualExternalTransportDetails";
 import FormSubmitted from "./FormSubmitted";
 import { buildIndividualReportHtml } from "./IndividualReport";
@@ -8,6 +9,29 @@ import { API_BASE } from "../../utils/apiConfig";
 import UploadIcon from "../../assets/upload.svg";
 
 const INDIVIDUAL_EVENT_API_BASE = import.meta.env.DEV ? "" : API_BASE;
+
+const formatTimeForPayload = (time) => {
+  const match = String(time || "").trim().match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/i);
+  if (!match) return "";
+
+  let hours = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === "PM") hours += 12;
+  return `${String(hours).padStart(2, "0")}:${match[2]}:00`;
+};
+
+const formatTimeForDisplay = (date) => {
+  const hours = date.getHours();
+  const hour12 = hours % 12 || 12;
+  return `${String(hour12).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")} ${hours >= 12 ? "PM" : "AM"}`;
+};
+
+const getFormDateTime = (dateValue, timeValue) => {
+  if (!dateValue) return null;
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const time = formatTimeForPayload(timeValue) || "11:00:00";
+  const [hours, minutes] = time.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes);
+};
 
 const Eventsattended = () => {
   const [form, setForm] = useState({
@@ -21,6 +45,8 @@ const Eventsattended = () => {
     programTo: "",
     onDutyFrom: "",
     onDutyTo: "",
+    onDutyFromTime: "",
+    onDutyToTime: "",
     foodRequired: "No",
     transportRequired: "No",
     accommodationRequired: "No",
@@ -39,6 +65,18 @@ const Eventsattended = () => {
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateOffCampusDateTime = (dateField, timeField, dateTime) => {
+    if (!dateTime) {
+      updateField(dateField, "");
+      updateField(timeField, "");
+      return;
+    }
+
+    const date = `${dateTime.getFullYear()}-${String(dateTime.getMonth() + 1).padStart(2, "0")}-${String(dateTime.getDate()).padStart(2, "0")}`;
+    updateField(dateField, date);
+    updateField(timeField, formatTimeForDisplay(dateTime));
   };
 
   const handlePrincipalFileChange = (event) => {
@@ -137,6 +175,14 @@ const Eventsattended = () => {
   };
 
   const totalOnDutyDays = getDayDiff(form.onDutyFrom, form.onDutyTo);
+  const onDutyFromDateTime = useMemo(
+    () => getFormDateTime(form.onDutyFrom, form.onDutyFromTime),
+    [form.onDutyFrom, form.onDutyFromTime]
+  );
+  const onDutyToDateTime = useMemo(
+    () => getFormDateTime(form.onDutyTo, form.onDutyToTime),
+    [form.onDutyTo, form.onDutyToTime]
+  );
 
   const participantCount = Number(form.participants) || 0;
   const participantRows = Array.from({ length: participantCount }, (_, index) => ({
@@ -232,7 +278,16 @@ const Eventsattended = () => {
     if (!form.participants || Number(form.participants) <= 0) missingFields.push("number of participants");
     if (!form.programFrom || !form.programTo) missingFields.push("program date range");
     if (!form.onDutyFrom || !form.onDutyTo) missingFields.push("on-duty date range");
+    if (!form.onDutyFromTime || !form.onDutyToTime) missingFields.push("on-duty time range");
     if (!principalApprovalFile) missingFields.push("Principal approval file");
+
+    if (
+      (form.onDutyFromTime && !formatTimeForPayload(form.onDutyFromTime)) ||
+      (form.onDutyToTime && !formatTimeForPayload(form.onDutyToTime))
+    ) {
+      setSubmitMessage("Enter the Off Campus time in hh:mm AM/PM format.");
+      return;
+    }
 
     if (missingFields.length > 0) {
       setSubmitMessage(`Please complete the ${missingFields.join(", ")}.`);
@@ -274,10 +329,10 @@ const Eventsattended = () => {
         expectedOutcome: form.expectedOutcome || "",
         programFromDate: form.programFrom || "",
         programToDate: form.programTo || "",
-        onDutyFrom: formatDateTime(form.onDutyFrom, "09:00:00"),
-        onDutyTo: formatDateTime(form.onDutyTo, "17:00:00"),
-        offCampusFrom: formatDateTime(form.onDutyFrom, "09:00:00"),
-        offCampusTo: formatDateTime(form.onDutyTo, "17:00:00"),
+        onDutyFrom: formatDateTime(form.onDutyFrom, formatTimeForPayload(form.onDutyFromTime)),
+        onDutyTo: formatDateTime(form.onDutyTo, formatTimeForPayload(form.onDutyToTime)),
+        offCampusFrom: formatDateTime(form.onDutyFrom, formatTimeForPayload(form.onDutyFromTime)),
+        offCampusTo: formatDateTime(form.onDutyTo, formatTimeForPayload(form.onDutyToTime)),
         foodRequired: form.foodRequired === "Yes",
         transportRequired: form.transportRequired === "Yes",
         accommodationRequired: form.accommodationRequired === "Yes",
@@ -540,35 +595,23 @@ const Eventsattended = () => {
             </label>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  From
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
-                  <input
-                    type="date"
-                    value={form.onDutyFrom}
-                    onChange={(e) => updateField("onDutyFrom", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
+              <CustomDateTimePicker
+                label="From"
+                value={onDutyFromDateTime}
+                onChange={(dateTime) =>
+                  updateOffCampusDateTime("onDutyFrom", "onDutyFromTime", dateTime)
+                }
+                placeholder="Select date & time"
+              />
 
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  To
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
-                  <input
-                    type="date"
-                    value={form.onDutyTo}
-                    onChange={(e) => updateField("onDutyTo", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
+              <CustomDateTimePicker
+                label="To"
+                value={onDutyToDateTime}
+                onChange={(dateTime) =>
+                  updateOffCampusDateTime("onDutyTo", "onDutyToTime", dateTime)
+                }
+                placeholder="Select date & time"
+              />
             </div>
 
             {form.onDutyFrom && form.onDutyTo && (
@@ -806,4 +849,3 @@ const Eventsattended = () => {
 };
 
 export default Eventsattended;
-

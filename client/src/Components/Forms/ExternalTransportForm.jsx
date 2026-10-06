@@ -11,11 +11,13 @@ function createEmptyForm() {
     id: crypto.randomUUID(),
     travelOption: "",
     travelDate: "",
+    travelTime: "",
     from: "",
     to: "",
     totalPassengers: "",
-    classOrBerth: [], // array for train, string for flight
+    classOrBerth: [], // array for train & bus, string for flight
     trainNumber: "",
+    busName: "",
     flightNumber: "",
     specialRequirements: "None",
     passengers: [],
@@ -47,14 +49,16 @@ function sanitiseForm(v) {
     id: v.id || crypto.randomUUID(),
     travelOption: v.travelOption || "",
     travelDate: dateStr,
+    travelTime: v.travelTime || "",
     from: v.from || "",
     to: v.to || "",
     totalPassengers: v.totalPassengers !== undefined && v.totalPassengers !== null ? String(v.totalPassengers) : "",
     classOrBerth:
       v.classOrBerth ||
       v.travelClass ||
-      (v.travelOption === "Train" ? [] : "Economy"),
+      (v.travelOption === "Flight" ? "Economy" : []),
     trainNumber: v.trainNumber || "",
+    busName: v.busName || "",
     flightNumber: v.flightNumber || "",
     specialRequirements: v.specialRequirements || "None",
     passengers: Array.isArray(v.passengers)
@@ -85,6 +89,29 @@ const TRAIN_CLASSES = [
   "Ladies Compartment",
   "Vistadome",
 ];
+
+const BUS_TYPES = [
+  "Sleeper",
+  "Seater",
+  "Semi-Sleeper",
+  "AC Sleeper",
+  "Non-AC Sleeper",
+  "AC Seater",
+  "Non-AC Seater",
+];
+
+const BUS_OPERATORS = [
+  "RedBus",
+  "AbhiBus",
+  "Zingbus",
+  "IntrCity SmartBus",
+  "Paytm Bus",
+  "MakeMyTrip",
+  "Goibibo",
+  "Others",
+];
+
+const TRAVEL_OPTIONS = ["Train", "Bus", "Flight"];
 
 function formatClassOrBerth(classOrBerth, travelOption) {
   if (travelOption === "Flight") {
@@ -129,6 +156,14 @@ export function validateExternalTransport(forms) {
         ? [form.classOrBerth]
         : [];
       if (classes.length === 0) err.classOrBerth = "Select at least one train class";
+    } else if (form.travelOption === "Bus") {
+      if (!form.busName?.trim()) err.busName = "Bus name is required";
+      const classes = Array.isArray(form.classOrBerth)
+        ? form.classOrBerth
+        : form.classOrBerth
+        ? [form.classOrBerth]
+        : [];
+      if (classes.length === 0) err.classOrBerth = "Select at least one bus type";
     } else if (form.travelOption === "Flight") {
       if (!form.flightNumber?.trim()) err.flightNumber = "Flight number is required";
     }
@@ -250,6 +285,7 @@ function FloatingInput({
   onChange,
   bgClass = "bg-[#1e1e2f]",
   onKeyDown,
+  inputClassName = "",
 }) {
   return (
     <div className="relative w-full">
@@ -264,7 +300,7 @@ function FloatingInput({
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder=" "
-        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
+        className={`w-full bg-transparent px-4 py-[13px] rounded-lg border border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors ${inputClassName}`}
       />
     </div>
   );
@@ -277,7 +313,7 @@ function CustomSelectDropdown({
   onChange,
   options,
   placeholder = "Select",
-  bgClass = "bg-[#1e1e2f]",
+  bgClass = "bg-[#071B2F]",
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -315,7 +351,7 @@ function CustomSelectDropdown({
         />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-[#071B2F] border border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
           {options.map((opt) => {
             const isSelected = value === opt;
             return (
@@ -405,28 +441,30 @@ export default function ExternalTransportForm({
 
     try {
       const externalTransports = formsRef.current.map((item) => ({
-            travelOption: item.travelOption || "",
-            travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
-            from: item.from || "",
-            to: item.to || "",
-            totalPassengers: Number(item.totalPassengers) || 0,
-            numberOfPassengers: Number(item.totalPassengers) || 0,
-            classOrBerth: formatClassOrBerth(item.classOrBerth, item.travelOption),
-            travelClass: formatClassOrBerth(item.classOrBerth, item.travelOption),
-            trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
-            flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
-            specialRequirements: item.specialRequirements?.trim() || "None",
-            passengers: (item.passengers || []).map((p) => ({
-              name: p.name || "",
-              phone: String(p.phone || "").trim(),
-              phoneNumber: String(p.phone || "").trim(),
-              email: p.email || "",
-              age: Number(p.age) || 0,
-              gender: p.gender || "",
-              designation: p.designation || "",
-              organization: p.organization || "",
-            })),
-          }));
+        travelOption: item.travelOption || "",
+        travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+        travelTime: item.travelTime || "",
+        from: item.from || "",
+        to: item.to || "",
+        totalPassengers: Number(item.totalPassengers) || 0,
+        numberOfPassengers: Number(item.totalPassengers) || 0,
+        classOrBerth: formatClassOrBerth(item.classOrBerth, item.travelOption),
+        travelClass: formatClassOrBerth(item.classOrBerth, item.travelOption),
+        trainNumber: item.travelOption === "Train" ? (item.trainNumber || "") : "",
+        busName: item.travelOption === "Bus" ? (item.busName || "") : "",
+        flightNumber: item.travelOption === "Flight" ? (item.flightNumber || "") : "",
+        specialRequirements: item.specialRequirements?.trim() || "None",
+        passengers: (item.passengers || []).map((p) => ({
+          name: p.name || "",
+          phone: String(p.phone || "").trim(),
+          phoneNumber: String(p.phone || "").trim(),
+          email: p.email || "",
+          age: Number(p.age) || 0,
+          gender: p.gender || "",
+          designation: p.designation || "",
+          organization: p.organization || "",
+        })),
+      }));
 
       const headers = {
         "Content-Type": "application/json",
@@ -519,6 +557,7 @@ export default function ExternalTransportForm({
         const oldVal = updated[index].travelOption;
         if (oldVal !== val) {
           updated[index].trainNumber = "";
+          updated[index].busName = "";
           updated[index].flightNumber = "";
           updated[index].classOrBerth = val === "Flight" ? "Economy" : [];
         }
@@ -636,7 +675,7 @@ export default function ExternalTransportForm({
         <div
           key={form.id}
           className="rounded-2xl mb-8 relative"
-          style={{ backgroundColor: "#1e1e2f", border: "1px solid #3A3A5A" }}
+          style={{ backgroundColor: "#071B2F", border: "1px solid #3A3A5A" }}
         >
           {index > 0 && (
             <button
@@ -655,7 +694,7 @@ export default function ExternalTransportForm({
                 <CustomSelectDropdown
                   label="Travel Option *"
                   value={form.travelOption}
-                  options={["Train", "Flight"]}
+                  options={TRAVEL_OPTIONS}
                   onChange={(val) => handleChange(index, "travelOption", val)}
                   bgClass="bg-[#1e1e2f]"
                 />
@@ -664,7 +703,7 @@ export default function ExternalTransportForm({
                 )}
               </div>
 
-              {(form.travelOption === "Train" || form.travelOption === "Flight") && (
+              {TRAVEL_OPTIONS.includes(form.travelOption) && (
                 <div className="relative">
                   <div
                     className="absolute -top-2 left-3 z-10 px-1 text-xs text-white"
@@ -672,7 +711,7 @@ export default function ExternalTransportForm({
                   >
                     Travel Date *
                   </div>
-                  <div className="pt-2">
+                  <div className="">
                     <CustomDatePicker
                       value={form.travelDate}
                       onChange={(val) => handleChange(index, "travelDate", val)}
@@ -688,7 +727,7 @@ export default function ExternalTransportForm({
               )}
             </div>
 
-            {(form.travelOption === "Train" || form.travelOption === "Flight") && (
+            {TRAVEL_OPTIONS.includes(form.travelOption) && (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
@@ -741,6 +780,42 @@ export default function ExternalTransportForm({
                           options={TRAIN_CLASSES}
                           labelBg="#1e1e2f"
                           placeholder="Select classes"
+                        />
+                        {getError(index, "classOrBerth") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "classOrBerth")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {form.travelOption === "Bus" && (
+                    <>
+                      <div>
+                        <CustomSelectDropdown
+                          label="Bus Name *"
+                          value={form.busName}
+                          options={BUS_OPERATORS}
+                          placeholder="Select bus name"
+                          onChange={(val) => handleChange(index, "busName", val)}
+                          bgClass="bg-[#1e1e2f]"
+                        />
+                        {getError(index, "busName") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "busName")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomSelect
+                          label="Select Bus Type *"
+                          multi
+                          searchable
+                          value={Array.isArray(form.classOrBerth) ? form.classOrBerth : []}
+                          onChange={(val) => handleChange(index, "classOrBerth", val)}
+                          options={BUS_TYPES}
+                          labelBg="#1e1e2f"
+                          placeholder="Select bus type"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -956,4 +1031,3 @@ export default function ExternalTransportForm({
     </div>
   );
 }
-

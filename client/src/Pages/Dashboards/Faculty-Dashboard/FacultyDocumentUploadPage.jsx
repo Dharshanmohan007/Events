@@ -561,7 +561,7 @@ const FacultyDocumentUploadPage = () => {
 
       if (res.status === 200 || res.status === 201) {
         toast.success("All details submitted successfully!");
-        setSubmitted(true);
+        navigate(`/dashboard-faculty/feedback/${eventId}`);
       }
     } catch (err) {
       console.error("Failed to submit expenditure details:", err);
