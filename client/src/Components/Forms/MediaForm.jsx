@@ -499,7 +499,7 @@ function FileTabUpload({ label, value = [], onChange, accept = ACCEPTED_FILE_TYP
 
 // ── PosterSection ─────────────────────────────────────────────────────────────
 
-function PosterSection({ data, onChange, errors = {}, showCertificate = false }) {
+function PosterSection({ data, onChange, errors = {}, showCertificate = false, isEditMode = false }) {
   const update      = (field) => (val) => onChange({ ...data, [field]: val });
   const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
   const updateSizeInput = (field) => (e) => {
@@ -626,6 +626,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <CustomInput labelBg="#1E1E35" label="Delivery Date *" type="date"
+            min={isEditMode ? undefined : new Date().toISOString().split("T")[0]}
             value={data.deliveryDate || ""} onChange={updateInput("deliveryDate")} />
           <ErrorMsg msg={errors.deliveryDate} />
         </div>
@@ -651,7 +652,7 @@ function PosterSection({ data, onChange, errors = {}, showCertificate = false })
 
 // ── VideoSection ──────────────────────────────────────────────────────────────
 
-function VideoSection({ data, onChange, errors = {} }) {
+function VideoSection({ data, onChange, errors = {}, isEditMode = false }) {
   const update      = (field) => (val) => onChange({ ...data, [field]: val });
   const updateInput = (field) => (e)   => onChange({ ...data, [field]: e.target.value });
 
@@ -690,6 +691,7 @@ function VideoSection({ data, onChange, errors = {} }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <CustomInput labelBg="#1E1E35" label="Delivery Date *" type="date"
+            min={isEditMode ? undefined : new Date().toISOString().split("T")[0]}
             value={data.deliveryDate || ""} onChange={updateInput("deliveryDate")} />
           <ErrorMsg msg={errors.deliveryDate} />
         </div>
@@ -1025,6 +1027,7 @@ export default function MediaForm({
           onChange={(d) => updateDay({ poster: d })}
           errors={currentErrors.poster || {}}
           showCertificate={showCertificate}
+          isEditMode={isEditMode}
         />
       )}
 
@@ -1033,6 +1036,7 @@ export default function MediaForm({
           data={currentDay.video || emptyVideo()}
           onChange={(d) => updateDay({ video: d })}
           errors={currentErrors.video || {}}
+          isEditMode={isEditMode}
         />
       )}
     </div>

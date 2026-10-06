@@ -5,7 +5,7 @@ import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
 import InternalStudentBreakdown from './InternalStudentBreakdown';
 
-export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
+export default function EventDetails({disabled = false, isEditMode = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
   const daysData = eventData.eventDays || [];
   const numDays = daysData.length > 0 ? daysData.length.toString() : "";
   const [eventTypeOptions, setEventTypeOptions] = useState([]);
@@ -302,6 +302,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           <EventDates
             key={i}
             dayIndex={i + 1}
+            isEditMode={isEditMode}
             dayData={day}
             day1Guests={i > 0 ? daysData[0].guests : []}
             minDate={calculatedMinDate}

@@ -17,6 +17,8 @@ import EventPreviewPage from "./EventPreviewPage";
 import { jwtDecode } from "jwt-decode";
 import generateAdvanceReceiptPdf from '../utils/generateAdvanceReceiptPdf';
 import { getFacultyById } from "../services/events/facultyService";
+import { ShieldAlert } from "lucide-react";
+// import { shield-x } from 'lucide-react';
 
 
 // ── Empty factories ───────────────────────────────────────────────────────────
@@ -84,6 +86,7 @@ const emptyExternalTransport = () => ({
   classOrBerth: [],
   trainNumber: "",
   flightNumber: "",
+  busName: "",
   specialRequirements: "None",
   passengers: [],
 });
@@ -1325,8 +1328,9 @@ function hydrateEventData(apiData) {
       to: item.to || "",
       totalPassengers: String(item.totalPassengers || ""),
       classOrBerth: item.classOrBerth || (item.travelOption === "Train" ? [] : ""),
-      trainNumber: item.trainNumber || "",
+      trainNumber: item.travelOption === "Bus" ? "" : (item.trainNumber || ""),
       flightNumber: item.flightNumber || "",
+      busName: item.busName || (item.travelOption === "Bus" ? item.trainNumber : ""),
       specialRequirements: item.specialRequirements || "None",
       passengers: (item.passengers || []).map(p => ({
         id: crypto.randomUUID(),
@@ -2153,15 +2157,21 @@ export default function Form() {
       {restrictionPopup && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white dark:bg-[#1C1C33] rounded-2xl shadow-xl w-full max-w-md p-6 border border-slate-200 dark:border-slate-800 text-center">
+            <ShieldAlert className="text-center mx-auto text-red-400 text-2xl w-10 h-10 mb-2 "/>
             <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-4">Submission Restricted</h2>
             <p className="text-slate-700 dark:text-slate-300 mb-6">
               You cannot submit the event before closing the previous event.
             </p>
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => {
+                if (window.opener) {
+                  window.opener.focus();
+                }
+                window.close();
+              }}
               className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
             >
-              Back to Dashboard
+              Back To Dashboard
             </button>
           </div>
         </div>
