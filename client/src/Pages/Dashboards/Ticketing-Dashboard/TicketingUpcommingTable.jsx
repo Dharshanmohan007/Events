@@ -1,32 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { Filter, ArrowUpRight, Plus } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
+import { ArrowUpRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 
-const tabs = ["Events"];
+const tabs = ["Events", "Individuals"];
 
 const TicketingUpcommingTable = () => {
   const navigate = useNavigate();
 
   // states
   const [selectedTab, setSelectedTab] = useState("Events");
-  // individual ticketing data from the api (will be used in the individuals table later)
-  // eslint-disable-next-line no-unused-vars
-  const [individualTicketingData, setIndividualTicketingData] = useState(null);
+  const [individualTicketingData, setIndividualTicketingData] = useState([]);
 
   // transport event data from the api (will be used in the events table later)
   // eslint-disable-next-line no-unused-vars
-  const [eventTicketingData, setEventTicketingData] = useState(null);
+  const [eventTicketingData, setEventTicketingData] = useState([]);
+  const [individualLoading, setIndividualLoading] = useState(false);
+  const [individualError, setIndividualError] = useState("");
 
   // function to fetch transport event data from the api
   const fetchEventTicketingData = () => {
     const token = localStorage.getItem("token");
-    const decoded = jwtDecode(token);
-    const dept = decoded.department;
-
     fetch(
       `${API_BASE_URL}/api/table/dashboard-table?module=externalTransports`,
       {
@@ -35,7 +31,10 @@ const TicketingUpcommingTable = () => {
         },
       },
     )
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to fetch event requests");
+        return response.json();
+      })
       .then((data) => {
         // log the data to check what the api returned
 
@@ -49,26 +48,39 @@ const TicketingUpcommingTable = () => {
 
   console.log("transport event data : ", eventTicketingData);
 
-  // function to fetch individual ticketing data from the api
-  const fetchIndividualTicketingData = () => {
+  // Individual external transport requests are submitted as individual submissions.
+  const fetchIndividualTicketingData = async () => {
     const token = localStorage.getItem("token");
+    setIndividualLoading(true);
+    setIndividualError("");
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/individual-submissions/getrequest/`,
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+      );
+      const result = await response.json();
+      if (!response.ok || result.success === false) {
+        throw new Error(result.message || "Failed to fetch individual requests");
+      }
 
-    fetch(`${API_BASE_URL}/api/individual-ticketing/head`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        // log the data to check what the api returned
-        console.log("individual ticketing data : ", data);
-
-        // store the data in state
-        setIndividualTicketingData(data);
-      })
-      .catch((error) => {
-        console.log("error while fetching individual ticketing data : ", error);
+      const records = Array.isArray(result.data)
+        ? result.data
+        : result.data?.requests || result.data?.tickets || result.requests || [];
+      const externalTransportRequests = records.filter((request) => {
+        const requestData = request?.data || request;
+        return (
+          requestData?.externalTransportRequired === true ||
+          request?.module?.toLowerCase() === "externaltransports" ||
+          request?.formType?.toLowerCase() === "externaltransport"
+        );
       });
+      setIndividualTicketingData(externalTransportRequests);
+    } catch (error) {
+      setIndividualError(error.message || "Failed to fetch individual requests");
+      setIndividualTicketingData([]);
+    } finally {
+      setIndividualLoading(false);
+    }
   };
 
   // when the tab changes, call the fetch function based on the selected tab
@@ -85,25 +97,50 @@ const TicketingUpcommingTable = () => {
   // status color denotion function
 
   const getStatusColor = (status = "") => {
-    const isPending = status.toLowerCase().includes("pending");
-
-    return isPending ? "text-red-500" : "text-green-500";
+    const normalizedStatus = String(status).toLowerCase();
+    if (normalizedStatus.includes("pending") || normalizedStatus.includes("reject")) {
+      return "text-red-500";
+    }
+    if (
+      normalizedStatus.includes("acknowledged") ||
+      normalizedStatus.includes("completed") ||
+      normalizedStatus.includes("approved")
+    ) {
+      return "text-green-500";
+    }
+    return "text-[#b0b7c5]";
   };
 
   return (
     <div className="w-full rounded-md border min-h-[calc(100vh-320px)] border-[#283247] bg-[#151e2e] p-4 shadow-lg">
-      {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
+      {/* Header and Events / Individuals tabs */}
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-[16px] font-medium text-white">
           Upcoming {selectedTab == "Events" ? "Event" : "Individual"} Requests
         </h2>
+        <div className="flex items-center gap-2 rounded-lg border border-[#283247] bg-[#101827] p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setSelectedTab(tab)}
+              className={`rounded-md px-4 py-2 text-sm transition ${
+                selectedTab === tab
+                  ? "bg-[#6d3bd8] text-white"
+                  : "text-[#a1a1aa] hover:text-white"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Events Table */}
       {selectedTab === "Events" && (
         <div className="overflow-x-auto table-custom-scrollbar  border max-h-[calc(100vh-400px)] overflow-auto border-gray-700 rounded-lg">
           <table className="w-full border-gray-700 rounded-lg border-collapse">
-            <thead className="bg-gray-800 sticky top-0">
+            <thead className="bg-gray-800 z-20 sticky top-0">
               <tr className="border-b border-[#252f41]">
                 <th className="px-2 py-4 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
                   Event Name
@@ -251,7 +288,7 @@ const TicketingUpcommingTable = () => {
                 </th>
 
                 <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
-                  Form Type
+                  Request No.
                 </th>
 
                 <th className="px-2 py-2 text-left text-[12px] font-medium uppercase tracking-wide text-[#858e9f]">
@@ -269,26 +306,48 @@ const TicketingUpcommingTable = () => {
             </thead>
 
             <tbody className="text-[14px]  ">
-              {/* Row 1 */}
-              <tr className="border-b border-[#202a3b] transition hover:bg-[#1a2435]">
-                <td className="px-2 py-3 text-[#d2d6de]">15-03-2026</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">Karthikeyan M</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">Transport</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">CSE</td>
+              {individualLoading ? (
+                <tr><td colSpan={6} className="px-2 py-10 text-center text-[#8b95a7]">Loading individual requests...</td></tr>
+              ) : individualError ? (
+                <tr><td colSpan={6} className="px-2 py-10 text-center text-red-400">{individualError}</td></tr>
+              ) : individualTicketingData.length === 0 ? (
+                <tr><td colSpan={6} className="px-2 py-10 text-center text-[#8b95a7]">No individual requests found</td></tr>
+              ) : individualTicketingData.map((request, index) => {
+                const requestData = request?.data || request;
+                const employee = request?.employeeDetail ||
+                  (typeof request?.employee === "object" ? request.employee : null) ||
+                  requestData?.employee || {};
+                const employeeName = [employee?.salutation, employee?.firstName || employee?.name, employee?.lastName]
+                  .filter(Boolean).join(" ") || request?.employeeName || request?.employeeEmail || "-";
+                const requestId = request?.requestId || request?.id || request?._id || requestData?._id;
+                  const rawStatus = request?.headApproval?.status || requestData?.headApproval?.status ||
+                    request?.status || request?.finalStatus || "Pending";
+                  const requestStatus = typeof rawStatus === "string"
+                    ? rawStatus
+                    : rawStatus?.status || "Pending";
+                const requestDate = request?.requestDate || request?.createdAt;
+                return (
+              <tr key={requestId || index} className="border-b border-[#202a3b] transition hover:bg-[#1a2435]">
+                <td className="px-2 py-3 text-[#d2d6de]">{requestDate ? new Date(requestDate).toLocaleDateString("en-GB").replaceAll("/", "-") : "-"}</td>
+                <td className="px-2 py-3 text-[#b0b7c5]">{employeeName}</td>
+                <td className="px-2 py-3 text-[#b0b7c5]">{request?.requestNo || "External Transport"}</td>
+                <td className="px-2 py-3 text-[#b0b7c5]">{employee?.department || requestData?.departmentCode || request?.department || "-"}</td>
 
                 <td className="px-2 py-2">
-                  <span className="text-[#55cbb0]">
+                  <span className={getStatusColor(requestStatus)}>
                     <span className="mr-1">●</span>
-                    Acknowledged
+                    {requestStatus}
                   </span>
                 </td>
 
                 <td className="px-2 py-2 text-center">
-                  <button className="text-[#aab3c3] hover:text-white">
+                  <button type="button" disabled={!requestId} onClick={() => requestId && navigate(`/dashboard/IndividualEvents/${requestId}`)} className="text-[#aab3c3] hover:text-white disabled:opacity-40">
                     <ArrowUpRight size={18} />
                   </button>
                 </td>
               </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

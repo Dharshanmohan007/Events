@@ -199,6 +199,29 @@ const EventsAttendingDetailView = ({ data }) => {
           )}
         </div>
       )}
+      {role === "faculty" && (
+        <div className="header flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-gray-500">Events Attending Request List</h1>
+            <ChevronRight size={16} />
+            <span className="rounded-full bg-yellow-200/10 px-3 py-2 text-xs text-yellow-500">
+              {data?.department || data?.employeeDetail?.department || "Department"}
+            </span>
+            <ChevronRight size={16} />
+            <span className={`rounded-full px-3 py-2 text-xs ${renderStatusColors(data?.finalStatus)}`}>
+              {data?.finalStatus || "Pending"}
+            </span>
+          </div>
+          {data?.superAdminApproval?.status?.toLowerCase() === "approved" && (
+            <Link
+              to={`/dashboard-faculty/IndividualDocumentUpload/${eventId}`}
+              className="cursor-pointer rounded-lg bg-emerald-800 px-4 py-2 text-white"
+            >
+              Close
+            </Link>
+          )}
+        </div>
+      )}
       {" "}
       {/* Program Name */}{" "}
       <div className="bg-[#1c2537] rounded-md mb-2 mt-4 ">
