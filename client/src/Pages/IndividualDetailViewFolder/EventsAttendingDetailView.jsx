@@ -14,6 +14,8 @@ import {
   UserRound,
   Phone,
   NotebookText,
+  MapPin,
+  Users,
 } from "lucide-react";
 
 const API_BASE_URL =
@@ -112,16 +114,31 @@ const EventsAttendingDetailView = ({ data }) => {
   };
 
   const formatDate = (dateString) => {
-  if (!dateString) return "";
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString("en-IN", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-  const date = new Date(dateString);
+  const formatTime = (dateTime) => {
+    if (!dateTime) return "—";
+    const date = new Date(dateTime);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  return date.toLocaleDateString("en-IN", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-};
+  const formatRequirement = (value) => {
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    return value || "—";
+  };
 
   console.log("event attending data : ", data);
 
@@ -335,7 +352,7 @@ const EventsAttendingDetailView = ({ data }) => {
           </div>{" "}
           <p className="text-[14px] font-medium text-white mt-2">
             {" "}
-            {formatDate(data?.data?.offCampusFrom)}{" "}
+            {formatDate(data?.data?.onDutyFrom || data?.data?.offCampusFrom)}{" "}
           </p>{" "}
         </div>{" "}
         {/* Off Campus Time From */}{" "}
@@ -350,8 +367,7 @@ const EventsAttendingDetailView = ({ data }) => {
             </span>{" "}
           </div>{" "}
           <p className="text-[14px] font-medium text-white mt-2">
-            {" "}
-            {" "}
+            {formatTime(data?.data?.onDutyFrom)}
           </p>{" "}
         </div>{" "}
         {/* Off Campus Date To */}{" "}
@@ -367,7 +383,7 @@ const EventsAttendingDetailView = ({ data }) => {
           </div>{" "}
           <p className="text-[14px] font-medium text-white mt-2">
             {" "}
-            {formatDate(data?.data?.offCampusTo)}{" "}
+            {formatDate(data?.data?.onDutyTo || data?.data?.offCampusTo)}{" "}
           </p>{" "}
         </div>{" "}
         {/* Off Campus Time To */}{" "}
@@ -382,8 +398,7 @@ const EventsAttendingDetailView = ({ data }) => {
             </span>{" "}
           </div>{" "}
           <p className="text-[14px] font-medium text-white mt-2">
-            {" "}
-            {" "}
+            {formatTime(data?.data?.onDutyTo)}
           </p>{" "}
         </div>{" "}
       </div>{" "}
@@ -397,9 +412,9 @@ const EventsAttendingDetailView = ({ data }) => {
             {" "}
             Food Required{" "}
           </span>{" "}
-          <span className={`text-[14px] font-medium ${data?.data?.food.toLowerCase() == "yes" ? "text-green-400" : "text-red-400"} `}>
+          <span className={`text-[14px] font-medium ${formatRequirement(data?.data?.foodRequired ?? data?.data?.food).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
             {" "}
-            {data?.data?.food}{" "}
+            {formatRequirement(data?.data?.foodRequired ?? data?.data?.food)}{" "}
           </span>{" "}
         </div>{" "}
         {/* Transport */}{" "}
@@ -409,9 +424,9 @@ const EventsAttendingDetailView = ({ data }) => {
             {" "}
             Transport Required{" "}
           </span>{" "}
-          <span className={`text-[14px] font-medium ${data?.data?.transport.toLowerCase() == "yes" ? "text-green-400" : "text-red-400"} `}>
+          <span className={`text-[14px] font-medium ${formatRequirement(data?.data?.transportRequired ?? data?.data?.transport).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
             {" "}
-            {data?.data?.transport}{" "}
+            {formatRequirement(data?.data?.transportRequired ?? data?.data?.transport)}{" "}
           </span>{" "}
         </div>{" "}
         {/* Accommodation */}{" "}
@@ -421,12 +436,79 @@ const EventsAttendingDetailView = ({ data }) => {
             {" "}
             Accommodation Required{" "}
           </span>{" "}
-          <span className={`text-[14px] font-medium  ${data?.data?.accommodation.toLowerCase() == "yes" ? "text-green-400" : "text-red-400"} `}>
+          <span className={`text-[14px] font-medium  ${formatRequirement(data?.data?.accommodationRequired ?? data?.data?.accommodation).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
             {" "}
-            {data?.data?.accommodation}{" "}
+            {formatRequirement(data?.data?.accommodationRequired ?? data?.data?.accommodation)}{" "}
           </span>{" "}
         </div>{" "}
       </div>{" "}
+      {data?.data?.externalTransportRequired === true && (
+        <section className="mb-2 rounded-md border border-[#30394d] bg-[#1d2638] p-4">
+          <h2 className="mb-3 flex items-center gap-2 text-base font-medium text-white">
+            <MapPin className="h-4 w-4 text-[#a78bfa]" /> External Transport
+          </h2>
+          {Array.isArray(data?.data?.externalTransport) && data.data.externalTransport.length > 0 ? (
+            <div className="space-y-3">
+              {data.data.externalTransport.map((transport, transportIndex) => {
+                const passengers = Array.isArray(transport?.passengers)
+                  ? transport.passengers
+                  : [];
+                const transportNumber = transport?.transportNumber || transport?.trainNumber || transport?.flightNumber;
+
+                return (
+                  <article
+                    key={transport?._id || transportIndex}
+                    className="overflow-hidden rounded-lg border border-[#3b465c] bg-[#20293b]"
+                  >
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#3a4354] px-4 py-3">
+                      <h3 className="font-medium text-purple-300">
+                        {transport?.travelOption || "Transport"} {transportIndex + 1}
+                      </h3>
+                      <span className="text-sm text-gray-400">
+                        {formatDate(transport?.travelDate)}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                      <ExternalTransportField icon={MapPin} label="From" value={transport?.from} />
+                      <ExternalTransportField icon={MapPin} label="To" value={transport?.to} />
+                      <ExternalTransportField icon={Users} label="Passengers" value={transport?.totalPassengers ?? transport?.numberOfPassengers} />
+                      <ExternalTransportField label="Class / Berth" value={transport?.classOrBerth || transport?.travelClass} />
+                      <ExternalTransportField label="Transport number" value={transportNumber} />
+                      <ExternalTransportField label="Special requirements" value={transport?.specialRequirements} />
+                    </div>
+                    <div className="border-t border-[#3a4354] p-4">
+                      <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-200">
+                        <Users className="h-4 w-4 text-[#a78bfa]" /> Passenger details
+                      </h4>
+                      {passengers.length > 0 ? (
+                        <div className="space-y-2">
+                          {passengers.map((passenger, passengerIndex) => (
+                            <div
+                              key={passenger?._id || passengerIndex}
+                              className="grid grid-cols-1 gap-3 rounded-lg border border-[#3b465c] bg-[#1c2537] p-3 sm:grid-cols-2 lg:grid-cols-4"
+                            >
+                              <ExternalTransportField label="Name" value={passenger?.name} />
+                              <ExternalTransportField label="Phone" value={passenger?.phoneNumber || passenger?.phone} />
+                              <ExternalTransportField label="Age / Gender" value={[passenger?.age, passenger?.gender].filter((value) => value !== undefined && value !== "").join(" / ")} />
+                              <ExternalTransportField label="Designation / Organization" value={[passenger?.designation, passenger?.organization].filter(Boolean).join(" / ")} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-400">No passenger details provided.</p>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-400">
+              External transport was requested, but no transport details were provided.
+            </p>
+          )}
+        </section>
+      )}
       {/* Special Requirement */}{" "}
       <div className="bg-[#1c2537] rounded-md p-4">
         {" "}
@@ -472,5 +554,17 @@ const EventsAttendingDetailView = ({ data }) => {
     </main>
   );
 };
+
+const ExternalTransportField = ({ icon: Icon, label, value }) => (
+  <div className="flex items-center justify-between gap-3 border-b border-[#3a4354] px-3 py-3 last:border-b-0">
+    <div className="flex items-center gap-2 text-xs uppercase text-gray-400">
+      {Icon && <Icon className="h-4 w-4 shrink-0 text-[#a78bfa]" />}
+      <span>{label}</span>
+    </div>
+    <span className="text-right text-sm font-medium text-white">
+      {value || "—"}
+    </span>
+  </div>
+);
 
 export default EventsAttendingDetailView;

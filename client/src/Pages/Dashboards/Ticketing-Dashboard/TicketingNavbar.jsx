@@ -1,7 +1,7 @@
 import React from "react";
-import { LogOut } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import smallLogo from "../../../assets/small-logo.svg";
+import LogoutButton from "../../../Components/LogoutButton";
 
 const TicketingNavbar = () => {
   const location = useLocation();
@@ -56,10 +56,7 @@ const TicketingNavbar = () => {
         </div>
 
         {/* Logout Button */}
-        <button className="flex items-center gap-2 rounded-md bg-gradient-to-r from-[#7c3aed] to-[#4f2b93] px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:opacity-90">
-          <LogOut size={16} strokeWidth={2} />
-          Logout
-        </button>
+        <LogoutButton />
       </div>
     </nav>
   );

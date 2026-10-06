@@ -7,6 +7,8 @@ import {
   Clock3,
   NotebookText,
   Phone,
+  MapPin,
+  Users,
   UserRound,
 } from "lucide-react";
 
@@ -85,7 +87,7 @@ const IndividualEventAttendingDetailView = ({ data }) => {
           <h1 className="text-gray-500">Events Attending Request List</h1>
           <ChevronRight size={16} />
           <span className="rounded-full bg-yellow-200/10 px-3 py-2 text-xs text-yellow-500">
-            {data?.employeeDetail?.department || "Department"}
+            {data?.department || data?.employeeDetail?.department || "Department"}
           </span>
           <ChevronRight size={16} />
           <span className={`rounded-full px-3 py-2 text-xs ${statusStyle}`}>
@@ -123,7 +125,14 @@ const IndividualEventAttendingDetailView = ({ data }) => {
       </div>
 
       <div className="mt-4 rounded-xl border border-gray-700 bg-[#232a3c]/30 p-4">
-        <h2 className="text-lg font-medium text-[#853FF9]">Events Attending Details</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-lg font-medium text-[#853FF9]">Events Attending Details</h2>
+          {data?.requestNo && (
+            <span className="rounded-full bg-[#853FF9]/10 px-3 py-1 text-xs text-purple-300">
+              {data.requestNo}
+            </span>
+          )}
+        </div>
 
         <DetailRow label="Name of the program" value={programData.programName || programData.programType} />
 
@@ -160,6 +169,77 @@ const IndividualEventAttendingDetailView = ({ data }) => {
             <p className="text-sm text-gray-400">No participant details provided.</p>
           )}
         </section>
+
+        {programData.externalTransportRequired === true && (
+          <section className="mt-2 rounded-md bg-[#1c2537] p-4">
+            <h3 className="mb-3 flex items-center gap-2 text-base font-medium text-white">
+              <MapPin className="h-4 w-4 text-[#a78bfa]" /> External Transport
+            </h3>
+            {Array.isArray(programData.externalTransport) && programData.externalTransport.length > 0 ? (
+              <div className="space-y-3">
+                {programData.externalTransport.map((transport, transportIndex) => {
+                  const passengers = Array.isArray(transport.passengers)
+                    ? transport.passengers
+                    : [];
+                  const transportNumber =
+                    transport.transportNumber ||
+                    transport.trainNumber ||
+                    transport.flightNumber;
+
+                  return (
+                    <article
+                      key={transport._id || transportIndex}
+                      className="overflow-hidden rounded-lg border border-[#3a4354] bg-[#20293b]"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#3a4354] px-4 py-3">
+                        <h4 className="font-medium text-purple-300">
+                          {transport.travelOption || "Transport"} {transportIndex + 1}
+                        </h4>
+                        <span className="text-sm text-gray-400">
+                          {formatDate(transport.travelDate)}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        <DetailRow icon={MapPin} label="From" value={transport.from} />
+                        <DetailRow icon={MapPin} label="To" value={transport.to} />
+                        <DetailRow icon={Users} label="Passengers" value={transport.totalPassengers ?? transport.numberOfPassengers} />
+                        <DetailRow label="Class / Berth" value={transport.classOrBerth || transport.travelClass} />
+                        <DetailRow label="Transport number" value={transportNumber} />
+                        <DetailRow label="Special requirements" value={transport.specialRequirements} />
+                      </div>
+
+                      <div className="border-t border-[#3a4354] p-4">
+                        <h5 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-200">
+                          <Users className="h-4 w-4 text-[#a78bfa]" /> Passenger details
+                        </h5>
+                        {passengers.length > 0 ? (
+                          <div className="space-y-2">
+                            {passengers.map((passenger, passengerIndex) => (
+                              <div
+                                key={passenger._id || passengerIndex}
+                                className="grid grid-cols-1 gap-3 rounded-lg border border-[#3a4354] bg-[#1c2537] p-3 sm:grid-cols-2 lg:grid-cols-4"
+                              >
+                                <ParticipantField icon={UserRound} label="Name" value={passenger.name} />
+                                <ParticipantField icon={Phone} label="Phone" value={passenger.phoneNumber || passenger.phone} />
+                                <ParticipantField icon={UserRound} label="Age / Gender" value={[passenger.age, passenger.gender].filter((value) => value !== undefined && value !== "").join(" / ")} />
+                                <ParticipantField icon={UserRound} label="Designation / Organization" value={[passenger.designation, passenger.organization].filter(Boolean).join(" / ")} />
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-400">No passenger details provided.</p>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-400">External transport was requested, but no transport details were provided.</p>
+            )}
+          </section>
+        )}
 
         <section className="mt-2 rounded-md bg-[#1c2537] p-4">
           <h3 className="mb-2 flex items-center gap-2 font-medium text-white">
