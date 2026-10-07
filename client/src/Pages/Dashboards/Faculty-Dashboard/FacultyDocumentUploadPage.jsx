@@ -221,7 +221,9 @@ const FacultyDocumentUploadPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState("thanks-page");
+  // Wait for event completion state before choosing a step. Starting on the
+  // thanks screen briefly showed a false success message while the API loaded.
+  const [step, setStep] = useState("loading");
   const [documents, setDocuments] = useState([]);
   const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -331,7 +333,7 @@ const FacultyDocumentUploadPage = () => {
       setStep("incomeSource");
       return;
     } else if (navigationDetails?.isFeedbackCompleted == false) {
-      window.open(`/dashboard-faculty/feedback/${eventId}`, "_blank");
+      navigate(`/dashboard-faculty/feedback/${eventId}`);
       return;
     } else if (
       navigationDetails?.isDocumentsCompleted &&
@@ -608,6 +610,11 @@ const FacultyDocumentUploadPage = () => {
 
   return (
     <div className="bg-[#0b1326] h-[100vh]">
+      {step === "loading" && (
+        <div className="flex h-screen items-center justify-center text-white">
+          Loading event status...
+        </div>
+      )}
       {step !== "thanks-page" && <FacultyDahsboardHeader />}
 
       {/* ─── Document Upload ─── */}
