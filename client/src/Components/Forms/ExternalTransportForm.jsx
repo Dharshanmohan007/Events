@@ -11,11 +11,13 @@ function createEmptyForm() {
     id: crypto.randomUUID(),
     travelOption: "",
     travelDate: "",
+    travelTime: "",
     from: "",
     to: "",
     totalPassengers: "",
-    classOrBerth: [], // array for train, string for flight
+    classOrBerth: [], // array for train & bus, string for flight
     trainNumber: "",
+    busName: "",
     flightNumber: "",
     busName: "",
     specialRequirements: "None",
@@ -48,14 +50,16 @@ function sanitiseForm(v) {
     id: v.id || crypto.randomUUID(),
     travelOption: v.travelOption || "",
     travelDate: dateStr,
+    travelTime: v.travelTime || "",
     from: v.from || "",
     to: v.to || "",
     totalPassengers: v.totalPassengers !== undefined && v.totalPassengers !== null ? String(v.totalPassengers) : "",
     classOrBerth:
       v.classOrBerth ||
       v.travelClass ||
-      (v.travelOption === "Train" ? [] : "Economy"),
+      (v.travelOption === "Flight" ? "Economy" : []),
     trainNumber: v.trainNumber || "",
+    busName: v.busName || "",
     flightNumber: v.flightNumber || "",
     busName: v.busName || "",
     specialRequirements: v.specialRequirements || "None",
@@ -87,6 +91,29 @@ const TRAIN_CLASSES = [
   "Ladies Compartment",
   "Vistadome",
 ];
+
+const BUS_TYPES = [
+  "Sleeper",
+  "Seater",
+  "Semi-Sleeper",
+  "AC Sleeper",
+  "Non-AC Sleeper",
+  "AC Seater",
+  "Non-AC Seater",
+];
+
+const BUS_OPERATORS = [
+  "RedBus",
+  "AbhiBus",
+  "Zingbus",
+  "IntrCity SmartBus",
+  "Paytm Bus",
+  "MakeMyTrip",
+  "Goibibo",
+  "Others",
+];
+
+const TRAVEL_OPTIONS = ["Train", "Bus", "Flight"];
 
 function formatClassOrBerth(classOrBerth, travelOption) {
   if (travelOption === "Flight") {
@@ -131,6 +158,14 @@ export function validateExternalTransport(forms) {
           ? [form.classOrBerth]
           : [];
       if (classes.length === 0) err.classOrBerth = "Select at least one train class";
+    } else if (form.travelOption === "Bus") {
+      if (!form.busName?.trim()) err.busName = "Bus name is required";
+      const classes = Array.isArray(form.classOrBerth)
+        ? form.classOrBerth
+        : form.classOrBerth
+        ? [form.classOrBerth]
+        : [];
+      if (classes.length === 0) err.classOrBerth = "Select at least one bus type";
     } else if (form.travelOption === "Flight") {
       if (!form.flightNumber?.trim()) err.flightNumber = "Flight number is required";
     } else if (form.travelOption === "Bus") {
@@ -253,6 +288,7 @@ function FloatingInput({
   onChange,
   bgClass = "bg-white dark:bg-[#1e1e2f]",
   onKeyDown,
+  inputClassName = "",
 }) {
   return (
     <div className="relative w-full">
@@ -526,6 +562,7 @@ export default function ExternalTransportForm({
         const oldVal = updated[index].travelOption;
         if (oldVal !== val) {
           updated[index].trainNumber = "";
+          updated[index].busName = "";
           updated[index].flightNumber = "";
           updated[index].busName = "";
           updated[index].classOrBerth = val === "Flight" ? "Economy" : val === "Bus" ? "" : [];
@@ -747,6 +784,42 @@ export default function ExternalTransportForm({
                           options={TRAIN_CLASSES}
                           labelClassName="bg-white dark:bg-[#1e1e2f]"
                           placeholder="Select classes"
+                        />
+                        {getError(index, "classOrBerth") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "classOrBerth")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {form.travelOption === "Bus" && (
+                    <>
+                      <div>
+                        <CustomSelectDropdown
+                          label="Bus Name *"
+                          value={form.busName}
+                          options={BUS_OPERATORS}
+                          placeholder="Select bus name"
+                          onChange={(val) => handleChange(index, "busName", val)}
+                          bgClass="bg-[#1e1e2f]"
+                        />
+                        {getError(index, "busName") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "busName")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomSelect
+                          label="Select Bus Type *"
+                          multi
+                          searchable
+                          value={Array.isArray(form.classOrBerth) ? form.classOrBerth : []}
+                          onChange={(val) => handleChange(index, "classOrBerth", val)}
+                          options={BUS_TYPES}
+                          labelBg="#1e1e2f"
+                          placeholder="Select bus type"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">

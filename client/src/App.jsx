@@ -117,12 +117,12 @@ import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/Indivi
 import IndividualExternalTransportDetails from "./Pages/IndividualForm/IndividualExternalTransportDetails.jsx";
 
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
-import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
+import EventTypeManagement from "./Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx";
 import Dashboard from "./Pages/Dashboards/Ticketing-Dashboard/Dashboard.jsx";
 import TicketingEventDetailView from "./Pages/Dashboards/Ticketing-Dashboard/TicketingEventDetailView.jsx";
 import TicketingRequestListpage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingRequestListpage.jsx";
 import TicketingReportsPage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingReportsPage.jsx";
-import EventsAttendingDetailView from "./Pages/IndividualDetailViewFolder/EventsAttendingDetailView.jsx";
+import EventsAttendedDetailView from "./Components/EventsAttendedDetailView.jsx";
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -848,8 +848,9 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="events-attended" e
-        lement={<Eventsattended />} />
+      <Route path="events-attended" element={<Eventsattended />} />
+      <Route path="events-attended/eventsAttendedDetail" element={<EventsAttendedDetailView />} />
+
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
