@@ -43,13 +43,13 @@ function VenueEventChip({ event, onClick }) {
       {tt && (
         <div
           style={{ position: "fixed", top: tt.top, left: tt.left, width: TT_W, zIndex: 9999 }}
-          className="rounded-lg border border-[#2e394e] bg-[#0f172a] p-2.5 shadow-xl text-left pointer-events-none"
+          className="rounded-lg border border-slate-200 dark:border-[#2e394e] bg-white dark:bg-[#0f172a] p-2.5 shadow-xl text-left pointer-events-none"
         >
-          <p className="text-[14px] font-semibold text-white truncate">{event.eventName}</p>
+          <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">{event.eventName}</p>
           <p className="text-[14px] text-[#853FF9] font-medium mb-1.5">
             {event.department || "N/A"} &bull; {formatTimeRange(event.startTime, event.endTime)}
           </p>
-          <div className="border-t border-[#1e293b] pt-1.5 space-y-0.5 text-[12px] text-slate-300">
+          <div className="border-t border-slate-100 dark:border-[#1e293b] pt-1.5 space-y-0.5 text-[12px] text-slate-600 dark:text-slate-300">
             <p><span className="text-slate-400 font-medium">Organizer:</span> {event.organizerName || "N/A"}</p>
             <p><span className="text-slate-400 font-medium">Emp ID:</span> {event.organizerEmpId || "N/A"}</p>
             <p><span className="text-slate-400 font-medium">Mobile:</span> {event.organizerMobile || "N/A"}</p>
@@ -129,16 +129,16 @@ export default function AllVenuesView({ currentDate, onSelectEvent }) {
   return (
     <div className="flex-1 overflow-auto table-custom-scrollbar">
       <div
-        className="relative rounded-xl border border-white/5 bg-[#0d1220]"
+        className="relative rounded-xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#0d1220]"
         style={{ minWidth: totalW }}
       >
         {/* header row (sticky top) */}
-        <div className="sticky top-0 z-20 flex border-b border-white/10" style={{ minWidth: totalW }}>
+        <div className="sticky top-0 z-20 flex border-b border-slate-200 dark:border-white/10" style={{ minWidth: totalW }}>
           <div
-            className="sticky left-0 z-30 flex shrink-0 items-center border-r border-white/10 bg-[#0b0f1a] px-4 py-3"
+            className="sticky left-0 z-30 flex shrink-0 items-center border-r border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0b0f1a] px-4 py-3"
             style={{ width: VENUE_W, minWidth: VENUE_W }}
           >
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Venue / Date
             </span>
           </div>
@@ -150,7 +150,7 @@ export default function AllVenuesView({ currentDate, onSelectEvent }) {
               <div
                 key={i}
                 className={[
-                  "flex shrink-0 flex-col items-center justify-center border-r border-white/5 bg-[#0b0f1a] py-2.5",
+                  "flex shrink-0 flex-col items-center justify-center border-r border-slate-200 dark:border-white/5 bg-white dark:bg-[#0b0f1a] py-2.5",
                   today ? "bg-violet-500/10" : "",
                 ].join(" ")}
                 style={{ width: COL_W, minWidth: COL_W }}
@@ -159,7 +159,7 @@ export default function AllVenuesView({ currentDate, onSelectEvent }) {
                 <span
                   className={[
                     "mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
-                    today ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30" : "text-slate-300",
+                    today ? "bg-violet-500 text-white shadow-lg shadow-violet-500/30" : "text-slate-700 dark:text-slate-300",
                   ].join(" ")}
                 >
                   {day.getDate()}
@@ -180,21 +180,21 @@ export default function AllVenuesView({ currentDate, onSelectEvent }) {
           <div
             key={venue}
             className={[
-              "flex border-b border-white/5",
-              vi % 2 === 0 ? "bg-white/[0.01]" : "bg-white/[0.03]",
+              "flex border-b border-slate-200 dark:border-white/5",
+              vi % 2 === 0 ? "bg-slate-50 dark:bg-white/[0.01]" : "bg-white dark:bg-white/[0.03]",
             ].join(" ")}
             style={{ minHeight: ROW_MIN }}
           >
             {/* venue name (sticky left) */}
             <div
               className={[
-                "sticky left-0 z-10 flex shrink-0 items-start  px-4 py-3",
-                vi % 2 === 0 ? "bg-[#0c1120]" : "bg-[#0e1325]",
+                "sticky left-0 z-10 flex shrink-0 items-start  px-4 py-3 border-r border-slate-200 dark:border-transparent",
+                vi % 2 === 0 ? "bg-slate-50 dark:bg-[#0c1120]" : "bg-white dark:bg-[#0e1325]",
               ].join(" ")}
               style={{ width: VENUE_W, minWidth: VENUE_W }}
             >
               <div className="flex items-center gap-2">
-                <span className="text-[12.5px] font-semibold text-slate-200 leading-tight">{venue}</span>
+                <span className="text-[12.5px] font-semibold text-slate-800 dark:text-slate-200 leading-tight">{venue}</span>
               </div>
             </div>
 
@@ -206,7 +206,7 @@ export default function AllVenuesView({ currentDate, onSelectEvent }) {
                 <div
                   key={di}
                   className={[
-                    "flex shrink-0 flex-col gap-1.5 border-r border-white/5 p-1.5",
+                    "flex shrink-0 flex-col gap-1.5 border-r border-slate-200 dark:border-white/5 p-1.5",
                     today ? "bg-violet-500/[0.04]" : "",
                   ].join(" ")}
                   style={{ width: COL_W, minWidth: COL_W, minHeight: ROW_MIN }}

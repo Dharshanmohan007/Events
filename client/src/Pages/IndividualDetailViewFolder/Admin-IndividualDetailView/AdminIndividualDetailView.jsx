@@ -15,8 +15,6 @@ const AdminIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   const { eventId } = useParams();
 
-
-
   // token
   const token = localStorage.getItem("token");
   const decoded = jwtDecode(token);
@@ -38,7 +36,7 @@ const AdminIndividualDetailView = () => {
           },
         );
         setData(res.data.data);
-       
+
         setFormType(res.data.data[0].formType);
         console.log("form type : ", res.data.data[0].formType);
       } catch (err) {

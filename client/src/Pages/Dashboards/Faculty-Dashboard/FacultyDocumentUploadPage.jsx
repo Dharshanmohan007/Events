@@ -169,8 +169,6 @@ const validateExpenditure = (expenditureData) => {
       bills.forEach((bill, idx) => {
         // if (!bill.expenseName)
         //   errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
-        if (!bill.billNo)
-          errors.push(`${cat} bill ${idx + 1}: Bill No is required`);
         if (!bill.billDate)
           errors.push(`${cat} bill ${idx + 1}: Bill Date is required`);
         if (
@@ -223,7 +221,9 @@ const FacultyDocumentUploadPage = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState("thanks-page");
+  // Wait for event completion state before choosing a step. Starting on the
+  // thanks screen briefly showed a false success message while the API loaded.
+  const [step, setStep] = useState("loading");
   const [documents, setDocuments] = useState([]);
   const [eventName, setEventName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -333,7 +333,7 @@ const FacultyDocumentUploadPage = () => {
       setStep("incomeSource");
       return;
     } else if (navigationDetails?.isFeedbackCompleted == false) {
-      window.open(`/dashboard-faculty/feedback/${eventId}`, "_blank");
+      navigate(`/dashboard-faculty/feedback/${eventId}`);
       return;
     } else if (
       navigationDetails?.isDocumentsCompleted &&
@@ -465,7 +465,7 @@ const FacultyDocumentUploadPage = () => {
       const fileRefs = []; // collect all files to append
       let fileCounter = 0;
 
-      const buildExpenditureItems = (items) =>
+      const buildExpenditureItems = (items, includeBankDetails = false) =>
         (items || []).map((b) => {
           const entry = {
             name: b.expenseName || "",
@@ -473,6 +473,15 @@ const FacultyDocumentUploadPage = () => {
             date: b.billDate || "",
             guestName: b.vendorGuestName || "",
             billAmount: Number(b.amount) || 0,
+            ...(includeBankDetails
+              ? {
+                  accountHolderName: b.accountHolderName || "",
+                  accountNumber: b.accountNumber || "",
+                  ifscCode: b.ifscCode || "",
+                  bankName: b.bankName || "",
+                  branch: b.branch || "",
+                }
+              : {}),
           };
           if (b.file) {
             const ref = `expenditure_file_${fileCounter++}`;
@@ -486,7 +495,7 @@ const FacultyDocumentUploadPage = () => {
         food: buildExpenditureItems(expenditureData.food),
         accommodation: buildExpenditureItems(expenditureData.accommodation),
         transport: buildExpenditureItems(expenditureData.transport),
-        remuneration: buildExpenditureItems(expenditureData.remuneration),
+        remuneration: buildExpenditureItems(expenditureData.remuneration, true),
         gifts: buildExpenditureItems(expenditureData.gifts),
         kits: buildExpenditureItems(expenditureData.kits),
         miscellaneous: buildExpenditureItems(expenditureData.miscellaneous),
@@ -601,6 +610,11 @@ const FacultyDocumentUploadPage = () => {
 
   return (
     <div className="bg-[#0b1326] h-[100vh]">
+      {step === "loading" && (
+        <div className="flex h-screen items-center justify-center text-white">
+          Loading event status...
+        </div>
+      )}
       {step !== "thanks-page" && <FacultyDahsboardHeader />}
 
       {/* ─── Document Upload ─── */}

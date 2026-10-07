@@ -8,6 +8,7 @@ import axios from "axios";
 import DashboardHeader from "../../Dashboards/ICTC-Dashboard/DashboardHeader";
 import { jwtDecode } from "jwt-decode";
 import IndividualVideoDetailPage from "../IndividualVideoDetailPage";
+import IndividualEventAttendingDetailView from "../IndividualEventAttendingDetailView";
 import { DEPARTMENT_ROUTES, getRouteForRole } from "../../../utils/roleRoutes";
 
 const HeadIndividualDetailView = () => {
@@ -79,6 +80,9 @@ const HeadIndividualDetailView = () => {
         )}
         {formType?.toLowerCase() == "video" && (
           <IndividualVideoDetailPage data={data[0]} />
+        )}
+        {formType?.toLowerCase() === "eventattending" && (
+          <IndividualEventAttendingDetailView data={data[0]} />
         )}
       </div>
     </>

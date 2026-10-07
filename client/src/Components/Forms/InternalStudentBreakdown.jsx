@@ -2,21 +2,22 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import CustomSelect from '../CustomSelect';
 import { Trash2, Plus, X } from 'lucide-react';
 
-const YEAR_OPTIONS = ["I", "II", "III", "IV"];
-const YEAR_MAP = { "I": "1st", "II": "2nd", "III": "3rd", "IV": "4th" };
-const REVERSE_YEAR_MAP = { "1st": "I", "2nd": "II", "3rd": "III", "4th": "IV" };
+const YEAR_OPTIONS = ["I", "II", "III", "IV","All Year"];
+const YEAR_MAP = { "I": "1st", "II": "2nd", "III": "3rd", "IV": "4th", "All Year": "All" };
+const REVERSE_YEAR_MAP = { "1st": "I", "2nd": "II", "3rd": "III", "4th": "IV", "All": "All Year" };
 
-const DEPT_OPTIONS = ["AIML", "AIDS", "CCE", "CSE", "CYS", "CSBS", "IT", "ECE", "EEE", "MECH", "VLSI", "S&H"];
+const DEPT_OPTIONS = ["AIML", "AIDS", "CCE", "CSE", "CYS", "CSBS", "IT", "ECE", "EEE", "MECH", "VLSI", "S&H", "All Department"];
 const SECTION_OPTIONS = [
   "AI&DS-A", "AI&DS-B", "AI&DS-C", "AI&DS-D",
   "AI&ML-A", "AI&ML-B",
   "CSE-A", "CSE-B", "CSE-C", "CSE-D",
   "Mech", "CCE", "CYS", "CSBS",
   "ECE-A", "ECE-B", "ECE-C/VLSI", "EEE", "IT",
-  "VLSI", "S&H"
+  "VLSI", "S&H", "All Section"
 ];
 
 const getDisplaySectionName = (dept, section) => {
+  if (dept === "All Department" || section === "All") return "All Section";
   if (["CCE", "CYS", "CSBS", "EEE", "IT", "VLSI", "S&H"].includes(dept)) return dept;
   if (dept === "MECH") return "Mech";
   if (dept === "ECE" && section === "C/VLSI") return "ECE-C/VLSI";
@@ -26,6 +27,7 @@ const getDisplaySectionName = (dept, section) => {
 };
 
 const guessDept = (secStr) => {
+  if (secStr === "All Section") return "All Department";
   if (secStr.startsWith("AI&DS")) return "AIDS";
   if (secStr.startsWith("AI&ML")) return "AIML";
   if (secStr.startsWith("CSE")) return "CSE";
@@ -126,6 +128,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
     }
 
     const getShortSection = (secStr) => {
+      if (secStr === "All Section") return "All";
       if (secStr.includes("-")) return secStr.split("-")[1];
       return "A";
     };
@@ -165,13 +168,19 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
     let num = val;
     const errorKey = `${yIdx}-${dIdx}-${sIdx}`;
     
+    const yearGroup = breakdown[yIdx];
+    const deptGroup = yearGroup.departments[dIdx];
+    const secGroup = deptGroup.sections[sIdx];
+    const isAll = deptGroup.department === "All Department" || secGroup.section === "All";
+    const maxLimit = isAll ? 6000 : 100;
+    
     if (val !== "") {
       num = parseInt(val, 10);
       if (isNaN(num)) num = 0;
       
-      if (num > 100) {
-        setCountErrors(prev => ({ ...prev, [errorKey]: "Max 100 students for one class" }));
-        num = 100;
+      if (num > maxLimit) {
+        setCountErrors(prev => ({ ...prev, [errorKey]: `Max ${maxLimit} students` }));
+        num = maxLimit;
       } else {
         setCountErrors(prev => {
           const newErr = { ...prev };
@@ -283,9 +292,9 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
   }, [breakdown]);
 
   return (
-    <div className="relative rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-4 mb-4 mt-2">
+    <div className="relative rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-white dark:bg-[#1E1E35] p-4 sm:p-6 flex flex-col gap-4 mb-4 mt-2 shadow-sm dark:shadow-none">
       <div className="flex justify-between items-center">
-        <h2 className="text-white text-md font-semibold">Internal Students Breakdown</h2>
+        <h2 className="text-slate-900 dark:text-white text-md font-semibold">Internal Students Breakdown</h2>
         {inputGroups.length < 4 && (
           <button
             type="button"
@@ -299,7 +308,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
       
       <div className="space-y-4 mb-2">
         {inputGroups.map((group, index) => (
-          <div key={group.id} className="relative p-4 border border-[#3A3A5A] rounded-lg bg-[#2E3645]">
+          <div key={group.id} className="relative p-4 border border-slate-300 dark:border-[#3A3A5A] rounded-lg bg-slate-50 dark:bg-[#2E3645]">
             {inputGroups.length > 1 && (
               <button
                 type="button"
@@ -313,7 +322,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Year *"
                   value={group.year}
                   onChange={(val) => {
@@ -328,7 +337,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Departments *"
                   multi
                   searchable
@@ -352,7 +361,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
               </div>
               <div className="col-span-1">
                 <CustomSelect
-                  labelBg="#2E3645"
+                  labelClassName="bg-white dark:bg-[#2E3645]"
                   label="Sections *"
                   multi
                   searchable
@@ -386,7 +395,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
           {breakdown.map((yearGroup, yIdx) => {
             if (yearGroup.departments.length === 0) return null;
             return (
-            <div key={yearGroup.year} className="rounded-xl border border-[#3A3A5A] bg-[#2E3645] p-4 sm:p-6">
+            <div key={yearGroup.year} className="rounded-xl border border-slate-300 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#2E3645] p-4 sm:p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-purple-400 text-sm font-semibold tracking-wide">Year {yearGroup.year}</h3>
                 <button
@@ -398,31 +407,31 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
-              <div className="overflow-x-auto rounded-lg border border-[#3A3A5A]">
+              <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-[#3A3A5A]">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-[#1E1E35] border-b border-[#3A3A5A]">
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm">Department</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm">Section</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm w-32">Count</th>
-                      <th className="py-3 px-4 text-gray-300 font-medium text-sm w-20">Action</th>
+                    <tr className="bg-slate-200 dark:bg-[#1E1E35] border-b border-slate-300 dark:border-[#3A3A5A]">
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm">Department</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm">Section</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm w-32">Count</th>
+                      <th className="py-3 px-4 text-slate-700 dark:text-gray-300 font-medium text-sm w-20">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#3A3A5A] bg-transparent">
+                  <tbody className="divide-y divide-slate-300 dark:divide-[#3A3A5A] bg-white dark:bg-transparent">
                     {yearGroup.departments.map((deptGroup, dIdx) =>
                       deptGroup.sections.map((sec, sIdx) => (
-                        <tr key={`${yearGroup.year}-${deptGroup.department}-${sec.section}`} className="hover:bg-[#1E1E35]/50 transition-colors">
-                          <td className="py-3 px-4 text-white text-sm">{deptGroup.department}</td>
-                          <td className="py-3 px-4 text-white text-sm">{getDisplaySectionName(deptGroup.department, sec.section)}</td>
+                        <tr key={`${yearGroup.year}-${deptGroup.department}-${sec.section}`} className="hover:bg-slate-100 dark:hover:bg-[#1E1E35]/50 transition-colors">
+                          <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{deptGroup.department}</td>
+                          <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{getDisplaySectionName(deptGroup.department, sec.section)}</td>
                           <td className="py-3 px-4 relative">
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
+                              <input
+                                type="number"
+                                min="0"
+                                max={deptGroup.department === "All Department" || sec.section === "All" ? "6000" : "100"}
                               onKeyDown={(e) => {
                                 if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === '.') e.preventDefault();
                               }}
-                              className={`bg-[#1E1E35] border ${countErrors[`${yIdx}-${dIdx}-${sIdx}`] ? 'border-red-500' : 'border-[#3A3A5A]'} text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2`}
+                              className={`bg-white dark:bg-[#1E1E35] border ${countErrors[`${yIdx}-${dIdx}-${sIdx}`] ? 'border-red-500' : 'border-slate-300 dark:border-[#3A3A5A]'} text-slate-900 dark:text-white text-sm rounded-lg focus:ring-purple-500 focus:border-purple-500 block w-full p-2`}
                               value={sec.count === 0 && !sec.count.toString().length ? "" : sec.count}
                               onChange={(e) => handleCountChange(yIdx, dIdx, sIdx, e.target.value)}
                             />
@@ -434,7 +443,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                             <button
                               type="button"
                               onClick={() => handleDeleteSection(yIdx, dIdx, sIdx)}
-                              className="text-red-400 hover:text-red-300 p-2 hover:bg-[#1E1E35] rounded-lg transition-colors"
+                              className="text-red-400 hover:text-red-300 p-2 hover:bg-slate-200 dark:hover:bg-[#1E1E35] rounded-lg transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -448,9 +457,9 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
             </div>
           )})}
           <div className="mt-4 flex justify-end">
-            <div className="bg-[#1E1E35] border border-[#3A3A5A] px-6 py-3 rounded-lg flex items-center gap-4">
-              <span className="text-gray-400 font-medium text-sm">Consolidated Total:</span>
-              <span className="text-white font-bold text-lg">{totalCount}</span>
+            <div className="bg-white dark:bg-[#1E1E35] border border-slate-300 dark:border-[#3A3A5A] px-6 py-3 rounded-lg flex items-center gap-4">
+              <span className="text-slate-600 dark:text-gray-400 font-medium text-sm">Consolidated Total:</span>
+              <span className="text-slate-900 dark:text-white font-bold text-lg">{totalCount}</span>
             </div>
           </div>
         </div>

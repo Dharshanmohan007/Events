@@ -370,6 +370,7 @@ export default function EventRequisitionDetails({
 
       <EventDetails
         // disabled={!isPrincipalUploaded}
+        isEditMode={isEditMode}
         setEventDays={syncEventDays}
         errors={mergedEventErrors}
         eventData={eventData}

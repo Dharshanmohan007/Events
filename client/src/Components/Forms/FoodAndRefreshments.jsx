@@ -11,65 +11,19 @@ import "react-datepicker/dist/react-datepicker.css";
 import CustomInput from "../CustomInput";
 import CustomSelect from "../CustomSelect";
 
-// ─── DatePicker dark theme override (injected once) ──────────────────────────
-const DATE_PICKER_STYLES = `
-  .food-datepicker-popper {
-    z-index: 9999 !important;
-  }
-  .food-datepicker-popper .react-datepicker {
-    background-color: #1E1E2F !important;
-    border: 1px solid #3A3A5A !important;
-    border-radius: 12px !important;
-    font-family: inherit !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__header {
-    background-color: #1E1E2F !important;
-    border-bottom: 1px solid #3A3A5A !important;
-    border-radius: 12px 12px 0 0 !important;
-  }
-  .food-datepicker-popper .react-datepicker__current-month,
-  .food-datepicker-popper .react-datepicker__day-name,
-  .food-datepicker-popper .react-datepicker-time__header {
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day {
-    color: #fff !important;
-    border-radius: 6px !important;
-  }
-  .food-datepicker-popper .react-datepicker__day:hover {
-    background-color: #7c3aed !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--selected,
-  .food-datepicker-popper .react-datepicker__day--keyboard-selected {
-    background-color: #7c3aed !important;
-    color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--outside-month {
-    color: #555580 !important;
-  }
-  .food-datepicker-popper .react-datepicker__navigation-icon::before {
-    border-color: #aaa !important;
-  }
-  .food-datepicker-popper .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
-    border-color: #fff !important;
-  }
-  .food-datepicker-popper .react-datepicker__triangle {
-    display: none !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--disabled {
-    color: #3a3a5a !important;
-    cursor: not-allowed !important;
-  }
-  .food-datepicker-popper .react-datepicker__day--disabled:hover {
-    background-color: transparent !important;
-    color: #3a3a5a !important;
-  }
-`;
+
 
 // ─── Multi-select — tick mark style, no checkbox ─────────────────────────────
-function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f38" }) {
+function MultiSelect({ 
+  label, 
+  options, 
+  selected = [], 
+  onToggle, 
+  labelClassName = "bg-white dark:bg-[#1f1f38]",
+  dropdownClassName = "bg-white dark:bg-[#1E1E2F] border-slate-200 dark:border-[#3A3A5A]",
+  selectedClassName = "bg-[#9B1DFC] text-white",
+  unselectedClassName = "text-slate-800 dark:text-gray-300 hover:bg-[#9B1DFC]/10 hover:text-[#9B1DFC] dark:hover:bg-[#9B1DFC]/20 dark:hover:text-white"
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -87,20 +41,19 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
   return (
     <div className="relative w-full" ref={ref}>
       <span
-        className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none"
-        style={{ backgroundColor: labelBg }}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${labelClassName}`}
       >
         {label}
       </span>
       <div
         onClick={() => setOpen((p) => !p)}
         className={`w-full bg-transparent border rounded-lg p-4 flex items-center justify-between cursor-pointer transition-colors duration-200 ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
         }`}
       >
         <span
           className={`text-sm truncate ${
-            selected.length === 0 ? "text-gray-500" : "text-white"
+            selected.length === 0 ? "text-gray-500" : "text-slate-900 dark:text-white"
           }`}
         >
           {displayText}
@@ -124,7 +77,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
       </div>
 
       {open && (
-        <div className="absolute top-full mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg z-50 max-h-52 overflow-y-auto">
+        <div className={`absolute top-full mt-1 w-full border rounded-lg z-50 max-h-52 overflow-y-auto ${dropdownClassName}`}>
           {options.map((opt, i) => {
             const isSelected = selected.includes(opt);
             return (
@@ -132,16 +85,14 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
                 key={i}
                 onClick={() => onToggle(opt)}
                 className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-purple-600/30 text-white"
-                    : "text-gray-300 hover:bg-purple-500/20 hover:text-white"
+                  isSelected ? selectedClassName : unselectedClassName
                 }`}
               >
-                <span>{opt}</span>
+                <span className={isSelected && selectedClassName.includes("bg-[") ? "text-white" : ""}>{opt}</span>
                 <span className="w-4 h-4 flex-shrink-0 flex items-center justify-center ml-3">
                   {isSelected && (
                     <svg
-                      className="w-4 h-4 text-purple-400"
+                      className={`w-4 h-4 ${selectedClassName.includes("bg-[") ? "text-white" : "text-purple-500 dark:text-purple-400"}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -165,7 +116,7 @@ function MultiSelect({ label, options, selected = [], onToggle, labelBg = "#1f1f
 }
 
 // ─── Meal section ─────────────────────────────────────────────────────────────
-const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelBg = "#1f1f38", maxCount = 0 }) {
+const MealSection = memo(function MealSection({ title, activeSections, data, errors = {}, onChange, labelClassName = "bg-white dark:bg-[#1f1f38]", maxCount = 0 }) {
   const getSectionLabel = (sectionKey) => {
     switch (sectionKey) {
       case "participants": return "Participants";
@@ -177,7 +128,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
   };
 
   return (
-    <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
+    <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5">
       <h2 className="text-purple-400 font-semibold text-lg mb-5">{title}</h2>
       {maxCount > 0 && (
         <p className="text-gray-400 text-xs mb-3">
@@ -196,7 +147,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
               <div className={hideNonVeg ? "col-span-1 md:col-span-2" : ""}>
                 <CustomInput
                   label={`No. of veg In ${sectionLabel} Menu *`}
-                  labelBg={labelBg}
+                  labelClassName={labelClassName}
                   type="number"
                   value={data[sectionKey]?.vegCount ?? ""}
                   onChange={(e) => {
@@ -218,7 +169,7 @@ const MealSection = memo(function MealSection({ title, activeSections, data, err
                 <div>
                   <CustomInput
                     label={`No. of Non-veg In ${sectionLabel} Menu *`}
-                    labelBg={labelBg}
+                    labelClassName={labelClassName}
                     type="number"
                     value={data[sectionKey]?.nonVegCount ?? ""}
                     onChange={(e) => {
@@ -255,22 +206,22 @@ function DeleteConfirmPopup({ onConfirm, onCancel }) {
         onClick={onCancel}
       />
       {/* Modal */}
-      <div className="relative bg-[#1e1e38] border border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+      <div className="relative bg-white dark:bg-[#1e1e38] border border-slate-200 dark:border-[#3a3a5a] rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
         {/* Icon */}
         <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15 border border-red-500/30 mx-auto mb-4">
           <Trash2 size={22} className="text-red-400" />
         </div>
-        <h3 className="text-white font-semibold text-center text-lg mb-2">
+        <h3 className="text-slate-900 dark:text-white font-semibold text-center text-lg mb-2">
           Delete Entry
         </h3>
-        <p className="text-gray-400 text-sm text-center mb-6">
+        <p className="text-gray-500 dark:text-gray-400 text-sm text-center mb-6">
           Are you sure you want to delete this entry? This action cannot be undone.
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-[#3a3a5a] text-gray-300 hover:text-white hover:border-[#5a5a8a] text-sm font-medium transition-colors"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-[#3a3a5a] text-gray-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-[#5a5a8a] text-sm font-medium transition-colors"
           >
             Cancel
           </button>
@@ -488,16 +439,7 @@ export default function FoodAndRefreshments({
     return refreshmentVenues;
   }, [venues, venuesList]);
 
-  // Inject dark datepicker styles once
-  useEffect(() => {
-    const id = "food-datepicker-dark";
-    if (!document.getElementById(id)) {
-      const style = document.createElement("style");
-      style.id = id;
-      style.textContent = DATE_PICKER_STYLES;
-      document.head.appendChild(style);
-    }
-  }, []);
+
 
   // ── FIX: Only restore forms that have a date set (real saved data).
   //         Auto-generated empty day-based entries from the parent are ignored
@@ -949,7 +891,7 @@ export default function FoodAndRefreshments({
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="relative bg-[#1f1f38] border border-[#32325a] rounded-2xl mb-6 overflow-visible"
+          className="relative bg-white dark:bg-[#1f1f38] border border-slate-200 dark:border-[#3A3A5A] rounded-2xl mb-6 overflow-visible"
         >
           {/* ── Delete button: inside top-right corner of the card ── */}
           {index !== 0 && (
@@ -970,7 +912,7 @@ export default function FoodAndRefreshments({
             <div className="col-span-1 md:col-span-2 w-full flex flex-col sm:flex-row gap-4">
               {/* From Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white pointer-events-none">
                   From Date *
                 </label>
                 <button
@@ -986,14 +928,13 @@ export default function FoodAndRefreshments({
                   selected={form.fromDate}
                   onChange={(date) => handleChange(form.id, "fromDate", date)}
                   dateFormat="dd/MM/yyyy"
-                  minDate={new Date()}
+                  minDate={isEditMode ? null : new Date()}
                   shouldCloseOnSelect
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
                   popperProps={{ strategy: "fixed" }}
-                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
-                  calendarClassName="food-dark-cal"
                 />
                 {getError(form.id, "fromDate") && (
                   <p className="text-red-400 text-xs mt-1">{getError(form.id, "fromDate")}</p>
@@ -1002,7 +943,7 @@ export default function FoodAndRefreshments({
               
               {/* To Date */}
               <div className="relative w-full">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white pointer-events-none">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white pointer-events-none">
                   To Date *
                 </label>
                 <button
@@ -1018,14 +959,13 @@ export default function FoodAndRefreshments({
                   selected={form.toDate}
                   onChange={(date) => handleChange(form.id, "toDate", date)}
                   dateFormat="dd/MM/yyyy"
-                  minDate={form.fromDate || new Date()}
+                  minDate={isEditMode ? null : (form.fromDate || new Date())}
                   shouldCloseOnSelect
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
                   popperProps={{ strategy: "fixed" }}
-                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-[#3d3d68] text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
+                  className="w-full h-[52px] px-4 pr-10 rounded-xl border border-slate-300 dark:border-[#3d3d68] text-slate-900 dark:text-white outline-none cursor-pointer focus:border-purple-500 bg-transparent"
                   wrapperClassName="w-full"
-                  calendarClassName="food-dark-cal"
                 />
                 {getError(form.id, "toDate") && (
                   <p className="text-red-400 text-xs mt-1">{getError(form.id, "toDate")}</p>
@@ -1039,7 +979,7 @@ export default function FoodAndRefreshments({
                 options={RESOURCE_OPTIONS}
                 selected={form.resourcePersonType}
                 onToggle={(opt) => handleMultiToggle(form.id, "resourcePersonType", opt)}
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
               />
               {getError(form.id, "resourcePersonType") && (
                 <p className="text-red-400 text-xs mt-1">
@@ -1052,7 +992,7 @@ export default function FoodAndRefreshments({
             <div>
               <CustomInput
                 label="Total number of Resource Persons *"
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
                 value={form.resourcePersons}
                 onChange={(e) => handleChange(form.id, "resourcePersons", e.target.value)}
                 type="number"
@@ -1067,7 +1007,7 @@ export default function FoodAndRefreshments({
             <div>
               <CustomInput
                 label="Total number of Internal Accompanying Persons *"
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
                 value={form.internalCount}
                 onChange={(e) => handleChange(form.id, "internalCount", e.target.value)}
                 type="number"
@@ -1085,7 +1025,7 @@ export default function FoodAndRefreshments({
                 {(form.staffList || []).map((staff, staffIndex) => (
                   <div
                     key={staffIndex}
-                    className="bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
+                    className="bg-white dark:bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5"
                   >
                     {/* Staff header row with title + delete button */}
                     <div className="flex items-center justify-between mb-4">
@@ -1105,7 +1045,7 @@ export default function FoodAndRefreshments({
                       <div>
                         <CustomInput
                           label={`Staff ${staffIndex + 1} Name *`}
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           value={staff.name}
                           onChange={(e) =>
                             handleStaffChange(form.id, staffIndex, "name", e.target.value)
@@ -1120,7 +1060,7 @@ export default function FoodAndRefreshments({
                       <div>
                         <CustomInput
                           label={`Staff ${staffIndex + 1} Mobile Number *`}
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           value={staff.mobile}
                           onChange={(e) =>
                             handleStaffChange(form.id, staffIndex, "mobile", e.target.value)
@@ -1146,7 +1086,7 @@ export default function FoodAndRefreshments({
                 options={FOOD_TYPE_OPTIONS}
                 selected={form.foodTypes}
                 onToggle={(opt) => handleMultiToggle(form.id, "foodTypes", opt)}
-                labelBg="#1f1f38"
+                labelClassName="bg-white dark:bg-[#1f1f38]"
               />
               {getError(form.id, "foodTypes") && (
                 <p className="text-red-400 text-xs mt-1">{getError(form.id, "foodTypes")}</p>
@@ -1175,7 +1115,7 @@ export default function FoodAndRefreshments({
                   data={form[mealKey] || {}}
                   errors={mealErr}
                   onChange={(sectionKey, field, value) => handleMealChange(form.id, mealKey, sectionKey, field, value)}
-                  labelBg="#2a2a4a"
+                  labelClassName="bg-white dark:bg-[#2a2a4a]"
                   maxCount={maxCount}
                 />
               );
@@ -1185,7 +1125,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Morning Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Morning Refreshment</h3>
                 </div>
@@ -1193,9 +1133,9 @@ export default function FoodAndRefreshments({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="mb-4">
                     {autoVenues.length > 0 ? (
-                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
-                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
-                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                      <div className="bg-slate-50 dark:bg-[#1e1e38] p-4 rounded-xl border border-slate-300 dark:border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-slate-900 dark:text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-700 dark:text-purple-300">
                           {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
                         </ul>
                       </div>
@@ -1203,7 +1143,7 @@ export default function FoodAndRefreshments({
                       <>
                         <CustomSelect
                           label="Venue *"
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           options={[
                             "Main block - Guest dinning (opp. to II floor auditorium)",
                             "AI & Mech Block: Cyber lab (opp. to Vista hall)"
@@ -1218,7 +1158,7 @@ export default function FoodAndRefreshments({
                   <div className="mb-4">
                     <CustomInput
                       label="Total Morning Refreshment Count (Timing: 10.45 AM to 11.15 AM) *"
-                      labelBg="#2a2a4a"
+                      labelClassName="bg-white dark:bg-[#2a2a4a]"
                       value={form.morningRefreshmentCount || ""}
                       onChange={(e) => handleChange(form.id, "morningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
                       type="text"
@@ -1233,7 +1173,7 @@ export default function FoodAndRefreshments({
             {form.foodTypes.includes("Evening Refreshment") && (() => {
               const autoVenues = getAutoRefreshmentVenues();
               return (
-              <div className="col-span-1 md:col-span-2 bg-[#2a2a4a] border border-[#3b3b66] rounded-2xl p-5 mb-4">
+              <div className="col-span-1 md:col-span-2 bg-white dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3b3b66] rounded-2xl p-5 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-purple-400 font-semibold text-lg">Evening Refreshment</h3>
                 </div>
@@ -1241,9 +1181,9 @@ export default function FoodAndRefreshments({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="mb-4">
                     {autoVenues.length > 0 ? (
-                      <div className="bg-[#1e1e38] p-4 rounded-xl border border-[#3b3b66] h-full flex flex-col justify-center">
-                        <p className="text-sm text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
-                        <ul className="list-disc pl-5 text-sm text-purple-300">
+                      <div className="bg-slate-50 dark:bg-[#1e1e38] p-4 rounded-xl border border-slate-300 dark:border-[#3b3b66] h-full flex flex-col justify-center">
+                        <p className="text-sm text-slate-900 dark:text-gray-300 font-semibold mb-2">Automatically Assigned Venues:</p>
+                        <ul className="list-disc pl-5 text-sm text-purple-700 dark:text-purple-300">
                           {autoVenues.map((v, i) => <li key={i}>{v}</li>)}
                         </ul>
                       </div>
@@ -1251,7 +1191,7 @@ export default function FoodAndRefreshments({
                       <>
                         <CustomSelect
                           label="Venue *"
-                          labelBg="#2a2a4a"
+                          labelClassName="bg-white dark:bg-[#2a2a4a]"
                           options={[
                             "Main block - Guest dinning (opp. to II floor auditorium)",
                             "AI & Mech Block: Cyber lab (opp. to Vista hall)"
@@ -1266,7 +1206,7 @@ export default function FoodAndRefreshments({
                   <div className="mb-4">
                     <CustomInput
                       label="Total Evening Refreshment Count (Timing: 3.30 PM to 4 PM) *"
-                      labelBg="#2a2a4a"
+                      labelClassName="bg-white dark:bg-[#2a2a4a]"
                       value={form.eveningRefreshmentCount || ""}
                       onChange={(e) => handleChange(form.id, "eveningRefreshmentCount", e.target.value.replace(/\D/g, ""))}
                       type="text"
@@ -1281,7 +1221,7 @@ export default function FoodAndRefreshments({
             {/* Special Requirements — transparent background */}
             <div className="col-span-1 md:col-span-2">
               <div className="relative">
-                <label className="absolute -top-2 left-3 z-10 bg-[#1f1f38] px-2 text-xs text-white">
+                <label className="absolute -top-2 left-3 z-10 bg-white dark:bg-[#1f1f38] px-2 text-xs text-slate-800 dark:text-white">
                   Special Requirements
                 </label>
                 <textarea
@@ -1290,7 +1230,7 @@ export default function FoodAndRefreshments({
                   onChange={(e) =>
                     handleChange(form.id, "specialRequirements", e.target.value)
                   }
-                  className="w-full rounded-xl bg-transparent border border-[#3d3d68] px-4 py-4 text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
+                  className="w-full rounded-xl bg-transparent border border-slate-300 dark:border-[#3d3d68] px-4 py-4 text-slate-900 dark:text-white placeholder:text-gray-400 outline-none resize-none focus:border-purple-500"
                 />
               </div>
             </div>
@@ -1300,3 +1240,4 @@ export default function FoodAndRefreshments({
     </div>
   );
 }
+

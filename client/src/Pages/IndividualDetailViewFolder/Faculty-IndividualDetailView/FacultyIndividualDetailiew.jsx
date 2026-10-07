@@ -6,6 +6,7 @@ import IndividualFoodDetailPage from "../IndividualFoodDetailPage";
 import IndividualPurchaseDetailPage from "../IndividualPurchaseDetailPage";
 import IndividualTrasnportDetailPage from "../IndividualTrasnportDetailPage";
 import IndividualMediaDetailPage from "../IndividualMediaDetailPage";
+import EventsAttendingDetailView from "../EventsAttendingDetailView";
 
 const FacultyIndividualDetailiew = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -58,6 +59,9 @@ const FacultyIndividualDetailiew = () => {
             )}
             {formType?.toLowerCase() == "media" && (
             <IndividualMediaDetailPage data={data[0]} />
+            )}
+            {formType?.toLowerCase() === "eventattending" && (
+            <EventsAttendingDetailView data={data[0]} />
             )}
         </div>
     </>

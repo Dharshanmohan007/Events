@@ -517,6 +517,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Event attending route  */}
+      <Route
+        path="/dashboard/eventsAttending/:eventId"
+        element={
+            <EventsAttendingDetailView />
+        }
+      />
 
       <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/transports/edit/:id" element={<TransportDetailsPage />} />

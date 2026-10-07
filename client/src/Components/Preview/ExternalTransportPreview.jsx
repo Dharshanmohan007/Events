@@ -13,17 +13,17 @@ function formatDate(date) {
 
 function InfoBlock({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 bg-[#252C3F] rounded-xl px-5 py-4 w-full">
+    <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4 w-full">
       {Icon && (
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-600/15 flex-shrink-0">
           <Icon size={16} className="text-purple-400" />
         </div>
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] tracking-wide uppercase text-gray-400 mb-0.5 truncate">
+        <p className="text-slate-500 dark:text-gray-400 text-xs uppercase mb-0.5 truncate">
           {label}
         </p>
-        <p className="text-sm font-semibold text-white truncate">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
           {value || "-"}
         </p>
       </div>
@@ -41,14 +41,11 @@ export default function ExternalTransportPreview({ data }) {
         const entryKey = item.id || index;
 
         return (
-          <div
-            key={entryKey}
-            className="bg-[#1C2133] rounded-2xl overflow-hidden border border-[#2D3348]"
-          >
-            <div className="bg-[#212739] px-6 py-4 border-b border-[#2D3348]">
-              <h3 className="text-white font-semibold text-lg flex items-center gap-2">
+          <div key={entryKey} className="bg-white dark:bg-[#161B2D] rounded-xl overflow-hidden border border-slate-200 dark:border-[#2E3652] text-slate-900 dark:text-white">
+            <div className="bg-slate-50 dark:bg-[#20263B] px-6 py-4 border-b border-slate-200 dark:border-[#343C59]">
+              <h3 className="text-slate-900 dark:text-white font-semibold text-lg flex items-center gap-2">
                 External Transport Entry {index + 1}
-                <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full font-medium ml-2">
+                <span className="text-xs bg-purple-600 text-slate-900 dark:text-white px-2 py-0.5 rounded-full font-medium ml-2">
                   {item.travelOption || "Unknown"}
                 </span>
               </h3>
@@ -103,6 +100,20 @@ export default function ExternalTransportPreview({ data }) {
                     />
                   </>
                 )}
+                {item.travelOption === "Bus" && (
+                  <>
+                    <InfoBlock
+                      icon={AlignLeft}
+                      label="Bus Name"
+                      value={item.busName}
+                    />
+                    <InfoBlock
+                      icon={AlignLeft}
+                      label="Bus Type"
+                      value={item.classOrBerth}
+                    />
+                  </>
+                )}
                 {item.specialRequirements &&
                   item.specialRequirements !== "None" && (
                     <div className="md:col-span-2">
@@ -117,43 +128,17 @@ export default function ExternalTransportPreview({ data }) {
 
               {item.passengers && item.passengers.length > 0 && (
                 <div className="mt-6">
-                  <h4 className="text-sm font-semibold text-white mb-4">
-                    Passenger Details
-                  </h4>
+                  <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Passenger Details</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {item.passengers.map((p, pIdx) => (
-                      <div
-                        key={p.id || pIdx}
-                        className="bg-[#252C3F] border border-[#343C59] p-4 rounded-xl space-y-2"
-                      >
-                        <p className="text-sm font-semibold text-white truncate">
-                          {p.name || "-"}
-                        </p>
-                        <div className="text-xs text-gray-400 space-y-1">
-                          <p>
-                            <span className="text-gray-500">Phone:</span>{" "}
-                            {p.phone || "-"}
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Email:</span>{" "}
-                            <span className="truncate inline-block max-w-[150px] align-bottom">
-                              {p.email || "-"}
-                            </span>
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Designation:</span>{" "}
-                            {p.designation || "-"}
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Organization:</span>{" "}
-                            {p.organization || "-"}
-                          </p>
-                          <p>
-                            <span className="text-gray-500">Gender:</span>{" "}
-                            {p.gender || "-"} |{" "}
-                            <span className="text-gray-500">Age:</span>{" "}
-                            {p.age || "-"}
-                          </p>
+                      <div key={p.id || pIdx} className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-4 rounded-xl space-y-2">
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{p.name || "-"}</p>
+                        <div className="text-xs text-slate-500 dark:text-gray-400 space-y-1">
+                          <p><span className="text-gray-500">Phone:</span> {p.phone || "-"}</p>
+                          <p><span className="text-gray-500">Email:</span> <span className="truncate inline-block max-w-[150px] align-bottom">{p.email || "-"}</span></p>
+                          <p><span className="text-gray-500">Designation:</span> {p.designation || "-"}</p>
+                          <p><span className="text-gray-500">Organization:</span> {p.organization || "-"}</p>
+                          <p><span className="text-gray-500">Gender:</span> {p.gender || "-"} | <span className="text-gray-500">Age:</span> {p.age || "-"}</p>
                         </div>
                       </div>
                     ))}

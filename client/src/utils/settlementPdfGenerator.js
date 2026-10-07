@@ -5,6 +5,7 @@
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { API_BASE } from "./apiConfig.js";
+import settlementTemplateRaw from "../templates/settlement_form_template.html?raw";
 
 /**
  * Fetch both settlement endpoints in parallel.
@@ -38,19 +39,9 @@ export async function fetchSettlementData(eventId, token) {
  * Returns the full HTML string of src/templates/settlement_form_template.html.
  */
 async function fetchTemplateHtml() {
-  // Vite serves files under /src when using ?raw or via the dev server.
-  // During build, the file is available at its source path relative to the project root.
-  // We use a relative URL that works in both dev and production builds.
-  const templateUrl = new URL(
-    "../templates/settlement_form_template.html",
-    import.meta.url
-  ).href + "?t=" + new Date().getTime();
-
-  const res = await fetch(templateUrl);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch settlement template: ${res.status}`);
-  }
-  return res.text();
+  // Use Vite's ?raw import to bundle the template directly into the JS.
+  // This prevents 404 errors and proxy fallbacks in the production build.
+  return settlementTemplateRaw;
 }
 
 /**
@@ -230,19 +221,26 @@ export async function generateSettlementPdf(eventId, token, mapper) {
   iframe.style.cssText =
     `position:fixed;left:-9999px;top:-9999px;width:${PDF_USABLE_WIDTH_PX}px;border:none;visibility:hidden;`;
 
+  // Use a Blob URL instead of iframe.srcdoc.
+  // srcdoc has a browser-enforced size limit (~2-4 KB on some hosts) that
+  // silently truncates the 42 KB template in production, making .page-wrap
+  // disappear. Blob URLs have no size limit.
+  const blob = new Blob([populatedHtml], { type: "text/html;charset=utf-8" });
+  const blobUrl = URL.createObjectURL(blob);
+
   const iframeLoaded = new Promise((resolve, reject) => {
     iframe.onload = resolve;
     iframe.onerror = reject;
   });
 
-  iframe.srcdoc = populatedHtml;
+  iframe.src = blobUrl;
   document.body.appendChild(iframe);
 
   try {
     await iframeLoaded;
 
     // Allow a small extra delay for CSS/fonts to settle
-    await new Promise((r) => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 500));
 
     // ── Step 6: Capture with html2canvas ───────────────────────────────────
     const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
@@ -347,5 +345,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
     if (document.body.contains(iframe)) {
       document.body.removeChild(iframe);
     }
+    // Release the Blob URL to free memory
+    URL.revokeObjectURL(blobUrl);
   }
 }

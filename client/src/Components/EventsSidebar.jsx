@@ -1,13 +1,29 @@
 import React from "react";
 import Logo from "../assets/logo.svg";
+import logolight from "../assets/clglight.svg";
 import SidebarDesign from "../assets/SidebarDesign.svg";
+import SidebarDesign1 from "../assets/SidebarDesign1.svg";
+// import ThemeToggle from "../Components/Calendar/ThemeToggle"
 
-export default function EventsSidebar({ steps = [], currentStep = 0, completedSteps = [] }) {
+export default function EventsSidebar({
+  steps = [],
+  currentStep = 0,
+  completedSteps = [],
+}) {
   return (
-    <div className="h-full bg-[#292946] p-6 flex flex-col relative overflow-hidden">
-
-      {/* Logo */}
-      <img src={Logo} alt="Logo" className="mb-8 w-40 z-10" />
+    <div className="h-full bg-[#f4f4f4] dark:bg-[#292946] border-r border-slate-200 dark:border-transparent p-6 flex flex-col relative overflow-hidden">
+      {/* Top Header */}
+      <div className="flex items-center justify-between mb-8 z-10 w-full">
+        <div>
+          <div className="hidden dark:block">
+            <img src={Logo} alt="Logo" className="w-40" />
+          </div>
+          <div className="dark:hidden">
+            <img src={logolight} alt="Logo" className="w-40" />
+          </div>
+        </div>
+        {/* <ThemeToggle /> */}
+      </div>
 
       {/* Steps */}
       <div className="flex flex-col gap-1 z-10">
@@ -18,7 +34,7 @@ export default function EventsSidebar({ steps = [], currentStep = 0, completedSt
               ${
                 index === currentStep
                   ? "bg-gradient-to-r from-purple-500 to-purple-600 text-white"
-                  : "text-gray-300 hover:bg-[#3A3A5A]"
+                  : "text-slate-600 hover:bg-slate-100 dark:text-gray-300 dark:hover:bg-[#3A3A5A]"
               }
             `}
           >
@@ -28,8 +44,8 @@ export default function EventsSidebar({ steps = [], currentStep = 0, completedSt
                   completedSteps.includes(index)
                     ? "bg-purple-600 border-purple-600 text-white"
                     : index === currentStep
-                    ? "border-white text-white"
-                    : "border-gray-400 text-gray-300"
+                      ? "border-white text-white"
+                      : "border-slate-400 text-slate-500 dark:border-gray-400 dark:text-gray-300"
                 }
               `}
             >
@@ -52,17 +68,26 @@ export default function EventsSidebar({ steps = [], currentStep = 0, completedSt
               )}
             </div>
 
-            
             <span className="text-sm whitespace-nowrap">{step.label}</span>
           </div>
         ))}
       </div>
-    
-      <img
-        src={SidebarDesign}
-        alt="Sidebar Design"
-        className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
-      />
+
+      <div className="hidden dark:block">
+        <img
+          src={SidebarDesign}
+          alt="Sidebar Design"
+          className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
+        />
+      </div>
+
+      <div className="dark:hidden block">
+        <img
+          src={SidebarDesign1}
+          alt="Sidebar Design"
+          className="absolute bottom-0 left-0 w-[40%] opacity-90 pointer-events-none"
+        />
+      </div>
     </div>
   );
 }

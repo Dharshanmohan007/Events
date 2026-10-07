@@ -5,7 +5,7 @@ import EventDates from './EventDates';
 import { getEventTypes } from "../../services/events/getEventTypes";
 import InternalStudentBreakdown from './InternalStudentBreakdown';
 
-export default function EventDetails({disabled = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
+export default function EventDetails({disabled = false, isEditMode = false, setEventDays, errors = {}, eventData = {}, setEventData, setErrors }) {
   const daysData = eventData.eventDays || [];
   const numDays = daysData.length > 0 ? daysData.length.toString() : "";
   const [eventTypeOptions, setEventTypeOptions] = useState([]);
@@ -104,7 +104,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
             }`}
         >
     <div className='px-1 py-6 rounded-xl'>
-      <h1 className='text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
+      <h1 className='text-slate-900 dark:text-white text-lg font-bold mb-6 playfair'>Event Details</h1>
 
       {/* Event Name */}
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6'>
@@ -302,6 +302,7 @@ export default function EventDetails({disabled = false, setEventDays, errors = {
           <EventDates
             key={i}
             dayIndex={i + 1}
+            isEditMode={isEditMode}
             dayData={day}
             day1Guests={i > 0 ? daysData[0].guests : []}
             minDate={calculatedMinDate}

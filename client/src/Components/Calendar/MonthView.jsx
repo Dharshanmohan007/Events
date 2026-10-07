@@ -12,7 +12,7 @@ export default function MonthView({ currentDate, events, onSelectEvent }) {
 
   return (
     <div className="flex-1 overflow-auto px-8 mt-4 pb-8">
-      <div className="grid grid-cols-7 border-b border-white/5 pb-2">
+      <div className="grid grid-cols-7 border-b border-slate-200 dark:border-white/5 pb-2">
         {DAY_LABELS.map((label) => (
           <div key={label} className="text-center text-xs font-medium text-slate-500">
             {label}
@@ -30,7 +30,7 @@ export default function MonthView({ currentDate, events, onSelectEvent }) {
             <div
               key={i}
               className={[
-                "flex flex-col gap-1 border-b border-l border-white/5 p-2",
+                "flex flex-col gap-1 border-b border-l border-slate-200 dark:border-white/5 p-2",
                 i % 7 === 0 ? "border-l-0" : "",
                 inMonth ? "" : "opacity-40",
               ].join(" ")}
@@ -38,7 +38,7 @@ export default function MonthView({ currentDate, events, onSelectEvent }) {
               <span
                 className={[
                   "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold",
-                  today ? "bg-violet-500 text-white" : "text-slate-300",
+                  today ? "bg-violet-500 text-white" : "text-slate-700 dark:text-slate-300",
                 ].join(" ")}
               >
                 {day.getDate()}

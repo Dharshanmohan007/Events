@@ -94,7 +94,8 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
   const organizer = organizerDetails.organizers?.[0] || {};
 
   // ── Extract all guest names ────────────────────────────────────────────
-  const guestNames = (basicDetails.guestDetails || [])
+  const uniqueGuests = [...new Set(basicDetails.guestDetails || [])];
+  const guestNames = uniqueGuests
     .map((g) => escapeHtml(g))
     .join(", ");
 
