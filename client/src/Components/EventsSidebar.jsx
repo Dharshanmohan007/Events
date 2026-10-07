@@ -12,14 +12,18 @@ export default function EventsSidebar({
 }) {
   return (
     <div className="h-full bg-[#f4f4f4] dark:bg-[#292946] border-r border-slate-200 dark:border-transparent p-6 flex flex-col relative overflow-hidden">
-      {/* Logo */}
-      <div className="hidden dark:block">
-        <img src={Logo} alt="Logo" className="mb-8 w-40 z-10" />
+      {/* Top Header */}
+      <div className="flex items-center justify-between mb-8 z-10 w-full">
+        <div>
+          <div className="hidden dark:block">
+            <img src={Logo} alt="Logo" className="w-40" />
+          </div>
+          <div className="dark:hidden">
+            <img src={logolight} alt="Logo" className="w-40" />
+          </div>
+        </div>
+        <ThemeToggle />
       </div>
-      <div className="dark:hidden">
-        <img src={logolight} alt="Logo" className="mb-8 w-40 z-10" />
-      </div>
-      <ThemeToggle/>
 
       {/* Steps */}
       <div className="flex flex-col gap-1 z-10">
