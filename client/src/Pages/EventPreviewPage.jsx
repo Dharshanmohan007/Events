@@ -1,4 +1,6 @@
-import React, {useMemo,  useState } from "react";
+import { useMemo, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
+import { Sun, Moon } from "lucide-react";
 import EventPreview from "../Components/Preview/EventPreview";
 import VenuePreview from "../Components/Preview/VenuePreview";
 import ICTSPreview from "../Components/Preview/ICTSPreview";
@@ -30,6 +32,8 @@ export default function EventPreviewPage({
         purchase: "Purchase Details",
         media: "Media Details",
     };
+
+    const { isDarkMode, toggleTheme } = useTheme();
 
     const requirementKeys = Array.isArray(selectedRequirements)
         ? selectedRequirements
@@ -126,14 +130,19 @@ export default function EventPreviewPage({
     };
 
     return (
-        <div className="h-screen bg-[#0B1326] text-white flex flex-col">
+        <div className="h-screen bg-slate-50 dark:bg-[#0B1326] text-slate-900 dark:text-white flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5">
-                <h1 className="text-2xl font-bold">
-                Event Preview
-                </h1>
+                <div className="flex items-center gap-4">
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                    Event Preview
+                    </h1>
+                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-[#1f2937] text-slate-800 dark:text-white transition-colors">
+                        {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+                    </button>
+                </div>
 
-                <p className="text-sm text-white/70">
+                <p className="text-sm text-slate-500 dark:text-white/70">
                     Kindly verify your, final event details before submit...
                 </p>
             </div>
@@ -145,10 +154,10 @@ export default function EventPreviewPage({
                 <div className="w-[320px] p-5 overflow-y-auto custom-scrollbar">
                     <div
                         className="
-                        border-2 border-[#2D2D4B]
+                        border-2 border-slate-200 dark:border-[#2D2D4B]
                         rounded-xl
                         p-4
-                        bg-[#FFFFFF0D]
+                        bg-white dark:bg-[#FFFFFF0D]
                         min-h-[600px]
                         "
                     >
@@ -164,8 +173,8 @@ export default function EventPreviewPage({
                                     backdrop-blur-[20px]
                                     ${
                                     selectedTab === tab.key
-                                        ? "bg-[#8B5CF61A] shadow-[inset_0_0_20px_0_#8B5CF61A] text-white"
-                                        : "bg-[#FFFFFF0D] text-white/80 hover:text-white"
+                                        ? "bg-purple-100 dark:bg-[#8B5CF61A] shadow-none dark:shadow-[inset_0_0_20px_0_#8B5CF61A] text-purple-700 dark:text-white font-medium"
+                                        : "bg-white dark:bg-[#FFFFFF0D] text-slate-600 dark:text-white/80 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent"
                                     }
                                 `}
                                 >
