@@ -1307,6 +1307,7 @@ export default function VenueForm({
             venueName: venueObj ? venueObj.venue : id,
           };
         }),
+        excludeEventId: eventId || "",
       };
 
       const response = await fetch(

@@ -8,12 +8,12 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import AdminDashboardHeader from "../../Dashboards/Admin-Dashboard/AdminDashboardHeader";
+import IndividualTicketingDetailView from "../IndividualTicketingDetailView";
+import EventsAttendingDetailView from "../EventsAttendingDetailView";
 
 const AdminIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
   const { eventId } = useParams();
-
-  console.log("id ", eventId);
 
   // token
   const token = localStorage.getItem("token");
@@ -36,6 +36,7 @@ const AdminIndividualDetailView = () => {
           },
         );
         setData(res.data.data);
+
         setFormType(res.data.data[0].formType);
       } catch (err) {
         console.error(
@@ -68,6 +69,14 @@ const AdminIndividualDetailView = () => {
         {formType?.toLowerCase() == "media" && (
           <IndividualMediaDetailPage data={data[0]} />
         )}
+        {formType?.toLowerCase() == "individualticketing" && (
+          <IndividualTicketingDetailView data={data[0]} />
+        )}
+        {formType?.toLowerCase() == "eventattending" && (
+          <EventsAttendingDetailView data={data[0]} />
+        )}
+
+        
       </div>
     </>
   );

@@ -2,21 +2,23 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import CustomSelect from '../CustomSelect';
 import { Trash2, Plus, X } from 'lucide-react';
 
-const YEAR_OPTIONS = ["I", "II", "III", "IV"];
-const YEAR_MAP = { "I": "1st", "II": "2nd", "III": "3rd", "IV": "4th" };
-const REVERSE_YEAR_MAP = { "1st": "I", "2nd": "II", "3rd": "III", "4th": "IV" };
+const YEAR_OPTIONS = ["I", "II", "III", "IV","All Year"];
+const YEAR_MAP = { "I": "1st", "II": "2nd", "III": "3rd", "IV": "4th", "All Year": "All" };
+const REVERSE_YEAR_MAP = { "1st": "I", "2nd": "II", "3rd": "III", "4th": "IV", "All": "All Year" };
 
-const DEPT_OPTIONS = ["AIML", "AIDS", "CCE", "CSE", "CYS", "CSBS", "IT", "ECE", "EEE", "MECH", "VLSI", "S&H"];
+const DEPT_OPTIONS = ["AIML", "AIDS", "CCE", "CSE", "CYS", "CSBS", "IT", "ECE", "EEE", "MECH", "VLSI", "S&H", "All Department"];
 const SECTION_OPTIONS = [
   "AI&DS-A", "AI&DS-B", "AI&DS-C", "AI&DS-D",
   "AI&ML-A", "AI&ML-B",
   "CSE-A", "CSE-B", "CSE-C", "CSE-D",
   "Mech", "CCE", "CYS", "CSBS",
-  "ECE-A", "ECE-B", "ECE-C/VLSI", "EEE"
+  "ECE-A", "ECE-B", "ECE-C/VLSI", "EEE", "IT",
+  "VLSI", "S&H", "All Section"
 ];
 
 const getDisplaySectionName = (dept, section) => {
-  if (["CCE", "CYS", "CSBS", "EEE"].includes(dept)) return dept;
+  if (dept === "All Department" || section === "All") return "All Section";
+  if (["CCE", "CYS", "CSBS", "EEE", "IT", "VLSI", "S&H"].includes(dept)) return dept;
   if (dept === "MECH") return "Mech";
   if (dept === "ECE" && section === "C/VLSI") return "ECE-C/VLSI";
   if (dept === "AIDS") return `AI&DS-${section}`;
@@ -25,6 +27,7 @@ const getDisplaySectionName = (dept, section) => {
 };
 
 const guessDept = (secStr) => {
+  if (secStr === "All Section") return "All Department";
   if (secStr.startsWith("AI&DS")) return "AIDS";
   if (secStr.startsWith("AI&ML")) return "AIML";
   if (secStr.startsWith("CSE")) return "CSE";
@@ -34,6 +37,7 @@ const guessDept = (secStr) => {
   if (secStr === "CYS") return "CYS";
   if (secStr === "CSBS") return "CSBS";
   if (secStr === "EEE") return "EEE";
+  if (secStr === "IT") return "IT";
   if (secStr.includes("VLSI")) return "VLSI";
   return "S&H";
 };
@@ -124,6 +128,7 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
     }
 
     const getShortSection = (secStr) => {
+      if (secStr === "All Section") return "All";
       if (secStr.includes("-")) return secStr.split("-")[1];
       return "A";
     };
@@ -163,13 +168,19 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
     let num = val;
     const errorKey = `${yIdx}-${dIdx}-${sIdx}`;
     
+    const yearGroup = breakdown[yIdx];
+    const deptGroup = yearGroup.departments[dIdx];
+    const secGroup = deptGroup.sections[sIdx];
+    const isAll = deptGroup.department === "All Department" || secGroup.section === "All";
+    const maxLimit = isAll ? 6000 : 100;
+    
     if (val !== "") {
       num = parseInt(val, 10);
       if (isNaN(num)) num = 0;
       
-      if (num > 100) {
-        setCountErrors(prev => ({ ...prev, [errorKey]: "Max 100 students for one class" }));
-        num = 100;
+      if (num > maxLimit) {
+        setCountErrors(prev => ({ ...prev, [errorKey]: `Max ${maxLimit} students` }));
+        num = maxLimit;
       } else {
         setCountErrors(prev => {
           const newErr = { ...prev };
@@ -413,10 +424,10 @@ export default function InternalStudentBreakdown({ eventData, setEventData, erro
                           <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{deptGroup.department}</td>
                           <td className="py-3 px-4 text-slate-900 dark:text-white text-sm">{getDisplaySectionName(deptGroup.department, sec.section)}</td>
                           <td className="py-3 px-4 relative">
-                            <input
-                              type="number"
-                              min="0"
-                              max="100"
+                              <input
+                                type="number"
+                                min="0"
+                                max={deptGroup.department === "All Department" || sec.section === "All" ? "6000" : "100"}
                               onKeyDown={(e) => {
                                 if (e.key === '-' || e.key === '+' || e.key === 'e' || e.key === '.') e.preventDefault();
                               }}

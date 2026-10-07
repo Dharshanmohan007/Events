@@ -85,7 +85,7 @@ const GuestFields = ({ guestIndex, dayIndex, data = {}, errors = {}, onChange })
   </div>
 );
 
-export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {}, day1Guests = [],onDelete, }) {
+export default function EventDates({ dayIndex, dayData, updateDay, minDate, errors = {}, day1Guests = [],onDelete, isEditMode = false }) {
   const [localTimeError, setLocalTimeError] = useState("");
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
@@ -342,6 +342,7 @@ export default function EventDates({ dayIndex, dayData, updateDay, minDate, erro
             onChange={(val) => updateDay({ ...dayData, date: val })}
             placeholder="DD/MM/YYYY"
             minDate={(() => {
+              if (isEditMode) return null;
               const tomorrow = new Date();
               tomorrow.setDate(tomorrow.getDate() + 1);
               const tomorrowStr = `${tomorrow.getFullYear()}-${String(

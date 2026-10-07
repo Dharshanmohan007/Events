@@ -128,11 +128,11 @@ function PreviewHeader({ description }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div>
-        <h2 className="text-[20px] font-bold text-[#8B5CF6] playfair">
+        <h2 className="text-xl font-semibold text-purple-400 playfair">
           Media Preview
         </h2>
 
-        <p className="mt-2 text-sm text-[#98A2B3] leading-6 max-w-3xl">
+        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 max-w-3xl leading-6">
           {description}
         </p>
       </div>
@@ -187,8 +187,8 @@ function TwoColumnCard({
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="border border-slate-200 dark:border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-5 min-w-0 overflow-hidden">
-      <h3 className="flex items-center gap-2 text-[20px] playfair font-bold text-[#8B5CF6] mb-5">
+    <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5 min-w-0 overflow-hidden">
+      <h3 className="flex items-center gap-2 font-semibold mb-5 text-lg">
         <Icon size={18} className="text-[#C4B5FD]" />
         {title}
       </h3>
@@ -251,7 +251,7 @@ function FileChip({ file, label, onOpen }) {
     <button
       type="button"
       onClick={() => onOpen({ name, url, isImage, isVideo })}
-      className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-white dark:bg-[#2A3042] px-3 py-2 text-left hover:border-slate-200 dark:border-[#8B5CF6] transition-colors"
+      className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-[#2E3652] bg-white dark:bg-[#161B2D] px-3 py-2 text-left hover:border-slate-200 dark:border-[#8B5CF6] transition-colors"
     >
       {isImage ? (
         <ImageIcon className="w-4 h-4 text-[#C4B5FD]" />
@@ -319,8 +319,8 @@ function PreviewModal({
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-12 text-center">
-      <p className="text-[#98A2B3]">{message}</p>
+    <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-12 text-center text-slate-900 dark:text-white">
+      <p className="text-slate-500 dark:text-gray-400">{message}</p>
     </div>
   );
 }
@@ -337,8 +337,8 @@ function DayTabs({ labels, current, onChange }) {
           onClick={() => onChange(i)}
           className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
             i === current
-              ? "bg-[#7C3AED] border-slate-200 dark:border-[#7C3AED] text-slate-900 dark:text-white"
-              : "bg-slate-50 dark:bg-white dark:bg-[#252C3F] border-slate-200 dark:border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
+              ? "bg-purple-600 text-slate-900 dark:text-white"
+              : "bg-white dark:bg-[#1c1c34] text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-[#2a2a45] hover:text-slate-900 dark:text-white"
           }`}
         >
           {label}
@@ -354,13 +354,13 @@ function DayTabs({ labels, current, onChange }) {
 
 function ContentBlock({ icon: Icon, title, content }) {
   return (
-    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
+    <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4 min-w-0 overflow-hidden">
       <div className="flex items-center gap-2 mb-3">
-        <Icon size={16} className="text-[#C4B5FD]" />
-        <span className="text-[14px] font-semibold text-[#C4B5FD]">{title}</span>
+        <Icon size={16} className="text-purple-400" />
+        <span className="text-sm font-semibold text-slate-900 dark:text-white">{title}</span>
       </div>
 
-      <p className="w-full min-w-0 overflow-hidden text-[14px] leading-6 text-[#D6D8E1] whitespace-pre-wrap break-words">
+      <p className="w-full min-w-0 overflow-hidden text-slate-500 dark:text-gray-400 text-sm leading-6 whitespace-pre-wrap break-words">
         {content?.trim() ? content : "—"}
       </p>
     </div>
@@ -369,8 +369,8 @@ function ContentBlock({ icon: Icon, title, content }) {
 
 function PillList({ label, items = [] }) {
   return (
-    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4 min-w-0 overflow-hidden">
-      <h4 className="text-[14px] font-semibold text-[#C4B5FD] mb-3">{label}</h4>
+    <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4 min-w-0 overflow-hidden">
+      <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{label}</h4>
 
       <div className="flex flex-wrap gap-2">
         {(!items || items.length === 0) ? (
@@ -394,8 +394,8 @@ function FileDisplayRow({ label, files = [], onOpen }) {
   const list = asFileArray(files);
 
   return (
-    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
-      <p className="text-[14px] font-semibold text-[#C4B5FD] mb-3">{label}</p>
+    <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4">
+      <p className="text-sm font-semibold text-slate-900 dark:text-white mb-3">{label}</p>
 
       {list.length === 0 ? (
         <span className="text-[14px] text-[#98A2B3]">No file uploaded</span>
@@ -412,10 +412,10 @@ function FileDisplayRow({ label, files = [], onOpen }) {
 
 function InfoRow({ label, value, icon: Icon }) {
   return (
-    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
+    <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4">
       <div className="flex items-center gap-2 mb-2">
-        <Icon size={16} className="text-[#C4B5FD]" />
-        <span className="text-[14px] text-[#C4C8D4]">{label}</span>
+        <Icon size={16} className="text-purple-400" />
+        <span className="text-slate-500 dark:text-gray-400 text-xs uppercase">{label}</span>
       </div>
 
       <p className="text-[14px] text-slate-900 dark:text-white font-semibold">{value || "—"}</p>
@@ -457,8 +457,8 @@ function PosterPreview({ data = {}, dayData = {}, onOpen }) {
               {showGlass && <InfoRow label="Size for Glass Sticker" value={glassSize} icon={Flag} />}
             </div>
           ) : (
-            <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
-              <p className="text-[14px] text-[#98A2B3]">No display size selected.</p>
+            <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4">
+              <p className="text-slate-500 dark:text-gray-400">No display size selected.</p>
             </div>
           )}
         </div>
@@ -552,7 +552,7 @@ export default function MediaPreview({
   if (dayCount === 0) {
     return (
       <div className="space-y-6">
-        <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6">
+        <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white space-y-6">
           <PreviewHeader description={description} />
         </div>
         <EmptyState message="No media requirement details submitted." />
@@ -562,7 +562,7 @@ export default function MediaPreview({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6 space-y-6">
+      <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white space-y-6">
         <PreviewHeader description={description} />
 
         {/* <TwoColumnCard

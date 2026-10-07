@@ -209,6 +209,44 @@ const EventRequisitionDetailsPanel = ({ requestDetails }) => {
                 )}
             </section>
 
+            {Array.isArray(event.targetAudience) && event.targetAudience.includes('Internal Students') && (
+                <section className="rounded-lg border border-[#374155] bg-[#232A3C] p-5">
+                    <div className="mb-4 flex items-center gap-2 text-base font-semibold text-[#E6E2F0]">
+                        <Network size={17} />
+                        Internal Students Breakdown
+                    </div>
+                    {(event.internalStudentsBreakdown || []).length > 0 ? (
+                        <div className="space-y-4">
+                            {event.internalStudentsBreakdown.map((yearGroup, yearIndex) => (
+                                <section key={`${yearGroup.year}-${yearIndex}`} className="rounded-lg border border-[#374155] bg-[#232A3B] p-4">
+                                    <h3 className="mb-3 text-sm font-semibold text-[#c6b5ff]">{displayValue(yearGroup.year)} Year</h3>
+                                    <div className="space-y-3">
+                                        {(yearGroup.departments || []).map((department, departmentIndex) => (
+                                            <div key={`${department.department}-${departmentIndex}`} className="rounded-md border border-[#374155]/70 bg-[#2E3545]/60 p-3">
+                                                <h4 className="mb-3 text-sm font-medium text-white">{displayValue(department.department)}</h4>
+                                                {(department.sections || []).length > 0 ? (
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {department.sections.map((section, sectionIndex) => (
+                                                            <div key={`${section.section}-${sectionIndex}`} className="inline-flex items-center gap-2 rounded-md border border-[#6b7280]/40 bg-[#232A3B] px-3 py-2 text-xs">
+                                                                <span className="text-[#CBC3D7]/75">Section {displayValue(section.section)}</span>
+                                                                <span className="font-semibold text-[#E6E2F0]">{displayValue(section.count)} students</span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xs text-[#CBC3D7]/65">No section breakdown available.</p>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="text-sm text-[#CBC3D7]/65">No internal student breakdown is available.</p>
+                    )}
+                </section>
+            )}
             {/* Guest Details */}
             <section className="space-y-3 rounded-lg border border-[#374155] bg-[#2E3545] p-4">
                 {(currentDay.guests || []).length > 0 ? (

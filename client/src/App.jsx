@@ -9,7 +9,7 @@ import AUDIODashboard from "./Pages/Dashboards/AUDIO-Dashboard/AUDIODashboard";
 import AudioEventsDetailViewPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioEventsDetailViewPage";
 import AudioReportsPage from "./Pages/Dashboards/AUDIO-Dashboard/AudioReportsPage";
 import Login from "./Pages/Login.jsx";
-import Login1 from "./Pages/Login1.jsx";
+// import Login1 from "./Pages/Login1.jsx";
 import Events from "./Pages/Dashboards/ICTC-Dashboard/Events";
 import Reports from "./Pages/Dashboards/ICTC-Dashboard/Reports";
 import IctcEventDetailsPage from "./Pages/Dashboards/ICTC-Dashboard/IctcEventDetailsPage";
@@ -117,7 +117,12 @@ import IndividualVideoDetailPage from "./Pages/IndividualDetailViewFolder/Indivi
 import IndividualExternalTransportDetails from "./Pages/IndividualForm/IndividualExternalTransportDetails.jsx";
 
 import RoomManagement from "./Pages/Dashboards/Admin-Dashboard/RoomManagement.jsx";
-import EventTypeManagement from "./Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx";
+import EventTypeManagement from './Pages/Dashboards/Admin-Dashboard/EventTypeManagement.jsx'
+import Dashboard from "./Pages/Dashboards/Ticketing-Dashboard/Dashboard.jsx";
+import TicketingEventDetailView from "./Pages/Dashboards/Ticketing-Dashboard/TicketingEventDetailView.jsx";
+import TicketingRequestListpage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingRequestListpage.jsx";
+import TicketingReportsPage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingReportsPage.jsx";
+import EventsAttendingDetailView from "./Pages/IndividualDetailViewFolder/EventsAttendingDetailView.jsx";
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -138,14 +143,14 @@ function AppRoutes() {
           </PublicRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/access-cronical"
         element={
           <PublicRoute>
             <Login1 />
           </PublicRoute>
         }
-      />
+      /> */}
       <Route path="/forget-password" element={<ForgetPassword />} />
 
       {/* ── Protected routes (just need to be logged in) ── */}
@@ -512,6 +517,13 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      {/* Event attending route  */}
+      <Route
+        path="/dashboard/eventsAttending/:eventId"
+        element={
+            <EventsAttendingDetailView />
+        }
+      />
 
       <Route path="/transports" element={<TransportDetailsPage />} />
       <Route path="/transports/edit/:id" element={<TransportDetailsPage />} />
@@ -821,10 +833,11 @@ function AppRoutes() {
         }
       />
       <Route path="/calendar" element={<Calendar />} />
-      <Route
-        path="/calendar/all-venues-fullscreen"
-        element={<AllVenuesFullscreenPage />}
-      />
+      <Route path="/ticketing-dashboard" element={<Dashboard />} />
+      <Route path="/ticketing-dashboard/requestList" element={<TicketingRequestListpage />} />
+      <Route path="/dashboard-ticketing/reports" element={<TicketingReportsPage />} />
+      <Route path="/ticketing-dashboard/event-request/:eventId" element={<TicketingEventDetailView />} />
+      <Route path="/calendar/all-venues-fullscreen" element={<AllVenuesFullscreenPage />} />
       {/* <Route path="/dashboard-purchase/events/individualDetailView/:id" element={<ProtectedRoute><PurchaseIndividualDetailViewPage /></ProtectedRoute>} /> */}
       {/* Purchase individual detail view v2 */}
       <Route
@@ -835,8 +848,8 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route path="events-attended" element={<Eventsattended />} />
-
+      <Route path="events-attended" e
+        lement={<Eventsattended />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

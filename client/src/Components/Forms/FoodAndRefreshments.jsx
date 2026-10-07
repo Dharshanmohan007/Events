@@ -928,7 +928,7 @@ export default function FoodAndRefreshments({
                   selected={form.fromDate}
                   onChange={(date) => handleChange(form.id, "fromDate", date)}
                   dateFormat="dd/MM/yyyy"
-                  minDate={new Date()}
+                  minDate={isEditMode ? null : new Date()}
                   shouldCloseOnSelect
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"
@@ -959,7 +959,7 @@ export default function FoodAndRefreshments({
                   selected={form.toDate}
                   onChange={(date) => handleChange(form.id, "toDate", date)}
                   dateFormat="dd/MM/yyyy"
-                  minDate={form.fromDate || new Date()}
+                  minDate={isEditMode ? null : (form.fromDate || new Date())}
                   shouldCloseOnSelect
                   popperPlacement="bottom-start"
                   popperClassName="food-datepicker-popper"

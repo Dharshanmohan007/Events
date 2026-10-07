@@ -57,14 +57,14 @@ function Divider() {
 
 function InfoBlock({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 min-w-0 bg-slate-50 dark:bg-[#252C3F] rounded-xl px-5 py-4">
+    <div className="flex items-center gap-3 min-w-0 bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4">
       {Icon && (
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-600/15 flex-shrink-0">
           <Icon size={16} className="text-purple-400" />
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-[11px] tracking-wide uppercase text-slate-500 dark:text-gray-400 mb-0.5 truncate">
+        <p className="text-slate-500 dark:text-gray-400 text-xs uppercase mb-0.5 truncate">
           {label}
         </p>
         <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{value}</p>
@@ -80,7 +80,7 @@ function LocationStop({
   checkpointNumber,
 }) {
   return (
-    <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4 w-[280px] h-[72px]">
+    <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4 w-[280px] h-[72px]">
       {type === "checkpoint" ? (
         <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-slate-900 dark:text-white font-semibold text-sm flex-shrink-0">
           {checkpointNumber}
@@ -96,7 +96,7 @@ function LocationStop({
       )}
 
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-slate-500 dark:text-gray-400 font-semibold">
+        <p className="text-slate-500 dark:text-gray-400 text-xs uppercase">
           {label}
         </p>
 
@@ -120,10 +120,10 @@ function PreviewHeader() {
   return (
     <div className="flex items-start justify-between gap-4 mb-5">
       <div>
-        <h2 className="text-lg font-bold text-purple-400 playfair">
+        <h2 className="text-xl font-semibold text-purple-400 playfair">
           Transport Details
         </h2>
-        <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 max-w-xl">
+        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
           Preview your transport details for selected day.
         </p>
       </div>
@@ -138,7 +138,7 @@ function PreviewHeader() {
 function HorizontalInfoBlock({ label, value }) {
   return (
     <div className="flex items-center justify-between w-full">
-      <p className="text-[15px] text-[#B5B8C7]">
+      <p className="text-slate-500 dark:text-gray-400">
         {label}
       </p>
 
@@ -232,7 +232,7 @@ export default function TransportPreview({ transportData = [] }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Pickup Card */}
-            <div className="bg-slate-50 dark:bg-[#252C3F]  rounded-xl px-6 py-5">
+            <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
               <div className="flex items-center">
 
                 <InfoBlock
@@ -253,7 +253,7 @@ export default function TransportPreview({ transportData = [] }) {
             </div>
 
             {/* Drop Card */}
-            <div className="bg-slate-50 dark:bg-[#252C3F] rounded-xl px-6 py-5">
+            <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
               <div className="flex items-center">
 
                 <InfoBlock
@@ -335,7 +335,7 @@ export default function TransportPreview({ transportData = [] }) {
         </Card>
 
         {/* Row 3: Total members / Vehicle types needed */}
-        <Card className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
+        <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
           <div className="flex flex-col md:flex-row">
 
             <div className="flex-1">
@@ -367,7 +367,7 @@ export default function TransportPreview({ transportData = [] }) {
 
         {/* Row 4: Vehicle counts, 2 per row */}
         {vehicleTypes.length > 0 && (
-        <Card className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
+        <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
           <div className="space-y-5">
             {chunkPairs(vehicleTypes).map((row, ri) => (
               <div
@@ -398,7 +398,7 @@ export default function TransportPreview({ transportData = [] }) {
           staffMembers.map((staff, idx) => (
             <Card
               key={idx}
-              className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5"
+              className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5"
             >
               <div className="flex flex-col md:flex-row">
 
@@ -444,7 +444,7 @@ export default function TransportPreview({ transportData = [] }) {
             </Card>
           ))
         ) : (
-          <Card className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
+          <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
             <div className="flex flex-col md:flex-row">
 
               <div className="flex-1 flex gap-4">
@@ -490,7 +490,7 @@ export default function TransportPreview({ transportData = [] }) {
         )}
 
         {/* Row 6: Special requirements */}
-        <div className="bg-slate-50 dark:bg-[#252C3F] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4">
+        <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4">
         <Card>
           <div className="flex items-center gap-2 mb-2">
             <FileText size={15} className="text-purple-400" />

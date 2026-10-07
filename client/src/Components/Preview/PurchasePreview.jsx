@@ -51,11 +51,11 @@ function PreviewHeader({ description }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
       <div>
-        <h2 className="text-[20px] font-bold text-[#8B5CF6] playfair">
+        <h2 className="text-xl font-semibold text-purple-400 playfair">
           Purchase Preview
         </h2>
 
-        <p className="mt-2 text-sm text-[#98A2B3] leading-6 ">
+        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 leading-6">
           {description}
         </p>
       </div>
@@ -110,8 +110,8 @@ function TwoColumnCard({
 
 function SectionCard({ title, icon: Icon, children }) {
   return (
-    <div className="border border-slate-200 dark:border-slate-200 dark:border-[#343C59] rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-5">
-      <h3 className="flex items-center gap-2 text-[20px] playfair font-bold text-[#8B5CF6] mb-5">
+    <div className="rounded-xl bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] p-5">
+      <h3 className="flex items-center gap-2 font-semibold mb-5 text-lg">
         <Icon size={18} className="text-[#C4B5FD]" />
         {title}
       </h3>
@@ -152,13 +152,13 @@ function DetailGrid({ items }) {
       {rows.map((pair, idx) => (
         <div
           key={idx}
-          className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#3B435A] rounded-2xl overflow-hidden"
+          className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl overflow-hidden"
         >
           <div className="grid grid-cols-1 lg:grid-cols-2">
             {/* Left Section */}
             <div className="flex items-center justify-between px-6 py-6">
               <div>
-                <p className="text-[15px] text-[#C7CAD6] mb-2">
+                <p className="text-slate-500 dark:text-gray-400 text-xs uppercase mb-2">
                   {pair[0]?.label}
                 </p>
 
@@ -172,7 +172,7 @@ function DetailGrid({ items }) {
             {pair[1] && (
               <div className="border-l border-slate-200 dark:border-[#495066] flex items-center justify-between px-6 py-6">
                 <div>
-                  <p className="text-[15px] text-[#C7CAD6] mb-2">
+                  <p className="text-slate-500 dark:text-gray-400 text-xs uppercase mb-2">
                     {pair[1].label}
                   </p>
 
@@ -191,8 +191,8 @@ function DetailGrid({ items }) {
 
 function EmptyState({ message }) {
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-200 dark:border-[#343C59] bg-slate-50 dark:bg-white dark:bg-[#1E2435] p-12 text-center">
-      <p className="text-[#98A2B3]">{message}</p>
+    <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-12 text-center text-slate-900 dark:text-white">
+      <p className="text-slate-500 dark:text-gray-400">{message}</p>
     </div>
   );
 }
@@ -209,8 +209,8 @@ function DayTabs({ labels, current, onChange }) {
           onClick={() => onChange(i)}
           className={`px-6 py-2 rounded-lg border transition-all duration-200 whitespace-nowrap ${
             i === current
-              ? "bg-[#7C3AED] border-slate-200 dark:border-[#7C3AED] text-slate-900 dark:text-white"
-              : "bg-slate-50 dark:bg-white dark:bg-[#252C3F] border-slate-200 dark:border-slate-200 dark:border-[#343C59] text-[#C4C8D4] hover:border-slate-200 dark:border-[#7C3AED]"
+              ? "bg-purple-600 text-slate-900 dark:text-white"
+              : "bg-white dark:bg-[#1c1c34] text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-[#2a2a45] hover:text-slate-900 dark:text-white"
           }`}
         >
           {label}
@@ -296,12 +296,12 @@ function SpecialRequirementBox({ text }) {
   if (!text || !text.trim()) return null;
 
   return (
-    <div className="bg-slate-50 dark:bg-white dark:bg-[#2A3042] border border-slate-200 dark:border-slate-200 dark:border-[#394156] rounded-xl p-4">
+    <div className="bg-white dark:bg-[#161B2D] border border-slate-200 dark:border-[#2E3652] rounded-xl p-4">
       <div className="flex items-center gap-2 mb-2">
-        <FileText size={16} className="text-[#C4B5FD]" />
-        <span className="text-[14px] font-semibold text-[#C4B5FD]">Special Requirement</span>
+        <FileText size={16} className="text-purple-400" />
+        <span className="text-sm font-semibold text-slate-900 dark:text-white">Special Requirement</span>
       </div>
-      <p className="text-[14px] leading-6 text-[#D6D8E1] whitespace-pre-wrap">{text}</p>
+      <p className="text-slate-500 dark:text-gray-400 text-sm leading-6 whitespace-pre-wrap">{text}</p>
     </div>
   );
 }
@@ -377,7 +377,7 @@ export default function PurchasePreview({
   if (days.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6">
+        <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white space-y-6">
           <PreviewHeader description={description} />
         </div>
         <EmptyState message="No purchase details have been submitted yet." />
@@ -390,7 +390,7 @@ export default function PurchasePreview({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl bg-slate-50 dark:bg-white dark:bg-[#1C2233] border border-slate-200 dark:border-slate-200 dark:border-[#343C59] p-6 space-y-6">
+      <div className="bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white space-y-6">
         <PreviewHeader description={description} />
 
         {/* <TwoColumnCard

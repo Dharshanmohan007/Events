@@ -143,7 +143,7 @@ function buildPurchasePayload(dayData) {
 
 // ── MultiSelect ───────────────────────────────────────────────────────────────
 
-function MultiSelect({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-slate-50 dark:bg-[#16162A]" }) {
+function MultiSelect({ label, options, selected, onChange, error, labelClassName = "bg-white dark:bg-[#16162A]" }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -981,7 +981,7 @@ export default function Purchase({
         completedDays={completedDays}
       />
 
-      <h2 className="text-white text-lg font-bold">
+      <h2 className="dark:text-white text-lg font-bold">
         Purchase Details
       </h2>
 
