@@ -50,6 +50,11 @@ const Eventsattended = () => {
     foodRequired: "No",
     transportRequired: "No",
     accommodationRequired: "No",
+    financeRequired: "",
+    estimatedAmount: "",
+    advanceAmount: "",
+    advancePurpose: "",
+    advanceToBeReceivedWithin: "",
     otherRequirements: "",
   });
   const [participantDetails, setParticipantDetails] = useState([]);
@@ -279,7 +284,10 @@ const Eventsattended = () => {
     if (!form.programFrom || !form.programTo) missingFields.push("program date range");
     if (!form.onDutyFrom || !form.onDutyTo) missingFields.push("on-duty date range");
     if (!form.onDutyFromTime || !form.onDutyToTime) missingFields.push("on-duty time range");
-    if (!principalApprovalFile) missingFields.push("Principal approval file");
+    if (!form.financeRequired) missingFields.push("Finance Required");
+    if (form.financeRequired === "Yes" && !principalApprovalFile) {
+      missingFields.push("Principal Approval Form");
+    }
 
     if (
       (form.onDutyFromTime && !formatTimeForPayload(form.onDutyFromTime)) ||
@@ -302,7 +310,7 @@ const Eventsattended = () => {
     setIsSubmitting(true);
 
     try {
-      const principalApprovalData = principalApprovalFile
+      const principalApprovalData = form.financeRequired === "Yes" && principalApprovalFile
         ? await readFileAsDataUrl(principalApprovalFile)
         : "";
 
@@ -339,11 +347,18 @@ const Eventsattended = () => {
         food: form.foodRequired,
         transport: form.transportRequired,
         accommodation: form.accommodationRequired,
+        financeRequired: form.financeRequired,
+        estimatedAmount: form.financeRequired === "Yes" ? Number(form.estimatedAmount) || 0 : 0,
+        advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
+        advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose : "",
+        advanceToBeReceivedWithin:
+          form.financeRequired === "Yes" ? Number(form.advanceToBeReceivedWithin) || 0 : 0,
         specialRequirement: form.otherRequirements || "",
         otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
-        principalApprovalFormName: principalApprovalFile?.name || "",
-        principalApprovalForm: principalApprovalFile
+        principalApprovalFormName:
+          form.financeRequired === "Yes" ? principalApprovalFile?.name || "" : "",
+        principalApprovalForm: form.financeRequired === "Yes" && principalApprovalFile
           ? {
               name: principalApprovalFile.name,
               type: principalApprovalFile.type,
@@ -623,9 +638,107 @@ const Eventsattended = () => {
           </div>
 
           <div className="space-y-5 pt-2">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-200">
+                  Finance Required <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={form.financeRequired}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateField("financeRequired", value);
+                      if (value !== "Yes") {
+                        updateField("estimatedAmount", "");
+                        updateField("advanceAmount", "");
+                        updateField("advancePurpose", "");
+                        updateField("advanceToBeReceivedWithin", "");
+                        setPrincipalApprovalFile(null);
+                        setPrincipalFileError("");
+                        if (principalInputRef.current) principalInputRef.current.value = "";
+                      }
+                    }}
+                    className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                  >
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {form.financeRequired === "Yes" && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                      Estimated Budget Amount (Rs.)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.estimatedAmount}
+                      onChange={(e) => updateField("estimatedAmount", e.target.value)}
+                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-200">
+                        I require Cash / In bank / Travel Advance / Online Payment of Rs.
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.advanceAmount}
+                        onChange={(e) => updateField("advanceAmount", e.target.value)}
+                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-200">
+                        Purpose of Advance
+                      </label>
+                      <input
+                        type="text"
+                        value={form.advancePurpose}
+                        onChange={(e) => updateField("advancePurpose", e.target.value)}
+                        placeholder="Purpose"
+                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                      Advance To Be Received Within
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.advanceToBeReceivedWithin}
+                      onChange={(e) => updateField("advanceToBeReceivedWithin", e.target.value)}
+                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+
+            {form.financeRequired === "Yes" && (
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
-                Principal Approval File
+                Principal Approval Form <span className="text-red-400">*</span>
               </label>
               <div
                 onClick={!principalApprovalFile ? openPrincipalFilePicker : undefined}
@@ -689,7 +802,17 @@ const Eventsattended = () => {
               {principalFileError && (
                 <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
               )}
+              <div className="mt-3 flex justify-end">
+                <a
+                  href="/templates/Principal_Approval_Form_Template.docx"
+                  download
+                  className="rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
+                >
+                  Download Principal Approval Form Template
+                </a>
+              </div>
             </div>
+            )}
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
