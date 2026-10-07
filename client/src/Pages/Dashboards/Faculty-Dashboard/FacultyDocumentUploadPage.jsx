@@ -169,8 +169,6 @@ const validateExpenditure = (expenditureData) => {
       bills.forEach((bill, idx) => {
         // if (!bill.expenseName)
         //   errors.push(`${cat} bill ${idx + 1}: Expense Name is required`);
-        if (!bill.billNo)
-          errors.push(`${cat} bill ${idx + 1}: Bill No is required`);
         if (!bill.billDate)
           errors.push(`${cat} bill ${idx + 1}: Bill Date is required`);
         if (
@@ -465,7 +463,7 @@ const FacultyDocumentUploadPage = () => {
       const fileRefs = []; // collect all files to append
       let fileCounter = 0;
 
-      const buildExpenditureItems = (items) =>
+      const buildExpenditureItems = (items, includeBankDetails = false) =>
         (items || []).map((b) => {
           const entry = {
             name: b.expenseName || "",
@@ -473,6 +471,15 @@ const FacultyDocumentUploadPage = () => {
             date: b.billDate || "",
             guestName: b.vendorGuestName || "",
             billAmount: Number(b.amount) || 0,
+            ...(includeBankDetails
+              ? {
+                  accountHolderName: b.accountHolderName || "",
+                  accountNumber: b.accountNumber || "",
+                  ifscCode: b.ifscCode || "",
+                  bankName: b.bankName || "",
+                  branch: b.branch || "",
+                }
+              : {}),
           };
           if (b.file) {
             const ref = `expenditure_file_${fileCounter++}`;
@@ -486,7 +493,7 @@ const FacultyDocumentUploadPage = () => {
         food: buildExpenditureItems(expenditureData.food),
         accommodation: buildExpenditureItems(expenditureData.accommodation),
         transport: buildExpenditureItems(expenditureData.transport),
-        remuneration: buildExpenditureItems(expenditureData.remuneration),
+        remuneration: buildExpenditureItems(expenditureData.remuneration, true),
         gifts: buildExpenditureItems(expenditureData.gifts),
         kits: buildExpenditureItems(expenditureData.kits),
         miscellaneous: buildExpenditureItems(expenditureData.miscellaneous),
@@ -561,7 +568,7 @@ const FacultyDocumentUploadPage = () => {
 
       if (res.status === 200 || res.status === 201) {
         toast.success("All details submitted successfully!");
-        setSubmitted(true);
+        navigate(`/dashboard-faculty/feedback/${eventId}`);
       }
     } catch (err) {
       console.error("Failed to submit expenditure details:", err);
