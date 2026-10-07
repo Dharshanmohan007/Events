@@ -122,7 +122,7 @@ import Dashboard from "./Pages/Dashboards/Ticketing-Dashboard/Dashboard.jsx";
 import TicketingEventDetailView from "./Pages/Dashboards/Ticketing-Dashboard/TicketingEventDetailView.jsx";
 import TicketingRequestListpage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingRequestListpage.jsx";
 import TicketingReportsPage from "./Pages/Dashboards/Ticketing-Dashboard/TicketingReportsPage.jsx";
-import EventsAttendedDetailView from "./Components/EventsAttendedDetailView.jsx";
+import EventsAttendedDetailView from "./Pages/IndividualDetailViewFolder/EventsAttendingDetailView.jsx";
 // import AdminOtherManagementPage from "./Pages/Dashboards/Admin-Dashboard/AdminOtherManagementPage";
 
 // ─── "/" always shows Login — even if token exists in localStorage ────────────
@@ -521,7 +521,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/eventsAttending/:eventId"
         element={
-            <EventsAttendingDetailView />
+            <EventsAttendedDetailView />
         }
       />
 
