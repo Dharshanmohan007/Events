@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Sparkles } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { ArrowLeft, LoaderCircle, Sparkles } from 'lucide-react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { jwtDecode } from 'jwt-decode'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
@@ -27,9 +27,11 @@ const SECTION_META = {
 
 const FacultyfeedbackPage = () => {
   const { eventId } = useParams()
+  const navigate = useNavigate()
   const [feedback, setFeedback] = useState({})
   const [requiredSections, setRequiredSections] = useState([])
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const fetchRequirements = async () => {
@@ -87,7 +89,9 @@ const FacultyfeedbackPage = () => {
 
   const handleSubmit = async (event) => {
     event.preventDefault()
+    if (submitting) return
 
+    setSubmitting(true)
     try {
       const token = localStorage.getItem('token')
       if (!token) return
@@ -122,10 +126,12 @@ const FacultyfeedbackPage = () => {
 
       const data = await res.json()
       if (data.success) {
-        // console.log('Feedback submitted successfully')
+        navigate('/dashboard-faculty')
       }
     } catch (err) {
       console.error('Failed to submit feedback:', err)
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -180,8 +186,18 @@ const FacultyfeedbackPage = () => {
   if (requiredSections.length === 0) {
     return (
       <section className="min-h-screen bg-[#121126] px-6 pb-4 pt-8 text-white poppins">
-        <div className="mx-auto max-w-[1310px] flex items-center justify-center min-h-[50vh]">
+        <div className="mx-auto max-w-[1310px]">
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard-faculty/events')}
+            className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <ArrowLeft size={18} aria-hidden="true" />
+            Back to events
+          </button>
+          <div className="flex min-h-[45vh] items-center justify-center">
           <p className="text-sm text-[#FFFFFF80]">No feedback sections required for this event.</p>
+          </div>
         </div>
       </section>
     )
@@ -214,9 +230,11 @@ const FacultyfeedbackPage = () => {
           <div className="-mx-6 flex justify-end px-6 ">
             <button
               type="submit"
-              className="rounded-md bg-[#8B3DFF] px-9 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#7830e5]"
+              disabled={submitting}
+              className="inline-flex min-w-[130px] items-center justify-center gap-2 rounded-md bg-[#8B3DFF] px-9 py-3 text-sm font-semibold text-white transition-colors duration-200 hover:bg-[#7830e5] disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Submit
+              {submitting && <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />}
+              {submitting ? 'Submitting...' : 'Submit'}
             </button>
           </div>
         </form>
