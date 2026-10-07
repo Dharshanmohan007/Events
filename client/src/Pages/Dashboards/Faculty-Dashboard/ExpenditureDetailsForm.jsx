@@ -19,6 +19,11 @@ const createEmptyBill = () => ({
   amount: '',
   file: null,
   details: '',
+  accountHolderName: '',
+  accountNumber: '',
+  ifscCode: '',
+  bankName: '',
+  branch: '',
 })
 
 const FloatingInput = ({ label, type = 'text', value, onChange, placeholder = '' }) => (
@@ -200,7 +205,7 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                     />
                     */}
                     <FloatingInput
-                      label="Bill No *"
+                      label="Bill No"
                       value={bill.billNo || ''}
                       onChange={(e) => handleBillChange(categoryKey, index, 'billNo', e.target.value)}
                     />
@@ -213,7 +218,7 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                       />
                     </div>
                     <FloatingInput
-                      label="Vendor / Guest name *"
+                      label="Guest name *"
                       value={bill.vendorGuestName || ''}
                       onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
                     />
@@ -227,6 +232,36 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#CBC3D7]/50 pointer-events-none z-10">₹</span>
                     </div>
                   </div>
+
+                  {categoryKey === 'remuneration' && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <FloatingInput
+                        label="Account Holder Name"
+                        value={bill.accountHolderName || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'accountHolderName', e.target.value)}
+                      />
+                      <FloatingInput
+                        label="Account Number"
+                        value={bill.accountNumber || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'accountNumber', e.target.value)}
+                      />
+                      <FloatingInput
+                        label="IFSC Code"
+                        value={bill.ifscCode || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'ifscCode', e.target.value)}
+                      />
+                      <FloatingInput
+                        label="Bank Name"
+                        value={bill.bankName || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'bankName', e.target.value)}
+                      />
+                      <FloatingInput
+                        label="Branch"
+                        value={bill.branch || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'branch', e.target.value)}
+                      />
+                    </div>
+                  )}
 
                   {/* File Upload */}
                   <div className="mb-4">
