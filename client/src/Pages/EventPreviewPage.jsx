@@ -137,13 +137,13 @@ export default function EventPreviewPage({
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Event Preview
                     </h1>
-                    <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-[#1f2937] text-slate-800 dark:text-white transition-colors">
+                    {/* <button onClick={toggleTheme} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-[#1f2937] text-slate-800 dark:text-white transition-colors">
                         {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-                    </button>
+                    </button> */}
                 </div>
 
                 <p className="text-sm text-slate-500 dark:text-white/70">
-                    Kindly verify your, final event details before submit...
+                    Kindly verify your event details before submit...
                 </p>
             </div>
 

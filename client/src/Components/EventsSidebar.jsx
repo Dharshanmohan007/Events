@@ -3,7 +3,7 @@ import Logo from "../assets/logo.svg";
 import logolight from "../assets/clglight.svg";
 import SidebarDesign from "../assets/SidebarDesign.svg";
 import SidebarDesign1 from "../assets/SidebarDesign1.svg";
-import ThemeToggle from "../Components/Calendar/ThemeToggle"
+// import ThemeToggle from "../Components/Calendar/ThemeToggle"
 
 export default function EventsSidebar({
   steps = [],
@@ -22,7 +22,7 @@ export default function EventsSidebar({
             <img src={logolight} alt="Logo" className="w-40" />
           </div>
         </div>
-        <ThemeToggle />
+        {/* <ThemeToggle /> */}
       </div>
 
       {/* Steps */}
