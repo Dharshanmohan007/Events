@@ -72,6 +72,7 @@ const AdminIndividualDetailView = () => {
         {formType?.toLowerCase() == "individualticketing" && (
           <IndividualTicketingDetailView data={data[0]} />
         )}
+        {/* this is the code for detail view of admin - Event attending Individual module  */}
         {formType?.toLowerCase() == "eventattending" && (
           <EventsAttendingDetailView data={data[0]} />
         )}
