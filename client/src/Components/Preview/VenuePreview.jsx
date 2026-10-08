@@ -21,12 +21,12 @@ const HALL_REQ_LABELS = {
 
     function VenueInfo({ label, value, isLast }) {
         return (
-            <div className={`${!isLast ? "border-r border-[#8E93A6] pr-6" : "pl-6"}`}>
-                <p className="text-gray-400 text-sm">
+            <div className={`${!isLast ? "border-r border-slate-200 dark:border-[#8E93A6] pr-6" : "pl-6"}`}>
+                <p className="text-slate-500 dark:text-gray-400 text-sm">
                     {label}
                 </p>
 
-                <p className="text-white font-semibold mt-2 ">
+                <p className="text-slate-900 dark:text-white font-semibold mt-2 ">
                     {value || "-"}
                 </p>
             </div>
@@ -35,8 +35,8 @@ const HALL_REQ_LABELS = {
 
     const Field = ({ label, value }) => (
     <div>
-        <p className="text-gray-400 text-xs mb-1">{label}</p>
-        <p className="text-white text-sm font-semibold">
+        <p className="text-slate-500 dark:text-gray-400 text-xs mb-1">{label}</p>
+        <p className="text-slate-900 dark:text-white text-sm font-semibold">
         {value === "" || value === null || value === undefined ? "-" : value}
         </p>
     </div>
@@ -44,8 +44,8 @@ const HALL_REQ_LABELS = {
 
     const SectionHeading = ({ children }) => (
     <div className="flex items-center gap-2 mb-3">
-        <NotebookText  size={14} className="text-white" />
-        <p className="text-white text-sm font-semibold">{children}</p>
+        <NotebookText  size={14} className="text-slate-900 dark:text-white" />
+        <p className="text-slate-900 dark:text-white text-sm font-semibold">{children}</p>
     </div>
     );
 
@@ -55,10 +55,10 @@ const HALL_REQ_LABELS = {
     const hallReqs = card.hallReqs || [];
 
     return (
-        <div className="rounded-xl border border-[#3A3A5A] bg-[#FFFFFF0D] p-4 sm:p-6 flex flex-col gap-5">
+        <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-[#FFFFFF0D] p-4 sm:p-6 flex flex-col gap-5">
         <h3 className="text-purple-400 text-base font-semibold">{card.venueName}</h3>
 
-        <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+        <div className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
             <div className="grid md:grid-cols-2">
                 <VenueInfo
                     label="Number of Participants"
@@ -74,11 +74,11 @@ const HALL_REQ_LABELS = {
         </div>
 
         {hallReqs.length > 0 && (
-            <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+            <div className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
                 <SectionHeading>Hall Requirements</SectionHeading>
 
                 <div className="grid md:grid-cols-2">
-                    <div className="border-r border-[#8E93A6] pr-6 space-y-6">
+                    <div className="border-r border-slate-200 dark:border-[#8E93A6] pr-6 space-y-6">
                         {hallReqs
                             .filter((_, index) => index % 2 === 0)
                             .map((req) => (
@@ -86,7 +86,7 @@ const HALL_REQ_LABELS = {
                                     key={req}
                                     className="flex justify-between"
                                 >
-                                    <span className="text-gray-400">
+                                    <span className="text-slate-500 dark:text-gray-400">
                                         {HALL_REQ_LABELS[req]}
                                     </span>
 
@@ -105,7 +105,7 @@ const HALL_REQ_LABELS = {
                                     key={req}
                                     className="flex justify-between"
                                 >
-                                    <span className="text-gray-400">
+                                    <span className="text-slate-500 dark:text-gray-400">
                                         {HALL_REQ_LABELS[req]}
                                     </span>
 
@@ -120,15 +120,15 @@ const HALL_REQ_LABELS = {
         )}
 
         {card.specialReqs && (
-            <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+            <div className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
                 <SectionHeading>Special Requirement</SectionHeading>
-                <p className="text-gray-300 leading-8">
+                <p className="text-slate-600 dark:text-gray-300 leading-8">
                     {card.specialReqs || "-"}
                 </p>
             </div>
         )}
         {(card.isDepartmentHeadContacted || card.isContactedDepartment) && (
-            <div className="bg-[#FFFFFF0D] border border-[#343C59] rounded-xl p-5">
+            <div className="bg-[#FFFFFF0D] border border-slate-200 dark:border-[#343C59] rounded-xl p-5">
                 <SectionHeading>Department Head Details</SectionHeading>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6">
                     <VenueInfo label="Department" value={card.department} />
@@ -154,7 +154,7 @@ const HALL_REQ_LABELS = {
 
     if (!venueData || venueData.length === 0) {
         return (
-        <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-gray-400 text-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#1E1E35] p-6 text-slate-500 dark:text-gray-400 text-sm">
             No venue details added.
         </div>
         );
@@ -165,7 +165,7 @@ const HALL_REQ_LABELS = {
     const dayMeta = eventDays[activeDay];
 
     return (
-        <div className="flex flex-col gap-6 bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
+        <div className="flex flex-col gap-6 bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white">
         {/* Heading */}
         <div>
             <h2 className="text-purple-400 text-xl font-semibold playfair">Venue Details</h2>
@@ -173,14 +173,14 @@ const HALL_REQ_LABELS = {
 
         {/* Day tabs */}
         {venueData.length > 1 && (
-            <div className="flex items-center gap-6 border-b border-[#2A2A45]">
+            <div className="flex items-center gap-6 border-b border-slate-200 dark:border-[#2A2A45]">
             {venueData.map((_, idx) => (
                 <button
                 key={idx}
                 type="button"
                 onClick={() => setActiveDay(idx)}
                 className={`relative pb-2 text-sm font-medium transition-colors ${
-                    activeDay === idx ? "text-purple-400" : "text-gray-400 hover:text-gray-200"
+                    activeDay === idx ? "text-purple-400" : "text-slate-500 dark:text-gray-400 hover:text-gray-200"
                 }`}
                 >
                 Day {idx + 1}
@@ -193,24 +193,24 @@ const HALL_REQ_LABELS = {
         )}
 
         {/* Day summary */}
-        <div className="rounded-xl border border-[#343C59] bg-[#FFFFFF0D] p-5">
+        <div className="rounded-xl border border-slate-200 dark:border-[#343C59] bg-[#FFFFFF0D] p-5">
             <div className="grid md:grid-cols-2">
-                <div className="flex justify-between border-r border-[#8E93A6] pr-6">
-                    <span className="text-gray-400">
+                <div className="flex justify-between border-r border-slate-200 dark:border-[#8E93A6] pr-6">
+                    <span className="text-slate-500 dark:text-gray-400">
                         Total Number of Participants
                     </span>
 
-                    <span className="font-semibold text-white">
+                    <span className="font-semibold text-slate-900 dark:text-white">
                         {day.participants ? `${day.participants} Members` : "-"}
                     </span>
                 </div>
 
                 <div className="flex justify-between pl-6">
-                    <span className="text-gray-400">
+                    <span className="text-slate-500 dark:text-gray-400">
                         Venue Required
                     </span>
 
-                    <span className="font-semibold text-white text-right">
+                    <span className="font-semibold text-slate-900 dark:text-white text-right">
                         {(day.selectedVenues || []).join(" / ") || "-"}
                     </span>
                 </div>
@@ -225,7 +225,7 @@ const HALL_REQ_LABELS = {
             ))}
             </div>
         ) : (
-            <div className="rounded-xl border border-[#3A3A5A] bg-[#1E1E35] p-6 text-gray-400 text-sm">
+            <div className="rounded-xl border border-slate-200 dark:border-[#3A3A5A] bg-slate-50 dark:bg-[#1E1E35] p-6 text-slate-500 dark:text-gray-400 text-sm">
             No venue cards for this day.
             </div>
         )}

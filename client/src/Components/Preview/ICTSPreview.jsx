@@ -7,12 +7,12 @@ function InfoRow({ label, value }) {
   if (value === undefined || value === null || value === "") return null;
 
   return (
-    <div className="flex items-center justify-between py-4 border-b border-[#2A2A45] last:border-b-0">
-      <span className="text-gray-400 text-sm">
+    <div className="flex items-center justify-between py-4 border-b border-slate-200 dark:border-[#2A2A45] last:border-b-0">
+      <span className="text-slate-500 dark:text-gray-400 text-sm">
         {label}
       </span>
 
-      <span className="text-white text-sm font-semibold">
+      <span className="text-slate-900 dark:text-white text-sm font-semibold">
         {value}
       </span>
     </div>
@@ -21,10 +21,10 @@ function InfoRow({ label, value }) {
 
 function SectionCard({ icon, title, children, className = "" }) {
   return (
-    <div className={`rounded-xl border border-[#2A2A45] bg-[#FFFFFF0D] p-5 flex flex-col gap-1 ${className}`}>
+    <div className={`rounded-xl border border-slate-200 dark:border-[#2A2A45] bg-[#FFFFFF0D] p-5 flex flex-col gap-1 ${className}`}>
       <div className="flex items-center gap-2 mb-2">
         {icon}
-        <h4 className="text-white text-sm font-semibold">{title}</h4>
+        <h4 className="text-slate-900 dark:text-white text-sm font-semibold">{title}</h4>
       </div>
       <div className="flex flex-col">{children}</div>
     </div>
@@ -80,15 +80,15 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
         <div className="flex items-center justify-between">
           <h2 className="text-purple-400 text-xl font-bold">ICTS Details</h2>
         </div>
-        <div className="rounded-xl border border-[#2A2A45] bg-[#1E1E35] p-6 text-center">
-          <p className="text-gray-400 text-sm">No ICTS details have been added yet.</p>
+        <div className="rounded-xl border border-slate-200 dark:border-[#2A2A45] bg-slate-50 dark:bg-[#1E1E35] p-6 text-center">
+          <p className="text-slate-500 dark:text-gray-400 text-sm">No ICTS details have been added yet.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-6 bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
+    <div className="flex flex-col gap-6 bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white">
       {/* ── Header ── */}
       <div className="flex items-start justify-between">
         <div>
@@ -98,14 +98,14 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
 
       {/* ── Day tabs ── */}
       {dayCount > 1 && (
-        <div className="flex items-center gap-6 border-b border-[#2A2A45]">
+        <div className="flex items-center gap-6 border-b border-slate-200 dark:border-[#2A2A45]">
           {dayIndices.map((idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setActiveDay(idx)}
               className={`relative pb-2 text-sm font-medium transition-colors ${
-                activeDay === idx ? "text-purple-400" : "text-gray-400 hover:text-gray-200"
+                activeDay === idx ? "text-purple-400" : "text-slate-500 dark:text-gray-400 hover:text-gray-200"
               }`}
             >
               Day {idx + 1}
@@ -119,8 +119,8 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
 
       {/* ── Venue blocks for the active day ── */}
       {activeCards.length === 0 ? (
-        <div className="rounded-xl border border-[#2A2A45] bg-[#1E1E35] p-6 text-center">
-          <p className="text-gray-400 text-sm">No ICTS details for this day.</p>
+        <div className="rounded-xl border border-slate-200 dark:border-[#2A2A45] bg-slate-50 dark:bg-[#1E1E35] p-6 text-center">
+          <p className="text-slate-500 dark:text-gray-400 text-sm">No ICTS details for this day.</p>
         </div>
       ) : (
         activeCards.map(({ venueName, card }) => {
@@ -137,7 +137,7 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Basic Requirement */}
                 <SectionCard
-                  icon={<ClipboardList size={16} className="text-white" />}
+                  icon={<ClipboardList size={16} className="text-slate-900 dark:text-white" />}
                   title="Basic Requirement"
                 >
                   <div className="flex flex-col py-1">
@@ -191,7 +191,7 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
                 </SectionCard>
 
                 {/* Object Requirement */}
-                <SectionCard icon={<PackageCheck size={16} className="text-white" />} title="Object Requirement">
+                <SectionCard icon={<PackageCheck size={16} className="text-slate-900 dark:text-white" />} title="Object Requirement">
                   {(card.requirements || []).length === 0 ? (
                     <p className="text-gray-500 text-sm py-1">No requirements selected.</p>
                   ) : (
@@ -201,11 +201,11 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
                           key={i}
                           className={`py-4 ${
                             i !== card.requirements.length - 1
-                              ? "border-b border-[#2A2A45]"
+                              ? "border-b border-slate-200 dark:border-[#2A2A45]"
                               : ""
                           }`}
                         >
-                          <span className="text-white text-sm font-semibold">
+                          <span className="text-slate-900 dark:text-white text-sm font-semibold">
                             {req}
                           </span>
                         </div>
@@ -213,9 +213,9 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
                     </div>
                   )}
                   {card.others && (
-                    <div className="mt-2 pt-2 border-t border-[#2A2A45]">
-                      <span className="text-gray-400 text-xs">Others</span>
-                      <p className="text-white text-sm mt-1">{card.others}</p>
+                    <div className="mt-2 pt-2 border-t border-slate-200 dark:border-[#2A2A45]">
+                      <span className="text-slate-500 dark:text-gray-400 text-xs">Others</span>
+                      <p className="text-slate-900 dark:text-white text-sm mt-1">{card.others}</p>
                     </div>
                   )}
                 </SectionCard>
@@ -223,8 +223,8 @@ export default function ICTSPreview({ ictsData = {}, venueData = [], eventDays =
 
               {/* Special Requirement */}
               {card.specialRequirements && (
-                <SectionCard icon={<FileText size={16} className="text-white" />} title="Special Requirement">
-                  <p className="text-gray-300 text-sm leading-relaxed">{card.specialRequirements}</p>
+                <SectionCard icon={<FileText size={16} className="text-slate-900 dark:text-white" />} title="Special Requirement">
+                  <p className="text-slate-600 dark:text-gray-300 text-sm leading-relaxed">{card.specialRequirements}</p>
                 </SectionCard>
               )}
             </div>

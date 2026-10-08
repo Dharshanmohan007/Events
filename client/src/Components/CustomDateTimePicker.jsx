@@ -52,11 +52,8 @@ function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
     <div className="relative flex flex-col items-center" style={{ width: 56 }}>
       {/* Fade top */}
       <div
-        className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg"
-        style={{
-          height: ITEM_H * 2,
-          background: "linear-gradient(to bottom, #1a1a35 0%, transparent 100%)",
-        }}
+        className="absolute top-0 left-0 right-0 z-10 pointer-events-none rounded-t-lg bg-gradient-to-b from-white dark:from-[#1a1a35] to-transparent"
+        style={{ height: ITEM_H * 2 }}
       />
       {/* Highlight band */}
       <div
@@ -65,11 +62,8 @@ function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
       />
       {/* Fade bottom */}
       <div
-        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg"
-        style={{
-          height: ITEM_H * 2,
-          background: "linear-gradient(to top, #1a1a35 0%, transparent 100%)",
-        }}
+        className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none rounded-b-lg bg-gradient-to-t from-white dark:from-[#1a1a35] to-transparent"
+        style={{ height: ITEM_H * 2 }}
       />
 
       {/* Scroll container — hidden scrollbar */}
@@ -110,10 +104,10 @@ function ScrollDrum({ items, value, onChange, isItemDisabled = () => false }) {
               style={{ height: ITEM_H }}
               className={`flex items-center justify-center text-base font-mono select-none transition-colors ${
                 isItemDisabled(i)
-                  ? "text-gray-700 cursor-not-allowed"
+                  ? "text-slate-300 dark:text-gray-700 cursor-not-allowed"
                   : i === value
-                  ? "text-white font-semibold cursor-pointer"
-                  : "text-gray-500 hover:text-gray-300 cursor-pointer"
+                  ? "text-slate-900 dark:text-white font-semibold cursor-pointer"
+                  : "text-slate-500 dark:text-gray-500 hover:text-slate-700 dark:hover:text-gray-300 cursor-pointer"
               }`}
             >
               {item}
@@ -269,7 +263,7 @@ export default function CustomDateTimePicker({
     <div ref={ref} className="relative w-full">
       {/* Floating label */}
       {label && (
-        <span className="absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none bg-[#1f1f3a]">
+        <span className="absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none bg-white dark:bg-[#1f1f3a]">
           {label}
         </span>
       )}
@@ -279,10 +273,10 @@ export default function CustomDateTimePicker({
         type="button"
         onClick={() => { setOpen((p) => !p); setView("calendar"); }}
         className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors ${
-          open ? "border-purple-500" : "border-[#3A3A5A]"
+          open ? "border-purple-500" : "border-slate-300 dark:border-[#3A3A5A]"
         }`}
       >
-        <span className={`text-sm ${value ? "text-gray-300" : "text-gray-500"}`}>
+        <span className={`text-sm ${value ? "text-slate-900 dark:text-gray-300" : "text-gray-500"}`}>
           {formatDisplay()}
         </span>
         <div className="flex gap-2 text-gray-400 flex-shrink-0">
@@ -293,29 +287,29 @@ export default function CustomDateTimePicker({
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute z-50 mt-2 bg-[#1a1a35] border border-[#3A3A5A] rounded-xl shadow-2xl w-72 overflow-hidden">
+        <div className="absolute z-50 mt-2 bg-white dark:bg-[#1a1a35] border border-slate-300 dark:border-[#3A3A5A] rounded-xl shadow-2xl w-72 overflow-hidden">
 
           {/* ── CALENDAR VIEW ── */}
           {view === "calendar" && (
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={prevMonth}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white transition-colors">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                   <ChevronLeft size={16} />
                 </button>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setView("month")}
-                    className="text-sm font-medium text-white hover:text-purple-400 transition-colors">
+                    className="text-sm font-medium text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                     {MONTHS[displayMonth]}
                   </button>
                   <button type="button"
                     onClick={() => { setYearPage(Math.floor(displayYear / 12)); setView("year"); }}
-                    className="text-sm font-medium text-white hover:text-purple-400 transition-colors">
+                    className="text-sm font-medium text-slate-900 dark:text-white hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                     {displayYear}
                   </button>
                 </div>
                 <button type="button" onClick={nextMonth}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white transition-colors">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -356,7 +350,7 @@ export default function CustomDateTimePicker({
                           ? "text-gray-600 cursor-not-allowed"
                           : isSelected
                           ? "bg-purple-600 text-white"
-                          : "text-gray-300 hover:bg-[#2a2a4a] hover:text-white"
+                          : "text-slate-800 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] hover:text-slate-900 dark:hover:text-white"
                       }`}>
                       {day}
                     </button>
@@ -365,7 +359,7 @@ export default function CustomDateTimePicker({
               </div>
 
               <button type="button" onClick={() => setView("time")}
-                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-[#3A3A5A] text-gray-400 hover:text-white hover:border-purple-500 text-xs transition-colors">
+                className="mt-3 w-full flex items-center justify-center gap-2 py-2 rounded-lg border border-slate-300 dark:border-[#3A3A5A] text-gray-400 hover:text-slate-900 dark:hover:text-white hover:border-purple-500 text-xs transition-colors">
                 <Clock size={14} /> Set Time
               </button>
             </div>
@@ -376,8 +370,8 @@ export default function CustomDateTimePicker({
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Back</button>
-                <span className="text-sm font-medium text-white">{displayYear}</span>
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">← Back</button>
+                <span className="text-sm font-medium text-slate-900 dark:text-white">{displayYear}</span>
                 <div />
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -385,7 +379,7 @@ export default function CustomDateTimePicker({
                   <button key={m} type="button"
                     onClick={() => { setDisplayMonth(i); setView("calendar"); }}
                     className={`py-2 rounded-lg text-xs transition-colors ${
-                      displayMonth === i ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-[#2a2a4a]"
+                      displayMonth === i ? "bg-purple-600 text-white" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}>
                     {m.slice(0, 3)}
                   </button>
@@ -399,13 +393,13 @@ export default function CustomDateTimePicker({
             <div className="p-3">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setYearPage((p) => p - 1)}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
                   <ChevronLeft size={16} />
                 </button>
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Back</button>
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">← Back</button>
                 <button type="button" onClick={() => setYearPage((p) => p + 1)}
-                  className="p-1 hover:bg-[#2a2a4a] rounded-lg text-gray-400 hover:text-white">
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-[#2a2a4a] rounded-lg text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white">
                   <ChevronRight size={16} />
                 </button>
               </div>
@@ -414,7 +408,7 @@ export default function CustomDateTimePicker({
                   <button key={y} type="button"
                     onClick={() => { setDisplayYear(y); setView("calendar"); }}
                     className={`py-2 rounded-lg text-xs transition-colors ${
-                      displayYear === y ? "bg-purple-600 text-white" : "text-gray-300 hover:bg-[#2a2a4a]"
+                      displayYear === y ? "bg-purple-600 text-white" : "text-slate-700 dark:text-gray-300 hover:bg-slate-100 dark:hover:bg-[#2a2a4a]"
                     }`}>
                     {y}
                   </button>
@@ -428,8 +422,8 @@ export default function CustomDateTimePicker({
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <button type="button" onClick={() => setView("calendar")}
-                  className="text-xs text-purple-400 hover:text-purple-300">← Date</button>
-                <span className="text-sm font-medium text-white flex items-center gap-1">
+                  className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-500 dark:hover:text-purple-300">← Date</button>
+                <span className="text-sm font-medium text-slate-900 dark:text-white flex items-center gap-1">
                   <Clock size={14} /> Select Time
                 </span>
                 <div />
@@ -448,7 +442,7 @@ export default function CustomDateTimePicker({
                   isItemDisabled={(i) => isTimeBeforeMin(i % 12, 59, ampm)}
                 />
 
-                <span className="text-white text-2xl font-mono mb-1 select-none">:</span>
+                <span className="text-slate-900 dark:text-white text-2xl font-mono mb-1 select-none">:</span>
 
                 {/* Minute drum */}
                 <ScrollDrum
@@ -475,7 +469,7 @@ export default function CustomDateTimePicker({
                       className={`w-12 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         ampm === ap
                           ? "bg-purple-600 text-white"
-                          : "bg-[#2a2a4a] text-gray-400 hover:text-white"
+                          : "bg-slate-100 dark:bg-[#2a2a4a] text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                       }`}
                     >
                       {ap}
