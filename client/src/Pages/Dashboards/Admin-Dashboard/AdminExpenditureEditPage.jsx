@@ -247,9 +247,23 @@ const AdminExpenditureEditPage = () => {
     setFiles((prev) => ({ ...prev, [fileRef]: file }));
   };
 
+  const hasExistingDocument = (document) => {
+    const requiredKey = toKey(document.name);
+    return existingDocuments.some((existing) => {
+      const existingLabel = existing.label?.trim().toLowerCase();
+      const existingKey = existing.key ? toKey(existing.key) : "";
+      return (
+        existingLabel === document.name?.trim().toLowerCase() ||
+        existingKey === requiredKey
+      );
+    });
+  };
+
   const handleDocumentSubmit = async () => {
-    // Validate all files selected
-    const missing = documents.filter((doc) => !files[toFileRef(doc.name)]);
+    // Existing uploads count unless a user is replacing them.
+    const missing = documents.filter(
+      (doc) => !files[toFileRef(doc.name)] && !hasExistingDocument(doc),
+    );
     if (missing.length > 0) {
       toast.error(
         `Please upload all required documents. Missing: ${missing.map((d) => d.name).join(", ")}`,
@@ -601,9 +615,14 @@ const AdminExpenditureEditPage = () => {
                 const fileRef = toFileRef(doc.name);
                 const selectedFile = files[fileRef];
                 // Find existing uploaded document matching this required document name
-                const existingDoc = existingDocuments.find(
-                  (ed) => ed.label?.toLowerCase() === doc.name?.toLowerCase(),
-                );
+                const existingDoc = existingDocuments.find((ed) => {
+                  const existingLabel = ed.label?.trim().toLowerCase();
+                  const existingKey = ed.key ? toKey(ed.key) : "";
+                  return (
+                    existingLabel === doc.name?.trim().toLowerCase() ||
+                    existingKey === toKey(doc.name)
+                  );
+                });
 
                 return (
                   <div key={doc.name} className="text-left">
