@@ -608,15 +608,7 @@ const Eventsattended = () => {
           {principalFileError && (
             <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
           )}
-          <div className="mt-3 flex justify-end">
-            <a
-              href="/templates/Principal_Approval_Form_Template.docx"
-              download
-              className="rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
-            >
-              Download Principal Approval Form Template
-            </a>
-          </div>
+          
         </div>
 
         <div className="">
@@ -1130,7 +1122,7 @@ const Eventsattended = () => {
           </div>
         </form>
       </div>
-    </div>
+   
   );
 };
 
