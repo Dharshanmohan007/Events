@@ -380,11 +380,18 @@ const Eventsattended = () => {
           formatTimeForPayload(form.onDutyToTime),
         ),
         foodRequired: form.foodRequired === "Yes",
-        foodAmount: form.foodRequired === "Yes" ? Number(form.foodAmount) || 0 : 0,
+        foodAmount:
+          form.foodRequired === "Yes" ? Number(form.foodAmount) || 0 : 0,
         transportRequired: form.transportRequired === "Yes",
-        transportAmount: form.transportRequired === "Yes" ? Number(form.transportAmount) || 0 : 0,
+        transportAmount:
+          form.transportRequired === "Yes"
+            ? Number(form.transportAmount) || 0
+            : 0,
         accommodationRequired: form.accommodationRequired === "Yes",
-        accommodationAmount: form.accommodationRequired === "Yes" ? Number(form.accommodationAmount) || 0 : 0,
+        accommodationAmount:
+          form.accommodationRequired === "Yes"
+            ? Number(form.accommodationAmount) || 0
+            : 0,
         food: form.foodRequired,
         transport: form.transportRequired,
         accommodation: form.accommodationRequired,
@@ -405,15 +412,14 @@ const Eventsattended = () => {
         otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
         principalApprovalFormName: principalApprovalFile?.name || "",
-        principalApprovalForm:
-          principalApprovalFile
-            ? {
-                name: principalApprovalFile.name,
-                type: principalApprovalFile.type,
-                size: principalApprovalFile.size,
-                data: principalApprovalData,
-              }
-            : null,
+        principalApprovalForm: principalApprovalFile
+          ? {
+              name: principalApprovalFile.name,
+              type: principalApprovalFile.type,
+              size: principalApprovalFile.size,
+              data: principalApprovalData,
+            }
+          : null,
         externalTransport:
           form.transport === "yes"
             ? normalizeExternalTransport(externalTransportDetails)
@@ -495,87 +501,92 @@ const Eventsattended = () => {
           <h1 className="text-[30px] font-semibold tracking-tight text-white">
             Request for attending Program / Event / Visit
           </h1>
-         
         </div>
 
-           <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
-                Principal Approval Form <span className="text-red-400">*</span>
-              </label>
-              <div
-                onClick={!principalApprovalFile ? openPrincipalFilePicker : undefined}
-                onDrop={handlePrincipalDrop}
-                onDragOver={(event) => event.preventDefault()}
-                className={`relative flex w-full flex-row items-center justify-center gap-3 rounded-lg p-4 text-center text-sm text-white ${
-                  !principalApprovalFile ? "cursor-pointer" : "cursor-default"
-                }`}
-              >
-                <svg className="pointer-events-none absolute inset-0 h-full w-full">
-                  <rect
-                    x="1"
-                    y="1"
-                    width="calc(100% - 2px)"
-                    height="calc(100% - 2px)"
-                    rx="10"
-                    fill="none"
-                    stroke={principalFileError ? "#f87171" : "#3A3A5A"}
-                    strokeWidth="2"
-                    strokeDasharray="10 4"
-                  />
-                </svg>
-
-                <img src={UploadIcon} alt="upload" className="z-10 h-8 w-7 opacity-80" />
-
-                {principalApprovalFile ? (
-                  <div className="z-10 flex flex-wrap items-center justify-center gap-3">
-                    <span className="text-sm font-medium text-purple-300">
-                      {principalApprovalFile.name}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      ({(principalApprovalFile.size / 1024 / 1024).toFixed(2)} MB)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handlePrincipalRemove}
-                      className="rounded-md border border-red-400/40 px-2 py-1 text-xs text-red-400 transition-colors hover:border-red-300/60 hover:text-red-300"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ) : (
-                  <p className="z-10">
-                    Drag and drop files here or{" "}
-                    <span className="text-purple-400 underline">choose file</span>
-                    <span className="mt-0.5 block text-xs text-gray-500">
-                      Only PDF files supported - Max file size: 1MB
-                    </span>
-                  </p>
-                )}
-              </div>
-
-              <input
-                ref={principalInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                onChange={handlePrincipalFileChange}
-                className="hidden"
-              />
-
-              {principalFileError && (
-                <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
-              )}
-              <div className="mt-3 flex justify-end">
-                <a
-                  href="/templates/Principal_Approval_Form_Template.docx"
-                  download
-                  className="rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
-                >
-                  Download Principal Approval Form Template
-                </a>
-              </div>
-            </div>
-
         <div>
+          <label className="mb-2 block text-sm font-medium text-slate-200">
+            Principal Approval Form <span className="text-red-400">*</span>
+          </label>
+          <div
+            onClick={
+              !principalApprovalFile ? openPrincipalFilePicker : undefined
+            }
+            onDrop={handlePrincipalDrop}
+            onDragOver={(event) => event.preventDefault()}
+            className={`relative flex w-full flex-row items-center justify-center gap-3 rounded-lg p-4 text-center text-sm text-white ${
+              !principalApprovalFile ? "cursor-pointer" : "cursor-default"
+            }`}
+          >
+            <svg className="pointer-events-none absolute inset-0 h-full w-full">
+              <rect
+                x="1"
+                y="1"
+                width="calc(100% - 2px)"
+                height="calc(100% - 2px)"
+                rx="10"
+                fill="none"
+                stroke={principalFileError ? "#f87171" : "#3A3A5A"}
+                strokeWidth="2"
+                strokeDasharray="10 4"
+              />
+            </svg>
+
+            <img
+              src={UploadIcon}
+              alt="upload"
+              className="z-10 h-8 w-7 opacity-80"
+            />
+
+            {principalApprovalFile ? (
+              <div className="z-10 flex flex-wrap items-center justify-center gap-3">
+                <span className="text-sm font-medium text-purple-300">
+                  {principalApprovalFile.name}
+                </span>
+                <span className="text-xs text-gray-400">
+                  ({(principalApprovalFile.size / 1024 / 1024).toFixed(2)} MB)
+                </span>
+                <button
+                  type="button"
+                  onClick={handlePrincipalRemove}
+                  className="rounded-md border border-red-400/40 px-2 py-1 text-xs text-red-400 transition-colors hover:border-red-300/60 hover:text-red-300"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <p className="z-10">
+                Drag and drop files here or{" "}
+                <span className="text-purple-400 underline">choose file</span>
+                <span className="mt-0.5 block text-xs text-gray-500">
+                  Only PDF files supported - Max file size: 1MB
+                </span>
+              </p>
+            )}
+          </div>
+
+          <input
+            ref={principalInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handlePrincipalFileChange}
+            className="hidden"
+          />
+
+          {principalFileError && (
+            <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
+          )}
+          <div className="mt-3 flex justify-end">
+            <a
+              href="/templates/Principal_Approval_Form_Template.docx"
+              download
+              className="rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
+            >
+              Download Principal Approval Form Template
+            </a>
+          </div>
+        </div>
+
+        <div className="">
           <label className="mb-2 block text-sm font-medium text-slate-200">
             Date of the program/event/visit
           </label>
@@ -944,8 +955,18 @@ const Eventsattended = () => {
 
             <div className="grid gap-4 md:grid-cols-3">
               {[
-                { label: "Food Required", field: "foodRequired", amountField: "foodAmount", amountLabel: "Food Amount" },
-                { label: "Transport Required", field: "transportRequired", amountField: "transportAmount", amountLabel: "Transport Amount" },
+                {
+                  label: "Food Required",
+                  field: "foodRequired",
+                  amountField: "foodAmount",
+                  amountLabel: "Food Amount",
+                },
+                {
+                  label: "Transport Required",
+                  field: "transportRequired",
+                  amountField: "transportAmount",
+                  amountLabel: "Transport Amount",
+                },
                 {
                   label: "Accomodation Required",
                   field: "accommodationRequired",
@@ -990,7 +1011,9 @@ const Eventsattended = () => {
                         min="0"
                         step="0.01"
                         value={form[amountField]}
-                        onChange={(e) => updateField(amountField, e.target.value)}
+                        onChange={(e) =>
+                          updateField(amountField, e.target.value)
+                        }
                         className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
                         placeholder="Enter amount"
                       />
