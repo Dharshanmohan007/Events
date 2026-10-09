@@ -11,7 +11,9 @@ import UploadIcon from "../../assets/upload.svg";
 const INDIVIDUAL_EVENT_API_BASE = import.meta.env.DEV ? "" : API_BASE;
 
 const formatTimeForPayload = (time) => {
-  const match = String(time || "").trim().match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/i);
+  const match = String(time || "")
+    .trim()
+    .match(/^(0?[1-9]|1[0-2]):([0-5]\d)\s*(AM|PM)$/i);
   if (!match) return "";
 
   let hours = Number(match[1]) % 12;
@@ -48,8 +50,11 @@ const Eventsattended = () => {
     onDutyFromTime: "",
     onDutyToTime: "",
     foodRequired: "No",
+    foodAmount: "",
     transportRequired: "No",
+    transportAmount: "",
     accommodationRequired: "No",
+    accommodationAmount: "",
     financeRequired: "",
     estimatedAmount: "",
     advanceAmount: "",
@@ -140,7 +145,8 @@ const Eventsattended = () => {
     new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(new Error("Unable to read the Principal approval file."));
+      reader.onerror = () =>
+        reject(new Error("Unable to read the Principal approval file."));
       reader.readAsDataURL(file);
     });
 
@@ -159,15 +165,12 @@ const Eventsattended = () => {
 
   const updateParticipantField = (index, field, value) => {
     setParticipantDetails((prev) =>
-      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item))
+      prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)),
     );
   };
 
   const getDayDiff = (fromDate, toDate) => {
     if (!fromDate || !toDate) return 0;
-
-
-
 
     const start = new Date(fromDate);
     const end = new Date(toDate);
@@ -182,35 +185,39 @@ const Eventsattended = () => {
   const totalOnDutyDays = getDayDiff(form.onDutyFrom, form.onDutyTo);
   const onDutyFromDateTime = useMemo(
     () => getFormDateTime(form.onDutyFrom, form.onDutyFromTime),
-    [form.onDutyFrom, form.onDutyFromTime]
+    [form.onDutyFrom, form.onDutyFromTime],
   );
   const onDutyToDateTime = useMemo(
     () => getFormDateTime(form.onDutyTo, form.onDutyToTime),
-    [form.onDutyTo, form.onDutyToTime]
+    [form.onDutyTo, form.onDutyToTime],
   );
 
   const participantCount = Number(form.participants) || 0;
-  const participantRows = Array.from({ length: participantCount }, (_, index) => ({
-    id: index + 1,
-    label: `${index + 1}. Participants Name`,
-    department: `${index + 1}. Participants Department`,
-    phone: `${index + 1}. Participants Phone Number`,
-  }));
+  const participantRows = Array.from(
+    { length: participantCount },
+    (_, index) => ({
+      id: index + 1,
+      label: `${index + 1}. Participants Name`,
+      department: `${index + 1}. Participants Department`,
+      phone: `${index + 1}. Participants Phone Number`,
+    }),
+  );
 
   const formatDateTime = (dateValue, timeValue) => {
     if (!dateValue) return "";
     return `${dateValue}T${timeValue || "00:00:00"}`;
   };
 
-    const openSubmittedReport = (payload, responseData) => {
+  const openSubmittedReport = (payload, responseData) => {
     const responseReportData = responseData?.data || responseData || {};
-    const storedIqacNumber = Number(localStorage.getItem("individualEventIqacNumber")) || 0;
+    const storedIqacNumber =
+      Number(localStorage.getItem("individualEventIqacNumber")) || 0;
     const apiIqacNumber = Number(responseReportData.iqacNumber) || 0;
     const nextIqacNumber = apiIqacNumber || storedIqacNumber + 1;
 
     localStorage.setItem(
       "individualEventIqacNumber",
-      String(Math.max(storedIqacNumber, nextIqacNumber))
+      String(Math.max(storedIqacNumber, nextIqacNumber)),
     );
 
     const reportData = {
@@ -237,15 +244,20 @@ const Eventsattended = () => {
             })
             .filter(Boolean)
             .join(", ")
-        : item.classOrBerth || (item.travelOption === "Flight" ? "Economy" : "");
+        : item.classOrBerth ||
+          (item.travelOption === "Flight" ? "Economy" : "");
 
-      const trainNumber = item.travelOption === "Train" ? item.trainNumber || "" : "";
-      const flightNumber = item.travelOption === "Flight" ? item.flightNumber || "" : "";
+      const trainNumber =
+        item.travelOption === "Train" ? item.trainNumber || "" : "";
+      const flightNumber =
+        item.travelOption === "Flight" ? item.flightNumber || "" : "";
       const transportNumber = trainNumber || flightNumber;
 
       return {
         travelOption: item.travelOption || "",
-        travelDate: item.travelDate ? new Date(item.travelDate).toISOString() : "",
+        travelDate: item.travelDate
+          ? new Date(item.travelDate).toISOString()
+          : "",
         from: item.from || "",
         to: item.to || "",
         totalPassengers: Number(item.totalPassengers) || 0,
@@ -255,7 +267,8 @@ const Eventsattended = () => {
         transportNumber,
         trainNumber,
         flightNumber,
-        externalTransportSpecialRequirement: item.specialRequirements?.trim() || "None",
+        externalTransportSpecialRequirement:
+          item.specialRequirements?.trim() || "None",
         passengers: (item.passengers || []).map((passenger) => ({
           name: passenger.name || "",
           phone: String(passenger.phone || "").trim(),
@@ -280,12 +293,16 @@ const Eventsattended = () => {
     const missingFields = [];
     if (!form.type) missingFields.push("program type");
     if (!String(form.name || "").trim()) missingFields.push("program name");
-    if (!form.participants || Number(form.participants) <= 0) missingFields.push("number of participants");
-    if (!form.programFrom || !form.programTo) missingFields.push("program date range");
-    if (!form.onDutyFrom || !form.onDutyTo) missingFields.push("on-duty date range");
-    if (!form.onDutyFromTime || !form.onDutyToTime) missingFields.push("on-duty time range");
+    if (!form.participants || Number(form.participants) <= 0)
+      missingFields.push("number of participants");
+    if (!form.programFrom || !form.programTo)
+      missingFields.push("program date range");
+    if (!form.onDutyFrom || !form.onDutyTo)
+      missingFields.push("on-duty date range");
+    if (!form.onDutyFromTime || !form.onDutyToTime)
+      missingFields.push("on-duty time range");
     if (!form.financeRequired) missingFields.push("Finance Required");
-    if (form.financeRequired === "Yes" && !principalApprovalFile) {
+    if (!principalApprovalFile) {
       missingFields.push("Principal Approval Form");
     }
 
@@ -302,15 +319,21 @@ const Eventsattended = () => {
       return;
     }
 
-    if (form.transport === "yes" && (!Array.isArray(externalTransportDetails) || externalTransportDetails.length === 0)) {
-      setSubmitMessage("Please fill in external transport details before submitting.");
+    if (
+      form.transport === "yes" &&
+      (!Array.isArray(externalTransportDetails) ||
+        externalTransportDetails.length === 0)
+    ) {
+      setSubmitMessage(
+        "Please fill in external transport details before submitting.",
+      );
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const principalApprovalData = form.financeRequired === "Yes" && principalApprovalFile
+      const principalApprovalData = principalApprovalFile
         ? await readFileAsDataUrl(principalApprovalFile)
         : "";
 
@@ -328,7 +351,10 @@ const Eventsattended = () => {
         programName: form.name || "",
         numberOfParticipants: Number(form.participants) || 0,
         participants: participantDetails
-          .filter((participant) => participant.name || participant.department || participant.phone)
+          .filter(
+            (participant) =>
+              participant.name || participant.department || participant.phone,
+          )
           .map((participant) => ({
             name: participant.name || "",
             department: participant.department || "",
@@ -337,49 +363,79 @@ const Eventsattended = () => {
         expectedOutcome: form.expectedOutcome || "",
         programFromDate: form.programFrom || "",
         programToDate: form.programTo || "",
-        onDutyFrom: formatDateTime(form.onDutyFrom, formatTimeForPayload(form.onDutyFromTime)),
-        onDutyTo: formatDateTime(form.onDutyTo, formatTimeForPayload(form.onDutyToTime)),
-        offCampusFrom: formatDateTime(form.onDutyFrom, formatTimeForPayload(form.onDutyFromTime)),
-        offCampusTo: formatDateTime(form.onDutyTo, formatTimeForPayload(form.onDutyToTime)),
+        // onDutyFrom: formatDateTime(
+        //   form.onDutyFrom,
+        //   formatTimeForPayload(form.onDutyFromTime),
+        // ),
+        // onDutyTo: formatDateTime(
+        //   form.onDutyTo,
+        //   formatTimeForPayload(form.onDutyToTime),
+        // ),
+        offCampusFrom: formatDateTime(
+          form.onDutyFrom,
+          formatTimeForPayload(form.onDutyFromTime),
+        ),
+        offCampusTo: formatDateTime(
+          form.onDutyTo,
+          formatTimeForPayload(form.onDutyToTime),
+        ),
         foodRequired: form.foodRequired === "Yes",
+        foodAmount: form.foodRequired === "Yes" ? Number(form.foodAmount) || 0 : 0,
         transportRequired: form.transportRequired === "Yes",
+        transportAmount: form.transportRequired === "Yes" ? Number(form.transportAmount) || 0 : 0,
         accommodationRequired: form.accommodationRequired === "Yes",
+        accommodationAmount: form.accommodationRequired === "Yes" ? Number(form.accommodationAmount) || 0 : 0,
         food: form.foodRequired,
         transport: form.transportRequired,
         accommodation: form.accommodationRequired,
         financeRequired: form.financeRequired,
-        estimatedAmount: form.financeRequired === "Yes" ? Number(form.estimatedAmount) || 0 : 0,
-        advanceAmount: form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
-        advancePurpose: form.financeRequired === "Yes" ? form.advancePurpose : "",
+        estimatedAmount:
+          form.financeRequired === "Yes"
+            ? Number(form.estimatedAmount) || 0
+            : 0,
+        advanceAmount:
+          form.financeRequired === "Yes" ? Number(form.advanceAmount) || 0 : 0,
+        advancePurpose:
+          form.financeRequired === "Yes" ? form.advancePurpose : "",
         advanceToBeReceivedWithin:
-          form.financeRequired === "Yes" ? Number(form.advanceToBeReceivedWithin) || 0 : 0,
+          form.financeRequired === "Yes"
+            ? Number(form.advanceToBeReceivedWithin) || 0
+            : 0,
         specialRequirement: form.otherRequirements || "",
         otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
-        principalApprovalFormName:
-          form.financeRequired === "Yes" ? principalApprovalFile?.name || "" : "",
-        principalApprovalForm: form.financeRequired === "Yes" && principalApprovalFile
-          ? {
-              name: principalApprovalFile.name,
-              type: principalApprovalFile.type,
-              size: principalApprovalFile.size,
-              data: principalApprovalData,
-            }
-          : null,
-        externalTransport: form.transport === "yes" ? normalizeExternalTransport(externalTransportDetails) : [],
+        principalApprovalFormName: principalApprovalFile?.name || "",
+        principalApprovalForm:
+          principalApprovalFile
+            ? {
+                name: principalApprovalFile.name,
+                type: principalApprovalFile.type,
+                size: principalApprovalFile.size,
+                data: principalApprovalData,
+              }
+            : null,
+        externalTransport:
+          form.transport === "yes"
+            ? normalizeExternalTransport(externalTransportDetails)
+            : [],
       };
 
       const token = localStorage.getItem("token");
 
-      console.info("Submitting individual event request to /api/individual-event-attending");
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/individual-event-attending`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      console.info(
+        "Submitting individual event request to /api/individual-event-attending",
+      );
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/individual-event-attending`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(payload),
         },
-        body: JSON.stringify(payload),
-      });
+      );
 
       const responseText = await response.text();
       let data = {};
@@ -420,7 +476,9 @@ const Eventsattended = () => {
       console.log("API response:", data);
     } catch (error) {
       console.error("Submit error:", error);
-      setSubmitMessage(error?.message || "Something went wrong while submitting.");
+      setSubmitMessage(
+        error?.message || "Something went wrong while submitting.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -437,306 +495,10 @@ const Eventsattended = () => {
           <h1 className="text-[30px] font-semibold tracking-tight text-white">
             Request for attending Program / Event / Visit
           </h1>
-          <p className="mt-2 text-sm text-slate-300/80">
-            Lorem ipsum is simply dummy text of the printing and typesetting industry.
-            Lorem ipsum has been the industry&apos;s standard dummy text ever since the 1500s
-          </p>
+         
         </div>
 
-<div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              Date of the program/event/visit
-            </label>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  From
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
-                  <input
-                    type="date"
-                    value={form.programFrom}
-                    onChange={(e) => updateField("programFrom", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
-                    placeholder="dd-mm-yyyy"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
-
-              <div className="relative">
-                <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  To
-                </label>
-                <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
-                  <input
-                    type="date"
-                    value={form.programTo}
-                    onChange={(e) => updateField("programTo", e.target.value)}
-                    className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
-                    placeholder="dd-mm-yyyy"
-                  />
-                  <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
-                </div>
-              </div>
-            </div>
-
-            {form.programFrom && form.programTo && (
-              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
-                <span className="text-slate-300">Total days: </span>
-                <span className="font-semibold text-white">{getDayDiff(form.programFrom, form.programTo)} day(s)</span>
-              </div>
-            )}
-          </div>
-
-
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid gap-5 md:grid-cols-2 mt-6">
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
-                Type of the program/event/visit
-              </label>
-              <div className="relative">
-                <select
-                  value={form.type}
-                  onChange={(e) => updateField("type", e.target.value)}
-                  className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-                >
-                  <option value="">Select</option>
-                  <option value="seminar">Seminar</option>
-                  <option value="workshop">Workshop</option>
-                  <option value="conference">Conference</option>
-                  <option value="visit">Visit</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
-                    <path
-                      fillRule="evenodd"
-                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-medium text-slate-200">
-                Name of the program/event/visit
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => updateField("name", e.target.value)}
-                className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
-                placeholder=""
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              Number of participants
-            </label>
-            <input
-              type="text"
-              value={form.participants}
-              onChange={(e) => updateField("participants", e.target.value)}
-              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
-            />
-          </div>
-
-          {participantCount > 0 && (
-            <div className="rounded-xl border border-[#2d3a4d] bg-[#0c1f3b] p-4">
-              <div className="space-y-3">
-                {participantRows.map((row, index) => (
-                  <div key={row.id} className="grid gap-4 md:grid-cols-3">
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={participantDetails[index]?.name || ""}
-                        onChange={(e) => updateParticipantField(index, "name", e.target.value)}
-                        placeholder={row.label}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={participantDetails[index]?.department || ""}
-                        onChange={(e) => updateParticipantField(index, "department", e.target.value)}
-                        placeholder={row.department}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
-                      />
-                    </div>
-
-                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
-                      <span className="min-w-fit text-sm text-slate-300">{index + 1}.</span>
-                      <input
-                        type="text"
-                        value={participantDetails[index]?.phone || ""}
-                        onChange={(e) => updateParticipantField(index, "phone", e.target.value)}
-                        placeholder={row.phone}
-                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              Expected outcome of the program/event/visit
-            </label>
-            <input
-              type="text"
-              value={form.expectedOutcome}
-              onChange={(e) => updateField("expectedOutcome", e.target.value)}
-              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
-            />
-          </div>
-
-          
-
-          <div>
-            <label className="mb-2 block text-sm font-medium text-slate-200">
-              Request for  Off Campus time
-            </label>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <CustomDateTimePicker
-                label="From"
-                value={onDutyFromDateTime}
-                onChange={(dateTime) =>
-                  updateOffCampusDateTime("onDutyFrom", "onDutyFromTime", dateTime)
-                }
-                placeholder="Select date & time"
-              />
-
-              <CustomDateTimePicker
-                label="To"
-                value={onDutyToDateTime}
-                onChange={(dateTime) =>
-                  updateOffCampusDateTime("onDutyTo", "onDutyToTime", dateTime)
-                }
-                placeholder="Select date & time"
-              />
-            </div>
-
-            {form.onDutyFrom && form.onDutyTo && (
-              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
-                <span className="text-slate-300">Total days: </span>
-                <span className="font-semibold text-white">{totalOnDutyDays} day(s)</span>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-5 pt-2">
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-200">
-                  Finance Required <span className="text-red-400">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={form.financeRequired}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      updateField("financeRequired", value);
-                      if (value !== "Yes") {
-                        updateField("estimatedAmount", "");
-                        updateField("advanceAmount", "");
-                        updateField("advancePurpose", "");
-                        updateField("advanceToBeReceivedWithin", "");
-                        setPrincipalApprovalFile(null);
-                        setPrincipalFileError("");
-                        if (principalInputRef.current) principalInputRef.current.value = "";
-                      }
-                    }}
-                    className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-                  >
-                    <option value="">Select</option>
-                    <option value="Yes">Yes</option>
-                    <option value="No">No</option>
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
-                      <path
-                        fillRule="evenodd"
-                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {form.financeRequired === "Yes" && (
-                <>
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-200">
-                      Estimated Budget Amount (Rs.)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.estimatedAmount}
-                      onChange={(e) => updateField("estimatedAmount", e.target.value)}
-                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-                    />
-                  </div>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-200">
-                        I require Cash / In bank / Travel Advance / Online Payment of Rs.
-                      </label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={form.advanceAmount}
-                        onChange={(e) => updateField("advanceAmount", e.target.value)}
-                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-slate-200">
-                        Purpose of Advance
-                      </label>
-                      <input
-                        type="text"
-                        value={form.advancePurpose}
-                        onChange={(e) => updateField("advancePurpose", e.target.value)}
-                        placeholder="Purpose"
-                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-sm font-medium text-slate-200">
-                      Advance To Be Received Within
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={form.advanceToBeReceivedWithin}
-                      onChange={(e) => updateField("advanceToBeReceivedWithin", e.target.value)}
-                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {form.financeRequired === "Yes" && (
-            <div>
+           <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
                 Principal Approval Form <span className="text-red-400">*</span>
               </label>
@@ -812,7 +574,335 @@ const Eventsattended = () => {
                 </a>
               </div>
             </div>
+
+        <div>
+          <label className="mb-2 block text-sm font-medium text-slate-200">
+            Date of the program/event/visit
+          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="relative">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                From
+              </label>
+              <div className="flex w-full items-center rounded-[14px] border border-violet-500 bg-[#0d2240] px-3 py-3 shadow-[0_0_0_1px_rgba(168,85,247,0.4)]">
+                <input
+                  type="date"
+                  value={form.programFrom}
+                  onChange={(e) => updateField("programFrom", e.target.value)}
+                  className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                  placeholder="dd-mm-yyyy"
+                />
+                <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+              </div>
+            </div>
+
+            <div className="relative">
+              <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                To
+              </label>
+              <div className="flex w-full items-center rounded-[14px] border border-[#2d3a4d] bg-[#0d2240] px-3 py-3">
+                <input
+                  type="date"
+                  value={form.programTo}
+                  onChange={(e) => updateField("programTo", e.target.value)}
+                  className="w-full bg-transparent text-base text-slate-200 outline-none placeholder:text-slate-500"
+                  placeholder="dd-mm-yyyy"
+                />
+                <CalendarDays className="ml-3 h-4 w-4 shrink-0 text-slate-300" />
+              </div>
+            </div>
+          </div>
+
+          {form.programFrom && form.programTo && (
+            <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
+              <span className="text-slate-300">Total days: </span>
+              <span className="font-semibold text-white">
+                {getDayDiff(form.programFrom, form.programTo)} day(s)
+              </span>
+            </div>
+          )}
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-5 md:grid-cols-2 mt-6">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                Type of the program/event/visit
+              </label>
+              <div className="relative">
+                <select
+                  value={form.type}
+                  onChange={(e) => updateField("type", e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                >
+                  <option value="">Select</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="conference">Conference</option>
+                  <option value="visit">Visit</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-5 w-5 text-slate-300"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-medium text-slate-200">
+                Name of the program/event/visit
+              </label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => updateField("name", e.target.value)}
+                className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                placeholder=""
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-200">
+              Number of participants
+            </label>
+            <input
+              type="number"
+              value={form.participants}
+              onChange={(e) => updateField("participants", e.target.value)}
+              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+            />
+          </div>
+
+          {participantCount > 0 && (
+            <div className="rounded-xl border border-[#2d3a4d] bg-[#0c1f3b] p-4">
+              <div className="space-y-3">
+                {participantRows.map((row, index) => (
+                  <div key={row.id} className="grid gap-4 md:grid-cols-3">
+                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-300">
+                        {index + 1}.
+                      </span>
+                      <input
+                        type="text"
+                        value={participantDetails[index]?.name || ""}
+                        onChange={(e) =>
+                          updateParticipantField(index, "name", e.target.value)
+                        }
+                        placeholder={row.label}
+                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-300">
+                        {index + 1}.
+                      </span>
+                      <input
+                        type="text"
+                        value={participantDetails[index]?.department || ""}
+                        onChange={(e) =>
+                          updateParticipantField(
+                            index,
+                            "department",
+                            e.target.value,
+                          )
+                        }
+                        placeholder={row.department}
+                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                      />
+                    </div>
+
+                    <div className="flex items-center gap-3 rounded-lg border border-[#2b3c5a] bg-[#0d213b] px-3 py-2">
+                      <span className="min-w-fit text-sm text-slate-300">
+                        {index + 1}.
+                      </span>
+                      <input
+                        type="text"
+                        value={participantDetails[index]?.phone || ""}
+                        onChange={(e) =>
+                          updateParticipantField(index, "phone", e.target.value)
+                        }
+                        placeholder={row.phone}
+                        className="w-full bg-transparent text-sm text-slate-200 placeholder:text-slate-400 outline-none"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-200">
+              Expected outcome of the program/event/visit
+            </label>
+            <input
+              type="text"
+              value={form.expectedOutcome}
+              onChange={(e) => updateField("expectedOutcome", e.target.value)}
+              className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-medium text-slate-200">
+              Request for Off Campus time
+            </label>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <CustomDateTimePicker
+                label="From"
+                value={onDutyFromDateTime}
+                onChange={(dateTime) =>
+                  updateOffCampusDateTime(
+                    "onDutyFrom",
+                    "onDutyFromTime",
+                    dateTime,
+                  )
+                }
+                placeholder="Select date & time"
+              />
+
+              <CustomDateTimePicker
+                label="To"
+                value={onDutyToDateTime}
+                onChange={(dateTime) =>
+                  updateOffCampusDateTime("onDutyTo", "onDutyToTime", dateTime)
+                }
+                placeholder="Select date & time"
+              />
+            </div>
+
+            {form.onDutyFrom && form.onDutyTo && (
+              <div className="mt-4 rounded-[14px] border border-violet-500/40 bg-[#0d2240] px-4 py-3 text-sm text-slate-200">
+                <span className="text-slate-300">Total days: </span>
+                <span className="font-semibold text-white">
+                  {totalOnDutyDays} day(s)
+                </span>
+              </div>
             )}
+          </div>
+
+          <div className="space-y-5 pt-2">
+            <div className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-200">
+                  Finance Required <span className="text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={form.financeRequired}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      updateField("financeRequired", value);
+                      if (value !== "Yes") {
+                        updateField("estimatedAmount", "");
+                        updateField("advanceAmount", "");
+                        updateField("advancePurpose", "");
+                        updateField("advanceToBeReceivedWithin", "");
+                        setPrincipalApprovalFile(null);
+                        setPrincipalFileError("");
+                        if (principalInputRef.current)
+                          principalInputRef.current.value = "";
+                      }
+                    }}
+                    className="w-full appearance-none rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                  >
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      className="h-5 w-5 text-slate-300"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {form.financeRequired === "Yes" && (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                      Estimated Budget Amount (Rs.)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.estimatedAmount}
+                      onChange={(e) =>
+                        updateField("estimatedAmount", e.target.value)
+                      }
+                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-200">
+                        I require Cash / In bank / Travel Advance / Online
+                        Payment of Rs.
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={form.advanceAmount}
+                        onChange={(e) =>
+                          updateField("advanceAmount", e.target.value)
+                        }
+                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-medium text-slate-200">
+                        Purpose of Advance
+                      </label>
+                      <input
+                        type="text"
+                        value={form.advancePurpose}
+                        onChange={(e) =>
+                          updateField("advancePurpose", e.target.value)
+                        }
+                        placeholder="Purpose"
+                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-slate-200">
+                      Advance To Be Received Within
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={form.advanceToBeReceivedWithin}
+                      onChange={(e) =>
+                        updateField("advanceToBeReceivedWithin", e.target.value)
+                      }
+                      className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
 
             <div>
               <label className="mb-2 block text-sm font-medium text-slate-200">
@@ -829,7 +919,11 @@ const Eventsattended = () => {
                   <option value="no">No</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                  <svg
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    className="h-5 w-5 text-slate-300"
+                  >
                     <path
                       fillRule="evenodd"
                       d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 1.04l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -842,18 +936,27 @@ const Eventsattended = () => {
 
             {form.transport === "yes" && (
               <div className="overflow-hidden rounded-xl border border-[#2d3a4d] bg-[#071b2f]">
-                <IndividualExternalTransportDetails onDataChange={setExternalTransportDetails} />
+                <IndividualExternalTransportDetails
+                  onDataChange={setExternalTransportDetails}
+                />
               </div>
             )}
 
             <div className="grid gap-4 md:grid-cols-3">
               {[
-                { label: "Food Required", field: "foodRequired" },
-                { label: "Transport Required", field: "transportRequired" },
-                { label: "Accomodation Required", field: "accommodationRequired" },
-              ].map(({ label, field }) => (
+                { label: "Food Required", field: "foodRequired", amountField: "foodAmount", amountLabel: "Food Amount" },
+                { label: "Transport Required", field: "transportRequired", amountField: "transportAmount", amountLabel: "Transport Amount" },
+                {
+                  label: "Accomodation Required",
+                  field: "accommodationRequired",
+                  amountField: "accommodationAmount",
+                  amountLabel: "Accommodation Amount",
+                },
+              ].map(({ label, field, amountField, amountLabel }) => (
                 <div key={field}>
-                  <label className="mb-2 block text-sm font-medium text-slate-200">{label}</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-200">
+                    {label}
+                  </label>
                   <div className="relative">
                     <select
                       value={form[field]}
@@ -864,7 +967,11 @@ const Eventsattended = () => {
                       <option value="Yes">Yes</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5 text-slate-300">
+                      <svg
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="h-5 w-5 text-slate-300"
+                      >
                         <path
                           fillRule="evenodd"
                           d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
@@ -873,6 +980,22 @@ const Eventsattended = () => {
                       </svg>
                     </div>
                   </div>
+                  {form[field] === "Yes" && (
+                    <div className="mt-3">
+                      <label className="mb-2 block text-sm font-medium text-slate-200">
+                        {amountLabel}
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form[amountField]}
+                        onChange={(e) => updateField(amountField, e.target.value)}
+                        className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition focus:border-violet-500"
+                        placeholder="Enter amount"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -883,7 +1006,9 @@ const Eventsattended = () => {
               </label>
               <textarea
                 value={form.otherRequirements}
-                onChange={(e) => updateField("otherRequirements", e.target.value)}
+                onChange={(e) =>
+                  updateField("otherRequirements", e.target.value)
+                }
                 rows={3}
                 className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
                 placeholder="Mention any other requirements"
@@ -952,7 +1077,9 @@ const Eventsattended = () => {
 
           <div className="flex flex-col items-end gap-3 pt-2">
             {submitMessage && (
-              <p className={`text-sm ${submitMessage.includes("successfully") ? "text-emerald-400" : "text-red-400"}`}>
+              <p
+                className={`text-sm ${submitMessage.includes("successfully") ? "text-emerald-400" : "text-red-400"}`}
+              >
                 {submitMessage}
               </p>
             )}

@@ -10,6 +10,7 @@ import { jwtDecode } from "jwt-decode";
 import AdminDashboardHeader from "../../Dashboards/Admin-Dashboard/AdminDashboardHeader";
 import IndividualTicketingDetailView from "../IndividualTicketingDetailView";
 import EventsAttendedDetailView from "../../../Components/EventsAttendedDetailView";
+import EventsAttendingDetailView from "../EventsAttendingDetailView";
 
 const AdminIndividualDetailView = () => {
   const apiUrl = import.meta.env.VITE_API_BASE_URL;
@@ -77,10 +78,9 @@ const AdminIndividualDetailView = () => {
         {/* {formType?.toLowerCase() == "eventattending" && (
           <EventsAttendingDetailView data={data[0]} />
         )} */}
-     {formType?.toLowerCase() == "eventattending" && (
+        {formType?.toLowerCase() == "eventattending" && (
           <EventsAttendingDetailView data={data[0]} />
         )}
-        
       </div>
     </>
   );

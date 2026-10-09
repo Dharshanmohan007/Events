@@ -22,7 +22,6 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://sece-events.onrender.com";
 
 const EventsAttendingDetailView = ({ data }) => {
-
   const { eventId } = useParams();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -54,7 +53,11 @@ const EventsAttendingDetailView = ({ data }) => {
       if (!response.ok || !result.success) {
         throw new Error(result.message || `Failed to ${action} request`);
       }
-      toast.success(action === "approve" ? "Approved successfully" : "Rejected successfully");
+      toast.success(
+        action === "approve"
+          ? "Approved successfully"
+          : "Rejected successfully",
+      );
       window.location.reload();
     } catch (error) {
       toast.error(error.message || `Failed to ${action} request`);
@@ -64,7 +67,8 @@ const EventsAttendingDetailView = ({ data }) => {
   };
 
   const handleReject = () => {
-    if (!rejectReason.trim()) return toast.error("Please enter a rejection reason");
+    if (!rejectReason.trim())
+      return toast.error("Please enter a rejection reason");
     submitApproval("reject", rejectReason.trim());
     setShowRejectModal(false);
     setRejectReason("");
@@ -78,7 +82,8 @@ const EventsAttendingDetailView = ({ data }) => {
         { method: "DELETE", headers: getAuthHeaders() },
       );
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.message || "Failed to delete submission");
+      if (!response.ok)
+        throw new Error(result.message || "Failed to delete submission");
       toast.success("Submission deleted successfully");
       navigate(-1);
     } catch (error) {
@@ -142,7 +147,6 @@ const EventsAttendingDetailView = ({ data }) => {
 
   console.log("event attending data : ", data);
 
-
   return (
     <main className="bg-[#0b1326] min-h-screen  p-4">
       {isAdmin && (
@@ -156,10 +160,13 @@ const EventsAttendingDetailView = ({ data }) => {
             <ChevronRight size={16} />
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-amber-400">
-                Submitted at : {convertToIST(data?.approvalHistory?.[0]?.actionDate)}
+                Submitted at :{" "}
+                {convertToIST(data?.approvalHistory?.[0]?.actionDate)}
               </h1>
               <ChevronRight size={16} />
-              <span className={`rounded-full px-3 py-2 text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}>
+              <span
+                className={`rounded-full px-3 py-2 text-xs ${renderStatusColors(data?.superAdminApproval?.status)}`}
+              >
                 {data?.superAdminApproval?.status || "Pending"}
               </span>
               <Link
@@ -205,10 +212,14 @@ const EventsAttendingDetailView = ({ data }) => {
             <h1 className="text-gray-500">Events Attending Request List</h1>
             <ChevronRight size={16} />
             <span className="rounded-full bg-yellow-200/10 px-3 py-2 text-xs text-yellow-500">
-              {data?.department || data?.employeeDetail?.department || "Department"}
+              {data?.department ||
+                data?.employeeDetail?.department ||
+                "Department"}
             </span>
             <ChevronRight size={16} />
-            <span className={`rounded-full px-3 py-2 text-xs ${renderStatusColors(data?.finalStatus)}`}>
+            <span
+              className={`rounded-full px-3 py-2 text-xs ${renderStatusColors(data?.finalStatus)}`}
+            >
               {data?.finalStatus || "Pending"}
             </span>
           </div>
@@ -221,8 +232,7 @@ const EventsAttendingDetailView = ({ data }) => {
             </Link>
           )}
         </div>
-      )}
-      {" "}
+      )}{" "}
       {/* Program Name */}{" "}
       <div className="bg-[#1c2537] rounded-md mb-2 mt-4 ">
         {" "}
@@ -306,61 +316,62 @@ const EventsAttendingDetailView = ({ data }) => {
         </div>{" "}
       </div>{" "}
       {/* Participant Information */}{" "}
-      
-      {data?.data?.participants?.map((item)=>{
-        return <div className="grid grid-cols-1 sm:grid-cols-3 bg-[#1c2537] rounded-md mb-2">
-        {" "}
-        {/* Participant Name */}{" "}
-        <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
-          {" "}
-          <div className="flex items-center gap-2 mb-2">
+      {data?.data?.participants?.map((item) => {
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-3 bg-[#1c2537] rounded-md mb-2">
             {" "}
-            <UserRound className="w-4 h-4 text-[#a78bfa]" />{" "}
-            <span className="text-[12px] text-gray-500 uppercase">
+            {/* Participant Name */}{" "}
+            <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
               {" "}
-              Participant Name{" "}
-            </span>{" "}
-          </div>{" "}
-          <p className="text-[14px] font-medium text-white">
-            {" "}
-            {item?.name}{" "}
-          </p>{" "}
-        </div>{" "}
-        {/* Mobile Number */}{" "}
-        <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
-          {" "}
-          <div className="flex items-center gap-2 mb-2">
-            {" "}
-            <Phone className="w-4 h-4 text-[#a78bfa]" />{" "}
-            <span className="text-[12px] text-gray-500 uppercase">
+              <div className="flex items-center gap-2 mb-2">
+                {" "}
+                <UserRound className="w-4 h-4 text-[#a78bfa]" />{" "}
+                <span className="text-[12px] text-gray-500 uppercase">
+                  {" "}
+                  Participant Name{" "}
+                </span>{" "}
+              </div>{" "}
+              <p className="text-[14px] font-medium text-white">
+                {" "}
+                {item?.name}{" "}
+              </p>{" "}
+            </div>{" "}
+            {/* Mobile Number */}{" "}
+            <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
               {" "}
-              Accompanying Mobile Number{" "}
-            </span>{" "}
-          </div>{" "}
-          <p className="text-[14px] font-medium text-white">
-            {" "}
-            {item?.phoneNumber}{" "}
-          </p>{" "}
-        </div>{" "}
-        {/* Department */}{" "}
-        <div className="px-3 py-4">
-          {" "}
-          <div className="flex items-center gap-2 mb-2">
-            {" "}
-            <UserRound className="w-4 h-4 text-[#a78bfa]" />{" "}
-            <span className="text-[12px] text-gray-500 uppercase">
+              <div className="flex items-center gap-2 mb-2">
+                {" "}
+                <Phone className="w-4 h-4 text-[#a78bfa]" />{" "}
+                <span className="text-[12px] text-gray-500 uppercase">
+                  {" "}
+                  Accompanying Mobile Number{" "}
+                </span>{" "}
+              </div>{" "}
+              <p className="text-[14px] font-medium text-white">
+                {" "}
+                {item?.phoneNumber}{" "}
+              </p>{" "}
+            </div>{" "}
+            {/* Department */}{" "}
+            <div className="px-3 py-4">
               {" "}
-              Participant Department{" "}
-            </span>{" "}
-          </div>{" "}
-          <p className="text-[14px] font-medium text-white">{item?.department}</p>{" "}
-        </div>{" "}
-      </div>
-      })}
-      
-      {" "}
+              <div className="flex items-center gap-2 mb-2">
+                {" "}
+                <UserRound className="w-4 h-4 text-[#a78bfa]" />{" "}
+                <span className="text-[12px] text-gray-500 uppercase">
+                  {" "}
+                  Participant Department{" "}
+                </span>{" "}
+              </div>{" "}
+              <p className="text-[14px] font-medium text-white">
+                {item?.department}
+              </p>{" "}
+            </div>{" "}
+          </div>
+        );
+      })}{" "}
       {/* Off Campus Details */}{" "}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2 mb-2">
         {" "}
         {/* Off Campus Date From */}{" "}
         <div className="bg-[#1c2537] rounded-md px-3 py-3">
@@ -375,22 +386,9 @@ const EventsAttendingDetailView = ({ data }) => {
           </div>{" "}
           <p className="text-[14px] font-medium text-white mt-2">
             {" "}
-            {formatDate(data?.data?.onDutyFrom || data?.data?.offCampusFrom)}{" "}
-          </p>{" "}
-        </div>{" "}
-        {/* Off Campus Time From */}{" "}
-        <div className="bg-[#1c2537] rounded-md px-3 py-3">
-          {" "}
-          <div className="flex items-center gap-2">
-            {" "}
-            <Clock3 className="w-4 h-4 text-[#8B5CF6]" />{" "}
-            <span className="text-[12px] text-gray-400 uppercase">
-              {" "}
-              Off Campus Time ( From ){" "}
-            </span>{" "}
-          </div>{" "}
-          <p className="text-[14px] font-medium text-white mt-2">
-            {formatTime(data?.data?.onDutyFrom)}
+            {formatDate(
+              data?.data?.onDutyFrom || data?.data?.offCampusFrom,
+            )}{" "}
           </p>{" "}
         </div>{" "}
         {/* Off Campus Date To */}{" "}
@@ -409,60 +407,69 @@ const EventsAttendingDetailView = ({ data }) => {
             {formatDate(data?.data?.onDutyTo || data?.data?.offCampusTo)}{" "}
           </p>{" "}
         </div>{" "}
-        {/* Off Campus Time To */}{" "}
-        <div className="bg-[#1c2537] rounded-md px-3 py-3">
-          {" "}
-          <div className="flex items-center gap-2">
-            {" "}
-            <Clock3 className="w-4 h-4 text-[#8B5CF6]" />{" "}
-            <span className="text-[12px] text-gray-400 uppercase">
-              {" "}
-              Off Campus Time ( To ){" "}
-            </span>{" "}
-          </div>{" "}
-          <p className="text-[14px] font-medium text-white mt-2">
-            {formatTime(data?.data?.onDutyTo)}
-          </p>{" "}
-        </div>{" "}
       </div>{" "}
       {/* Requirements */}{" "}
       <div className="grid grid-cols-1 sm:grid-cols-3 bg-[#1c2537] rounded-md mb-2">
         {" "}
         {/* Food */}{" "}
-        <div className="flex items-center justify-between px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
+        <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
           {" "}
-          <span className="text-[16px] text-gray-400">
-            {" "}
-            Food Required{" "}
-          </span>{" "}
-          <span className={`text-[14px] font-medium ${formatRequirement(data?.data?.foodRequired ?? data?.data?.food).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
-            {" "}
-            {formatRequirement(data?.data?.foodRequired ?? data?.data?.food)}{" "}
-          </span>{" "}
+          <div className="flex justify-between w-full">
+            <span className="text-[16px] text-gray-400"> Food Required </span>{" "}
+            <span
+              className={`text-[14px] font-medium ${formatRequirement(data?.data?.foodRequired ?? data?.data?.food).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}
+            >
+              {" "}
+              {formatRequirement(
+                data?.data?.foodRequired ?? data?.data?.food,
+              )}{" "}
+            </span>{" "}
+          </div>
+          <div className="food-amnt-container mt-2 w-full flex items-center justify-between">
+            <p>Amount</p>
+            <p> ₹ {data?.data?.foodAmount}</p>
+          </div>
         </div>{" "}
         {/* Transport */}{" "}
-        <div className="flex items-center justify-between px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
-          {" "}
-          <span className="text-[16px] text-gray-400">
-            {" "}
-            Transport Required{" "}
-          </span>{" "}
-          <span className={`text-[14px] font-medium ${formatRequirement(data?.data?.transportRequired ?? data?.data?.transport).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
-            {" "}
-            {formatRequirement(data?.data?.transportRequired ?? data?.data?.transport)}{" "}
-          </span>{" "}
+        <div className="px-3 py-4 border-b sm:border-b-0 sm:border-r border-[#3a4354]">
+          <div className="flex items-center justify-between">
+            <span className="text-[16px] text-gray-400">
+              Transport Required{" "}
+            </span>
+            <span
+              className={`text-[14px] font-medium ${formatRequirement(data?.data?.transportRequired ?? data?.data?.transport).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}
+            >
+              {formatRequirement(
+                data?.data?.transportRequired ?? data?.data?.transport,
+              )}
+            </span>
+          </div>
+          <div className="food-amnt-container mt-2 w-full flex items-center justify-between">
+            <p>Amount</p>
+            <p> ₹ {data?.data?.transportAmount}</p>
+          </div>
         </div>{" "}
         {/* Accommodation */}{" "}
-        <div className="flex items-center justify-between px-3 py-4">
-          {" "}
-          <span className="text-[16px] text-gray-400">
+        <div className=" px-3 py-4">
+          <div className="flex items-center justify-between ">
             {" "}
-            Accommodation Required{" "}
-          </span>{" "}
-          <span className={`text-[14px] font-medium  ${formatRequirement(data?.data?.accommodationRequired ?? data?.data?.accommodation).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}>
-            {" "}
-            {formatRequirement(data?.data?.accommodationRequired ?? data?.data?.accommodation)}{" "}
-          </span>{" "}
+            <span className="text-[16px] text-gray-400">
+              {" "}
+              Accommodation Required{" "}
+            </span>{" "}
+            <span
+              className={`text-[14px] font-medium  ${formatRequirement(data?.data?.accommodationRequired ?? data?.data?.accommodation).toLowerCase() === "yes" ? "text-green-400" : "text-red-400"} `}
+            >
+              {" "}
+              {formatRequirement(
+                data?.data?.accommodationRequired ?? data?.data?.accommodation,
+              )}{" "}
+            </span>{" "}
+          </div>
+          <div className="food-amnt-container mt-2 w-full flex items-center justify-between">
+            <p>Amount</p>
+            <p> ₹ {data?.data?.accommodationAmount}</p>
+          </div>
         </div>{" "}
       </div>{" "}
       {data?.data?.externalTransportRequired === true && (
@@ -470,13 +477,17 @@ const EventsAttendingDetailView = ({ data }) => {
           <h2 className="mb-3 flex items-center gap-2 text-base font-medium text-white">
             <MapPin className="h-4 w-4 text-[#a78bfa]" /> External Transport
           </h2>
-          {Array.isArray(data?.data?.externalTransport) && data.data.externalTransport.length > 0 ? (
+          {Array.isArray(data?.data?.externalTransport) &&
+          data.data.externalTransport.length > 0 ? (
             <div className="space-y-3">
               {data.data.externalTransport.map((transport, transportIndex) => {
                 const passengers = Array.isArray(transport?.passengers)
                   ? transport.passengers
                   : [];
-                const transportNumber = transport?.transportNumber || transport?.trainNumber || transport?.flightNumber;
+                const transportNumber =
+                  transport?.transportNumber ||
+                  transport?.trainNumber ||
+                  transport?.flightNumber;
 
                 return (
                   <article
@@ -485,23 +496,51 @@ const EventsAttendingDetailView = ({ data }) => {
                   >
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#3a4354] px-4 py-3">
                       <h3 className="font-medium text-purple-300">
-                        {transport?.travelOption || "Transport"} {transportIndex + 1}
+                        {transport?.travelOption || "Transport"}{" "}
+                        {transportIndex + 1}
                       </h3>
                       <span className="text-sm text-gray-400">
                         {formatDate(transport?.travelDate)}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                      <ExternalTransportField icon={MapPin} label="From" value={transport?.from} />
-                      <ExternalTransportField icon={MapPin} label="To" value={transport?.to} />
-                      <ExternalTransportField icon={Users} label="Passengers" value={transport?.totalPassengers ?? transport?.numberOfPassengers} />
-                      <ExternalTransportField label="Class / Berth" value={transport?.classOrBerth || transport?.travelClass} />
-                      <ExternalTransportField label="Transport number" value={transportNumber} />
-                      <ExternalTransportField label="Special requirements" value={transport?.specialRequirements} />
+                      <ExternalTransportField
+                        icon={MapPin}
+                        label="From"
+                        value={transport?.from}
+                      />
+                      <ExternalTransportField
+                        icon={MapPin}
+                        label="To"
+                        value={transport?.to}
+                      />
+                      <ExternalTransportField
+                        icon={Users}
+                        label="Passengers"
+                        value={
+                          transport?.totalPassengers ??
+                          transport?.numberOfPassengers
+                        }
+                      />
+                      <ExternalTransportField
+                        label="Class / Berth"
+                        value={
+                          transport?.classOrBerth || transport?.travelClass
+                        }
+                      />
+                      <ExternalTransportField
+                        label="Transport number"
+                        value={transportNumber}
+                      />
+                      <ExternalTransportField
+                        label="Special requirements"
+                        value={transport?.specialRequirements}
+                      />
                     </div>
                     <div className="border-t border-[#3a4354] p-4">
                       <h4 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-200">
-                        <Users className="h-4 w-4 text-[#a78bfa]" /> Passenger details
+                        <Users className="h-4 w-4 text-[#a78bfa]" /> Passenger
+                        details
                       </h4>
                       {passengers.length > 0 ? (
                         <div className="space-y-2">
@@ -510,15 +549,41 @@ const EventsAttendingDetailView = ({ data }) => {
                               key={passenger?._id || passengerIndex}
                               className="grid grid-cols-1 gap-3 rounded-lg border border-[#3b465c] bg-[#1c2537] p-3 sm:grid-cols-2 lg:grid-cols-4"
                             >
-                              <ExternalTransportField label="Name" value={passenger?.name} />
-                              <ExternalTransportField label="Phone" value={passenger?.phoneNumber || passenger?.phone} />
-                              <ExternalTransportField label="Age / Gender" value={[passenger?.age, passenger?.gender].filter((value) => value !== undefined && value !== "").join(" / ")} />
-                              <ExternalTransportField label="Designation / Organization" value={[passenger?.designation, passenger?.organization].filter(Boolean).join(" / ")} />
+                              <ExternalTransportField
+                                label="Name"
+                                value={passenger?.name}
+                              />
+                              <ExternalTransportField
+                                label="Phone"
+                                value={
+                                  passenger?.phoneNumber || passenger?.phone
+                                }
+                              />
+                              <ExternalTransportField
+                                label="Age / Gender"
+                                value={[passenger?.age, passenger?.gender]
+                                  .filter(
+                                    (value) =>
+                                      value !== undefined && value !== "",
+                                  )
+                                  .join(" / ")}
+                              />
+                              <ExternalTransportField
+                                label="Designation / Organization"
+                                value={[
+                                  passenger?.designation,
+                                  passenger?.organization,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" / ")}
+                              />
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-400">No passenger details provided.</p>
+                        <p className="text-sm text-gray-400">
+                          No passenger details provided.
+                        </p>
                       )}
                     </div>
                   </article>
@@ -527,7 +592,8 @@ const EventsAttendingDetailView = ({ data }) => {
             </div>
           ) : (
             <p className="text-sm text-gray-400">
-              External transport was requested, but no transport details were provided.
+              External transport was requested, but no transport details were
+              provided.
             </p>
           )}
         </section>
@@ -550,10 +616,15 @@ const EventsAttendingDetailView = ({ data }) => {
       </div>{" "}
       <Modal
         isOpen={showRejectModal}
-        onClose={() => { setShowRejectModal(false); setRejectReason(""); }}
+        onClose={() => {
+          setShowRejectModal(false);
+          setRejectReason("");
+        }}
         title="Reason for Rejection"
       >
-        <p className="text-sm text-gray-400">Please enter the reason for rejecting this request.</p>
+        <p className="text-sm text-gray-400">
+          Please enter the reason for rejecting this request.
+        </p>
         <textarea
           value={rejectReason}
           onChange={(event) => setRejectReason(event.target.value)}
@@ -561,8 +632,24 @@ const EventsAttendingDetailView = ({ data }) => {
           placeholder="Enter rejection reason..."
         />
         <div className="mt-4 flex justify-end gap-3">
-          <button type="button" onClick={() => { setShowRejectModal(false); setRejectReason(""); }} className="rounded-lg border border-gray-600 px-4 py-2 text-gray-300">Cancel</button>
-          <button type="button" onClick={handleReject} disabled={actionLoading} className="rounded-lg bg-red-700 px-4 py-2 text-white disabled:opacity-50">{actionLoading ? "Rejecting..." : "Reject"}</button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowRejectModal(false);
+              setRejectReason("");
+            }}
+            className="rounded-lg border border-gray-600 px-4 py-2 text-gray-300"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleReject}
+            disabled={actionLoading}
+            className="rounded-lg bg-red-700 px-4 py-2 text-white disabled:opacity-50"
+          >
+            {actionLoading ? "Rejecting..." : "Reject"}
+          </button>
         </div>
       </Modal>
       {showDeleteConfirm && (
