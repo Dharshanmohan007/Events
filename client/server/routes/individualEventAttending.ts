@@ -141,17 +141,12 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       ...multipart.fields,
       ...(multipart.file ? { principalApprovalForm: multipart.file } : {}),
     };
-    payload.onDutyFrom = payload.onDutyFrom || payload.offCampusFrom;
-    payload.onDutyTo = payload.onDutyTo || payload.offCampusTo;
-
     const requiredFields = [
       { key: "programType", label: "Program type" },
       { key: "programName", label: "Program name" },
       { key: "numberOfParticipants", label: "Number of participants" },
       { key: "programFromDate", label: "Program from date" },
       { key: "programToDate", label: "Program to date" },
-      { key: "onDutyFrom", label: "On-duty from date" },
-      { key: "onDutyTo", label: "On-duty to date" },
     ];
 
     const missingFields = requiredFields.filter(({ key, label }) => {
