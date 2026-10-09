@@ -5,7 +5,7 @@ import axios from "axios";
 import { jwtDecode } from "jwt-decode";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { ChevronRight, Pencil, Trash } from "lucide-react";
+import { ChevronRight, ExternalLink, File, Pencil, Trash } from "lucide-react";
 import Modal from "../../Components/Modal";
 import DeleteConfirmationPopup from "../Dashboards/Admin-Dashboard/DeleteConfirmationPopup";
 import {
@@ -249,7 +249,7 @@ const EventsAttendingDetailView = ({ data }) => {
         </div>{" "}
       </div>{" "}
       {/* Program Dates */}{" "}
-      <div className="grid grid-cols-1 md:grid-cols-2 bg-[#1c2537] rounded-md mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 bg-[#1c2537] rounded-md mb-2 ">
         {" "}
         {/* Date From */}{" "}
         <div className="flex items-center justify-between px-3 py-4 border-b md:border-b-0 md:border-r border-[#3a4354]">
@@ -284,6 +284,30 @@ const EventsAttendingDetailView = ({ data }) => {
           </span>{" "}
         </div>{" "}
       </div>{" "}
+
+
+
+       <div className="grid grid-cols-1  bg-[#1c2537] rounded-md mb-2 ">
+        <div className="flex items-center justify-between px-3 py-4 ">
+         
+          <div className="flex items-center gap-2">
+
+            <File className="w-4 h-4 text-[#8B5CF6]" />{" "}
+            <span className="text-[16px] text-gray-400">
+              {" "}
+              Principal Approval Form{" "}
+            </span>{" "}
+          </div>{" "}
+          <span className="text-[14px] font-medium text-white">
+           <button  onClick={()=>{
+            window.open(`${data?.data?.principalApprovalFormName}`)
+           }} className="underline cursor-pointer flex items-center gap-2">View document <span><ExternalLink size={13}/></span> </button>
+          </span>{" "}
+        </div>
+      </div>
+
+
+
       {/* Participants / Expected Outcome */}{" "}
       <div className="grid grid-cols-1 md:grid-cols-2 bg-[#1c2537] rounded-md mb-2">
         {" "}
