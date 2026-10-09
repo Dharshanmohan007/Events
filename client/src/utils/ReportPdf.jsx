@@ -483,6 +483,7 @@ export default async function ReportPdf({
   formData,
   employee,
   submitResponse,
+  receiptWindow,
 }) {
   const requisitionDateValue = new Date();
 
@@ -717,6 +718,13 @@ export default async function ReportPdf({
 
   // Build the full HTML document
   const html = buildReceiptHTML(logoDataUrl, data);
+
+  if (receiptWindow && !receiptWindow.closed) {
+    receiptWindow.document.open();
+    receiptWindow.document.write(html);
+    receiptWindow.document.close();
+    return;
+  }
 
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);

@@ -402,6 +402,7 @@ export default async function generateAdvanceReceiptPdf({
   formData,
   employee,
   submitResponse,
+  receiptWindow,
 }) {
   const data = {
     iqacNumber: submitResponse?.iqacNumber || "",
@@ -428,8 +429,11 @@ export default async function generateAdvanceReceiptPdf({
   // Build the full HTML document
   const html = buildReceiptHTML(logoDataUrl, data);
 
-  // Open in a new tab
-  const newTab = window.open("", "_blank");
+  // Reuse a tab opened synchronously from the submit action to avoid popup blockers.
+  const newTab =
+    receiptWindow && !receiptWindow.closed
+      ? receiptWindow
+      : window.open("", "_blank");
   if (newTab) {
     newTab.document.write(html);
     newTab.document.close();

@@ -51,6 +51,7 @@ const Eventsattended = () => {
     onDutyToTime: "",
     foodRequired: "No",
     foodAmount: "",
+  
     transportRequired: "No",
     transportAmount: "",
     accommodationRequired: "No",
@@ -140,15 +141,6 @@ const Eventsattended = () => {
   };
 
   const openPrincipalFilePicker = () => principalInputRef.current?.click();
-
-  const readFileAsDataUrl = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () =>
-        reject(new Error("Unable to read the Principal approval file."));
-      reader.readAsDataURL(file);
-    });
 
   useEffect(() => {
     const count = Number(form.participants) || 0;
@@ -293,7 +285,11 @@ const Eventsattended = () => {
     const missingFields = [];
     if (!form.type) missingFields.push("program type");
     if (!String(form.name || "").trim()) missingFields.push("program name");
-    if (!form.participants || Number(form.participants) <= 0)
+    if (
+      String(form.participants).trim() === "" ||
+      !Number.isFinite(Number(form.participants)) ||
+      Number(form.participants) < 0
+    )
       missingFields.push("number of participants");
     if (!form.programFrom || !form.programTo)
       missingFields.push("program date range");
@@ -333,13 +329,10 @@ const Eventsattended = () => {
     setIsSubmitting(true);
 
     try {
-      const principalApprovalData = principalApprovalFile
-        ? await readFileAsDataUrl(principalApprovalFile)
-        : "";
-
       let department = "";
+      let storedUser = {};
       try {
-        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        storedUser = JSON.parse(localStorage.getItem("user") || "{}");
         department = storedUser.department || storedUser.departmentName || "";
       } catch {
         // The request can still be submitted if a stale user value cannot be parsed.
@@ -381,6 +374,7 @@ const Eventsattended = () => {
         ),
         foodRequired: form.foodRequired === "Yes",
         foodAmount: form.foodRequired === "Yes" ? Number(form.foodAmount) || 0 : 0,
+      
         transportRequired: form.transportRequired === "Yes",
         transportAmount: form.transportRequired === "Yes" ? Number(form.transportAmount) || 0 : 0,
         accommodationRequired: form.accommodationRequired === "Yes",
@@ -405,20 +399,37 @@ const Eventsattended = () => {
         otherRequirements: form.otherRequirements || "",
         externalTransportRequired: form.transport === "yes",
         principalApprovalFormName: principalApprovalFile?.name || "",
-        principalApprovalForm:
-          principalApprovalFile
-            ? {
-                name: principalApprovalFile.name,
-                type: principalApprovalFile.type,
-                size: principalApprovalFile.size,
-                data: principalApprovalData,
-              }
-            : null,
         externalTransport:
           form.transport === "yes"
             ? normalizeExternalTransport(externalTransportDetails)
             : [],
       };
+      const requestFormData = new FormData();
+      const employeeId =
+        storedUser._id ||
+        storedUser.id ||
+        storedUser.facultyId ||
+        storedUser.employeeId;
+
+      if (employeeId) requestFormData.append("employee", String(employeeId));
+      if (principalApprovalFile) {
+        requestFormData.append("principalApprovalForm", principalApprovalFile);
+      }
+      Object.entries(payload).forEach(([key, value]) => {
+        if (value === null || value === undefined) return;
+        requestFormData.append(
+          key,
+          typeof value === "object" ? JSON.stringify(value) : String(value),
+        );
+      });
+      requestFormData.set("programType", String(form.type).trim());
+
+      if (!requestFormData.get("programType")) {
+        if (receiptWindow && !receiptWindow.closed) receiptWindow.close();
+        setSubmitMessage("Select the program/event type before submitting.");
+        setIsSubmitting(false);
+        return;
+      }
 
       const token = localStorage.getItem("token");
 
@@ -430,10 +441,9 @@ const Eventsattended = () => {
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
-          body: JSON.stringify(payload),
+          body: requestFormData,
         },
       );
 
@@ -468,12 +478,80 @@ const Eventsattended = () => {
       }
 
       setSubmitMessage("Request submitted successfully.");
+
+      if (form.financeRequired === "Yes") {
+        const receiptWindow = window.open("", "_blank");
+        let storedUser = {};
+        try {
+          storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        } catch {
+          storedUser = {};
+        }
+
+        const employee = {
+          firstName:
+            storedUser.firstName ||
+            storedUser.name ||
+            storedUser.employeeName ||
+            data?.employeeName ||
+            "",
+          name:
+            storedUser.name ||
+            storedUser.employeeName ||
+            storedUser.firstName ||
+            data?.employeeName ||
+            "",
+          employeeName:
+            storedUser.employeeName ||
+            storedUser.name ||
+            storedUser.firstName ||
+            data?.employeeName ||
+            "",
+          empId: storedUser.empId || storedUser.employeeId || "",
+          designation: storedUser.designation || data?.designation || "",
+          department:
+            storedUser.department ||
+            storedUser.departmentName ||
+            data?.department ||
+            department,
+        };
+
+        const receiptResponse = data?.data || data || {};
+        const requestNo =
+          receiptResponse?.requestNo ||
+          receiptResponse?.data?.requestNo ||
+          receiptResponse?.individualEvent?.requestNo ||
+          receiptResponse?.data?.individualEvent?.requestNo ||
+          "";
+
+        await import("../../utils/ReportPdf").then(({ default: ReportPdf }) =>
+          ReportPdf({
+            formData: {
+              advanceAmount: form.advanceAmount,
+              advancePurpose: form.advancePurpose,
+              clearanceDays: form.advanceToBeReceivedWithin || 15,
+              employeeName: employee.employeeName || employee.name,
+              empId: employee.empId,
+              designation: employee.designation,
+              department: employee.department,
+            },
+            employee,
+            submitResponse: {
+              ...receiptResponse,
+              requestNo,
+              response: data,
+            },
+            receiptWindow,
+          }),
+        );
+      }
+
       setSubmitSuccess(true);
       console.log(
         "Event attended submission payload:",
         JSON.stringify(payload, null, 2),
       );
-      console.log("API response:", data);
+      console.log("API response:", data      );
     } catch (error) {
       console.error("Submit error:", error);
       setSubmitMessage(
@@ -640,6 +718,7 @@ const Eventsattended = () => {
                   <option value="workshop">Workshop</option>
                   <option value="conference">Conference</option>
                   <option value="visit">Visit</option>
+                  <option value="audit">Audit</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <svg
@@ -677,6 +756,8 @@ const Eventsattended = () => {
             </label>
             <input
               type="number"
+              min="0"
+              step="1"
               value={form.participants}
               onChange={(e) => updateField("participants", e.target.value)}
               className="w-full rounded-xl border border-[#2d3a4d] bg-[#0d2240] px-4 py-3 text-base text-slate-200 outline-none transition placeholder:text-slate-400 focus:border-violet-500"
@@ -770,6 +851,7 @@ const Eventsattended = () => {
                   )
                 }
                 placeholder="Select date & time"
+                valueTextClassName="text-slate-200"
               />
 
               <CustomDateTimePicker
@@ -779,6 +861,7 @@ const Eventsattended = () => {
                   updateOffCampusDateTime("onDutyTo", "onDutyToTime", dateTime)
                 }
                 placeholder="Select date & time"
+                valueTextClassName="text-slate-200"
               />
             </div>
 
@@ -944,7 +1027,7 @@ const Eventsattended = () => {
 
             <div className="grid gap-4 md:grid-cols-3">
               {[
-                { label: "Food Required", field: "foodRequired", amountField: "foodAmount", amountLabel: "Food Amount" },
+                { label: "Food Required", field: "foodRequired", amountField: "foodAmount", amountLabel: "Food Sanction Amount" },
                 { label: "Transport Required", field: "transportRequired", amountField: "transportAmount", amountLabel: "Transport Amount" },
                 {
                   label: "Accomodation Required",

@@ -4,6 +4,97 @@ const router = Router();
 
 const records: Array<Record<string, any>> = [];
 
+const readMultipartBody = (req: Request) =>
+  new Promise<{
+    fields: Record<string, string>;
+    file?: { name: string; type: string; size: number; data: string };
+  }>((resolve, reject) => {
+    const contentType = req.headers["content-type"] || "";
+    const boundary = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
+    if (!boundary) {
+      reject(new Error("Multipart request is missing its boundary."));
+      return;
+    }
+
+    const boundaryMarker = Buffer.from(`--${boundary[1] || boundary[2]}`);
+    const chunks: Buffer[] = [];
+    let totalSize = 0;
+    let exceedsLimit = false;
+
+    req.on("data", (chunk: Buffer) => {
+      totalSize += chunk.length;
+      if (totalSize > 2 * 1024 * 1024) {
+        exceedsLimit = true;
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    req.on("error", reject);
+    req.on("end", () => {
+      try {
+        if (exceedsLimit) {
+          reject(new Error("Multipart request exceeds the 2MB limit."));
+          return;
+        }
+
+        const body = Buffer.concat(chunks);
+        const fields: Record<string, string> = {};
+        let file:
+          | { name: string; type: string; size: number; data: string }
+          | undefined;
+        let markerIndex = body.indexOf(boundaryMarker);
+
+        while (markerIndex !== -1) {
+          let partStart = markerIndex + boundaryMarker.length;
+          if (body.subarray(partStart, partStart + 2).toString() === "--") break;
+          if (body.subarray(partStart, partStart + 2).toString() === "\r\n") {
+            partStart += 2;
+          }
+
+          const headerEnd = body.indexOf("\r\n\r\n", partStart, "utf8");
+          if (headerEnd === -1) break;
+          const nextMarker = body.indexOf(boundaryMarker, headerEnd + 4);
+          if (nextMarker === -1) break;
+
+          const partEnd =
+            body.subarray(nextMarker - 2, nextMarker).toString() === "\r\n"
+              ? nextMarker - 2
+              : nextMarker;
+          const headers = body.subarray(partStart, headerEnd).toString("utf8");
+          const disposition = headers.match(/content-disposition:\s*form-data;([^\r\n]+)/i)?.[1] || "";
+          const fieldName = disposition.match(/name="([^"]+)"/i)?.[1];
+          const fileName = disposition.match(/filename="([^"]*)"/i)?.[1];
+          const partData = body.subarray(headerEnd + 4, partEnd);
+
+          if (fieldName && fileName !== undefined) {
+            if (partData.length > 1024 * 1024) {
+              reject(new Error("Principal approval file exceeds the 1MB limit."));
+              return;
+            }
+            const mimeType =
+              headers.match(/content-type:\s*([^\r\n]+)/i)?.[1]?.trim() ||
+              "application/octet-stream";
+            file = {
+              name: fileName,
+              type: mimeType,
+              size: partData.length,
+              data: `data:${mimeType};base64,${partData.toString("base64")}`,
+            };
+          } else if (fieldName) {
+            fields[fieldName] = partData.toString("utf8");
+          }
+
+          markerIndex = nextMarker;
+        }
+
+        resolve({ fields, file });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  });
+
 router.get("/", (req: Request, res: Response): void => {
   try {
     res.status(200).json({
@@ -40,9 +131,18 @@ router.get("/:id", (req: Request, res: Response): void => {
   }
 });
 
-router.post("/", (req: Request, res: Response): void => {
+router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
-    const payload = req.body || {};
+    const contentType = req.headers["content-type"] || "";
+    const multipart = contentType.startsWith("multipart/form-data")
+      ? await readMultipartBody(req)
+      : { fields: req.body || {} };
+    const payload = {
+      ...multipart.fields,
+      ...(multipart.file ? { principalApprovalForm: multipart.file } : {}),
+    };
+    payload.onDutyFrom = payload.onDutyFrom || payload.offCampusFrom;
+    payload.onDutyTo = payload.onDutyTo || payload.offCampusTo;
 
     const requiredFields = [
       { key: "programType", label: "Program type" },
@@ -57,7 +157,13 @@ router.post("/", (req: Request, res: Response): void => {
     const missingFields = requiredFields.filter(({ key, label }) => {
       const value = payload[key];
       if (key === "numberOfParticipants") {
-        return Number(value) <= 0;
+        return (
+          value === undefined ||
+          value === null ||
+          String(value).trim() === "" ||
+          !Number.isFinite(Number(value)) ||
+          Number(value) < 0
+        );
       }
       return value === undefined || value === null || String(value).trim() === "";
     }).map(({ label }) => label);
@@ -93,7 +199,13 @@ router.post("/", (req: Request, res: Response): void => {
     });
   } catch (error) {
     console.error("Error creating individual event attending record:", error);
-    res.status(500).json({ success: false, message: "Failed to create record" });
+    const message =
+      error instanceof Error ? error.message : "Failed to create record";
+    const isRequestSizeError = message.includes("exceeds the");
+    res.status(isRequestSizeError ? 413 : 400).json({
+      success: false,
+      message,
+    });
   }
 });
 
