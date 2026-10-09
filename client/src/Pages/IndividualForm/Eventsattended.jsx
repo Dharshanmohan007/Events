@@ -592,12 +592,34 @@ const Eventsattended = () => {
               rel="noopener noreferrer"
               className="ml-3 rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
             >
-              Download Attending Event  Template
+              Download Attending Event Template
             </a>
           </div>
         </div>
 
-        <div>
+          <input
+            ref={principalInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handlePrincipalFileChange}
+            className="hidden"
+          />
+
+          {principalFileError && (
+            <p className="mt-1 text-xs text-red-400">{principalFileError}</p>
+          )}
+          <div className="mt-3 flex justify-end">
+            <a
+              href="/templates/Principal_Approval_Form_Template.docx"
+              download
+              className="rounded-lg border border-purple-500/60 bg-purple-500/10 px-4 py-2 text-sm font-medium text-purple-300 transition hover:bg-purple-500/20"
+            >
+              Download Principal Approval Form Template
+            </a>
+          </div>
+        </div>
+
+        <div className="">
           <label className="mb-2 block text-sm font-medium text-slate-200">
             Date of the program/event/visit
           </label>
