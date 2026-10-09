@@ -129,6 +129,7 @@ export default function CustomDateTimePicker({
   minDate,
   minDateTime,
   maxDate,
+  valueTextClassName = "text-slate-900 dark:text-gray-300",
 }) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState("calendar");
@@ -276,7 +277,7 @@ export default function CustomDateTimePicker({
           open ? "border-purple-500" : "border-slate-300 dark:border-[#3A3A5A]"
         }`}
       >
-        <span className={`text-sm ${value ? "text-slate-900 dark:text-gray-300" : "text-gray-500"}`}>
+        <span className={`text-sm ${value ? valueTextClassName : "text-gray-500"}`}>
           {formatDisplay()}
         </span>
         <div className="flex gap-2 text-gray-400 flex-shrink-0">
