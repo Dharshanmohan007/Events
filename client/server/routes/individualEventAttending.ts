@@ -70,13 +70,15 @@ router.post("/", (req: Request, res: Response): void => {
       return;
     }
 
+    const { specialRequirements: legacySpecialRequirements, ...payloadWithoutLegacySpecialRequirements } = payload;
     const nextIqacNumber =
       records.reduce((highest, item) => Math.max(highest, Number(item.iqacNumber) || 0), 0) + 1;
     const iqacNumber = String(nextIqacNumber).padStart(3, "0");
     const generatedId = globalThis.crypto?.randomUUID?.() ?? `evt-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const record = {
       id: generatedId,
-      ...payload,
+      ...payloadWithoutLegacySpecialRequirements,
+      specialRequirement: payload.specialRequirement ?? legacySpecialRequirements ?? "",
       iqacNumber,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

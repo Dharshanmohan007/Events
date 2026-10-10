@@ -87,16 +87,16 @@ export default function EventCard({ event, size = "week", style, onClick }) {
           onMouseEnter={showTooltip}
           onMouseLeave={hideTooltip}
           style={{ position: "fixed", top: tooltip.top, left: tooltip.left, width: TOOLTIP_WIDTH, zIndex: 9999 }}
-          className="rounded-lg border border-[#2e394e] bg-[#0f172a] p-2.5 shadow-xl text-left pointer-events-none"
+          className="rounded-lg border border-slate-200 dark:border-[#2e394e] bg-white dark:bg-[#0f172a] p-2.5 shadow-xl text-left pointer-events-none"
         >
-          <p className="text-[14px] font-semibold text-white truncate">{event.eventName}</p>
+          <p className="text-[14px] font-semibold text-slate-900 dark:text-white truncate">{event.eventName}</p>
           <p className="text-[14px] text-[#853FF9] font-medium mb-1.5">
             {event.department || "N/A"} &bull; {formatTimeRange(event.startTime, event.endTime)}
           </p>
-          <div className="border-t border-[#1e293b] pt-1.5 space-y-0.5 text-[12px] text-slate-300">
-            <p><span className="text-slate-400 font-medium">Organizer:</span> {orgName}</p>
-            <p><span className="text-slate-400 font-medium">Emp ID:</span> {orgEmpId}</p>
-            <p><span className="text-slate-400 font-medium">Mobile:</span> {orgMobile}</p>
+          <div className="border-t border-slate-100 dark:border-[#1e293b] pt-1.5 space-y-0.5 text-[12px] text-slate-600 dark:text-slate-300">
+            <p><span className="text-slate-500 dark:text-slate-400 font-medium">Organizer:</span> {orgName}</p>
+            <p><span className="text-slate-500 dark:text-slate-400 font-medium">Emp ID:</span> {orgEmpId}</p>
+            <p><span className="text-slate-500 dark:text-slate-400 font-medium">Mobile:</span> {orgMobile}</p>
           </div>
         </div>
       )}

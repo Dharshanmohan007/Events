@@ -13,6 +13,8 @@ import {
   ChevronDown,
   ArrowRight,
   FileText,
+  Moon,
+  Sun,
 } from "lucide-react";
 
 import { jwtDecode } from "jwt-decode";
@@ -73,6 +75,9 @@ const TransportDetailsPage = () => {
   const [existingPrincipalDocument, setExistingPrincipalDocument] = useState(null);
 
   const [transportForms, setTransportForms] = useState([createTransportForm()]);
+  const [theme, setTheme] = useState(() =>
+    localStorage.getItem("transportDetailsTheme") === "light" ? "light" : "dark"
+  );
 
   const [employeeId, setEmployeeId] = useState("");
   const [token, setToken] = useState("");
@@ -80,6 +85,10 @@ const TransportDetailsPage = () => {
   const [submitMessage, setSubmitMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("transportDetailsTheme", theme);
+  }, [theme]);
 
   const MAX_PRINCIPAL_FILE_SIZE_MB = 1;
   const MAX_PRINCIPAL_FILE_SIZE_BYTES =
@@ -1175,7 +1184,10 @@ const TransportDetailsPage = () => {
   }
 
   return (
-    <div className="transport-form min-h-screen bg-[#141428] text-white p-5">
+    <div
+      className="transport-form min-h-screen bg-[#141428] text-white p-5"
+      data-theme={theme}
+    >
       <style>{`
           .transport-form input:focus,
           .transport-form textarea:focus,
@@ -1186,6 +1198,61 @@ const TransportDetailsPage = () => {
             outline: none !important;
           }
         `}</style>
+      {theme === "light" && (
+        <style>{`
+          .transport-form[data-theme="light"] {
+            background-color: #f8fafc !important;
+            color: #1f2937 !important;
+          }
+          .transport-form[data-theme="light"] [class*="bg-[#141428]"],
+          .transport-form[data-theme="light"] [class*="bg-[#1b1b35]"],
+          .transport-form[data-theme="light"] [class*="bg-[#26264a]"],
+          .transport-form[data-theme="light"] [class*="bg-[#282846]"],
+          .transport-form[data-theme="light"] [class*="bg-[#1a1a35]"],
+          .transport-form[data-theme="light"] [class*="bg-[#2a2a4a]"],
+          .transport-form[data-theme="light"] [class*="bg-[#1E1E2F]"],
+          .transport-form[data-theme="light"] [class*="bg-[#23234a]"],
+          .transport-form[data-theme="light"] [class*="bg-[#1f1f3a]"] {
+            background-color: #fff !important;
+          }
+          .transport-form[data-theme="light"] [class*="border-[#2F2F47]"],
+          .transport-form[data-theme="light"] [class*="border-[#2F2F3E]"],
+          .transport-form[data-theme="light"] [class*="border-[#34345c]"],
+          .transport-form[data-theme="light"] [class*="border-[#3A3A5A]"],
+          .transport-form[data-theme="light"] [class*="border-[#2a2a40]"],
+          .transport-form[data-theme="light"] [class*="border-gray-"] {
+            border-color: #d1d5db !important;
+          }
+          .transport-form[data-theme="light"] [class~="text-white"] {
+            color: #1f2937 !important;
+          }
+          .transport-form[data-theme="light"] button[class~="text-white"] {
+            color: #1f2937 !important;
+          }
+          .transport-form[data-theme="light"] button[class*="bg-purple-"],
+          .transport-form[data-theme="light"] button[class*="bg-[#8b5cf6]"],
+          .transport-form[data-theme="light"] button[class*="bg-[#9b5cff]"],
+          .transport-form[data-theme="light"] button[class*="bg-[#492A6F]"] {
+            color: #fff !important;
+          }
+          .transport-form[data-theme="light"] [class*="text-gray-"],
+          .transport-form[data-theme="light"] [class*="text-[#8d8da8]"] {
+            color: #4b5563 !important;
+          }
+          .transport-form[data-theme="light"] input,
+          .transport-form[data-theme="light"] textarea {
+            color: #1f2937 !important;
+          }
+          .transport-form[data-theme="light"] input::placeholder,
+          .transport-form[data-theme="light"] textarea::placeholder {
+            color: #6b7280 !important;
+          }
+          .transport-form[data-theme="light"] [style*="linear-gradient(to bottom"],
+          .transport-form[data-theme="light"] [style*="linear-gradient(to top"] {
+            background: linear-gradient(to bottom, #fff 0%, transparent 100%) !important;
+          }
+        `}</style>
+      )}
 
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -1198,15 +1265,27 @@ const TransportDetailsPage = () => {
             </p>
           )}
         </div>
-        {isEditMode && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => navigate(-1)}
-            className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+            onClick={() => setTheme((current) => current === "dark" ? "light" : "dark")}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
+            className="inline-flex items-center gap-2 rounded-md border border-gray-600 px-3 py-2 text-xs font-medium text-gray-300 transition hover:bg-gray-500/10"
           >
-            Cancel
+            {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+            {theme === "dark" ? "Light" : "Dark"} mode
           </button>
-        )}
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="text-xs text-gray-400 hover:text-white border border-gray-600 rounded-md px-3 py-1.5 transition"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
 
       {transportForms.some((form) => isFinanceYes(form.financeRequired)) && (
@@ -1658,9 +1737,9 @@ const TransportDetailsPage = () => {
                     }
                     className={`px-4 py-3 cursor-pointer flex items-center justify-between ${
                       form.financeRequired === value
-                        ? "bg-[#492A6F] text-white"
-                        : "text-white hover:bg-[#492A6F]"
-                    }`}
+                        ? "text-white font-medium"
+                        : "text-white"
+                      } ${theme === "light" ? "hover:bg-gray-50" : "hover:bg-white/10"}`}
                   >
                     <span>{value}</span>
                     {form.financeRequired === value && <span>✓</span>}
@@ -1945,8 +2024,8 @@ const TransportDetailsPage = () => {
                                  justify-between
                                  ${
                                    isSelected
-                                     ? "bg-[#492A6F] text-white"
-                                     : "hover:bg-[#492A6F]"
+                                     ? "text-white font-medium"
+                                     : ""
                                  }
                                `}
                       >

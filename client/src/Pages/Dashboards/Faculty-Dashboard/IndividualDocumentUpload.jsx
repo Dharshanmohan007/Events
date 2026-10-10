@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
@@ -8,6 +8,7 @@ export default function IndividualDocumentUpload({
   sectionTitle = "Expenditure Details",
 }) {
   const { eventId } = useParams();
+  const navigate = useNavigate();
   const requestKey = (() => {
     const label = String(requestType || "").toLowerCase();
     if (label.includes("purchase")) return "purchase";
@@ -211,9 +212,7 @@ export default function IndividualDocumentUpload({
         throw new Error(errorBody.message || "Unable to upload expenditure details");
       }
 
-      setSubmitSuccess(
-        isEditMode ? "Expenditure details updated successfully" : "Expenditure details uploaded successfully"
-      );
+      navigate(`/dashboard-faculty/feedback/${eventId}`);
     } catch (error) {
       setSubmitError(error.message || "Unable to upload expenditure details");
     } finally {

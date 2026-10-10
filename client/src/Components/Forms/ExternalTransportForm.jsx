@@ -11,11 +11,13 @@ function createEmptyForm() {
     id: crypto.randomUUID(),
     travelOption: "",
     travelDate: "",
+    travelTime: "",
     from: "",
     to: "",
     totalPassengers: "",
-    classOrBerth: [], // array for train, string for flight
+    classOrBerth: [], // array for train & bus, string for flight
     trainNumber: "",
+    busName: "",
     flightNumber: "",
     busName: "",
     specialRequirements: "None",
@@ -48,14 +50,16 @@ function sanitiseForm(v) {
     id: v.id || crypto.randomUUID(),
     travelOption: v.travelOption || "",
     travelDate: dateStr,
+    travelTime: v.travelTime || "",
     from: v.from || "",
     to: v.to || "",
     totalPassengers: v.totalPassengers !== undefined && v.totalPassengers !== null ? String(v.totalPassengers) : "",
     classOrBerth:
       v.classOrBerth ||
       v.travelClass ||
-      (v.travelOption === "Train" ? [] : "Economy"),
+      (v.travelOption === "Flight" ? "Economy" : []),
     trainNumber: v.trainNumber || "",
+    busName: v.busName || "",
     flightNumber: v.flightNumber || "",
     busName: v.busName || "",
     specialRequirements: v.specialRequirements || "None",
@@ -87,6 +91,29 @@ const TRAIN_CLASSES = [
   "Ladies Compartment",
   "Vistadome",
 ];
+
+const BUS_TYPES = [
+  "Sleeper",
+  "Seater",
+  "Semi-Sleeper",
+  "AC Sleeper",
+  "Non-AC Sleeper",
+  "AC Seater",
+  "Non-AC Seater",
+];
+
+const BUS_OPERATORS = [
+  "RedBus",
+  "AbhiBus",
+  "Zingbus",
+  "IntrCity SmartBus",
+  "Paytm Bus",
+  "MakeMyTrip",
+  "Goibibo",
+  "Others",
+];
+
+const TRAVEL_OPTIONS = ["Train", "Bus", "Flight"];
 
 function formatClassOrBerth(classOrBerth, travelOption) {
   if (travelOption === "Flight") {
@@ -131,6 +158,14 @@ export function validateExternalTransport(forms) {
           ? [form.classOrBerth]
           : [];
       if (classes.length === 0) err.classOrBerth = "Select at least one train class";
+    } else if (form.travelOption === "Bus") {
+      if (!form.busName?.trim()) err.busName = "Bus name is required";
+      const classes = Array.isArray(form.classOrBerth)
+        ? form.classOrBerth
+        : form.classOrBerth
+        ? [form.classOrBerth]
+        : [];
+      if (classes.length === 0) err.classOrBerth = "Select at least one bus type";
     } else if (form.travelOption === "Flight") {
       if (!form.flightNumber?.trim()) err.flightNumber = "Flight number is required";
     } else if (form.travelOption === "Bus") {
@@ -210,8 +245,7 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
       onClick={onCancel}
     >
       <div
-        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl"
-        style={{ backgroundColor: "#1f1f3a", border: "1px solid #3A3A5A" }}
+        className="relative w-full max-w-sm mx-4 rounded-2xl p-6 shadow-2xl bg-white dark:bg-[#1f1f3a] border border-slate-300 dark:border-[#3A3A5A]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-center mb-4">
@@ -219,18 +253,17 @@ function ConfirmDeleteModal({ isOpen, message, onConfirm, onCancel }) {
             <AlertTriangle size={22} className="text-red-400" />
           </div>
         </div>
-        <h3 className="text-center text-white font-semibold text-base mb-2">
+        <h3 className="text-center text-slate-900 dark:text-white font-semibold text-base mb-2">
           Confirm Delete
         </h3>
-        <p className="text-center text-gray-400 text-sm mb-6 leading-relaxed">
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
           {message}
         </p>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:text-white transition-colors cursor-pointer"
-            style={{ backgroundColor: "#2a2a4a", border: "1px solid #3A3A5A" }}
+            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-500 dark:text-gray-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer bg-slate-100 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3A3A5A]"
           >
             Cancel
           </button>
@@ -253,13 +286,14 @@ function FloatingInput({
   type = "text",
   value,
   onChange,
-  bgClass = "bg-[#1e1e2f]",
+  bgClass = "bg-white dark:bg-[#1e1e2f]",
   onKeyDown,
+  inputClassName = "",
 }) {
   return (
     <div className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
@@ -269,7 +303,7 @@ function FloatingInput({
         onChange={onChange}
         onKeyDown={onKeyDown}
         placeholder=" "
-        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-[#3A3A5A] text-white text-sm outline-none focus:border-purple-500 transition-colors"
+        className="w-full bg-transparent px-4 py-[13px] rounded-lg border border-slate-200 dark:border-[#3A3A5A] text-slate-900 dark:text-white text-sm outline-none focus:border-purple-500 transition-colors"
       />
     </div>
   );
@@ -282,7 +316,7 @@ function CustomSelectDropdown({
   onChange,
   options,
   placeholder = "Select",
-  bgClass = "bg-[#1e1e2f]",
+  bgClass = "bg-white dark:bg-[#1e1e2f]",
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -298,17 +332,18 @@ function CustomSelectDropdown({
   return (
     <div ref={ref} className="relative w-full">
       <span
-        className={`absolute left-3 -top-[9px] text-xs text-white px-1 z-10 pointer-events-none ${bgClass}`}
+        className={`absolute left-3 -top-[9px] text-xs text-slate-800 dark:text-white px-1 z-10 pointer-events-none ${bgClass}`}
       >
         {label}
       </span>
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors cursor-pointer ${open ? "border-purple-500" : "border-[#3A3A5A]"
-          }`}
+        className={`w-full flex items-center justify-between bg-transparent px-4 py-[13px] rounded-lg border text-left transition-colors cursor-pointer ${
+          open ? "border-purple-500" : "border-slate-200 dark:border-[#3A3A5A]"
+        }`}
       >
-        <span className={`text-sm ${value ? "text-white" : "text-gray-500"}`}>
+        <span className={`text-sm ${value ? "text-slate-900 dark:text-white" : "text-gray-500"}`}>
           {value || placeholder}
         </span>
         <ChevronDown
@@ -318,7 +353,7 @@ function CustomSelectDropdown({
         />
       </button>
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-[#1E1E2F] border border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
+        <div className="absolute z-50 mt-1 w-full bg-white dark:bg-[#1E1E2F] border border-slate-200 dark:border-[#3A3A5A] rounded-lg shadow-lg overflow-hidden max-h-52 overflow-y-auto">
           {options.map((opt) => {
             const isSelected = value === opt;
             return (
@@ -329,10 +364,14 @@ function CustomSelectDropdown({
                   onChange(opt);
                   setOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-white hover:bg-purple-600/20 transition-colors text-left cursor-pointer"
+                className={`w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left cursor-pointer ${
+                  isSelected
+                    ? "bg-[#9B1BFC] text-white"
+                    : "text-slate-900 dark:text-white hover:bg-slate-100 dark:hover:bg-purple-600/20"
+                }`}
               >
                 <span>{opt}</span>
-                {isSelected && <Check size={14} className="text-purple-400" />}
+                {isSelected && <Check size={14} className="text-white" />}
               </button>
             );
           })}
@@ -523,6 +562,7 @@ export default function ExternalTransportForm({
         const oldVal = updated[index].travelOption;
         if (oldVal !== val) {
           updated[index].trainNumber = "";
+          updated[index].busName = "";
           updated[index].flightNumber = "";
           updated[index].busName = "";
           updated[index].classOrBerth = val === "Flight" ? "Economy" : val === "Bus" ? "" : [];
@@ -621,7 +661,7 @@ export default function ExternalTransportForm({
       )}
 
       <div className="header-container">
-        <h1 className="text-white text-3xl font-bold">External Transport Details</h1>
+        <h1 className="text-slate-900 dark:text-white text-3xl font-bold">External Transport Details</h1>
 
       </div>
       {!disabled && (
@@ -629,7 +669,7 @@ export default function ExternalTransportForm({
           <button
             type="button"
             onClick={addForm}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#9810FA] cursor-pointer border border-[#3A3A5A] text-white rounded-xl transition-colors font-medium text-sm hover:bg-[#850ee0]"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#9810FA] cursor-pointer border border-slate-200 dark:border-[#3A3A5A] text-white rounded-xl transition-colors font-medium text-sm hover:bg-[#850ee0]"
           >
             <Plus size={18} />
             Add
@@ -640,18 +680,19 @@ export default function ExternalTransportForm({
       {forms.map((form, index) => (
         <div
           key={form.id}
-          className="rounded-2xl mb-8 relative"
-          style={{ backgroundColor: "#1e1e2f", border: "1px solid #3A3A5A" }}
+          className="rounded-2xl mb-8 relative bg-white dark:bg-[#1e1e2f] border border-slate-300 dark:border-[#3A3A5A]"
         >
           {index > 0 && (
-            <button
-              type="button"
-              onClick={() => setDeleteIndex(index)}
-              className="absolute top-4 right-4 z-10 text-gray-400 hover:text-red-400 transition-colors bg-[#1E1E2F] rounded-full p-1 border border-[#3A3A5A] cursor-pointer"
-              title="Remove Entry"
-            >
-              <Trash2 size={18} />
-            </button>
+            <div className="flex items-center justify-end px-6 pt-5 pb-3 border-slate-200 dark:border-[#2e2e50]">
+              <button
+                type="button"
+                onClick={() => setDeleteIndex(index)}
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-red-400 hover:text-red-300 bg-red-500/10 hover:bg-red-500/20 transition-colors cursor-pointer"
+                title="Remove Entry"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           )}
 
           <div className="p-6 space-y-6">
@@ -662,7 +703,7 @@ export default function ExternalTransportForm({
                   value={form.travelOption}
                   options={["Train", "Flight", "Bus"]}
                   onChange={(val) => handleChange(index, "travelOption", val)}
-                  bgClass="bg-[#1e1e2f]"
+                  bgClass="bg-white dark:bg-[#1e1e2f]"
                 />
                 {getError(index, "travelOption") && (
                   <p className="text-red-400 text-xs mt-1">{getError(index, "travelOption")}</p>
@@ -670,22 +711,19 @@ export default function ExternalTransportForm({
               </div>
 
               {["Train", "Flight", "Bus"].includes(form.travelOption) && (
-                <div className="relative">
+                <div className="relative w-full">
                   <div
-                    className="absolute -top-2 left-3 z-10 px-1 text-xs text-white"
-                    style={{ backgroundColor: "#1e1e2f" }}
+                    className="absolute -top-[9px] left-3 z-10 px-1 text-xs text-slate-800 dark:text-white bg-white dark:bg-[#1e1e2f] pointer-events-none"
                   >
                     Travel Date *
                   </div>
-                  <div className="pt-2">
-                    <CustomDatePicker
-                      value={form.travelDate}
-                      onChange={(val) => handleChange(index, "travelDate", val)}
-                      placeholder="Select Travel Date"
-                      minDate={isEditMode ? null : todayDateStr}
-                      className="w-full bg-transparent border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-white"
-                    />
-                  </div>
+                  <CustomDatePicker
+                    value={form.travelDate}
+                    onChange={(val) => handleChange(index, "travelDate", val)}
+                    placeholder="Select Travel Date"
+                    minDate={isEditMode ? null : todayDateStr}
+                    className="w-full bg-transparent border-slate-200 dark:border-[#3A3A5A] !h-[47px] !px-4 !py-[13px] !text-sm rounded-lg text-slate-900 dark:text-white"
+                  />
                   {getError(index, "travelDate") && (
                     <p className="text-red-400 text-xs mt-1">{getError(index, "travelDate")}</p>
                   )}
@@ -701,7 +739,7 @@ export default function ExternalTransportForm({
                       label="From *"
                       value={form.from}
                       onChange={(e) => handleChange(index, "from", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "from") && (
                       <p className="text-red-400 text-xs mt-1">{getError(index, "from")}</p>
@@ -712,7 +750,7 @@ export default function ExternalTransportForm({
                       label="To *"
                       value={form.to}
                       onChange={(e) => handleChange(index, "to", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "to") && (
                       <p className="text-red-400 text-xs mt-1">{getError(index, "to")}</p>
@@ -728,7 +766,7 @@ export default function ExternalTransportForm({
                           label="Train Number *"
                           value={form.trainNumber}
                           onChange={(e) => handleChange(index, "trainNumber", e.target.value)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "trainNumber") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -744,8 +782,44 @@ export default function ExternalTransportForm({
                           value={Array.isArray(form.classOrBerth) ? form.classOrBerth : []}
                           onChange={(val) => handleChange(index, "classOrBerth", val)}
                           options={TRAIN_CLASSES}
-                          labelBg="#1e1e2f"
+                          labelClassName="bg-white dark:bg-[#1e1e2f]"
                           placeholder="Select classes"
+                        />
+                        {getError(index, "classOrBerth") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "classOrBerth")}
+                          </p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                  {form.travelOption === "Bus" && (
+                    <>
+                      <div>
+                        <CustomSelectDropdown
+                          label="Bus Name *"
+                          value={form.busName}
+                          options={BUS_OPERATORS}
+                          placeholder="Select bus name"
+                          onChange={(val) => handleChange(index, "busName", val)}
+                          bgClass="bg-[#1e1e2f]"
+                        />
+                        {getError(index, "busName") && (
+                          <p className="text-red-400 text-xs mt-1">
+                            {getError(index, "busName")}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <CustomSelect
+                          label="Select Bus Type *"
+                          multi
+                          searchable
+                          value={Array.isArray(form.classOrBerth) ? form.classOrBerth : []}
+                          onChange={(val) => handleChange(index, "classOrBerth", val)}
+                          options={BUS_TYPES}
+                          labelBg="#1e1e2f"
+                          placeholder="Select bus type"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -762,7 +836,7 @@ export default function ExternalTransportForm({
                           label="Flight Number *"
                           value={form.flightNumber}
                           onChange={(e) => handleChange(index, "flightNumber", e.target.value)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "flightNumber") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -776,7 +850,7 @@ export default function ExternalTransportForm({
                           value={form.classOrBerth || "Economy"}
                           options={["Economy"]}
                           onChange={(val) => handleChange(index, "classOrBerth", val)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -793,7 +867,7 @@ export default function ExternalTransportForm({
                           label="Bus Name *"
                           value={form.busName}
                           onChange={(e) => handleChange(index, "busName", e.target.value)}
-                          bgClass="bg-[#1e1e2f]"
+                          bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "busName") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -815,7 +889,7 @@ export default function ExternalTransportForm({
                           "A/C Seater"
                         ]}
                         onChange={(val) => handleChange(index, "classOrBerth", val)}
-                        bgClass="bg-[#1e1e2f]"
+                        bgClass="bg-white dark:bg-[#1e1e2f]"
                         />
                         {getError(index, "classOrBerth") && (
                           <p className="text-red-400 text-xs mt-1">
@@ -833,7 +907,7 @@ export default function ExternalTransportForm({
                       label="No. of Passengers *"
                       value={form.totalPassengers}
                       onChange={(e) => handleChange(index, "totalPassengers", e.target.value)}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                     {getError(index, "totalPassengers") && (
                       <p className="text-red-400 text-xs mt-1">
@@ -846,31 +920,23 @@ export default function ExternalTransportForm({
                       label="Special Requirements (Optional)"
                       value={form.specialRequirements === "None" ? "" : form.specialRequirements}
                       onChange={(e) => handleChange(index, "specialRequirements", e.target.value || "None")}
-                      bgClass="bg-[#1e1e2f]"
+                      bgClass="bg-white dark:bg-[#1e1e2f]"
                     />
                   </div>
                 </div>
 
                 {Number(form.totalPassengers) > 0 && Number(form.totalPassengers) <= 10 && (
                   <div
-                    className="mt-6 rounded-xl p-5"
-                    style={{
-                      backgroundColor: "#2a2a4a",
-                      border: "1px solid #3A3A5A",
-                    }}
+                    className="mt-6 rounded-xl p-5 bg-slate-50 dark:bg-[#2a2a4a] border border-slate-300 dark:border-[#3A3A5A]"
                   >
-                    <h4 className="text-white font-medium mb-4">Passenger Details</h4>
+                    <h4 className="text-slate-900 dark:text-white font-medium mb-4">Passenger Details</h4>
                     <div className="space-y-4">
                       {form.passengers.slice(0, Number(form.totalPassengers)).map((p, pIndex) => (
                         <div
                           key={p.id}
-                          className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg"
-                          style={{
-                            backgroundColor: "#1e1e2f",
-                            border: "1px solid #3A3A5A",
-                          }}
+                          className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-lg bg-white dark:bg-[#1e1e2f] border border-slate-300 dark:border-[#3A3A5A]"
                         >
-                          <h5 className="text-sm font-medium text-white md:col-span-2">
+                          <h5 className="text-sm font-medium text-slate-900 dark:text-white md:col-span-2">
                             Passenger {pIndex + 1}
                           </h5>
                           <div>
@@ -880,7 +946,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "name", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "name") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -895,7 +961,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "phone", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "phone") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -910,7 +976,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "email", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "email") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -925,7 +991,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "designation", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "designation") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -939,7 +1005,7 @@ export default function ExternalTransportForm({
                               value={p.gender}
                               options={["Male", "Female"]}
                               onChange={(v) => handlePassengerChange(index, pIndex, "gender", v)}
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "gender") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -954,7 +1020,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "age", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "age") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -969,7 +1035,7 @@ export default function ExternalTransportForm({
                               onChange={(e) =>
                                 handlePassengerChange(index, pIndex, "organization", e.target.value)
                               }
-                              bgClass="bg-[#1e1e2f]"
+                              bgClass="bg-white dark:bg-[#1e1e2f]"
                             />
                             {getPaxError(index, pIndex, "organization") && (
                               <p className="text-red-400 text-xs mt-1">
@@ -1000,4 +1066,5 @@ export default function ExternalTransportForm({
     </div>
   );
 }
+
 

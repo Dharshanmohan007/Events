@@ -1643,6 +1643,35 @@ export default function Form() {
     }
   }, [isEditMode]);
 
+  useEffect(() => {
+    if (isEditMode) return;
+    
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        const facultyId = decoded.facultyId || decoded.id || decoded._id;
+        if (facultyId) {
+          const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ? import.meta.env.VITE_API_BASE_URL.replace(/\/$/, '') : '';
+          fetch(`${apiBaseUrl}/api/events/faculty-restriction/${facultyId}`, {
+            headers: {
+              "Authorization": `Bearer ${token}`
+            }
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.actionRestricted) {
+                setRestrictionPopup(true);
+              }
+            })
+            .catch(err => console.error("Error checking faculty restriction:", err));
+        }
+      } catch (err) {
+        console.error("Error decoding token:", err);
+      }
+    }
+  }, [isEditMode]);
+
   // childNav extended with isOnLastDay + nextDayLabel from MediaForm
   // isOnLastDay: true  → the child is on its last day tab (show Submit if also last parent step)
   // isOnLastDay: false → the child still has more day tabs (always show "Next Day" label)
@@ -2120,10 +2149,10 @@ export default function Form() {
   // Full-page draft loading screen
   if (isDraftLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#16162A]">
+      <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-[#16162A]">
         <div className="text-center">
           <div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-purple-500 border-t-transparent"></div>
-          <p className="mt-4 text-white text-lg">Loading event...</p>
+          <p className="mt-4 text-slate-800 dark:text-white text-lg">Loading event...</p>
         </div>
       </div>
     );
@@ -2180,18 +2209,18 @@ export default function Form() {
         <div className="hidden md:block w-[325px] flex-shrink-0">
         <EventsSidebar steps={steps} currentStep={currentStep} completedSteps={completedSteps} />
       </div>
-      <div className="w-full flex-1 flex flex-col overflow-hidden ">
-        <div className="px-4 sm:px-6 pt-4 pb-3 border-[#2A2A45] ">
-          <h1 className="text-white text-xl font-bold playfair">{steps[currentStep]?.label}</h1>
+      <div className="w-full flex-1 flex flex-col overflow-hidden">
+        <div className="px-4 sm:px-6 pt-4 pb-3 border-b border-slate-200 dark:border-[#2A2A45]">
+          <h1 className="text-slate-900 dark:text-white text-xl font-bold playfair">{steps[currentStep]?.label}</h1>
           <div className="flex flex-row  gap-5 ">
-            <div className="w-full h-1.5 bg-gray-700 rounded mt-3">
-              <div className="h-full bg-purple-500 rounded transition-all duration-500" style={{ width: `${progress}%` }} />
+            <div className="w-full h-1.5 bg-[#853ff9]/20 dark:bg-gray-700 rounded mt-3">
+              <div className="h-full bg-[#853ff9] rounded transition-all duration-500" style={{ width: `${progress}%` }} />
             </div>
-            <p className="text-xs text-gray-400 mt-1 text-right">{progress}%</p>
+            <p className="text-xs text-slate-500 dark:text-gray-400 mt-1 text-right">{progress}%</p>
           </div>
           {apiError && (
-            <div className="mt-4 rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-3">
-              <p className="text-red-400 text-sm">{apiError}</p>
+            <div className="mt-4 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/40 px-4 py-3">
+              <p className="text-red-600 dark:text-red-400 text-sm">{apiError}</p>
             </div>
           )}
         </div>
@@ -2217,7 +2246,7 @@ export default function Form() {
             <button
               onClick={handleBack}
               disabled={!childNav.prev && currentStep === 0}
-              className="rounded-lg border border-purple-600 px-6 py-2 text-purple-600 hover:bg-purple-600/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded-lg border border-purple-600 px-6 py-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-600/10 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               ← Back
             </button>

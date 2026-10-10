@@ -52,22 +52,22 @@ function Card({ children, className = "" }) {
 }
 
 function Divider() {
-  return <div className="hidden sm:block w-[2px] h-10 bg-[#454D67] mx-6 self-center rounded-full" />
+  return <div className="hidden sm:block w-[2px] h-10 bg-slate-50 dark:bg-[#454D67] mx-6 self-center rounded-full" />
 }
 
 function InfoBlock({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-3 min-w-0 bg-[#252C3F] rounded-xl px-5 py-4">
+    <div className="flex items-center gap-3 min-w-0 bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4">
       {Icon && (
         <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-600/15 flex-shrink-0">
           <Icon size={16} className="text-purple-400" />
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-[11px] tracking-wide uppercase text-gray-400 mb-0.5 truncate">
+        <p className="text-slate-500 dark:text-gray-400 text-xs uppercase mb-0.5 truncate">
           {label}
         </p>
-        <p className="text-sm font-semibold text-white truncate">{value}</p>
+        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{value}</p>
       </div>
     </div>
   );
@@ -80,27 +80,27 @@ function LocationStop({
   checkpointNumber,
 }) {
   return (
-    <div className="flex items-center gap-3 bg-[#252C3F] border border-[#343C59] rounded-xl px-5 py-4 w-[280px] h-[72px]">
+    <div className="flex items-center gap-3 bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4 w-[280px] h-[72px]">
       {type === "checkpoint" ? (
-        <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+        <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center text-slate-900 dark:text-white font-semibold text-sm flex-shrink-0">
           {checkpointNumber}
         </div>
       ) : (
         <div className="w-9 h-9 rounded-full bg-purple-600 flex items-center justify-center flex-shrink-0">
           <MapPin
             size={17}
-            className="text-white"
+            className="text-slate-900 dark:text-white"
             fill="currentColor"
           />
         </div>
       )}
 
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-gray-400 font-semibold">
+        <p className="text-slate-500 dark:text-gray-400 text-xs uppercase">
           {label}
         </p>
 
-        <p className="text-sm font-semibold text-white truncate">
+        <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
           {name || "—"}
         </p>
       </div>
@@ -111,7 +111,7 @@ function LocationStop({
 function Connector({ visible = true }) {
   return (
     <div className="flex-1 flex items-center min-w-[2rem] px-2">
-      <div className={`w-full border-t-2 border-dashed border-[#62658B] ${visible ? '' : 'opacity-0'}`} />
+      <div className={`w-full border-t-2 border-dashed border-slate-200 dark:border-[#62658B] ${visible ? '' : 'opacity-0'}`} />
     </div>
   );
 }
@@ -120,10 +120,10 @@ function PreviewHeader() {
   return (
     <div className="flex items-start justify-between gap-4 mb-5">
       <div>
-        <h2 className="text-lg font-bold text-purple-400 playfair">
+        <h2 className="text-xl font-semibold text-purple-400 playfair">
           Transport Details
         </h2>
-        <p className="text-xs text-gray-400 mt-1 max-w-xl">
+        <p className="text-slate-500 dark:text-gray-400 text-sm mt-1 max-w-xl">
           Preview your transport details for selected day.
         </p>
       </div>
@@ -138,11 +138,11 @@ function PreviewHeader() {
 function HorizontalInfoBlock({ label, value }) {
   return (
     <div className="flex items-center justify-between w-full">
-      <p className="text-[15px] text-[#B5B8C7]">
+      <p className="text-slate-500 dark:text-gray-400">
         {label}
       </p>
 
-      <p className="text-[15px] font-semibold text-white text-right">
+      <p className="text-[15px] font-semibold text-slate-900 dark:text-white text-right">
         {value}
       </p>
     </div>
@@ -160,7 +160,7 @@ export default function TransportPreview({ transportData = [] }) {
       <div>
         <PreviewHeader />
         <Card>
-          <p className="text-sm text-gray-400 text-center py-6">
+          <p className="text-sm text-slate-500 dark:text-gray-400 text-center py-6">
             No transport details added.
           </p>
         </Card>
@@ -203,7 +203,7 @@ export default function TransportPreview({ transportData = [] }) {
   ];
 
   return (
-    <div className="flex flex-col gap-6 bg-[#161B2D] rounded-xl border border-[#2E3652] p-6 text-white">
+    <div className="flex flex-col gap-6 bg-white dark:bg-[#161B2D] rounded-xl border border-slate-200 dark:border-[#2E3652] p-6 text-slate-900 dark:text-white">
       <PreviewHeader />
 
       {/* ── Day / entry tabs — mirrors the Venue & ICTS preview tab pattern ── */}
@@ -216,8 +216,8 @@ export default function TransportPreview({ transportData = [] }) {
               onClick={() => setActiveTab(i)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
                 safeIndex === i
-                  ? "bg-purple-600 text-white"
-                  : "bg-[#1c1c34] text-gray-400 border border-[#2a2a45] hover:text-white"
+                  ? "bg-purple-600 text-slate-900 dark:text-white"
+                  : "bg-slate-50 dark:bg-[#1c1c34] text-slate-500 dark:text-gray-400 border border-slate-200 dark:border-[#2a2a45] hover:text-slate-900 dark:text-white"
               }`}
             >
               Trip {i + 1}
@@ -232,7 +232,7 @@ export default function TransportPreview({ transportData = [] }) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Pickup Card */}
-            <div className="bg-[#252C3F]  rounded-xl px-6 py-5">
+            <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
               <div className="flex items-center">
 
                 <InfoBlock
@@ -241,7 +241,7 @@ export default function TransportPreview({ transportData = [] }) {
                   value={formatDate(form.pickupDate)}
                 />
 
-                <div className="mx-6 h-14 w-px bg-[#454D67]" />
+                <div className="mx-6 h-14 w-px bg-slate-50 dark:bg-[#454D67]" />
 
                 <InfoBlock
                   icon={Clock}
@@ -253,7 +253,7 @@ export default function TransportPreview({ transportData = [] }) {
             </div>
 
             {/* Drop Card */}
-            <div className="bg-[#252C3F] rounded-xl px-6 py-5">
+            <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
               <div className="flex items-center">
 
                 <InfoBlock
@@ -262,7 +262,7 @@ export default function TransportPreview({ transportData = [] }) {
                   value={formatDate(form.dropDate)}
                 />
 
-                <div className="mx-6 h-14 w-px bg-[#454D67]" />
+                <div className="mx-6 h-14 w-px bg-slate-50 dark:bg-[#454D67]" />
 
                 <InfoBlock
                   icon={Clock}
@@ -324,7 +324,7 @@ export default function TransportPreview({ transportData = [] }) {
                   {r < rowsArr.length - 1 && (
                     <div className={`flex w-full ${isEven ? "justify-end" : "justify-start"}`}>
                       <div className="w-[280px] h-8 flex justify-center items-center">
-                        <div className="h-full border-l-2 border-dashed border-[#62658B]" />
+                        <div className="h-full border-l-2 border-dashed border-slate-200 dark:border-[#62658B]" />
                       </div>
                     </div>
                   )}
@@ -335,7 +335,7 @@ export default function TransportPreview({ transportData = [] }) {
         </Card>
 
         {/* Row 3: Total members / Vehicle types needed */}
-        <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-6">
+        <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
           <div className="flex flex-col md:flex-row">
 
             <div className="flex-1">
@@ -367,13 +367,13 @@ export default function TransportPreview({ transportData = [] }) {
 
         {/* Row 4: Vehicle counts, 2 per row */}
         {vehicleTypes.length > 0 && (
-        <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-6">
+        <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-6">
           <div className="space-y-5">
             {chunkPairs(vehicleTypes).map((row, ri) => (
               <div
                 key={ri}
                 className={`flex flex-col md:flex-row ${
-                  ri > 0 ? "pt-5 border-t border-[#3A415E]" : ""
+                  ri > 0 ? "pt-5 border-t border-slate-200 dark:border-[#3A415E]" : ""
                 }`}
               >
                 {row.map((type, i) => (
@@ -398,7 +398,7 @@ export default function TransportPreview({ transportData = [] }) {
           staffMembers.map((staff, idx) => (
             <Card
               key={idx}
-              className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5"
+              className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5"
             >
               <div className="flex flex-col md:flex-row">
 
@@ -413,7 +413,7 @@ export default function TransportPreview({ transportData = [] }) {
                       Accompanying Staff Name
                     </p>
 
-                    <p className="text-[15px] font-semibold text-white mt-1">
+                    <p className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
                       {staff.name?.trim() || "—"}
                     </p>
                   </div>
@@ -433,7 +433,7 @@ export default function TransportPreview({ transportData = [] }) {
                       Accompanying Mobile Number
                     </p>
 
-                    <p className="text-[15px] font-semibold text-white mt-1">
+                    <p className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
                       {staff.mobile || "—"}
                     </p>
                   </div>
@@ -444,7 +444,7 @@ export default function TransportPreview({ transportData = [] }) {
             </Card>
           ))
         ) : (
-          <Card className="bg-[#252C3F] border border-[#343C59] rounded-xl px-6 py-5">
+          <Card className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-6 py-5">
             <div className="flex flex-col md:flex-row">
 
               <div className="flex-1 flex gap-4">
@@ -458,7 +458,7 @@ export default function TransportPreview({ transportData = [] }) {
                     Accompanying Staff Name
                   </p>
 
-                  <p className="text-[15px] font-semibold text-white mt-1">
+                  <p className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
                     —
                   </p>
                 </div>
@@ -478,7 +478,7 @@ export default function TransportPreview({ transportData = [] }) {
                     Accompanying Mobile Number
                   </p>
 
-                  <p className="text-[15px] font-semibold text-white mt-1">
+                  <p className="text-[15px] font-semibold text-slate-900 dark:text-white mt-1">
                     —
                   </p>
                 </div>
@@ -490,15 +490,15 @@ export default function TransportPreview({ transportData = [] }) {
         )}
 
         {/* Row 6: Special requirements */}
-        <div className="bg-[#252C3F] border border-[#343C59] rounded-xl px-5 py-4">
+        <div className="bg-slate-50 dark:bg-[#20263B] border border-slate-200 dark:border-[#343C59] rounded-xl px-5 py-4">
         <Card>
           <div className="flex items-center gap-2 mb-2">
             <FileText size={15} className="text-purple-400" />
-            <p className="text-sm font-semibold text-white">
+            <p className="text-sm font-semibold text-slate-900 dark:text-white">
               Special Requirement
             </p>
           </div>
-          <p className="text-sm text-gray-400 leading-relaxed">
+          <p className="text-sm text-slate-500 dark:text-gray-400 leading-relaxed">
             {form.specialRequirements?.trim() ||
               "No special requirements specified."}
           </p>
