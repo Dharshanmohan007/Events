@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  Trash2,
   Mail,
   Phone,
   UserRound,
@@ -96,6 +97,7 @@ const EventsExpenditureDetailView = () => {
   const [expenditureOverAllData, setExpenditureOverAllData] = useState(null);
   const [expenditureToBeShown, setExpenditureToBeShown] = useState(null);
   const [isApproving, setIsApproving] = useState(false);
+  const [isResettingClosing, setIsResettingClosing] = useState(false);
 
   //   -------------------- functions ----------------
 
@@ -184,6 +186,29 @@ const EventsExpenditureDetailView = () => {
     }
   };
 
+  const handleResetClosing = async () => {
+    setIsResettingClosing(true);
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_API_BASE_URL}/api/events/${eventId}/reset-closing`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      toast.success("Expenditure closing reset successfully");
+      navigate("/dashboard-admin/expenditures");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to reset expenditure closing",
+      );
+      console.error("Error resetting expenditure closing:", error);
+    } finally {
+      setIsResettingClosing(false);
+    }
+  };
+
   //  -------------------------- useEffect's -----------------
   useEffect(() => {
     getDocuments();
@@ -217,43 +242,59 @@ const EventsExpenditureDetailView = () => {
             </span>
 
             {role?.toLowerCase() !== "faculty" && (
-              <button
-                type="button"
-                onClick={() =>
-                  navigate(`/dashboard-admin/expenditures/edit/${eventId}`)
-                }
-                className="ml-1 flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
-              >
-                <Pencil size={14} strokeWidth={2} />
-              </button>
+              <div className="ml-1 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(`/dashboard-admin/expenditures/edit/${eventId}`)
+                  }
+                  title="Edit expenditure"
+                  aria-label="Edit expenditure"
+                  className="flex h-[26px] w-[26px] items-center justify-center rounded-[3px] bg-[#172137] text-[#00c99a] transition hover:bg-[#202b43]"
+                >
+                  <Pencil size={14} strokeWidth={2} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetClosing}
+                  disabled={isResettingClosing}
+                  title="Delete expenditure"
+                  aria-label="Delete expenditure"
+                  className="flex h-[26px] w-[26px] items-center justify-center rounded-[3px] border border-red-500/50 bg-red-500/10 text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Trash2 size={14} strokeWidth={2} />
+                </button>
+              </div>
             )}
           </div>
 
-          {/* Approve button */}
+          {/* Pending expenditure actions */}
           {role.toLowerCase() !== "faculty" &&
             overAllData?.eventId?.documentExpenditureApproved == false && (
-              <button
-                type="button"
-                onClick={handleAdminApprove}
-                disabled={isApproving}
-                className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[3px] bg-linear-to-r from-emerald-700 to-emerald-900 px-4 text-[14px] font-medium text-white transition hover:bg-[#009f89] disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isApproving ? (
-                  <>
-                    <Loader2
-                      size={16}
-                      strokeWidth={2.5}
-                      className="animate-spin"
-                    />
-                    Approving...
-                  </>
-                ) : (
-                  <>
-                    <Check size={16} strokeWidth={2.5} />
-                    Approve
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleAdminApprove}
+                  disabled={isApproving}
+                  className="flex h-[34px] cursor-pointer items-center gap-1.5 rounded-[3px] bg-linear-to-r from-emerald-700 to-emerald-900 px-4 text-[14px] font-medium text-white transition hover:bg-[#009f89] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isApproving ? (
+                    <>
+                      <Loader2
+                        size={16}
+                        strokeWidth={2.5}
+                        className="animate-spin"
+                      />
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <Check size={16} strokeWidth={2.5} />
+                      Approve
+                    </>
+                  )}
+                </button>
+              </div>
             )}
 
           {overAllData?.eventId?.documentExpenditureApproved && (
