@@ -225,7 +225,7 @@ const EventsAttendingDetailView = ({ data }) => {
           </div>
           {data?.superAdminApproval?.status?.toLowerCase() === "approved" && (
             <Link
-              to={`/dashboard-faculty/IndividualDocumentUpload/${eventId}`}
+              to={`/dashboard-faculty/EventAttendingIndividualDocumentUpload/${eventId}`}
               className="cursor-pointer rounded-lg bg-emerald-800 px-4 py-2 text-white"
             >
               Close

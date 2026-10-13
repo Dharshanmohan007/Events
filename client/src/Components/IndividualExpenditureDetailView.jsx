@@ -33,6 +33,11 @@ const EventRequestDetails = () => {
       ""
     ).toLowerCase();
 
+    if (moduleName.includes("eventattending") || moduleName.includes("event attending")) {
+      navigate(`/dashboard-faculty/EventAttendingIndividualDocumentUpload/${requestId}`);
+      return;
+    }
+
     if (moduleName.includes("media")) {
       navigate(`/dashboard-faculty/MediaIndividualDocumentUpload/${requestId}`);
       return;
@@ -742,7 +747,7 @@ const EventRequestDetails = () => {
 
               <div>
                 <label className="mb-[8px] block text-[12px] font-medium text-[#e7ebf5]">
-                  Upload (if have any supporting document )
+                  Upload
                 </label>
                 <div className="rounded-[10px] border-2 border-dashed border-[#4b5670] bg-[#111b2e] px-[20px] py-[22px] text-center text-[#c7d0e0]">
                   <div className="mb-[8px] flex justify-center text-[#dfe6f5]">
