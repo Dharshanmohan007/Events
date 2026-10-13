@@ -11,6 +11,7 @@ export default function IndividualDocumentUpload({
   const navigate = useNavigate();
   const requestKey = (() => {
     const label = String(requestType || "").toLowerCase();
+    if (label.includes("attend")) return "eventattending";
     if (label.includes("purchase")) return "purchase";
     if (label.includes("transport")) return "transport";
     if (label.includes("media")) return "media";

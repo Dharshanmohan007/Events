@@ -668,6 +668,17 @@ function AppRoutes() {
         }
       />
       <Route
+        path="/dashboard-faculty/EventAttendingIndividualDocumentUpload/:eventId"
+        element={
+          <ProtectedRoute>
+            <IndividualDocumentUpload
+              requestType="Events Attended"
+              sectionTitle="Events Attended Details"
+            />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/dashboard-faculty/PurchaseIndividualDocumentUpload/:eventId"
         element={
           <ProtectedRoute>
