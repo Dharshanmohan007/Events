@@ -217,11 +217,40 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                         onChange={(e) => handleBillChange(categoryKey, index, 'billDate', e.target.value)}
                       />
                     </div>
-                    <FloatingInput
-                      label="Guest name *"
-                      value={bill.vendorGuestName || ''}
-                      onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
-                    />
+                    {categoryKey === 'food' ? (
+                      <div className="relative">
+                        <select
+                          value={['Zenith Catering', 'fortune flavours', 'SS'].includes(bill.vendorGuestName) ? bill.vendorGuestName : bill.vendorGuestName ? 'Other' : ''}
+                          onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
+                          className="peer w-full bg-transparent border border-gray-700 rounded-md px-3 pt-5 pb-2 text-sm text-white focus:border-[#8B5CF6]"
+                        >
+                          <option value="" className="bg-[#151d31]">Select vendor</option>
+                          <option value="Zenith Catering" className="bg-[#151d31]">Zenith Catering</option>
+                          <option value="fortune flavours" className="bg-[#151d31]">fortune flavours</option>
+                          <option value="SS" className="bg-[#151d31]">SS</option>
+                          <option value="Other" className="bg-[#151d31]">Other</option>
+                        </select>
+                        <label className="absolute top-[-8px] left-3 bg-[#151d31] px-1 text-[11px] text-white pointer-events-none">
+                          Guest Name / Vendor *
+                        </label>
+                        {(bill.vendorGuestName === 'Other' || (bill.vendorGuestName && !['Zenith Catering', 'fortune flavours', 'SS'].includes(bill.vendorGuestName))) && (
+                          <input
+                            type="text"
+                            value={bill.vendorGuestName === 'Other' ? '' : bill.vendorGuestName || ''}
+                            onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
+                            placeholder="Enter guest name or vendor"
+                            className="mt-3 w-full bg-transparent border border-gray-700 rounded-md px-3 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#8B5CF6]"
+                            aria-label="Guest Name / Vendor"
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <FloatingInput
+                        label="Guest Name / Vendor *"
+                        value={bill.vendorGuestName === 'Other' ? '' : bill.vendorGuestName || ''}
+                        onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
+                      />
+                    )}
                     <div className="relative">
                       <FloatingInput
                         label="Amount *"
