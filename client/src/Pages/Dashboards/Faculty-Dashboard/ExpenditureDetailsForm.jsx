@@ -220,7 +220,7 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                     {categoryKey === 'food' ? (
                       <div className="relative">
                         <select
-                          value={['Zenith Catering', 'fortune flavours', 'Sweety snacks'].includes(bill.vendorGuestName) ? bill.vendorGuestName : bill.vendorGuestName ? 'Other' : ''}
+                          value={['Zenith Catering', 'fortune flavours', 'SS'].includes(bill.vendorGuestName) ? bill.vendorGuestName : bill.vendorGuestName ? 'Other' : ''}
                           onChange={(e) => handleBillChange(categoryKey, index, 'vendorGuestName', e.target.value)}
                           className="peer w-full bg-transparent border border-gray-700 rounded-md px-3 pt-5 pb-2 text-sm text-white focus:border-[#8B5CF6]"
                         >
@@ -233,7 +233,7 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                         <label className="absolute top-[-8px] left-3 bg-[#151d31] px-1 text-[11px] text-white pointer-events-none">
                           Guest Name / Vendor *
                         </label>
-                        {(bill.vendorGuestName === 'Other' || (bill.vendorGuestName && !['Zenith Catering', 'fortune flavours', 'Sweety snacks'].includes(bill.vendorGuestName))) && (
+                        {(bill.vendorGuestName === 'Other' || (bill.vendorGuestName && !['Zenith Catering', 'fortune flavours', 'SS'].includes(bill.vendorGuestName))) && (
                           <input
                             type="text"
                             value={bill.vendorGuestName === 'Other' ? '' : bill.vendorGuestName || ''}
