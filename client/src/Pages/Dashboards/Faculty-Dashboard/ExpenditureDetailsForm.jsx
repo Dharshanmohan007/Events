@@ -226,8 +226,9 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                         >
                           <option value="" className="bg-[#151d31]">Select vendor</option>
                           <option value="Zenith Catering" className="bg-[#151d31]">Zenith Catering</option>
-                          <option value="fortune flavours" className="bg-[#151d31]">fortune flavours</option>
-                          <option value="SS" className="bg-[#151d31]">SS</option>
+                          <option value="Food Fantacy" className="bg-[#151d31]">Food Fantacy</option>
+                          <option value="Snacks street" className="bg-[#151d31]">Snacks Street</option>
+                          <option value="Cafe corner" className="bg-[#151d31]">Cafe corner</option>
                           <option value="Other" className="bg-[#151d31]">Other</option>
                         </select>
                         <label className="absolute top-[-8px] left-3 bg-[#151d31] px-1 text-[11px] text-white pointer-events-none">
