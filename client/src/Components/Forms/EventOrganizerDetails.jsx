@@ -426,78 +426,6 @@ export default function EventOrganizerDetails({
         </div>
       )}
 
-      {/* Budget & Finance */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div>
-          <CustomSelect
-            label="Is It approved in budget?"
-            required
-            value={budget}
-            onChange={setBudget}
-            options={["Yes", "No"]}
-            placeholder="Select an option"
-          />
-          {errors.budget && <p className="text-red-400 text-xs mt-1">{errors.budget}</p>}
-        </div>
-        <div>
-          <CustomSelect
-            label="Finance Required"
-            required
-            value={finance}
-            onChange={(value) => {
-              setFinance(value);
-
-              if (value === "No") {
-                setEstimatedBudget("");
-                setAdvanceAmount("");
-                setPurposeOfAdvance("");
-                setFundingSource([]);
-              }
-            }}
-            options={["Yes", "No"]}
-            placeholder="Select an option"
-          />
-          {errors.finance && <p className="text-red-400 text-xs mt-1">{errors.finance}</p>}
-        </div>
-        {finance === "Yes" && (
-          <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-          <div className="col-span-1 sm:col-span-2">
-            <CustomSelect
-              label="Funding Type"
-              required
-              value={fundingType}
-              onChange={handleFundingTypeChange}
-              options={["Institutional Fund", "Department Funding", "Both"]}
-              placeholder="Select funding type"
-            />
-            {fundingType === "Institutional Fund" || fundingType === "Both" ? (
-              <div className="mt-4">
-                <CustomInput
-                  label="Institutional Fund Amount"
-                  type="number"
-                  min="0"
-                  value={getFundingAmount("Institutional Fund")}
-                  onChange={(e) => updateFundingAmount("Institutional Fund", e.target.value)}
-                  placeholder="Enter institutional fund amount"
-                />
-              </div>
-            ) : null}
-            {fundingType === "Department Funding" || fundingType === "Both" ? (
-              <div className="mt-4">
-                <CustomInput
-                  label="Department Funding Amount"
-                  type="number"
-                  min="0"
-                  value={getFundingAmount("Department Funding")}
-                  onChange={(e) => updateFundingAmount("Department Funding", e.target.value)}
-                  placeholder="Enter department funding amount"
-                />
-              </div>
-            ) : null}
-          </div>
-
-          {/* Principal Approval Form Upload */}
       <div className="mb-7 sm:col-span-2">
         <label className="block mb-1 text-sm text-slate-800 dark:text-white">
           Principal Approval Form *
@@ -639,8 +567,8 @@ export default function EventOrganizerDetails({
           ───────────────────────────────────────────────────────────── */}
         <div className="mt-3 flex justify-end">
           <a
-            href="/templates/Principal_Approval_Form_Template.docx"
-            download="Principal_Approval_Form_Template.docx"
+            href="/templates/Principal_Approval_Form_Template.pdf"
+            download="Principal_Approval_Form_Template.pdf"
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 hover:text-purple-300 transition-colors text-xs font-medium"
             title="Download Principal Approval Form Template"
           >
@@ -664,6 +592,80 @@ export default function EventOrganizerDetails({
           </a>
         </div>
       </div>
+
+      {/* Budget & Finance */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+          <CustomSelect
+            label="Is It approved in budget?"
+            required
+            value={budget}
+            onChange={setBudget}
+            options={["Yes", "No"]}
+            placeholder="Select an option"
+          />
+          {errors.budget && <p className="text-red-400 text-xs mt-1">{errors.budget}</p>}
+        </div>
+        <div>
+          <CustomSelect
+            label="Finance Required"
+            required
+            value={finance}
+            onChange={(value) => {
+              setFinance(value);
+
+              if (value === "No") {
+                setEstimatedBudget("");
+                setAdvanceAmount("");
+                setPurposeOfAdvance("");
+                setFundingSource([]);
+              }
+            }}
+            options={["Yes", "No"]}
+            placeholder="Select an option"
+          />
+          {errors.finance && <p className="text-red-400 text-xs mt-1">{errors.finance}</p>}
+        </div>
+        {finance === "Yes" && (
+          <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <div className="col-span-1 sm:col-span-2">
+            <CustomSelect
+              label="Funding Type"
+              required
+              value={fundingType}
+              onChange={handleFundingTypeChange}
+              options={["Institutional Fund", "Department Funding", "Both"]}
+              placeholder="Select funding type"
+            />
+            {fundingType === "Institutional Fund" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Institutional Fund Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Institutional Fund")}
+                  onChange={(e) => updateFundingAmount("Institutional Fund", e.target.value)}
+                  placeholder="Enter institutional fund amount"
+                />
+              </div>
+            ) : null}
+            {fundingType === "Department Funding" || fundingType === "Both" ? (
+              <div className="mt-4">
+                <CustomInput
+                  label="Department Funding Amount"
+                  type="number"
+                  min="0"
+                  value={getFundingAmount("Department Funding")}
+                  onChange={(e) => updateFundingAmount("Department Funding", e.target.value)}
+                  placeholder="Enter department funding amount"
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Principal Approval Form Upload */}
+      
             {/* Estimated Event Budget */}
             <div>
               <div className="relative">
