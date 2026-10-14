@@ -226,6 +226,14 @@ const EventsAttendingDetailView = ({ data }) => {
           {data?.superAdminApproval?.status?.toLowerCase() === "approved" && (
             <Link
               to={`/dashboard-faculty/EventAttendingIndividualDocumentUpload/${eventId}`}
+              state={{
+                eventAttendingDetails: {
+                  foodRequired: data?.data?.foodRequired ?? data?.data?.food,
+                  participantNames: (Array.isArray(data?.data?.participants) ? data.data.participants : [])
+                    .map((participant) => participant?.name)
+                    .filter(Boolean),
+                },
+              }}
               className="cursor-pointer rounded-lg bg-emerald-800 px-4 py-2 text-white"
             >
               Close

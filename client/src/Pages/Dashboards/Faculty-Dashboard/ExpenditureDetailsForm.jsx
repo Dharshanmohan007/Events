@@ -266,7 +266,7 @@ const ExpenditureDetailsForm = ({ expenditureData, setExpenditureData, initialSe
                   {/* File Upload */}
                   <div className="mb-4">
                     <label className="block text-[11px] text-[#CBC3D7]/60 mb-2">
-                      Upload ( if have any supporting document )
+                      Upload
                     </label>
                     
                     {/* Show existing uploaded documents */}

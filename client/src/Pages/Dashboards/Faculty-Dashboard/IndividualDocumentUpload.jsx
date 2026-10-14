@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
@@ -8,7 +8,9 @@ export default function IndividualDocumentUpload({
   sectionTitle = "Expenditure Details",
 }) {
   const { eventId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
+  const eventAttendingDetails = location.state?.eventAttendingDetails;
   const requestKey = (() => {
     const label = String(requestType || "").toLowerCase();
     if (label.includes("attend")) return "eventattending";
@@ -17,8 +19,24 @@ export default function IndividualDocumentUpload({
     if (label.includes("media")) return "media";
     return "food";
   })();
+  const foodRequired = [true, "yes", "true"].includes(
+    typeof eventAttendingDetails?.foodRequired === "string"
+      ? eventAttendingDetails.foodRequired.trim().toLowerCase()
+      : eventAttendingDetails?.foodRequired,
+  );
+  const participantNames = Array.isArray(eventAttendingDetails?.participantNames)
+    ? eventAttendingDetails.participantNames.join(", ")
+    : "";
   const [foodDetails, setFoodDetails] = useState([
-    { name: "", billNo: "", billDate: "", vendor: "", amount: "", file: null, fileError: "" }
+    {
+      name: requestKey === "eventattending" && foodRequired ? "Food" : "",
+      billNo: "",
+      billDate: "",
+      vendor: requestKey === "eventattending" ? participantNames : "",
+      amount: "",
+      file: null,
+      fileError: "",
+    }
   ]);
   const [miscDetails, setMiscDetails] = useState([
     { name: "", billNo: "", billDate: "", vendor: "", amount: "", file: null, fileError: "" }
@@ -94,6 +112,15 @@ export default function IndividualDocumentUpload({
     if (!file) return;
 
     const change = section === "food" ? handleFoodChange : handleMiscChange;
+    const fileName = file.name || "";
+    const isPdf = fileName.toLowerCase().endsWith(".pdf") || file.type === "application/pdf";
+
+    if (!isPdf) {
+      change(index, "file", null);
+      change(index, "fileError", "Only PDF files are allowed");
+      return;
+    }
+
     if (file.size > 1024 * 1024) {
       change(index, "file", null);
       change(index, "fileError", "File is more than 1 MB");
@@ -159,6 +186,15 @@ export default function IndividualDocumentUpload({
     const invalidFile = [...foodDetails, ...miscDetails].find((item) => item.fileError);
     if (invalidFile) {
       setSubmitError(invalidFile.fileError);
+      return;
+    }
+
+    const missingUpload = [...foodDetails, ...miscDetails].find((item) => {
+      const hasEntry = item.name || item.billNo || item.billDate || item.vendor || item.amount;
+      return hasEntry && !item.file;
+    });
+    if (missingUpload) {
+      setSubmitError("Please upload a PDF file for each entered expenditure");
       return;
     }
 
@@ -337,7 +373,7 @@ export default function IndividualDocumentUpload({
             {/* File Upload */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-2">
-                Upload (if have any supporting document )
+                Upload <span className="text-red-400">*</span>
               </label>
               <label
                 onDragOver={(e) => e.preventDefault()}
@@ -366,6 +402,7 @@ export default function IndividualDocumentUpload({
                 )}
                 <input
                   type="file"
+                  accept=".pdf,application/pdf"
                   onChange={(e) => handleFileUpload(e.target.files?.[0], "food", index)}
                   className="hidden"
                 />
@@ -479,7 +516,7 @@ export default function IndividualDocumentUpload({
             {/* File Upload */}
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-2">
-                Upload (if have any supporting document )
+                Upload <span className="text-red-400">*</span>
               </label>
               <label
                 onDragOver={(e) => e.preventDefault()}
@@ -508,6 +545,7 @@ export default function IndividualDocumentUpload({
                 )}
                 <input
                   type="file"
+                  accept=".pdf,application/pdf"
                   onChange={(e) => handleFileUpload(e.target.files?.[0], "misc", index)}
                   className="hidden"
                 />
