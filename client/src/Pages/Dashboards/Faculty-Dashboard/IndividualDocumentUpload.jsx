@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import { Upload, Plus, Calendar, Trash2 } from "lucide-react";
+import { Upload, Plus, Calendar, Trash2, FileText, X } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
 export default function IndividualDocumentUpload({
@@ -46,6 +46,140 @@ export default function IndividualDocumentUpload({
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [requiredDocuments, setRequiredDocuments] = useState([]);
+  const [requiredDocumentFiles, setRequiredDocumentFiles] = useState({});
+  const [closingEventId, setClosingEventId] = useState(null);
+  const [closingDocumentId, setClosingDocumentId] = useState(null);
+  const [documentStep, setDocumentStep] = useState(requestKey === "eventattending");
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(requestKey === "eventattending");
+  const [documentLoadError, setDocumentLoadError] = useState("");
+
+  const toDocumentKey = (name) =>
+    name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_|_$/g, "");
+  const toDocumentFileRef = (document) =>
+    `doc_${toDocumentKey(document.name)}_file`;
+  const getDefaultEventAttendingDocuments = () => [
+    { order: 1, name: "Jio Tag Required Document" },
+    { order: 2, name: "Report Required Document" },
+    { order: 3, name: "Certificate Required Document" },
+  ];
+
+  useEffect(() => {
+    if (requestKey !== "eventattending" || !eventId) return;
+
+    const fetchRequiredDocuments = async () => {
+      setIsLoadingDocuments(true);
+      setDocumentLoadError("");
+
+      try {
+        const token = localStorage.getItem("token");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const requestResponse = await fetch(
+          `${API_BASE}/api/individual-submissions/getrequest/${eventId}`,
+          { headers },
+        );
+        const requestPayload = await requestResponse.json();
+        if (!requestResponse.ok) {
+          throw new Error(
+            requestPayload.message || "Failed to load the transport request",
+          );
+        }
+
+        const requestResult = requestPayload.data || requestPayload;
+        const request = Array.isArray(requestResult)
+          ? requestResult[0]
+          : requestResult;
+        const submission = request?.data || request || {};
+        const requestDetails = submission?.requestDetails || request?.requestDetails || {};
+        const eventDetails =
+          submission?.eventDetails ||
+          requestDetails?.eventDetails ||
+          requestDetails?.event ||
+          {};
+        const linkedEvent =
+          request?.eventId ||
+          request?.event?._id ||
+          submission?.eventId ||
+          submission?.event?._id ||
+          requestDetails?.eventId ||
+          requestDetails?.event?._id ||
+          eventDetails?._id ||
+          eventDetails?.id ||
+          submission?.event ||
+          request?.event;
+        const closingEventId = typeof linkedEvent === "object"
+          ? linkedEvent?._id || linkedEvent?.id
+          : linkedEvent;
+
+        let requiredData;
+        let existingClosingData = {};
+        let documents = [];
+
+        if (closingEventId) {
+          const [requiredResponse, uploadedResponse] = await Promise.all([
+            fetch(`${API_BASE}/api/events/documents/${closingEventId}`, { headers }),
+            fetch(`${API_BASE}/api/event-closing-documents/event/${closingEventId}`, { headers }),
+          ]);
+          const requiredPayload = await requiredResponse.json();
+          if (!requiredResponse.ok) {
+            throw new Error(requiredPayload.message || "Failed to load required documents");
+          }
+
+          const uploadedPayload = uploadedResponse.ok
+            ? await uploadedResponse.json()
+            : null;
+          if (!uploadedResponse.ok && uploadedResponse.status !== 404) {
+            const errorPayload = await uploadedResponse.json().catch(() => ({}));
+            throw new Error(errorPayload.message || "Failed to check uploaded documents");
+          }
+
+          requiredData = requiredPayload.data || requiredPayload;
+          existingClosingData = uploadedPayload?.data || uploadedPayload || {};
+          documents = requiredData.requiredDocuments || [];
+        } else {
+          const candidateLists = [
+            submission?.requiredDocuments,
+            submission?.data?.requiredDocuments,
+            requestDetails?.requiredDocuments,
+            eventDetails?.requiredDocuments,
+          ];
+          documents = candidateLists.find(
+            (candidate) => Array.isArray(candidate) && candidate.length,
+          ) || [];
+        }
+
+        documents = getDefaultEventAttendingDocuments();
+        documents = [...documents].sort(
+          (first, second) => first.order - second.order,
+        );
+
+        const uploadedDocuments = existingClosingData.documents || [];
+        const allDocumentsAlreadyUploaded = documents.every((requiredDocument) => {
+          const key = toDocumentKey(requiredDocument.name);
+          return uploadedDocuments.some((uploadedDocument) => (
+            uploadedDocument.label?.trim().toLowerCase() === requiredDocument.name?.trim().toLowerCase()
+            || (uploadedDocument.key && toDocumentKey(uploadedDocument.key) === key)
+          ));
+        });
+
+        setRequiredDocuments(documents);
+        setClosingEventId(closingEventId || eventId);
+        setClosingDocumentId(existingClosingData._id || null);
+        if (allDocumentsAlreadyUploaded) setDocumentStep(false);
+      } catch (error) {
+        console.error("Failed to load required transport documents:", error);
+        setDocumentLoadError(error.message || "Failed to load required documents");
+      } finally {
+        setIsLoadingDocuments(false);
+      }
+    };
+
+    fetchRequiredDocuments();
+  }, [eventId, requestKey]);
 
   const normalizeFormRow = (row = {}) => ({
     name: row?.expenseName || row?.name || row?.mediaName || "",
@@ -257,8 +391,235 @@ export default function IndividualDocumentUpload({
     }
   };
 
+  const handleRequiredDocumentSubmit = async () => {
+    const missingDocuments = requiredDocuments.filter(
+      (document) =>
+        !requiredDocumentFiles[toDocumentFileRef(document)],
+    );
+    if (missingDocuments.length) {
+      setSubmitError(
+        `Please upload all required documents. Missing: ${missingDocuments.map((document) => document.name).join(", ")}`,
+      );
+      return;
+    }
+
+    setSubmitError("");
+    setIsSubmitting(true);
+
+    try {
+      const invalidDocument = requiredDocuments.find((document) => {
+        const file = requiredDocumentFiles[toDocumentFileRef(document)];
+        return file && !(
+          file.type === "application/pdf"
+          || file.name.toLowerCase().endsWith(".pdf")
+        );
+      });
+      if (invalidDocument) {
+        throw new Error(`${invalidDocument.name} must be a PDF file.`);
+      }
+      const token = localStorage.getItem("token");
+      const documents = getDefaultEventAttendingDocuments().map((document) => ({
+        documentName: document.name,
+        documentUrl: "",
+      }));
+      const payload = {
+        event: closingEventId || eventId,
+        documents,
+      };
+
+      const response = await fetch(`${API_BASE}/api/individual-attendance/documents`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => ({}));
+        throw new Error(errorBody.message || "Unable to submit required documents");
+      }
+
+      const responsePayload = await response.json();
+      const savedDocuments = responsePayload?.data || responsePayload;
+      setClosingDocumentId(savedDocuments?._id || closingDocumentId);
+      setDocumentStep(false);
+      setSubmitSuccess("");
+    } catch (error) {
+      console.error("Failed to submit required transport documents:", error);
+      setSubmitError(error.message || "Unable to submit required documents");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-white p-8">
+      {documentStep ? (
+        <>
+          <div className="mb-6 text-sm text-slate-400">
+            <span>{requestType}</span> <span className="mx-2">›</span>{" "}
+            <span className="text-purple-300">Document Upload</span>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="mb-2 text-2xl font-bold">Upload Required Documents</h1>
+            <p className="text-xs text-slate-400">
+              Upload every required document and submit them before entering expenditure details.
+            </p>
+          </div>
+
+          {isLoadingDocuments ? (
+            <p className="py-12 text-center text-sm text-slate-400">
+              Loading required documents...
+            </p>
+          ) : documentLoadError ? (
+            <div className="py-8">
+              <p role="alert" className="text-sm text-red-400">
+                {documentLoadError}
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="mt-6 rounded border border-purple-600 px-4 py-2 text-sm font-medium text-purple-400 transition hover:bg-purple-600/10"
+              >
+                ← Back
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="mb-8 space-y-6">
+                {requiredDocuments.map((document) => {
+                  const fileRef = toDocumentFileRef(document);
+                  const file = requiredDocumentFiles[fileRef];
+
+                  return (
+                    <div key={fileRef}>
+                      <label
+                        htmlFor={fileRef}
+                        className="mb-3 block text-sm font-medium text-slate-200"
+                      >
+                        {document.order}. {document.name}
+                        <span className="ml-1 text-red-400">*</span>
+                      </label>
+                      <div
+                        onDragOver={(event) => event.preventDefault()}
+                        onDrop={(event) => {
+                          event.preventDefault();
+                          const droppedFile = event.dataTransfer.files?.[0];
+                          if (droppedFile) {
+                            if (
+                              droppedFile.type === "application/pdf"
+                              || droppedFile.name.toLowerCase().endsWith(".pdf")
+                            ) {
+                              setRequiredDocumentFiles((currentFiles) => ({
+                                ...currentFiles,
+                                [fileRef]: droppedFile,
+                              }));
+                              setSubmitError("");
+                            } else {
+                              setSubmitError("Only PDF files are allowed.");
+                            }
+                          }
+                        }}
+                        className="flex min-h-[68px] items-center justify-center gap-2 rounded-md border border-dashed border-slate-700 bg-[#151d31] px-5 py-4 text-sm text-slate-300 hover:border-purple-500"
+                      >
+                        <label
+                          htmlFor={fileRef}
+                          className="flex cursor-pointer items-center justify-center gap-2"
+                        >
+                          {file ? (
+                            <>
+                              <FileText size={17} className="shrink-0 text-purple-400" />
+                              <span className="max-w-[70%] truncate">{file.name}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload size={17} className="text-slate-400" />
+                              <span>
+                                Drag and drop the file here or{" "}
+                                <span className="text-purple-400">choose file</span>
+                              </span>
+                            </>
+                          )}
+                        </label>
+                        <input
+                          id={fileRef}
+                          type="file"
+                          accept=".pdf,application/pdf"
+                          className="hidden"
+                          onChange={(event) => {
+                            const selectedFile = event.target.files?.[0];
+                            if (selectedFile) {
+                              if (
+                                selectedFile.type === "application/pdf"
+                                || selectedFile.name.toLowerCase().endsWith(".pdf")
+                              ) {
+                                setRequiredDocumentFiles((currentFiles) => ({
+                                  ...currentFiles,
+                                  [fileRef]: selectedFile,
+                                }));
+                                setSubmitError("");
+                              } else {
+                                event.target.value = "";
+                                setSubmitError("Only PDF files are allowed.");
+                              }
+                            }
+                          }}
+                        />
+                        {file && (
+                          <button
+                            type="button"
+                            aria-label={`Remove ${document.name}`}
+                            onClick={() => {
+                              setRequiredDocumentFiles((currentFiles) => {
+                                const nextFiles = { ...currentFiles };
+                                delete nextFiles[fileRef];
+                                return nextFiles;
+                              });
+                              const input = window.document.getElementById(fileRef);
+                              if (input) input.value = "";
+                            }}
+                            className="ml-2 text-red-400 hover:text-red-300"
+                          >
+                            <X size={17} />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {submitError && (
+                <p role="alert" className="mb-4 text-sm text-red-400">
+                  {submitError}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="rounded border border-purple-600 px-4 py-2 text-sm font-medium text-purple-400 transition hover:bg-purple-600/10"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRequiredDocumentSubmit}
+                  disabled={isSubmitting || isLoadingDocuments || !!documentLoadError}
+                  className="rounded bg-purple-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isSubmitting ? "Loading..." : "Submit"}
+                </button>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
       {/* Breadcrumb */}
       <div className="mb-6 text-sm text-slate-400">
         <span>{requestType}</span> <span className="mx-2">›</span> <span>Expenditure Details</span>
@@ -577,7 +938,11 @@ export default function IndividualDocumentUpload({
         </p>
       )}
       <div className="flex justify-between items-center">
-        <button className="border border-purple-600 text-purple-500 hover:bg-purple-600/10 px-4 py-2 rounded text-sm font-medium transition">
+        <button
+          type="button"
+          onClick={requestKey === "eventattending" ? () => setDocumentStep(true) : undefined}
+          className="border border-purple-600 text-purple-500 hover:bg-purple-600/10 px-4 py-2 rounded text-sm font-medium transition"
+        >
           ← Back
         </button>
         <button
@@ -595,6 +960,8 @@ export default function IndividualDocumentUpload({
               : "Continue →"}
         </button>
       </div>
+        </>
+      )}
     </div>
   );
 }
