@@ -26,7 +26,7 @@ const EventsAttendingDetailView = ({ data }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const role = token ? jwtDecode(token)?.role?.toLowerCase() : "";
-  const isAdmin = ["admin", "super admin 1", "super admin 2"].includes(role);
+  const isAdmin = ["admin", "super admin 1", "super admin 2", "super admin 3"].includes(role);
   const [actionLoading, setActionLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");

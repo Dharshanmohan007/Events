@@ -3,6 +3,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Upload, Plus, Calendar, Trash2, FileText, X } from "lucide-react";
 import { API_BASE } from "../../../utils/apiConfig";
 
+const isSupportedRequiredDocument = (file) =>
+  file.type === "application/pdf" ||
+  file.type === "image/jpeg" ||
+  /\.(pdf|jpe?g)$/i.test(file.name);
+
 export default function IndividualDocumentUpload({
   requestType = "Expenditure Request",
   sectionTitle = "Expenditure Details",
@@ -10,6 +15,7 @@ export default function IndividualDocumentUpload({
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const documentsSubmittedKey = `individual-attendance-documents-submitted-${eventId}`;
   const eventAttendingDetails = location.state?.eventAttendingDetails;
   const requestKey = (() => {
     const label = String(requestType || "").toLowerCase();
@@ -50,7 +56,10 @@ export default function IndividualDocumentUpload({
   const [requiredDocumentFiles, setRequiredDocumentFiles] = useState({});
   const [closingEventId, setClosingEventId] = useState(null);
   const [closingDocumentId, setClosingDocumentId] = useState(null);
-  const [documentStep, setDocumentStep] = useState(requestKey === "eventattending");
+  const [documentStep, setDocumentStep] = useState(
+    requestKey === "eventattending" &&
+      !localStorage.getItem(documentsSubmittedKey),
+  );
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(requestKey === "eventattending");
   const [documentLoadError, setDocumentLoadError] = useState("");
 
@@ -114,6 +123,21 @@ export default function IndividualDocumentUpload({
         const closingEventId = typeof linkedEvent === "object"
           ? linkedEvent?._id || linkedEvent?.id
           : linkedEvent;
+        const attendanceEventId = closingEventId || eventId;
+
+        const attendanceResponse = await fetch(
+          `${API_BASE}/api/individual-attendance/documents/${attendanceEventId}`,
+          { headers },
+        );
+        if (attendanceResponse.ok) {
+          localStorage.setItem(documentsSubmittedKey, "true");
+          setDocumentStep(false);
+        } else if (attendanceResponse.status !== 404) {
+          const attendanceError = await attendanceResponse.json().catch(() => ({}));
+          throw new Error(
+            attendanceError.message || "Failed to check uploaded attendance documents",
+          );
+        }
 
         let requiredData;
         let existingClosingData = {};
@@ -179,7 +203,7 @@ export default function IndividualDocumentUpload({
     };
 
     fetchRequiredDocuments();
-  }, [eventId, requestKey]);
+  }, [documentsSubmittedKey, eventId, requestKey]);
 
   const normalizeFormRow = (row = {}) => ({
     name: row?.expenseName || row?.name || row?.mediaName || "",
@@ -365,7 +389,6 @@ export default function IndividualDocumentUpload({
         if (item.file) formData.append("othersFiles", item.file, item.file.name);
       });
 
-      if (foodRows[0]?.file) formData.append(`${requestKey}File`, foodRows[0].file, foodRows[0].file.name);
       if (miscRows[0]?.file) formData.append("othersFile", miscRows[0].file, miscRows[0].file.name);
 
       const endpoint = isEditMode
@@ -409,42 +432,48 @@ export default function IndividualDocumentUpload({
     try {
       const invalidDocument = requiredDocuments.find((document) => {
         const file = requiredDocumentFiles[toDocumentFileRef(document)];
-        return file && !(
-          file.type === "application/pdf"
-          || file.name.toLowerCase().endsWith(".pdf")
-        );
+        return file && !isSupportedRequiredDocument(file);
       });
       if (invalidDocument) {
-        throw new Error(`${invalidDocument.name} must be a PDF file.`);
+        throw new Error(`${invalidDocument.name} must be a PDF or JPG file.`);
       }
       const token = localStorage.getItem("token");
-      const documents = getDefaultEventAttendingDocuments().map((document) => ({
-        documentName: document.name,
-        documentUrl: "",
-      }));
-      const payload = {
-        event: closingEventId || eventId,
-        documents,
-      };
+      const requiredDocumentsToSubmit = requiredDocuments;
+      if (!requiredDocumentsToSubmit.length) {
+        throw new Error("Please keep at least one required document.");
+      }
+      const formData = new FormData();
+      formData.append("event", closingEventId || eventId);
+      requiredDocumentsToSubmit.forEach((document) => {
+        const file = requiredDocumentFiles[toDocumentFileRef(document)];
+        formData.append(toDocumentFileRef(document), file, file.name);
+      });
 
       const response = await fetch(`${API_BASE}/api/individual-attendance/documents`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
+      const responsePayload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        const errorBody = await response.json().catch(() => ({}));
-        throw new Error(errorBody.message || "Unable to submit required documents");
+        const errorMessage = responsePayload.message || "Unable to submit required documents";
+        if (errorMessage.toLowerCase().includes("attendance documents already exist")) {
+          localStorage.setItem(documentsSubmittedKey, "true");
+          setClosingDocumentId(responsePayload?.data?._id || closingDocumentId);
+          setDocumentStep(false);
+          return;
+        }
+        throw new Error(errorMessage);
       }
 
-      const responsePayload = await response.json();
+      localStorage.setItem(documentsSubmittedKey, "true");
+      setDocumentStep(false);
+
       const savedDocuments = responsePayload?.data || responsePayload;
       setClosingDocumentId(savedDocuments?._id || closingDocumentId);
-      setDocumentStep(false);
       setSubmitSuccess("");
     } catch (error) {
       console.error("Failed to submit required transport documents:", error);
@@ -510,8 +539,7 @@ export default function IndividualDocumentUpload({
                           const droppedFile = event.dataTransfer.files?.[0];
                           if (droppedFile) {
                             if (
-                              droppedFile.type === "application/pdf"
-                              || droppedFile.name.toLowerCase().endsWith(".pdf")
+                              isSupportedRequiredDocument(droppedFile)
                             ) {
                               setRequiredDocumentFiles((currentFiles) => ({
                                 ...currentFiles,
@@ -519,7 +547,7 @@ export default function IndividualDocumentUpload({
                               }));
                               setSubmitError("");
                             } else {
-                              setSubmitError("Only PDF files are allowed.");
+                              setSubmitError("Only PDF or JPG files are allowed.");
                             }
                           }
                         }}
@@ -547,14 +575,13 @@ export default function IndividualDocumentUpload({
                         <input
                           id={fileRef}
                           type="file"
-                          accept=".pdf,application/pdf"
+                          accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg"
                           className="hidden"
                           onChange={(event) => {
                             const selectedFile = event.target.files?.[0];
                             if (selectedFile) {
                               if (
-                                selectedFile.type === "application/pdf"
-                                || selectedFile.name.toLowerCase().endsWith(".pdf")
+                                isSupportedRequiredDocument(selectedFile)
                               ) {
                                 setRequiredDocumentFiles((currentFiles) => ({
                                   ...currentFiles,
@@ -563,7 +590,7 @@ export default function IndividualDocumentUpload({
                                 setSubmitError("");
                               } else {
                                 event.target.value = "";
-                                setSubmitError("Only PDF files are allowed.");
+                                setSubmitError("Only PDF or JPG files are allowed.");
                               }
                             }
                           }}
@@ -571,8 +598,14 @@ export default function IndividualDocumentUpload({
                         {file && (
                           <button
                             type="button"
-                            aria-label={`Remove ${document.name}`}
+                            aria-label={`Delete ${document.name} row`}
                             onClick={() => {
+                              setRequiredDocuments((currentDocuments) =>
+                                currentDocuments.filter(
+                                  (currentDocument) =>
+                                    toDocumentFileRef(currentDocument) !== fileRef,
+                                ),
+                              );
                               setRequiredDocumentFiles((currentFiles) => {
                                 const nextFiles = { ...currentFiles };
                                 delete nextFiles[fileRef];
@@ -940,7 +973,7 @@ export default function IndividualDocumentUpload({
       <div className="flex justify-between items-center">
         <button
           type="button"
-          onClick={requestKey === "eventattending" ? () => setDocumentStep(true) : undefined}
+          onClick={requestKey === "eventattending" ? () => navigate(-1) : undefined}
           className="border border-purple-600 text-purple-500 hover:bg-purple-600/10 px-4 py-2 rounded text-sm font-medium transition"
         >
           ← Back

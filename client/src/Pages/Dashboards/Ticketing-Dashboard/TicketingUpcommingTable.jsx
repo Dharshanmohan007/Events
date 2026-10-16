@@ -66,15 +66,7 @@ const TicketingUpcommingTable = () => {
       const records = Array.isArray(result.data)
         ? result.data
         : result.data?.requests || result.data?.tickets || result.requests || [];
-      const externalTransportRequests = records.filter((request) => {
-        const requestData = request?.data || request;
-        return (
-          requestData?.externalTransportRequired === true ||
-          request?.module?.toLowerCase() === "externaltransports" ||
-          request?.formType?.toLowerCase() === "externaltransport"
-        );
-      });
-      setIndividualTicketingData(externalTransportRequests);
+      setIndividualTicketingData(records);
     } catch (error) {
       setIndividualError(error.message || "Failed to fetch individual requests");
       setIndividualTicketingData([]);
@@ -330,7 +322,7 @@ const TicketingUpcommingTable = () => {
               <tr key={requestId || index} className="border-b border-[#202a3b] transition hover:bg-[#1a2435]">
                 <td className="px-2 py-3 text-[#d2d6de]">{requestDate ? new Date(requestDate).toLocaleDateString("en-GB").replaceAll("/", "-") : "-"}</td>
                 <td className="px-2 py-3 text-[#b0b7c5]">{employeeName}</td>
-                <td className="px-2 py-3 text-[#b0b7c5]">{request?.requestNo || "External Transport"}</td>
+                <td className="px-2 py-3 text-[#b0b7c5]">{request?.requestNo || "Individual Request"}</td>
                 <td className="px-2 py-3 text-[#b0b7c5]">{employee?.department || requestData?.departmentCode || request?.department || "-"}</td>
 
                 <td className="px-2 py-2">
