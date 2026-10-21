@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import smallLogo from "../../../assets/small-logo.svg";
 import { NavLink } from "react-router-dom";
 import LogoutButton from "../../../Components/LogoutButton";
-import { useAuth } from "../../../Components/AuthContext";
+import ChangePasswordModal from "../../../Components/ChangePasswordModal";
+import { Lock } from "lucide-react";
 
 const adminRoutes = {
   dashboard: "/dashboard-admin",
@@ -22,7 +23,7 @@ const getNavLinkClassName = ({ isActive }) =>
   `font-medium ${isActive ? "border-b border-[#8B5CF6] text-[#8B5CF6]" : "text-[#FFFFFF80]"}`;
 
 const AdminDashboardHeader = () => {
-  const { isAdminSecretary } = useAuth();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
 
   return (
     <>
@@ -72,9 +73,24 @@ const AdminDashboardHeader = () => {
           </div>
         </div>
         <div className="second-container flex items-center gap-6 ">
+          <button
+            type="button"
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="relative group flex items-center justify-center rounded-full p-2 transition hover:bg-[#1d2638]"
+            aria-label="Change password"
+          >
+            <Lock className="text-white cursor-pointer" />
+            <span className="absolute top-full left-1/2 mt-2 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white group-hover:block">
+              Change password
+            </span>
+          </button>
           <LogoutButton />
         </div>
       </section>
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
+      />
     </>
   );
 };
