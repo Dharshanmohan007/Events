@@ -132,7 +132,7 @@ export default function EventRequirements({
         </div>
 
         {/* Media - Full Width */}
-        <div className="w-full mb-6">
+        {/* <div className="w-full mb-6">
           <CustomSelect
             label={`${LABEL_MAP.media} Required *`}
             value={values.media}
@@ -145,7 +145,7 @@ export default function EventRequirements({
               {localErrors.media || errors.media}
             </p>
           )}
-        </div>
+        </div> */}
 
         {errors.requirements && (
           <p className="text-red-400 text-sm mb-4">{errors.requirements}</p>
