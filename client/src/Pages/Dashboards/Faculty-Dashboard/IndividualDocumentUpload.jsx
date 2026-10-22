@@ -25,6 +25,7 @@ export default function IndividualDocumentUpload({
     if (label.includes("media")) return "media";
     return "food";
   })();
+  const isAttendanceRequest = requestKey === "eventattending";
   const foodRequired = [true, "yes", "true"].includes(
     typeof eventAttendingDetails?.foodRequired === "string"
       ? eventAttendingDetails.foodRequired.trim().toLowerCase()
@@ -52,15 +53,14 @@ export default function IndividualDocumentUpload({
   const [submitSuccess, setSubmitSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [expenditureRecordId, setExpenditureRecordId] = useState(null);
   const [requiredDocuments, setRequiredDocuments] = useState([]);
   const [requiredDocumentFiles, setRequiredDocumentFiles] = useState({});
   const [closingEventId, setClosingEventId] = useState(null);
+  const [attendanceEventId, setAttendanceEventId] = useState(eventId);
   const [closingDocumentId, setClosingDocumentId] = useState(null);
-  const [documentStep, setDocumentStep] = useState(
-    requestKey === "eventattending" &&
-      !localStorage.getItem(documentsSubmittedKey),
-  );
-  const [isLoadingDocuments, setIsLoadingDocuments] = useState(requestKey === "eventattending");
+  const [documentStep, setDocumentStep] = useState(isAttendanceRequest);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(isAttendanceRequest);
   const [documentLoadError, setDocumentLoadError] = useState("");
 
   const toDocumentKey = (name) =>
@@ -78,7 +78,7 @@ export default function IndividualDocumentUpload({
   ];
 
   useEffect(() => {
-    if (requestKey !== "eventattending" || !eventId) return;
+    if (!isAttendanceRequest || !eventId) return;
 
     const fetchRequiredDocuments = async () => {
       setIsLoadingDocuments(true);
@@ -123,20 +123,24 @@ export default function IndividualDocumentUpload({
         const closingEventId = typeof linkedEvent === "object"
           ? linkedEvent?._id || linkedEvent?.id
           : linkedEvent;
-        const attendanceEventId = closingEventId || eventId;
+        const resolvedAttendanceEventId = closingEventId || eventId;
+        setAttendanceEventId(closingEventId || eventId);
 
-        const attendanceResponse = await fetch(
-          `${API_BASE}/api/individual-attendance/documents/${attendanceEventId}`,
-          { headers },
-        );
-        if (attendanceResponse.ok) {
-          localStorage.setItem(documentsSubmittedKey, "true");
-          setDocumentStep(false);
-        } else if (attendanceResponse.status !== 404) {
-          const attendanceError = await attendanceResponse.json().catch(() => ({}));
-          throw new Error(
-            attendanceError.message || "Failed to check uploaded attendance documents",
+        let attendanceDocumentsSubmitted = false;
+        if (isAttendanceRequest) {
+          const attendanceResponse = await fetch(
+            `${API_BASE}/api/individual-attendance/documents/${resolvedAttendanceEventId}`,
+            { headers },
           );
+          attendanceDocumentsSubmitted = attendanceResponse.ok;
+          if (attendanceResponse.ok) {
+            localStorage.setItem(documentsSubmittedKey, "true");
+          } else if (attendanceResponse.status !== 404) {
+            const attendanceError = await attendanceResponse.json().catch(() => ({}));
+            throw new Error(
+              attendanceError.message || "Failed to check uploaded attendance documents",
+            );
+          }
         }
 
         let requiredData;
@@ -148,8 +152,8 @@ export default function IndividualDocumentUpload({
             fetch(`${API_BASE}/api/events/documents/${closingEventId}`, { headers }),
             fetch(`${API_BASE}/api/event-closing-documents/event/${closingEventId}`, { headers }),
           ]);
-          const requiredPayload = await requiredResponse.json();
-          if (!requiredResponse.ok) {
+          const requiredPayload = await requiredResponse.json().catch(() => ({}));
+          if (!requiredResponse.ok && requiredResponse.status !== 404) {
             throw new Error(requiredPayload.message || "Failed to load required documents");
           }
 
@@ -176,13 +180,15 @@ export default function IndividualDocumentUpload({
           ) || [];
         }
 
-        documents = getDefaultEventAttendingDocuments();
+        if (isAttendanceRequest) {
+          documents = getDefaultEventAttendingDocuments();
+        }
         documents = [...documents].sort(
           (first, second) => first.order - second.order,
         );
 
         const uploadedDocuments = existingClosingData.documents || [];
-        const allDocumentsAlreadyUploaded = documents.every((requiredDocument) => {
+        const allDocumentsAlreadyUploaded = documents.length > 0 && documents.every((requiredDocument) => {
           const key = toDocumentKey(requiredDocument.name);
           return uploadedDocuments.some((uploadedDocument) => (
             uploadedDocument.label?.trim().toLowerCase() === requiredDocument.name?.trim().toLowerCase()
@@ -193,7 +199,9 @@ export default function IndividualDocumentUpload({
         setRequiredDocuments(documents);
         setClosingEventId(closingEventId || eventId);
         setClosingDocumentId(existingClosingData._id || null);
-        if (allDocumentsAlreadyUploaded) setDocumentStep(false);
+        setDocumentStep(
+          !attendanceDocumentsSubmitted && !allDocumentsAlreadyUploaded,
+        );
       } catch (error) {
         console.error("Failed to load required transport documents:", error);
         setDocumentLoadError(error.message || "Failed to load required documents");
@@ -217,11 +225,13 @@ export default function IndividualDocumentUpload({
 
   useEffect(() => {
     const fetchExistingData = async () => {
-      if (!eventId) return;
+      const expenditureEventId =
+        requestKey === "eventattending" ? attendanceEventId : eventId;
+      if (!expenditureEventId) return;
 
       try {
         const token = localStorage.getItem("token");
-        const response = await fetch(`${API_BASE}/api/individual/expenditure/${eventId}`, {
+        const response = await fetch(`${API_BASE}/api/individual/expenditure/${expenditureEventId}`, {
           method: "GET",
           headers: {
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -245,14 +255,16 @@ export default function IndividualDocumentUpload({
         if (sectionRows.length) setFoodDetails(sectionRows);
         if (miscRows.length) setMiscDetails(miscRows);
         if (data?.remarks || requestData?.remarks) setRemarks(data?.remarks || requestData?.remarks || "");
-        setIsEditMode(true);
+        const savedExpenditureId = requestData?._id;
+        setExpenditureRecordId(savedExpenditureId || null);
+        setIsEditMode(Boolean(savedExpenditureId && (sectionRows.length || miscRows.length)));
       } catch (error) {
         console.error("Failed to load individual expenditure for edit:", error);
       }
     };
 
     fetchExistingData();
-  }, [eventId, requestKey]);
+  }, [attendanceEventId, eventId, requestKey]);
 
   const handleFoodChange = (index, field, value) => {
     setFoodDetails((currentDetails) => currentDetails.map((item, itemIndex) => (
@@ -329,6 +341,8 @@ export default function IndividualDocumentUpload({
       return;
     }
 
+    const expenditureEventId =
+      requestKey === "eventattending" ? attendanceEventId : eventId;
     const hasDetails = (item) => (
       item.name || item.billNo || item.billDate || item.vendor || item.amount || item.file
     );
@@ -336,18 +350,35 @@ export default function IndividualDocumentUpload({
     const foodRows = getFilledRows(foodDetails);
     const miscRows = getFilledRows(miscDetails);
 
-    if (!foodRows.length && !miscRows.length) {
+    if (isAttendanceRequest && foodRows.some((item) => !item.name.trim())) {
+      setSubmitError("Expense name is required");
+      return;
+    }
+
+    if (isAttendanceRequest && foodRows.some((item) => (
+      !String(item.amount ?? "").trim() || !Number.isFinite(Number(item.amount))
+    ))) {
+      setSubmitError("Enter a valid amount");
+      return;
+    }
+
+    const hasExpenditureRows = isAttendanceRequest
+      ? foodRows.length > 0
+      : foodRows.length > 0 || miscRows.length > 0;
+    if (!hasExpenditureRows) {
       setSubmitError("Please enter at least one expenditure");
       return;
     }
 
-    const invalidFile = [...foodDetails, ...miscDetails].find((item) => item.fileError);
+    const submittedRows =
+      isAttendanceRequest ? foodDetails : [...foodDetails, ...miscDetails];
+    const invalidFile = submittedRows.find((item) => item.fileError);
     if (invalidFile) {
       setSubmitError(invalidFile.fileError);
       return;
     }
 
-    const missingUpload = [...foodDetails, ...miscDetails].find((item) => {
+    const missingUpload = submittedRows.find((item) => {
       const hasEntry = item.name || item.billNo || item.billDate || item.vendor || item.amount;
       return hasEntry && !item.file;
     });
@@ -361,14 +392,14 @@ export default function IndividualDocumentUpload({
       const token = localStorage.getItem("token");
       const formData = new FormData();
 
-      formData.append("requestId", eventId);
+      formData.append(isAttendanceRequest ? "eventId" : "requestId", expenditureEventId);
 
       const foodPayload = foodRows.map((item) => ({
         expenseName: item.name,
         billNo: item.billNo,
         billDate: item.billDate,
         vendorOrGuestName: item.vendor,
-        amount: item.amount,
+        amount: isAttendanceRequest ? Number(item.amount) : item.amount,
       }));
       const othersPayload = miscRows.map((item) => ({
         expenseName: item.name,
@@ -379,24 +410,30 @@ export default function IndividualDocumentUpload({
       }));
 
       formData.append(requestKey, JSON.stringify(foodPayload));
-      formData.append("others", JSON.stringify(othersPayload));
-      formData.append("remarks", remarks);
+      if (!isAttendanceRequest) {
+        formData.append("others", JSON.stringify(othersPayload));
+        formData.append("remarks", remarks);
+      }
 
       foodRows.forEach((item) => {
         if (item.file) formData.append(`${requestKey}Files`, item.file, item.file.name);
       });
-      miscRows.forEach((item) => {
-        if (item.file) formData.append("othersFiles", item.file, item.file.name);
-      });
+      if (!isAttendanceRequest) {
+        miscRows.forEach((item) => {
+          if (item.file) formData.append("othersFiles", item.file, item.file.name);
+        });
 
-      if (miscRows[0]?.file) formData.append("othersFile", miscRows[0].file, miscRows[0].file.name);
+        if (miscRows[0]?.file) formData.append("othersFile", miscRows[0].file, miscRows[0].file.name);
+      }
 
-      const endpoint = isEditMode
-        ? `${API_BASE}/api/individual/expenditure/${eventId}`
-        : `${API_BASE}/api/individual/expenditure`;
+      const endpoint = isAttendanceRequest
+        ? `${API_BASE}/api/individual/expenditure`
+        : isEditMode
+          ? `${API_BASE}/api/individual/expenditure/${expenditureEventId}`
+          : `${API_BASE}/api/individual/expenditure`;
 
       const response = await fetch(endpoint, {
-        method: isEditMode ? "PUT" : "POST",
+        method: isAttendanceRequest || !isEditMode ? "POST" : "PUT",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
@@ -406,7 +443,7 @@ export default function IndividualDocumentUpload({
         throw new Error(errorBody.message || "Unable to upload expenditure details");
       }
 
-      navigate(`/dashboard-faculty/feedback/${eventId}`);
+      navigate(`/dashboard-faculty/individual-feedback/${eventId}`);
     } catch (error) {
       setSubmitError(error.message || "Unable to upload expenditure details");
     } finally {
@@ -808,7 +845,7 @@ export default function IndividualDocumentUpload({
       </div>
 
       {/* Miscellaneous Section */}
-      <div className="mb-12">
+      {!isAttendanceRequest && <div className="mb-12">
         {miscDetails.map((item, index) => (
           <div key={index} className="mb-8 last:mb-0 bg-[#191D36] border border-slate-700/50 p-6 rounded-lg">
             {index === 0 && (
@@ -948,10 +985,10 @@ export default function IndividualDocumentUpload({
             </div>
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* Remarks */}
-      <div className="mb-8">
+      {!isAttendanceRequest && <div className="mb-8">
         <label className="block text-xs font-medium text-slate-300 mb-2">
           Remarks if any <span className=""></span>
         </label>
@@ -962,7 +999,7 @@ export default function IndividualDocumentUpload({
           rows="3"
           className="w-full border border-slate-700 rounded px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"
         ></textarea>
-      </div>
+      </div>}
 
       {/* Action Buttons */}
       {(submitError || submitSuccess) && (
