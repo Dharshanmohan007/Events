@@ -1,11 +1,12 @@
 // ── Settlement PDF Generator ────────────────────────────────────────────────
-// Populates the settlement_form_template.html with live data and exports
+// Populates the Settlement Form.html with live data and exports
 // it as a downloadable PDF using html2canvas + jsPDF.
 
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { API_BASE } from "./apiConfig.js";
-import settlementTemplateRaw from "../templates/settlement_form_template.html?raw";
+import settlementTemplateRaw from "../templates/Settlement Form.html?raw";
+import logoSvgRaw from "../assets/logo-black.svg?raw";
 
 /**
  * Fetch both settlement endpoints in parallel.
@@ -36,7 +37,7 @@ export async function fetchSettlementData(eventId, token) {
 
 /**
  * Read the settlement form HTML template as raw text.
- * Returns the full HTML string of src/templates/settlement_form_template.html.
+ * Returns the full HTML string of src/templates/Settlement Form.html.
  */
 async function fetchTemplateHtml() {
   // Use Vite's ?raw import to bundle the template directly into the JS.
@@ -110,6 +111,16 @@ function injectDataIntoTemplate(templateHtml, data) {
   // ── Replace the demo data objects with actual mapped data ───────────────
   let modified = templateHtml;
 
+  // Inject crisp vector logo into header
+  const styledLogoSvg = logoSvgRaw.replace(
+    /<svg\b/,
+    '<svg class="brand-logo" style="height: 34px; width: auto;"'
+  );
+  modified = modified.replace(
+    /<div class="logo"[^>]*>[\s\S]*?<\/div>/,
+    `<div class="logo" id="headerLogo">${styledLogoSvg}</div>`
+  );
+
   // Replace EXPENDITURE_CATEGORIES
   modified = modified.replace(
     /const EXPENDITURE_CATEGORIES = \[[\s\S]*?\];/,
@@ -134,7 +145,7 @@ function injectDataIntoTemplate(templateHtml, data) {
     `const SDG_DATA = ${sdgDataStr};`
   );
 
-  // ── Add a DOMContentLoaded listener to populate the info-table spans ───
+  // ── Add a DOMContentLoaded listener to populate dynamic fields ───
   const injectionScript = `
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -155,28 +166,75 @@ document.addEventListener("DOMContentLoaded", function() {
   setText("advanceAmount", ${JSON.stringify(data.advanceAmount)});
   setText("dateOfAdvance", ${JSON.stringify(data.dateOfAdvance)});
   setText("purposeOfAdvance", ${JSON.stringify(data.purposeOfAdvance)});
-  setText("cornerCode", ${JSON.stringify(data.cornerCode)});
+  setText("cornerCode", ${JSON.stringify(data.cornerCode || data.iqacNumber)});
 
   // ── Populate totals ──────────────────────────────────────────────────
-  setText("totalAmount", ${JSON.stringify(String(data.totalAmount))});
-  setText("advanceTaken", ${JSON.stringify(String(data.advanceTaken))});
-  setText("netClaim", ${JSON.stringify(String(data.netClaim))});
-  setText("totalFund", ${JSON.stringify(
-    String(data.incomeRows.reduce((sum, r) => {
+  var totalAmtNum = ${JSON.stringify(Number(data.totalAmount) || 0)};
+  var advanceTkNum = ${JSON.stringify(Number(data.advanceTaken) || 0)};
+  var totalAmt = totalAmtNum ? totalAmtNum.toLocaleString("en-IN") : "0";
+  var advanceTk = advanceTkNum ? advanceTkNum.toLocaleString("en-IN") : "0";
+
+  // Total Fund (A) = Advance Amount + Registration Fees + Sponsorship + Department Fund + Other Sources if Any (Institutional Amount excluded)
+  var incomeRowsSum = ${JSON.stringify(
+    data.incomeRows.reduce((sum, r) => {
       const v = parseFloat(String(r.amount).replace(/,/g, ""));
       return sum + (isNaN(v) ? 0 : v);
-    }, 0))
-  )});
+    }, 0)
+  )};
+  var totFundNum = advanceTkNum + incomeRowsSum;
+  var totFund = totFundNum.toLocaleString("en-IN");
 
-  // ── Populate remarks cell ────────────────────────────────────────────
-  var remarksCell = document.getElementById("remarksCell");
+  // Net Claim (B - A) = Total Amount (B) - Total Fund (A)
+  var netClNum = totalAmtNum - totFundNum;
+  var netCl = netClNum.toLocaleString("en-IN");
+
+  setText("totalAmount", totalAmt);
+  setText("advanceTaken", advanceTk);
+  setText("netClaim", netCl);
+  setText("totalFund", totFund);
+
+  // ── Populate Refunded / To be Received ──────────────────────────────
+  var refundedStatusEl = document.getElementById("refundedStatus");
+  var refundedLabelEl = document.getElementById("refundedLabel");
+  if (refundedStatusEl) {
+    if (netClNum < 0) {
+      if (refundedLabelEl) refundedLabelEl.textContent = "Repay (To Institute) :";
+      refundedStatusEl.textContent = Math.abs(netClNum).toLocaleString("en-IN");
+    } else if (netClNum > 0) {
+      if (refundedLabelEl) refundedLabelEl.textContent = "To be Received :";
+      refundedStatusEl.textContent = netClNum.toLocaleString("en-IN");
+    } else {
+      if (refundedLabelEl) refundedLabelEl.textContent = "Refunded / To be Received :";
+      refundedStatusEl.textContent = "0";
+    }
+  }
+
+  // If advance amount row exists in income table:
+  var advEl = document.getElementById("incomeAdvAmount");
+  if (advEl && (!advEl.textContent || advEl.textContent.trim() === "" || advEl.textContent.trim() === "-") && advanceTk) {
+    advEl.textContent = advanceTk;
+  }
+
+  // ── Populate remarks row ─────────────────────────────────────────────
+  var remarksText = document.getElementById("remarksText");
   var remarksData = ${JSON.stringify(data.remarks || "")};
-  if (remarksCell) {
+  if (remarksText) {
+    remarksText.textContent = (remarksData && remarksData.toUpperCase() !== "NA") ? ": " + remarksData : "";
+  }
+  var remarksCell = document.getElementById("remarksCell");
+  if (remarksCell && !remarksText) {
     var remarksHtml = (remarksData && remarksData.toUpperCase() !== "NA") ? '<div style="font-size:10px; margin-top:4px;">' + remarksData + '</div>' : '';
     remarksCell.innerHTML = '<div style="font-weight:bold; font-size:11px;">Remarks</div>' + remarksHtml;
   }
 
-  // ── Populate outcomes cell ───────────────────────────────────────────
+  // ── Populate closed against advance ──────────────────────────────────
+  var advanceTakenNum = ${JSON.stringify(Number(data.advanceTaken) || 0)};
+  var closedAdvanceStatus = document.getElementById("closedAdvanceStatus");
+  if (closedAdvanceStatus) {
+    closedAdvanceStatus.innerHTML = advanceTakenNum > 0 ? "<b>Yes</b>" : "No";
+  }
+
+  // ── Populate outcomes cell (if present) ──────────────────────────────
   var outcomesCell = document.getElementById("outcomesCell");
   var aboutProgram = ${JSON.stringify(data.aboutProgram || "")};
   if (outcomesCell) {
@@ -193,27 +251,124 @@ document.addEventListener("DOMContentLoaded", function() {
 }
 
 /**
- * Main entry point: fetch data, map it, generate and download the PDF.
+ * Fetch data, map it, and return the fully populated HTML document string
+ * along with the mapped data object for live preview.
  *
- * @param {string} eventId       – MongoDB ObjectId of the event
- * @param {string} token         – Bearer auth token
- * @param {Function} mapper     – mapSettlementData function (imported separately)
- * @returns {Promise<void>}
+ * @param {string} eventId
+ * @param {string} token
+ * @param {Function} mapper
+ * @returns {Promise<{ populatedHtml: string, data: Object }>}
  */
-export async function generateSettlementPdf(eventId, token, mapper) {
-  // ── Step 1: Fetch both endpoints in parallel ───────────────────────────
+export async function getSettlementFormPreviewHtml(eventId, token, mapper) {
+  // Step 1: Fetch both endpoints in parallel
   const [expenditureRes, closingDocRes] = await fetchSettlementData(eventId, token);
 
-  // ── Step 2: Map API data to template format ────────────────────────────
+  // Step 2: Map API data to template format
   const data = mapper(expenditureRes, closingDocRes);
 
-  // ── Step 3: Read the HTML template ─────────────────────────────────────
+  // Step 3: Read the HTML template
   const templateHtml = await fetchTemplateHtml();
 
-  // ── Step 4: Inject data into the template ──────────────────────────────
+  // Step 4: Inject data into the template
   const populatedHtml = injectDataIntoTemplate(templateHtml, data);
 
-  // ── Step 5: Render in a hidden iframe ──────────────────────────────────
+  return { populatedHtml, data };
+}
+
+/**
+ * Open the populated Settlement Form in a new browser tab for preview/printing.
+ *
+ * @param {string} eventId
+ * @param {string} token
+ * @param {Function} mapper
+ * @returns {Promise<void>}
+ */
+export async function openSettlementFormInNewTab(eventId, token, mapper) {
+  // Synchronously open a new tab immediately on user click to prevent popup blockers
+  const newTab = window.open("about:blank", "_blank");
+  if (newTab) {
+    newTab.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Loading Settlement Form...</title>
+          <style>
+            body {
+              margin: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              background: #f8fafc;
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #334155;
+            }
+            .loader {
+              border: 3px solid #e2e8f0;
+              border-top: 3px solid #8B3DFF;
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              animation: spin 0.8s linear infinite;
+              margin: 0 auto 16px;
+            }
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+          </style>
+        </head>
+        <body>
+          <div style="text-align: center;">
+            <div class="loader"></div>
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 6px;">Opening Settlement Form</div>
+            <div style="font-size: 13px; color: #64748b;">Fetching details and preparing document...</div>
+          </div>
+        </body>
+      </html>
+    `);
+  }
+
+  try {
+    const { populatedHtml } = await getSettlementFormPreviewHtml(eventId, token, mapper);
+
+    const blob = new Blob([populatedHtml], { type: "text/html;charset=utf-8" });
+    const blobUrl = URL.createObjectURL(blob);
+
+    if (newTab && !newTab.closed) {
+      newTab.location.href = blobUrl;
+    } else {
+      window.open(blobUrl, "_blank");
+    }
+  } catch (err) {
+    console.error("Failed to open settlement preview in new tab:", err);
+    if (newTab && !newTab.closed) {
+      newTab.document.open();
+      newTab.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Error</title></head>
+          <body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#f8fafc;font-family:sans-serif;color:#ef4444;">
+            <div style="text-align:center;">
+              <div style="font-size:18px;font-weight:600;margin-bottom:8px;">Failed to load settlement form</div>
+              <div style="font-size:13px;color:#64748b;">${err.message || "An unexpected error occurred."}</div>
+            </div>
+          </body>
+        </html>
+      `);
+      newTab.document.close();
+    }
+    throw err;
+  }
+}
+
+/**
+ * Render populated HTML into a hidden iframe, capture with html2canvas,
+ * build an A4 jsPDF document, and trigger download.
+ *
+ * @param {string} populatedHtml
+ * @param {Object} data
+ * @returns {Promise<void>}
+ */
+export async function exportPopulatedHtmlToPdf(populatedHtml, data) {
+  // ── Render in a hidden iframe ──────────────────────────────────────────
   // Match iframe width to the PDF usable width so html2canvas captures
   // at the exact pixel density the PDF will use, avoiding vertical scaling.
   const PDF_USABLE_WIDTH_PX = 756; // 200mm at 96dpi
@@ -223,7 +378,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
 
   // Use a Blob URL instead of iframe.srcdoc.
   // srcdoc has a browser-enforced size limit (~2-4 KB on some hosts) that
-  // silently truncates the 42 KB template in production, making .page-wrap
+  // silently truncates the template in production, making .page-wrap
   // disappear. Blob URLs have no size limit.
   const blob = new Blob([populatedHtml], { type: "text/html;charset=utf-8" });
   const blobUrl = URL.createObjectURL(blob);
@@ -242,10 +397,14 @@ export async function generateSettlementPdf(eventId, token, mapper) {
     // Allow a small extra delay for CSS/fonts to settle
     await new Promise((r) => setTimeout(r, 500));
 
-    // ── Step 6: Capture with html2canvas ───────────────────────────────────
-    const sourceEl = iframe.contentDocument.querySelector(".page-wrap");
+    // ── Capture with html2canvas ─────────────────────────────────────────
+    const sourceEl =
+      iframe.contentDocument.querySelector(".page-wrap") ||
+      iframe.contentDocument.querySelector(".page");
     if (!sourceEl) {
-      throw new Error(`Could not find .page-wrap element in rendered template. Diagnostics: HTML string length ${populatedHtml.length}, iframe body length ${iframe.contentDocument?.body?.innerHTML?.length || 0}`);
+      throw new Error(
+        `Could not find .page-wrap or .page element in rendered template. Diagnostics: HTML string length ${populatedHtml.length}, iframe body length ${iframe.contentDocument?.body?.innerHTML?.length || 0}`
+      );
     }
 
     const canvas = await html2canvas(sourceEl, {
@@ -259,7 +418,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
       windowHeight: sourceEl.scrollHeight,
     });
 
-    // ── Step 7: Convert canvas to multi-page PDF ───────────────────────────
+    // ── Convert canvas to multi-page PDF ─────────────────────────────────
     const imgWidthPx = canvas.width;
     const imgHeightPx = canvas.height;
 
@@ -322,7 +481,7 @@ export async function generateSettlementPdf(eventId, token, mapper) {
           0,
           0,
           imgWidthPx,
-          sliceHeight 
+          sliceHeight
         );
 
         pdf.addImage(
@@ -336,16 +495,28 @@ export async function generateSettlementPdf(eventId, token, mapper) {
       }
     }
 
-    // ── Step 8: Download the PDF ───────────────────────────────────────────
-    const filename = `Event-Settlement-${sanitizeFilename(data.eventNameRaw)}.pdf`;
+    // ── Download the PDF ─────────────────────────────────────────────────
+    const filename = `Event-Settlement-${sanitizeFilename(data.eventNameRaw || data.eventName || "Form")}.pdf`;
     pdf.save(filename);
-
   } finally {
-    // ── Cleanup ────────────────────────────────────────────────────────────
+    // ── Cleanup ──────────────────────────────────────────────────────────
     if (document.body.contains(iframe)) {
       document.body.removeChild(iframe);
     }
     // Release the Blob URL to free memory
     URL.revokeObjectURL(blobUrl);
   }
+}
+
+/**
+ * Main entry point: fetch data, map it, generate and download the PDF.
+ *
+ * @param {string} eventId       – MongoDB ObjectId of the event
+ * @param {string} token         – Bearer auth token
+ * @param {Function} mapper     – mapSettlementData function (imported separately)
+ * @returns {Promise<void>}
+ */
+export async function generateSettlementPdf(eventId, token, mapper) {
+  const { populatedHtml, data } = await getSettlementFormPreviewHtml(eventId, token, mapper);
+  await exportPopulatedHtmlToPdf(populatedHtml, data);
 }

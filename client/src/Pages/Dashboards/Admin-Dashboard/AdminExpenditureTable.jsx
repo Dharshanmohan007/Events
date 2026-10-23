@@ -7,12 +7,16 @@ import {
   ExternalLink,
   Download,
   Loader2,
+  FileText,
 } from "lucide-react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { mapSettlementData } from "../../../utils/settlementMapper.js";
-import { generateSettlementPdf } from "../../../utils/settlementPdfGenerator.js";
+import {
+  generateSettlementPdf,
+  openSettlementFormInNewTab,
+} from "../../../utils/settlementPdfGenerator.js";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB CONFIGURATION
@@ -37,8 +41,25 @@ const AdminExpenditureTable = () => {
   const [eventsSearchQuery, setEventsSearchQuery] = useState("");
   const [individualSearchQuery, setIndividualSearchQuery] = useState("");
 
-  // ── PDF Download State ─────────────────────────────────────────────────
-  const [downloadingEventId, setDownloadingEventId] = useState(null);
+  // ── Settlement Form State ──────────────────────────────────────────────
+  const [openingSettlementId, setOpeningSettlementId] = useState(null);
+
+  const handleOpenSettlementForm = async (eventId) => {
+    if (!eventId) {
+      toast.error("Invalid event ID");
+      return;
+    }
+
+    setOpeningSettlementId(eventId);
+    try {
+      await openSettlementFormInNewTab(eventId, token, mapSettlementData);
+    } catch (err) {
+      console.error("Failed to open settlement form:", err);
+      toast.error(err.message || "Failed to open settlement form");
+    } finally {
+      setOpeningSettlementId(null);
+    }
+  };
 
   // ══════════════════════════════════════════════════════════════════════════
   // HELPER FUNCTIONS
@@ -463,17 +484,16 @@ const AdminExpenditureTable = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              downloadSettlementPdf(item?.eventId?._id)
+                              handleOpenSettlementForm(item?.eventId?._id)
                             }
-                            disabled={
-                              downloadingEventId === item?.eventId?._id
-                            }
-                            className="text-[#8b93a5] transition hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={openingSettlementId === item?.eventId?._id}
+                            className="text-[#8b93a5] transition hover:text-white disabled:opacity-50"
+                            title="Open Settlement Form in New Tab"
                           >
-                            {downloadingEventId === item?.eventId?._id ? (
+                            {openingSettlementId === item?.eventId?._id ? (
                               <Loader2 size={13} strokeWidth={1.8} className="animate-spin" />
                             ) : (
-                              <Download size={13} strokeWidth={1.8} />
+                              <FileText size={13} strokeWidth={1.8} />
                             )}
                           </button>
                         </div>

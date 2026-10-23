@@ -76,6 +76,21 @@ function escapeHtml(str) {
 }
 
 /**
+ * Shorten common faculty designations to abbreviations so they fit well in single-line fields.
+ */
+function formatShortDesignation(desig) {
+  if (!desig) return "";
+  const trimmed = String(desig).trim();
+  const lower = trimmed.toLowerCase();
+  if (/ass?is?st?ant\s*prof(essor)?/i.test(lower)) return "AP";
+  if (/ass?oc?iate\s*prof(essor)?/i.test(lower)) return "ASP";
+  if (/^prof(essor)?/i.test(lower)) return "Prof.";
+  if (/head\s*(of\s*(the\s*)?department|of\s*dept|dept)|hod/i.test(lower)) return "HOD";
+  if (/lecturer/i.test(lower)) return "Lec.";
+  return trimmed;
+}
+
+/**
  * Map both API responses into the settlement form data structure.
  *
  * @param {Object} expenditureRes  - Response from GET /api/event-expenditures/event/:eventId
@@ -118,15 +133,16 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
     expenditure[cat] = items;
   });
 
-  // ── Build income rows ──────────────────────────────────────────────────
+  // ── Build income rows (exclude institutional fund from income & calculations) ────
   const institutionalTypes = ["Institutional Amount", "Institutional Fund"];
-  const deptName = organizerDetails.organizingDepartment || organizer.department || "";
+  const nonInstitutionalIncome = (expData.income || []).filter(
+    (inc) => !institutionalTypes.includes(inc.type)
+  );
 
-  const incomeRows = (expData.income || []).map((inc) => {
-    const isInstitutional = institutionalTypes.includes(inc.type);
+  const incomeRows = nonInstitutionalIncome.map((inc) => {
     return {
       label: inc.type || "Other",
-      details: isInstitutional ? deptName : (inc.details || ""),
+      details: inc.details || "",
       detailsBold: false,
       amount: formatAmount(inc.amount),
     };
@@ -152,8 +168,15 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
   // ── Advance taken from the expenditure response ────────────────────────
   const advanceTaken = Number(basicDetails.advanceAmount) || 0;
 
-  // ── Net claim ──────────────────────────────────────────────────────────
-  const netClaim = totalAmount - advanceTaken;
+  // ── Total Fund (A) = Advance Amount + Registration Fees + Sponsorship + Department Fund + Other Sources (Excluding Institutional)
+  const otherIncomeSum = nonInstitutionalIncome.reduce((sum, inc) => {
+    const val = Number(inc.amount) || 0;
+    return sum + val;
+  }, 0);
+  const totalFund = advanceTaken + otherIncomeSum;
+
+  // ── Net claim (B - A) = Total Expenditure (B) - Total Fund (A) ──────────
+  const netClaim = totalAmount - totalFund;
 
   // ── Submission date: use the closing document createdAt or expenditure createdAt
   const submissionDate =
@@ -171,11 +194,6 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
   }
 
   const rawIqac = eventObj.iqacNumber || "";
-  let formattedIqac = rawIqac;
-  const iqacParts = rawIqac.split("/");
-  if (iqacParts.length >= 2) {
-    formattedIqac = `${iqacParts[0]}/${iqacParts[1]}/`;
-  }
 
   return {
     // ── Top section ──────────────────────────────────────────────────────
@@ -184,10 +202,10 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
     submissionDate: formatDate(submissionDate),
     eventDate: eventDatesStr,
     guestNames: guestNames || "",
-    iqacNumber: formattedIqac,
+    iqacNumber: rawIqac,
     facultyName: organizer.name || "",
     empId: organizer.empId || "",
-    designation: organizer.designation || "",
+    designation: formatShortDesignation(organizer.designation || ""),
     department: organizerDetails.organizingDepartment || organizer.department || "",
     advanceAmount: formatAmount(advanceTaken),
     dateOfAdvance: formatDate(basicDetails.dateOfAdvanceTaken),
@@ -197,6 +215,7 @@ export function mapSettlementData(expenditureRes, closingDocRes) {
     incomeRows,
     expenditure,
     totalAmount,
+    totalFund,
 
     gender: {
       maleWithin: male.withinState ?? "",

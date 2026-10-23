@@ -1,0 +1,724 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settlement Form - Sri Eshwar College of Engineering</title>
+    <style>
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #e6e6e6;
+        font-family: "Times New Roman", Times, Georgia, serif;
+        color: #000;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+      }
+      .page {
+        width: 100%;
+        max-width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        background: #fff;
+        padding: 4mm 6mm;
+      }
+      @media print {
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .page {
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 4mm 6mm !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+      }
+      .sans {
+        font-family: Calibri, Arial, Helvetica, sans-serif;
+      }
+
+      /* ---------- header ---------- */
+      .hd {
+        height: 42px;
+        border: 1px solid #444;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .brand-logo {
+        height: 34px;
+        width: auto;
+      }
+      .ref {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font:
+          bold 12px/14px Verdana,
+          Arial,
+          sans-serif;
+      }
+      .st {
+        height: 18px;
+        border: 1px solid #444;
+        border-top: none;
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 16px;
+      }
+
+      /* ---------- top block (absolute layout) ---------- */
+      .tb {
+        position: relative;
+        height: 215px;
+        border-left: 1px solid #444;
+      }
+      .a {
+        position: absolute;
+        white-space: nowrap;
+        font-size: 13px;
+        line-height: 14px;
+      }
+      .rl {
+        font-weight: bold;
+        font-size: 12.5px;
+        text-align: right;
+        line-height: 15px;
+      }
+      .bx {
+        position: absolute;
+        border-bottom: 1px solid #444;
+        border-left: 1px solid #444;
+        border-right: 1px solid #444;
+      }
+      .bx2 {
+        position: absolute;
+        border-left: 1px solid #444;
+        border-right: 1px solid #444;
+      }
+      .bx1 {
+        position: absolute;
+        border: 1px solid #444;
+      }
+      .ln {
+        position: absolute;
+        height: 0;
+        border-top: 1px solid #444;
+      }
+
+      /* ---------- main table ---------- */
+      table.t {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+      }
+      .t td,
+      .t th {
+        border: 1px solid #444;
+        padding: 0 4px;
+        font-size: 13px;
+        font-weight: normal;
+        line-height: 15px;
+      }
+      .t th.ih {
+        height: 16px;
+        font-weight: bold;
+        font-size: 12.5px;
+        text-align: center;
+      }
+      .t td.sn {
+        text-align: center;
+        font:
+          12px Calibri,
+          Arial,
+          sans-serif;
+        color: #444;
+        padding: 0;
+      }
+      .t td.nm {
+        padding-left: 3px;
+      }
+      .t td.tf {
+        text-align: right;
+        font-weight: bold;
+        padding-right: 4px;
+      }
+      .t td.bh {
+        height: 26px;
+        font-weight: bold;
+        padding-left: 3px;
+      }
+      .t th.eh {
+        height: 34px;
+        vertical-align: top;
+        padding-top: 4px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: normal;
+      }
+      .t th.es {
+        font-family: Calibri, Arial, sans-serif;
+        font-weight: bold;
+      }
+      .t th.sn2 {
+        text-align: left;
+        padding-left: 4px;
+      }
+      .t tr.er td {
+        height: 38px;
+      }
+      .t td.rm {
+        vertical-align: middle;
+        font-weight: bold;
+        font-size: 13px;
+        line-height: 14px;
+        padding-left: 4px;
+      }
+      .t td.lb {
+        font-weight: bold;
+        font-size: 13px;
+        padding-left: 3px;
+      }
+
+      /* ---------- declaration + signatures ---------- */
+      .dc {
+        border: 1px solid #444;
+        border-top: none;
+        height: 112px;
+        position: relative;
+      }
+      .sign {
+        display: flex;
+        justify-content: space-between;
+        padding-left: 10px;
+        padding-right: 20px;
+      }
+      .sg {
+        padding-top: 48px;
+        font-size: 13px;
+        line-height: 16px;
+        text-align: center;
+      }
+
+      .dc p {
+        margin: 0;
+        padding: 5px 4px;
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 16px;
+      }
+
+      .print {
+        position: fixed;
+        right: 18px;
+        top: 18px;
+        padding: 9px 18px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        background: #8B3DFF;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        box-shadow: 0 4px 14px rgba(139, 61, 255, 0.4);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        transition: background 0.15s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        z-index: 99999;
+      }
+      .print:hover {
+        background: #7828e8;
+      }
+      @media print {
+        body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background: #fff !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .page {
+          box-shadow: none !important;
+          margin: 0 !important;
+          padding: 4mm 6mm !important;
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        .print {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <button class="print" onclick="window.print()" title="Print Form or Save as PDF (Ctrl+P)">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      Print / Save as PDF
+    </button>
+    <div class="page page-wrap">
+      <!-- Header box with logo + reference -->
+      <div class="hd">
+        <div class="logo" id="headerLogo"></div>
+        <div class="ref" id="cornerCode"></div>
+      </div>
+      <div class="st">Settlement Form</div>
+
+      <!-- Top block -->
+      <div class="tb">
+        <!-- left: event / guest -->
+        <div class="a" style="left: 2px; top: 8px; line-height: 17px">
+          Name of the<br />Event
+        </div>
+        <div
+          class="bx"
+          id="eventName"
+          style="left: 12.8%; width: 36.4%; top: 0; height: 46px; padding: 2px 4px; font-size: 11px; font-weight: bold; line-height: 1.25; overflow: hidden; display: flex; align-items: center;"
+        ></div>
+        <div class="a" style="left: 2px; top: 57px; line-height: 15px">
+          Guest Name<br />(s), if any
+        </div>
+        <div
+          class="bx"
+          id="guestNames"
+          style="left: 12.8%; width: 36.4%; top: 45px; height: 46px; padding: 2px 4px; font-size: 11px; line-height: 1.25; overflow: hidden; display: flex; align-items: center;"
+        ></div>
+
+        <!-- right: submission / IQAC no. -->
+        <div class="a rl" style="right: 19.1%; padding-top: 6px">
+          Submission Date:
+        </div>
+        <div
+          class="bx2"
+          id="submissionDate"
+          style="left: 81.9%; right: 0; height: 26px; padding-left: 8px; line-height: 25px; font-size: 12px; font-weight: bold;"
+        ></div>
+        <div class="a rl" style="right: 28.6%; top: 27px">IQAC Number:</div>
+        <div
+          class="bx1"
+          id="iqacNumber"
+          style="
+            left: 71.4%;
+            right: 0;
+            top: 26px;
+            height: 25px;
+            padding-left: 6px;
+            padding-right: 6px;
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+          "
+        ></div>
+
+        <!-- right: accounts headers -->
+        <div
+          class="bx1"
+          style="left: 64%; right: 0; top: 50px; height: 44px"
+        ></div>
+        <div
+          class="bx1"
+          style="left: 64%; right: 0; top: 93px; height: 42px"
+        ></div>
+        <div
+          class="bx1"
+          style="left: 64%; right: 0; top: 134px; height: 44px"
+        ></div>
+        <div
+          class="bx1"
+          style="left: 64%; right: 0; top: 177px; height: 39px"
+        ></div>
+        <div class="a rl" style="right: 36.2%; top: 52px">
+          Accounts Dept.<br />Header 1:
+        </div>
+        <div class="a rl" style="right: 36.2%; top: 96px">
+          Accounts Dept.<br />Header 2:
+        </div>
+        <div class="a rl" style="right: 36.2%; top: 134px">
+          Accounts Dept.<br />Header 3:
+        </div>
+        <div class="a rl" style="right: 36.2%; top: 180px; line-height: 14px">
+          Ledger:
+        </div>
+
+        <!-- left: faculty details -->
+        <div class="a" style="left: 2px; top: 96px">Name of the faculty</div>
+        <div class="a" id="facultyName" style="left: 15.5%; top: 94px; font-weight: bold; font-size: 12px; max-width: 34%; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div class="ln" style="left: 15.3%; width: 35%; top: 109px"></div>
+
+        <div class="a" style="left: 2px; top: 117px">Emp ID :</div>
+        <div class="a" id="empId" style="left: 7.2%; top: 114px; font-weight: bold; font-size: 12px;"></div>
+        <div class="ln" style="left: 6.7%; width: 17.7%; top: 127px"></div>
+
+        <div class="a" style="left: 25.8%; top: 117px">Designation :</div>
+        <div class="a" id="designation" style="left: 37%; top: 114px; font-weight: bold; font-size: 12px; max-width: 13.5%; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div class="ln" style="left: 36.7%; width: 13.9%; top: 127px"></div>
+
+        <div class="a" style="left: 2px; top: 134px">Department/Centre</div>
+        <div class="a" id="department" style="left: 15.5%; top: 132px; font-weight: bold; font-size: 12px; max-width: 35%; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div class="ln" style="left: 15%; width: 36%; top: 146px"></div>
+
+        <div class="a" style="left: 2px; top: 153px">Advance Amount (A):</div>
+        <div class="a" id="advanceAmount" style="left: 18%; top: 150px; font-weight: bold; font-size: 12px;"></div>
+        <div class="ln" style="left: 17.3%; width: 31%; top: 165px"></div>
+
+        <div class="a" style="left: 2px; top: 172px">
+          Date of Advance Taken (if any):
+        </div>
+        <div class="a" id="dateOfAdvance" style="left: 26%; top: 169px; font-weight: bold; font-size: 12px;"></div>
+        <div class="ln" style="left: 25.5%; width: 23%; top: 184px"></div>
+
+        <div class="a" style="left: 2px; top: 192px">
+          Purpose of Advance Taken (if any):
+        </div>
+        <div class="a" id="purposeOfAdvance" style="left: 29.5%; top: 189px; font-weight: bold; font-size: 11px; max-width: 20%; overflow: hidden; text-overflow: ellipsis;"></div>
+        <div class="ln" style="left: 28.8%; width: 20.2%; top: 204px"></div>
+      </div>
+
+      <!-- Income + Expenditure + Totals (one grid so all columns line up) -->
+      <table class="t">
+        <colgroup>
+          <col style="width: 5%" />
+          <col style="width: 24%" />
+          <col style="width: 27%" />
+          <col style="width: 14%" />
+          <col style="width: 12%" />
+          <col style="width: 18%" />
+        </colgroup>
+
+        <tr>
+          <th class="ih">S. No</th>
+          <th class="ih">Income Resource</th>
+          <th class="ih" colspan="3">
+            Details, Requirements (Nos.) and Calculation
+          </th>
+          <th class="ih">Amount</th>
+        </tr>
+        <tbody id="incomeBody">
+          <tr style="height: 22px">
+            <td class="sn">1</td>
+            <td class="nm">Advance Amount</td>
+            <td colspan="3" id="incomeAdvDetails" style="text-align: center;"></td>
+            <td id="incomeAdvAmount" style="text-align: center; padding-right: 4px;"></td>
+          </tr>
+          <tr style="height: 22px">
+            <td class="sn">2</td>
+            <td class="nm">Registration Fees</td>
+            <td colspan="3" id="incomeRegDetails" style="text-align: center;"></td>
+            <td id="incomeRegAmount" style="text-align: center; padding-right: 4px;"></td>
+          </tr>
+          <tr style="height: 22px">
+            <td class="sn">3</td>
+            <td class="nm">Sponsorship</td>
+            <td colspan="3" id="incomeSponDetails" style="text-align: center;"></td>
+            <td id="incomeSponAmount" style="text-align: center; padding-right: 4px;"></td>
+          </tr>
+          <tr style="height: 22px">
+            <td class="sn">4</td>
+            <td class="nm">Department Fund</td>
+            <td colspan="3" id="incomeDeptDetails" style="text-align: center;"></td>
+            <td id="incomeDeptAmount" style="text-align: center; padding-right: 4px;"></td>
+          </tr>
+          <tr style="height: 22px">
+            <td class="sn">5</td>
+            <td class="nm">Other Sources if Any</td>
+            <td colspan="3" id="incomeOtherDetails" style="text-align: center;"></td>
+            <td id="incomeOtherAmount" style="text-align: center; padding-right: 4px;"></td>
+          </tr>
+        </tbody>
+        <tr style="height: 22px">
+          <td class="tf" colspan="5">Total Fund (A)</td>
+          <td id="totalFund" style="text-align: center; font-weight: bold; padding-right: 4px;"></td>
+        </tr>
+
+        <tr>
+          <td class="bh" colspan="6">(B) Expenditure Details</td>
+        </tr>
+        <tr>
+          <th class="eh sn2">S. No</th>
+          <th class="eh">Nature of Expenses</th>
+          <th class="eh es">Vendor / Guest Name</th>
+          <th class="eh">Bill No.</th>
+          <th class="eh">Bill Date</th>
+          <th class="eh es">Total (Rs)</th>
+        </tr>
+        <tbody id="expenditureBody">
+          <!-- Dynamically populated or 9 rows default -->
+        </tbody>
+
+        <tr style="height: 27px">
+          <td class="rm" colspan="3" id="remarksRow">Remarks If Any<span id="remarksText" style="font-weight: normal; margin-left: 6px; font-size: 12px;"></span></td>
+          <td class="lb" colspan="2" style="text-align: right;">Total Amount (B)</td>
+          <td id="totalAmount" style="text-align: center; font-weight: bold; padding-right: 4px;"></td>
+        </tr>
+        <tr style="height: 28px">
+          <td class="rm" colspan="3" id="closedAgainstAdvanceRow">Closed against advance : <span id="closedAdvanceStatus" style="font-weight: normal;">Yes/No</span></td>
+          <td class="lb" colspan="2" style="text-align: right;">Net Claim (B-A) in Rs</td>
+          <td id="netClaim" style="text-align: center; font-weight: bold; padding-right: 4px;"></td>
+        </tr>
+        <tr style="height: 28px">
+          <td class="rm" colspan="3"></td>
+          <td class="lb" colspan="2" id="refundedLabel" style="text-align: right;">Refunded / To be Received</td>
+          <td id="refundedStatus" style="text-align: center; font-weight: bold; padding-right: 4px;">0</td>
+        </tr>
+      </table>
+
+      <!-- Declaration + signatures -->
+      <div class="dc">
+        <p>
+          Declaration : I hereby declare that the above expenses are correct and
+          actually incurred for official purpose
+        </p>
+        <div class="sign">
+          <div class="sg">
+            Approved By<br />Dean / HOD / Section Head
+          </div>
+          <div class="sg">
+            Verified by<br />
+            IQAC
+          </div>
+          <div class="sg">Authorized by<br />Principal</div>
+          <div class="sg r">Verified By<br />Accounts</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const EXPENDITURE_CATEGORIES = [
+        { category: "Food", items: [] },
+        { category: "Transport", items: [] },
+        { category: "Accommodation", items: [] },
+        { category: "Remuneration", items: [] },
+        { category: "Gifts", items: [] },
+        { category: "Kits", items: [] },
+        { category: "Miscellaneous (Others)", items: [] },
+      ];
+
+      const INCOME_ROWS = [
+        { label: "Registration Fees", details: "", amount: "" },
+        { label: "Sponsorship", details: "", amount: "" },
+        { label: "Department Fund", details: "", amount: "" },
+        { label: "Other Sources if Any", details: "", amount: "" },
+      ];
+
+      const GENDER_DATA = {};
+      const SDG_DATA = {};
+
+      function renderIncome() {
+        if (!Array.isArray(INCOME_ROWS) || INCOME_ROWS.length === 0) return;
+
+        const advRow = INCOME_ROWS.find((r) => /advance/i.test(r.label));
+        const regRow = INCOME_ROWS.find((r) => /registration/i.test(r.label));
+        const sponRow = INCOME_ROWS.find((r) =>
+          /sponsorship|scholarship/i.test(r.label)
+        );
+        const deptRow = INCOME_ROWS.find((r) => /department/i.test(r.label));
+        const otherRows = INCOME_ROWS.filter(
+          (r) =>
+            !/advance/i.test(r.label) &&
+            !/registration/i.test(r.label) &&
+            !/sponsorship|scholarship/i.test(r.label) &&
+            !/department/i.test(r.label) &&
+            !/institutional/i.test(r.label)
+        );
+
+        function setRow(idPrefix, details, amount) {
+          const dEl = document.getElementById(idPrefix + "Details");
+          const aEl = document.getElementById(idPrefix + "Amount");
+          if (dEl && details !== undefined && details !== null) dEl.textContent = details;
+          if (aEl && amount !== undefined && amount !== null) aEl.textContent = amount;
+        }
+
+        if (advRow) setRow("incomeAdv", advRow.details, advRow.amount);
+        if (regRow) setRow("incomeReg", regRow.details, regRow.amount);
+        if (sponRow) setRow("incomeSpon", sponRow.details, sponRow.amount);
+        if (deptRow) setRow("incomeDept", deptRow.details, deptRow.amount);
+
+        if (otherRows.length > 0) {
+          const details = otherRows
+            .map((r) => {
+              if (/other/i.test(r.label)) {
+                return r.details || "NA";
+              }
+              return r.label + (r.details ? `: ${r.details}` : "");
+            })
+            .join("; ");
+          const totalOtherAmt = otherRows.reduce((sum, r) => {
+            const v = parseFloat(String(r.amount).replace(/,/g, ""));
+            return sum + (isNaN(v) ? 0 : v);
+          }, 0);
+          setRow(
+            "incomeOther",
+            details,
+            totalOtherAmt
+              ? totalOtherAmt.toLocaleString("en-IN")
+              : (otherRows[0]?.amount != null ? String(otherRows[0].amount) : "0")
+          );
+        }
+
+        // Calculate Total Fund (A) = Advance Amount + Registration Fees + Sponsorship + Department Fund + Other Sources
+        const getRowVal = (id) => {
+          const el = document.getElementById(id);
+          if (!el) return 0;
+          const v = parseFloat(String(el.textContent).replace(/,/g, ""));
+          return isNaN(v) ? 0 : v;
+        };
+
+        const totalFundA =
+          getRowVal("incomeAdvAmount") +
+          getRowVal("incomeRegAmount") +
+          getRowVal("incomeSponAmount") +
+          getRowVal("incomeDeptAmount") +
+          getRowVal("incomeOtherAmount");
+
+        const tfEl = document.getElementById("totalFund");
+        if (tfEl && totalFundA) {
+          tfEl.textContent = totalFundA.toLocaleString("en-IN");
+        }
+
+        const totAmtEl = document.getElementById("totalAmount");
+        const netClaimEl = document.getElementById("netClaim");
+        const refundedLabelEl = document.getElementById("refundedLabel");
+        const refundedStatusEl = document.getElementById("refundedStatus");
+
+        if (totAmtEl && netClaimEl) {
+          const bVal = parseFloat(String(totAmtEl.textContent).replace(/,/g, "")) || 0;
+          const net = bVal - totalFundA;
+          netClaimEl.textContent = net.toLocaleString("en-IN");
+
+          if (refundedStatusEl) {
+            if (net < 0) {
+              // Income exceeds expenditure: Money is refunded / returned to college
+              if (refundedLabelEl) refundedLabelEl.textContent = "Repay (To Institute) :";
+              refundedStatusEl.textContent = Math.abs(net).toLocaleString("en-IN");
+            } else if (net > 0) {
+              // Expenditure exceeds income: Amount is to be received by faculty/organizer
+              if (refundedLabelEl) refundedLabelEl.textContent = "To be Received :";
+              refundedStatusEl.textContent = net.toLocaleString("en-IN");
+            } else {
+              if (refundedLabelEl) refundedLabelEl.textContent = "Refunded / To be Received :";
+              refundedStatusEl.textContent = "0";
+            }
+          }
+        }
+
+        const closedEl = document.getElementById("closedAdvanceStatus");
+        if (closedEl) {
+          const advAmt = getRowVal("incomeAdvAmount");
+          closedEl.innerHTML = advAmt > 0 ? "<b>Yes</b>" : "No";
+        }
+      }
+
+      function renderExpenditure() {
+        const body = document.getElementById("expenditureBody");
+        if (!body) return;
+        body.innerHTML = "";
+
+        const allItems = [];
+        EXPENDITURE_CATEGORIES.forEach((cat) => {
+          (cat.items || []).forEach((item) => {
+            allItems.push({
+              category: cat.category,
+              expense: item.expense || cat.category,
+              billNo: item.billNo || "",
+              billDate: item.billDate || "",
+              guest: item.guest || "-",
+              amount: item.amount,
+            });
+          });
+        });
+
+        const rowCount = Math.max(allItems.length, 9);
+        let grandTotal = 0;
+
+        for (let i = 0; i < rowCount; i++) {
+          const item = allItems[i];
+          const sNo = i + 1;
+          const tr = document.createElement("tr");
+          tr.className = "er";
+          tr.style.height = "38px";
+
+          if (item) {
+            const amtNum =
+              Number(String(item.amount).replace(/,/g, "")) || 0;
+            grandTotal += amtNum;
+            tr.innerHTML = `
+              <td class="sn">${sNo}</td>
+              <td style="padding: 2px 4px; font-size: 12px; line-height: 1.2;">${item.expense || item.category || "-"}</td>
+              <td style="padding: 2px 4px; font-size: 12px; line-height: 1.2;">${item.guest || "-"}</td>
+              <td style="text-align: center; font-size: 11px; line-height: 1.2; word-break: break-word;">${item.billNo || "-"}</td>
+              <td style="text-align: center; font-size: 11px; white-space: nowrap;">${item.billDate || "-"}</td>
+              <td style="text-align: right; font-weight: bold; padding-right: 4px; font-size: 12.5px;">${amtNum ? amtNum.toLocaleString("en-IN") : "-"}</td>
+            `;
+          } else {
+            tr.innerHTML = `
+              <td class="sn">${sNo}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            `;
+          }
+          body.appendChild(tr);
+        }
+
+        const totEl = document.getElementById("totalAmount");
+        if (totEl && grandTotal) {
+          totEl.textContent = grandTotal.toLocaleString("en-IN");
+        }
+
+        const tfEl = document.getElementById("totalFund");
+        const netClaimEl = document.getElementById("netClaim");
+        const refundedLabelEl = document.getElementById("refundedLabel");
+        const refundedStatusEl = document.getElementById("refundedStatus");
+
+        if (tfEl && netClaimEl && totEl) {
+          const aVal = parseFloat(String(tfEl.textContent).replace(/,/g, "")) || 0;
+          const bVal = parseFloat(String(totEl.textContent).replace(/,/g, "")) || 0;
+          const net = bVal - aVal;
+          netClaimEl.textContent = net.toLocaleString("en-IN");
+
+          if (refundedStatusEl) {
+            if (net < 0) {
+              if (refundedLabelEl) refundedLabelEl.textContent = "Repay (To Institute) :";
+              refundedStatusEl.textContent = Math.abs(net).toLocaleString("en-IN");
+            } else if (net > 0) {
+              if (refundedLabelEl) refundedLabelEl.textContent = "To be Received :";
+              refundedStatusEl.textContent = net.toLocaleString("en-IN");
+            } else {
+              if (refundedLabelEl) refundedLabelEl.textContent = "Refunded / To be Received :";
+              refundedStatusEl.textContent = "0";
+            }
+          }
+        }
+      }
+
+      renderExpenditure();
+      renderIncome();
+    </script>
+  </body>
+</html>
