@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function() {
   return modified;
 }
 
-/**
+/***
  * Fetch data, map it, and return the fully populated HTML document string
  * along with the mapped data object for live preview.
  *
