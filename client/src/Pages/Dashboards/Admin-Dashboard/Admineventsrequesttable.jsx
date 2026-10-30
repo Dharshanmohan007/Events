@@ -55,6 +55,7 @@ const normalizeEventRequest = (event) => ({
   department: event.organizingDepartment || event.department || "-",
   approvedStatus: event.adminApproval ? "Approved" : "Pending",
   eventStatus: event.overallStatus || event.eventStatus || "-",
+  isClosed: event.isClosed || false,
 });
 
 const normalizeIndividualRequest = (request) => ({
@@ -66,6 +67,7 @@ const normalizeIndividualRequest = (request) => ({
   dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
   status: typeof request.status === "string" ? request.status : "-",
   adminStatus: request?.superAdminApproval?.status || "-",
+  isClosed: request.isClosed || false,
 });
 
 const getStatusColor = (status = "") => {
@@ -406,7 +408,7 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
             <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span
-                className={`${event.isClosed ? "text-green-500" : "text-amber-500"}`}
+                className={`${event.isClosed ? "text-emerald-400" : "text-amber-500"}`}
               >
                 {event.isClosed ? "Closed" : "Not closed"}
               </span>
