@@ -125,7 +125,7 @@ export default function OrganizerDetails({ title, data = {}, errors = {}, onChan
             required
             value={data.department || ""}
             onChange={handleSelect("department")}
-            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","Maths","S&H","Media","Transport","Placement","Innovation","IR","HR","CFRD","IQAC","PD","COE","IT","Library"]}
+            options={["AIML","AIDS","CSE","CYS","CSBS","ECE","CCE","EEE","MECH","Maths","S&H","Media","Transport","Placement","Innovation","IR","HR","CFRD","IQAC","PD","COE","IT","Library","AI Centre of Competency","Office","Training"]}
             placeholder="Select department"
             searchable
           />

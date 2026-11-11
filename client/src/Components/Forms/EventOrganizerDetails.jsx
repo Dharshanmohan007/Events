@@ -872,10 +872,14 @@ export default function EventOrganizerDetails({
                 "CYS",
                 "PLACEMENT",
                 "PD",
-                "INNOVATION",
+                "INNOVATION", 
                 "COE",
                 "HR",
-                "Library"
+                "Library",
+                "AI Centre of Competency",
+                "Office",
+                "Training",
+
               ]}
             placeholder="Select an option"
           />
