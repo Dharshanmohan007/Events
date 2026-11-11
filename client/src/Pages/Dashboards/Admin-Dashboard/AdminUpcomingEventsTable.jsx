@@ -37,6 +37,7 @@ const normalizeEvent = (event) => ({
     : event.adminApproval
       ? "Approved"
       : "Pending",
+  isClosed: event.isClosed || false,
 });
 
 const normalizeIndividualRequest = (request) => ({
@@ -292,7 +293,7 @@ const AdminUpcomingEventsTable = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`${event.isClosed ? "text-green-500" : "text-amber-500"}`}
+                          className={`${event.isClosed ? "text-emerald-400" : "text-amber-500"}`}
                         >
                           {event.isClosed ? "closed" : "Not closed"}
                         </span>

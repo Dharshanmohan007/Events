@@ -53,8 +53,13 @@ const normalizeEventRequest = (event) => ({
     ? event.dates.map(toDateKey)
     : [event.eventDate || event.requiredDate].filter(Boolean).map(toDateKey),
   department: event.organizingDepartment || event.department || "-",
-  approvedStatus: event.adminApproval ? "Approved" : "Pending",
-  eventStatus: event.overallStatus || event.eventStatus || "-",
+  status: event.overallStatus || event.acknowledgeStatus,
+  approvedStatus: /deleted|rejected/i.test(String(event.overallStatus || ""))
+    ? event.overallStatus
+    : event.adminApproval
+      ? "Approved"
+      : "Pending",
+  isClosed: event.isClosed || false,
 });
 
 const normalizeIndividualRequest = (request) => ({
@@ -66,12 +71,13 @@ const normalizeIndividualRequest = (request) => ({
   dateKeys: request.createdAt ? [toDateKey(request.createdAt)] : [],
   status: typeof request.status === "string" ? request.status : "-",
   adminStatus: request?.superAdminApproval?.status || "-",
+  isClosed: request.isClosed || false,
 });
 
 const getStatusColor = (status = "") => {
   const normalizedStatus = String(status).toLowerCase();
 
-  if (normalizedStatus.includes("rejected"))
+  if (normalizedStatus.includes("rejected")|| normalizedStatus.includes("deleted"))
     return { text: "text-red-400", dot: "bg-red-400" };
   if (normalizedStatus.includes("acknowledged"))
     return { text: "text-emerald-400", dot: "bg-emerald-400" };
@@ -406,7 +412,7 @@ const EventRequestTable = ({ rows, selectedDateKey }) => (
             <td className="px-6 py-4 whitespace-nowrap">{event.department}</td>
             <td className="px-6 py-4 whitespace-nowrap">
               <span
-                className={`${event.isClosed ? "text-green-500" : "text-amber-500"}`}
+                className={`${event.isClosed ? "text-emerald-400" : "text-amber-500"}`}
               >
                 {event.isClosed ? "Closed" : "Not closed"}
               </span>

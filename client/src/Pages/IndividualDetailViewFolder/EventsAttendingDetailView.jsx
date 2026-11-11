@@ -26,7 +26,7 @@ const EventsAttendingDetailView = ({ data }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const role = token ? jwtDecode(token)?.role?.toLowerCase() : "";
-  const isAdmin = ["admin", "super admin 1", "super admin 2"].includes(role);
+  const isAdmin = ["admin", "super admin 1", "super admin 2", "super admin 3"].includes(role);
   const [actionLoading, setActionLoading] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
@@ -226,6 +226,14 @@ const EventsAttendingDetailView = ({ data }) => {
           {data?.superAdminApproval?.status?.toLowerCase() === "approved" && (
             <Link
               to={`/dashboard-faculty/EventAttendingIndividualDocumentUpload/${eventId}`}
+              state={{
+                eventAttendingDetails: {
+                  foodRequired: data?.data?.foodRequired ?? data?.data?.food,
+                  participantNames: (Array.isArray(data?.data?.participants) ? data.data.participants : [])
+                    .map((participant) => participant?.name)
+                    .filter(Boolean),
+                },
+              }}
               className="cursor-pointer rounded-lg bg-emerald-800 px-4 py-2 text-white"
             >
               Close

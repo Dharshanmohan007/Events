@@ -774,7 +774,7 @@ const EventRequestDetails = () => {
                         </span>
                         {supportFileName}
                       </div>
-                    )
+                    ) 
                   ) : (
                     <div className="text-[12px]">
                       Drag and drop the files here or
