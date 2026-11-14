@@ -564,10 +564,7 @@ function AccommodationBlock({
   const showAmenity = acc.dineTypes.includes("Amenity");
   const showHostel = acc.dineTypes.includes("Hostel");
   const filteredRoomOptions = roomOptions.filter((room) => {
-    if (room.available === false) return false;
-    const capacity = Number(room.occupantCount) || 0;
-    if (selectedCount === 1) return capacity === 2;
-    return true;
+    return room.available !== false;
   });
 
   return (
@@ -1064,4 +1061,3 @@ export default function AccommodationForm({
     </div>
   );
 }
-
