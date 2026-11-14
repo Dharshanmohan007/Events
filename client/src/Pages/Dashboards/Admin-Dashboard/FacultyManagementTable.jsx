@@ -125,7 +125,7 @@ const FacultyManagementTable = ({ faculties = [], onEdit, onDelete, onView, read
                                             >
                                                 <SquarePen size={17} />
                                             </button>)}
-                                            {!readOnly && (<button
+                                            {readOnly && (<button
                                                 type="button"
                                                 onClick={() => onDelete?.(faculty)}
                                                 className="hover:text-[#ff3045]"

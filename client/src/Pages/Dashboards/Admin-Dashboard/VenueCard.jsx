@@ -44,7 +44,7 @@ export default function VenueCard({ venues = [], onEdit, onDelete, readOnly = fa
               >
                 <Pencil size={14} className="text-[#059669]" />
               </button>)}
-              {!readOnly && (<button
+              {readOnly && (<button
                 type="button"
                 onClick={() => onDelete?.(venue)}
                 className="w-8 h-8 rounded-lg bg-[#2a2d3e] flex items-center justify-center text-gray-400 hover:text-rose-400 hover:bg-[#32354a] transition-colors"

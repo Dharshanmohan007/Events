@@ -359,7 +359,7 @@ export default function RoomsTableData({
                       </button>)}
 
                       {/* DELETE */}
-                      {!readOnly && (<button
+                      {readOnly && (<button
                         type="button"
                         onClick={() => onDelete(room)}
                         title="Delete Room"
