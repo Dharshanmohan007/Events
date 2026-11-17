@@ -6,6 +6,10 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { mapSettlementData } from "../../../utils/settlementMapper.js";
 import { generateSettlementPdf } from "../../../utils/settlementPdfGenerator.js";
+import {
+  enrichEventAttendingDepartments,
+  getIndividualDepartment,
+} from "../../../utils/individualExpenditureDepartment.js";
 
 const tabs = ["Event expenditures", "Individual expenditures"];
 
@@ -137,7 +141,13 @@ const FacultyExpenditureTable = () => {
           "Faculty Individual Expenditures response :",
           res.data.data,
         );
-        setIndividualExpenditureList(res.data.data || []);
+        const list = res.data.data || [];
+        setIndividualExpenditureList(list);
+        enrichEventAttendingDepartments(list, API_BASE_URL, token)
+          .then(setIndividualExpenditureList)
+          .catch((error) =>
+            console.error("Failed to resolve event-attending departments:", error),
+          );
       } catch (error) {
         console.error(
           "Failed to fetch faculty individual expenditures:",
@@ -175,7 +185,7 @@ const FacultyExpenditureTable = () => {
     const q = searchQuery.toLowerCase();
     return individualExpenditureList.filter((item) => {
       const module = item?.module || "";
-      const department = item?.faculty?.department || "";
+      const department = getIndividualDepartment(item);
       const status = item?.expenditure?.approvalStatus || "";
       return (
         module.toLowerCase().includes(q) ||
@@ -451,7 +461,7 @@ const FacultyExpenditureTable = () => {
                           {formatDate(item?.requestDate)}
                         </td>
                         <td className="px-3 text-[14px] text-[#d1d5db]">
-                          {item?.faculty?.department}
+                          {getIndividualDepartment(item)}
                         </td>
                         <td className="px-3 text-[14px] text-[#d1d5db]">
                           {formatDate(item?.expenditure?.createdAt)}

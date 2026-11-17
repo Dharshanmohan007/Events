@@ -13,6 +13,10 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { mapSettlementData } from "../../../utils/settlementMapper.js";
 import { generateSettlementPdf } from "../../../utils/settlementPdfGenerator.js";
+import {
+  enrichEventAttendingDepartments,
+  getIndividualDepartment,
+} from "../../../utils/individualExpenditureDepartment.js";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB CONFIGURATION
@@ -148,13 +152,6 @@ const AdminExpenditureTable = () => {
     item?.expenditure?.module ||
     "Individual request";
 
-  const getIndividualDepartment = (item) =>
-    item?.faculty?.department ||
-    item?.department ||
-    item?.facultyDetails?.department ||
-    item?.expenditure?.faculty?.department ||
-    "-";
-
   const getIndividualStatus = (item) =>
     item?.expenditure?.approvalStatus ||
     item?.approvalStatus ||
@@ -216,6 +213,15 @@ const AdminExpenditureTable = () => {
 
         if (list.length > 0 || url.includes("/overall") || !url.includes("/overall")) {
           setIndividualExpenditureData(list);
+          enrichEventAttendingDepartments(
+            list,
+            import.meta.env.VITE_API_BASE_URL,
+            token,
+          )
+            .then(setIndividualExpenditureData)
+            .catch((error) =>
+              console.error("Failed to resolve event-attending departments:", error),
+            );
           return;
         }
       } catch (error) {
